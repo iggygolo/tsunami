@@ -190,7 +190,7 @@ function generateRSSFeed(episodes: PodcastEpisode[], trailers: PodcastTrailer[],
 
     ${podcastConfig.podcast.funding && podcastConfig.podcast.funding.length > 0 ?
       podcastConfig.podcast.funding.map(url =>
-        `<podcast:funding url="${escapeXml(url)}">Support the show</podcast:funding>`
+        `<podcast:funding url="${escapeXml(url)}">Support the artist</podcast:funding>`
       ).join('\n    ') : ''
     }
 

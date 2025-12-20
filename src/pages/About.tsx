@@ -233,11 +233,11 @@ const About = () => {
               {/* Support */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Support the Show</CardTitle>
+                  <CardTitle>Support</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Support this podcast by zapping episodes, sharing with friends, and engaging with the community.
+                    Support us by zapping albums, sharing with friends, and engaging with the community.
                   </p>
 
                   {creator?.event && user && (creator.metadata?.lud16 || creator.metadata?.lud06) ? (

@@ -242,11 +242,11 @@ const Index = () => {
             {/* Support */}
             <Card className="card-hover border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
               <CardHeader>
-                <CardTitle className="gradient-text">Support the Show</CardTitle>
+                <CardTitle className="gradient-text">Support</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Support this podcast by zapping episodes, sharing with friends, and engaging with the community.
+                   Support us by zapping albums, sharing with friends, and engaging with the community.
                 </p>
 
                 {creator?.event && user && (creator.metadata?.lud16 || creator.metadata?.lud06) ? (
