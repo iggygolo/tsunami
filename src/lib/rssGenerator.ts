@@ -113,7 +113,6 @@ export function generateRSSFeed(episodes: PodcastEpisode[], config?: PodcastConf
     ${podcastConfig.podcast.image ? `<itunes:image href="${escapeXml(podcastConfig.podcast.image)}" />` : ''}
     ${podcastConfig.podcast.categories.map(cat => `<itunes:category text="${escapeXml(cat)}" />`).join('\n    ')}
     <itunes:explicit>${podcastConfig.podcast.explicit ? 'true' : 'false'}</itunes:explicit>
-    <itunes:type>${podcastConfig.podcast.type || 'episodic'}</itunes:type>
 
     <!-- Podcasting 2.0 tags -->
     <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.creatorNpub)}</podcast:guid>

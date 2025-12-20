@@ -26,7 +26,7 @@ config();
  * This replicates the PODCAST_CONFIG structure but uses process.env instead of import.meta.env
  */
 function createNodejsConfig() {
-  const creatorNpub = process.env.VITE_CREATOR_NPUB || "npub1dv9vvyqwurfwh2fpe30nnsn94447jflalr4drlkqjj0swkhfwpxslca89d";
+  const creatorNpub = process.env.VITE_CREATOR_NPUB;
 
   // Parse recipients safely
   let recipients = [];
@@ -89,7 +89,6 @@ function createNodejsConfig() {
         currency: process.env.VITE_PODCAST_VALUE_CURRENCY || "sats",
         recipients
       },
-      type: (process.env.VITE_PODCAST_TYPE as "episodic" | "serial") || "episodic",
       complete: process.env.VITE_PODCAST_COMPLETE === "true",
       // Podcasting 2.0 fields
       guid: process.env.VITE_PODCAST_GUID || creatorNpub,

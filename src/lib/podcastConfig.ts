@@ -58,7 +58,6 @@ export interface PodcastConfig {
         fee?: boolean;
       }>;
     };
-    type: 'episodic' | 'serial';
     complete: boolean;
     // New Podcasting 2.0 fields
     guid?: string; // Unique podcast identifier
@@ -149,7 +148,6 @@ export const PODCAST_CONFIG: PodcastConfig = {
         }
       ])
     },
-    type: (import.meta.env.VITE_PODCAST_TYPE as "episodic" | "serial") || "episodic",
     complete: import.meta.env.VITE_PODCAST_COMPLETE === "true",
     // Podcasting 2.0 fields from environment
     guid: import.meta.env.VITE_PODCAST_GUID || import.meta.env.VITE_CREATOR_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",

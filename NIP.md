@@ -151,7 +151,6 @@ The content field SHOULD contain a JSON object with podcast metadata including:
       }
     ]
   },
-  "type": "episodic",
   "complete": false
 }
 ```

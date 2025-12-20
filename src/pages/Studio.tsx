@@ -81,7 +81,6 @@ interface PodcastFormData {
       fee?: boolean;
     }>;
   };
-  type: 'episodic' | 'serial';
   complete: boolean;
   // New Podcasting 2.0 fields
   guid: string;
@@ -132,7 +131,6 @@ interface ExtendedPodcastMetadata {
       fee?: boolean;
     }>;
   };
-  type?: 'episodic' | 'serial';
   complete?: boolean;
   // Podcasting 2.0 fields
   guid?: string;
@@ -998,20 +996,6 @@ const Studio = () => {
                   {/* Podcast 2.0 Advanced Settings */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="podcast-type">Podcast Type</Label>
-                        <select
-                          id="podcast-type"
-                          value={formData.type}
-                          onChange={(e) => handleInputChange('type', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
-                          className="w-full p-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <option value="episodic">Episodic</option>
-                          <option value="serial">Serial</option>
-                        </select>
-                      </div>
-
                       <div>
                         <Label htmlFor="medium">Medium</Label>
                         <select

@@ -28,7 +28,6 @@ interface PodcastMetadata {
       fee?: boolean;
     }>;
   };
-  type: 'episodic' | 'serial';
   complete: boolean;
   useOP3?: boolean;
   updated_at: number;
