@@ -68,7 +68,6 @@ function createNodejsConfig() {
   return {
     creatorNpub,
     podcast: {
-      title: process.env.VITE_PODCAST_TITLE || "PODSTR Podcast",
       description: process.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered podcast exploring decentralized conversations",
       author: process.env.VITE_PODCAST_AUTHOR || "PODSTR Creator",
       email: process.env.VITE_PODCAST_EMAIL || "creator@podstr.example",

@@ -33,9 +33,8 @@ export interface PodcastConfig {
 
   /** Podcast metadata */
   podcast: {
-    title: string;
-    description: string;
     author: string;
+    description: string;
     email: string;
     image: string;
     language: string;
@@ -107,9 +106,8 @@ export const PODCAST_CONFIG: PodcastConfig = {
   creatorNpub: import.meta.env.VITE_CREATOR_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
 
   podcast: {
-    title: import.meta.env.VITE_PODCAST_TITLE || "PODSTR Podcast",
-    description: import.meta.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered podcast exploring decentralized conversations",
     author: import.meta.env.VITE_PODCAST_AUTHOR || "PODSTR Creator",
+    description: import.meta.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered podcast exploring decentralized conversations",
     email: import.meta.env.VITE_PODCAST_EMAIL || "creator@podstr.example",
     image: import.meta.env.VITE_PODCAST_IMAGE || "https://example.com/podcast-artwork.jpg",
     language: import.meta.env.VITE_PODCAST_LANGUAGE || "en-us",

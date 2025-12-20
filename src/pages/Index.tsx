@@ -33,7 +33,7 @@ const Index = () => {
   };
 
   useSeoMeta({
-    title: podcastConfig.podcast.title,
+    title: podcastConfig.podcast.author,
     description: podcastConfig.podcast.description,
   });
 
@@ -188,14 +188,14 @@ const Index = () => {
             {/* Podcast Info */}
             <Card className="card-hover border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
               <CardHeader>
-                <CardTitle className="gradient-text">About This Podcast</CardTitle>
+                <CardTitle className="gradient-text">About This Artist</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {podcastConfig.podcast.image && (
                   <div className="relative group">
                     <img
                       src={podcastConfig.podcast.image}
-                      alt={podcastConfig.podcast.title}
+                      alt={podcastConfig.podcast.author}
                       className="w-full rounded-xl object-cover shadow-lg group-hover:shadow-xl transition-shadow duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -205,17 +205,6 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {podcastConfig.podcast.description}
                 </p>
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-muted-foreground">Host:</span>
-                    <span className="font-medium">{podcastConfig.podcast.author}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-muted-foreground">Language:</span>
-                    <span className="font-medium">{podcastConfig.podcast.language.toUpperCase()}</span>
-                  </div>
-                </div>
 
                 <Button variant="outline" className="w-full focus-ring" asChild>
                   <Link to="/about" className="group">

@@ -5,8 +5,8 @@ import { PODCAST_CONFIG } from '@/lib/podcastConfig';
 
 const Episodes = () => {
   useSeoMeta({
-    title: `Episodes - ${PODCAST_CONFIG.podcast.title}`,
-    description: `Browse all episodes of ${PODCAST_CONFIG.podcast.title}`,
+    title: `Episodes - ${PODCAST_CONFIG.podcast.author}`,
+    description: `Browse all episodes of ${PODCAST_CONFIG.podcast.author}`,
   });
 
   return (
@@ -16,7 +16,7 @@ const Episodes = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">All Episodes</h1>
             <p className="text-muted-foreground">
-              Browse and listen to all episodes of {PODCAST_CONFIG.podcast.title}
+              Browse and listen to all episodes of {PODCAST_CONFIG.podcast.author}
             </p>
           </div>
 

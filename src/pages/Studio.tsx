@@ -56,9 +56,8 @@ interface ProfileFormData {
 }
 
 interface PodcastFormData {
-  title: string;
-  description: string;
   author: string;
+  description: string;
   email: string;
   image: string;
   language: string;
@@ -182,7 +181,6 @@ const Studio = () => {
   });
 
   const [formData, setFormData] = useState<PodcastFormData>({
-    title: PODCAST_CONFIG.podcast.title,
     description: PODCAST_CONFIG.podcast.description,
     author: PODCAST_CONFIG.podcast.author,
     email: PODCAST_CONFIG.podcast.email,
@@ -221,9 +219,8 @@ const Studio = () => {
   useEffect(() => {
     if (podcastMetadata && !isLoadingMetadata) {
       setFormData({
-        title: podcastMetadata.title,
-        description: podcastMetadata.description,
         author: podcastMetadata.author,
+        description: podcastMetadata.description,
         email: podcastMetadata.email,
         image: podcastMetadata.image,
         language: podcastMetadata.language,
@@ -438,9 +435,8 @@ const Studio = () => {
         const podcastMetadataEvent = {
           kind: PODCAST_KINDS.PODCAST_METADATA, // Addressable podcast metadata event
           content: JSON.stringify({
-            title: formData.title,
-            description: formData.description,
             author: formData.author,
+            description: formData.description,
             email: formData.email,
             image: formData.image,
             language: formData.language,
@@ -463,7 +459,7 @@ const Studio = () => {
           }),
           tags: [
             ['d', 'podcast-metadata'], // Identifier for this type of event
-            ['title', formData.title]
+            ['title', formData.author]
           ],
           created_at: Math.floor(Date.now() / 1000)
         };
@@ -528,9 +524,8 @@ const Studio = () => {
 
     if (editingSection === 'podcast' && podcastMetadata) {
       setFormData({
-        title: podcastMetadata.title,
-        description: podcastMetadata.description,
         author: podcastMetadata.author,
+        description: podcastMetadata.description,
         email: podcastMetadata.email,
         image: podcastMetadata.image,
         language: podcastMetadata.language,
@@ -832,17 +827,6 @@ const Studio = () => {
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="title">Podcast Title</Label>
-                        <Input
-                          id="title"
-                          value={formData.title}
-                          onChange={(e) => handleInputChange('title', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
-                          placeholder="Enter podcast title"
-                        />
-                      </div>
-
                       <div>
                         <Label htmlFor="author">Author/Host</Label>
                         <Input

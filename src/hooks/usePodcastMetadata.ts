@@ -3,9 +3,8 @@ import { useNostr } from '@nostrify/react';
 import { PODCAST_CONFIG, PODCAST_KINDS, getCreatorPubkeyHex } from '@/lib/podcastConfig';
 
 interface PodcastMetadata {
-  title: string;
-  description: string;
   author: string;
+  description: string;
   email: string;
   image: string;
   language: string;
@@ -70,7 +69,6 @@ export function usePodcastMetadata() {
 
       // Fallback to config (includes environment variables)
       return {
-        title: PODCAST_CONFIG.podcast.title,
         description: PODCAST_CONFIG.podcast.description,
         author: PODCAST_CONFIG.podcast.author,
         email: PODCAST_CONFIG.podcast.email,
