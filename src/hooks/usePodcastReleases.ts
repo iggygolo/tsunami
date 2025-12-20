@@ -175,12 +175,12 @@ export function usePodcastReleases(options: ReleaseSearchOptions = {}) {
 
       const zapData: Map<string, { count: number; totalSats: number }> = new Map();
 
-      if (releaseEventsIds.length > 0) {
+      if (releaseIds.length > 0) {
         try {
           // Query for all zaps to these releaseEventss
           const zapEvents = await nostr.query([{
             kinds: [9735], // Zap receipts
-            '#e': releaseEventsIds, // Releases being zapped
+            '#e': releaseIds, // Releases being zapped
             limit: 2000 // High limit to get all zaps
           }], { signal });
 
