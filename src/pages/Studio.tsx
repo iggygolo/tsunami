@@ -251,8 +251,8 @@ const Studio = () => {
   }, [creator]);
 
   useSeoMeta({
-    title: 'Studio - PODSTR',
-    description: 'Manage your podcast settings and publish new releases',
+    title: 'Studio',
+    description: 'Manage your artist profile and publish new releases',
   });
 
   const handleProfileInputChange = (field: keyof ProfileFormData, value: string) => {
@@ -399,7 +399,7 @@ const Studio = () => {
           if (typeof window !== 'undefined') {
             return window.location.origin;
           }
-          return process.env.BASE_URL || 'https://podstr.example';
+          return process.env.BASE_URL || 'https://tsunami.example';
         };
         
         const baseUrl = getBaseUrl();

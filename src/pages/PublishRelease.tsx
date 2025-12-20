@@ -13,7 +13,7 @@ const PublishRelease = () => {
   const isCreator = user && isPodcastCreator(user.pubkey);
 
   useSeoMeta({
-    title: 'Publish Release - PODSTR',
+    title: 'Publish Release',
     description: 'Publish a new release',
   });
 

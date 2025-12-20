@@ -1,6 +1,6 @@
 {
-  "name": "PODSTR - Nostr Podcast Platform",
-  "short_name": "PODSTR",
+  "name": "Tsunami - Nostr Podcast Platform",
+  "short_name": "Tsunami",
   "description": "A decentralized podcast platform powered by Nostr protocol",
   "start_url": "/",
   "display": "standalone",
