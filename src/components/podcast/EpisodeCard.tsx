@@ -107,11 +107,6 @@ export function EpisodeCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
-                {episode.episodeNumber && (
-                  <Badge variant="secondary">
-                    Episode {episode.episodeNumber}
-                  </Badge>
-                )}
                 {episode.explicit && (
                   <Badge variant="destructive">Explicit</Badge>
                 )}

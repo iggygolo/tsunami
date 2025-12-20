@@ -327,8 +327,6 @@ function eventToPodcastEpisode(event: NostrEvent): PodcastEpisode {
     transcriptUrl,
     chaptersUrl,
     duration,
-    episodeNumber: undefined,
-    seasonNumber: undefined,
     publishDate,
     explicit: false,
     tags: topicTags,

@@ -209,12 +209,6 @@ export function AudioPlayer({ episode, className, autoPlay = false }: AudioPlaye
                 className="w-12 h-12 rounded object-cover"
               />
             )}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium truncate">{episode.title}</h3>
-              <p className="text-sm text-muted-foreground truncate">
-                Episode {episode.episodeNumber}
-              </p>
-            </div>
           </div>
 
           {/* Social Actions */}

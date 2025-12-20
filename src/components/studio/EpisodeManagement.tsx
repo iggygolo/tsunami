@@ -284,12 +284,6 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
                               {episode.title}
                             </h3>
                             <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-2">
-                              {episode.episodeNumber && (
-                                <span className="flex items-center space-x-1">
-                                  <Hash className="w-3 h-3" />
-                                  <span>Episode {episode.episodeNumber}</span>
-                                </span>
-                              )}
                               <span className="flex items-center space-x-1">
                                 <Calendar className="w-3 h-3" />
                                 <span>{format(episode.publishDate, 'MMM d, yyyy')}</span>
