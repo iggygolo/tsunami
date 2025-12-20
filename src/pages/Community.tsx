@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Layout } from '@/components/Layout';
 import { ZapLeaderboard } from '@/components/podcast/ZapLeaderboard';
 import { RecentActivity } from '@/components/podcast/RecentActivity';
-import { EpisodeDiscussions } from '@/components/podcast/EpisodeDiscussions';
+import { ReleaseDiscussions } from '@/components/podcast/ReleaseDiscussions';
 import { PODCAST_CONFIG } from '@/lib/podcastConfig';
 
 const Community = () => {
@@ -58,10 +58,10 @@ const Community = () => {
                 <TabsContent value="discussions" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Episode Discussions</CardTitle>
+                      <CardTitle>Release Discussions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <EpisodeDiscussions limit={15} />
+                      <ReleaseDiscussions limit={15} />
                     </CardContent>
                   </Card>
                 </TabsContent>

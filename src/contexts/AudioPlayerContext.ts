@@ -1,8 +1,8 @@
 import { createContext } from 'react';
-import type { PodcastEpisode } from '@/types/podcast';
+import type { PodcastRelease } from '@/types/podcast';
 
 interface AudioPlayerState {
-  currentEpisode: PodcastEpisode | null;
+  currentRelease: PodcastRelease | null;
   isPlaying: boolean;
   currentTime: number;
   duration: number;
@@ -17,7 +17,7 @@ interface AudioPlayerContextType {
   state: AudioPlayerState;
 
   // Actions
-  playEpisode: (episode: PodcastEpisode) => void;
+  playRelease: (release: PodcastRelease) => void;
   play: () => void;
   pause: () => void;
   stop: () => void;

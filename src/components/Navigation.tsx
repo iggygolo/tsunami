@@ -39,13 +39,13 @@ export function Navigation({ className }: NavigationProps) {
       path: '/',
       icon: Headphones,
       label: 'Home',
-      description: 'Overview & latest episode'
+      description: 'Overview & latest release'
     },
     {
-      path: '/episodes',
+      path: '/releases',
       icon: List,
-      label: 'Episodes',
-      description: 'Browse all episodes'
+      label: 'Releases',
+      description: 'Browse all releases'
     },
     {
       path: '/social',

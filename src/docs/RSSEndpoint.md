@@ -223,7 +223,7 @@ curl -s https://podstr.example/rss.xml | xmllint --format -
 // Dynamic generation for development
 app.get('/rss.xml', async (req, res) => {
   // Generate RSS on the fly
-  const rssContent = await generateRSSFeed(episodes);
+  const rssContent = await generateRSSFeed(releases);
   res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
   res.send(rssContent);
 });

@@ -4,14 +4,14 @@ import { config } from 'dotenv';
 import { nip19 } from 'nostr-tools';
 import { NRelay1, NostrEvent } from '@nostrify/nostrify';
 // import { generateRSSFeed } from '../src/lib/rssGenerator.js'; // Can't import due to import.meta.env issues
-import type { PodcastEpisode, PodcastTrailer } from '../src/types/podcast.js';
+import type { PodcastRelease, PodcastTrailer } from '../src/types/podcast.js';
 
 // Import naddr encoding function
-import { encodeEpisodeAsNaddr } from '../src/lib/nip19Utils.js';
+import { encodeReleaseAsNaddr } from '../src/lib/nip19Utils.js';
 
 // Copied from podcastConfig.ts to avoid import.meta.env issues
 const PODCAST_KINDS = {
-  EPISODE: 30054, // Addressable Podcast episodes (editable, replaceable)
+  EPISODE: 30054, // Addressable Podcast releases (editable, replaceable)
   TRAILER: 30055, // Addressable Podcast trailers (editable, replaceable)
   PODCAST_METADATA: 30078, // Podcast metadata (addressable event)
 } as const;
@@ -152,7 +152,7 @@ function formatDurationForRSS(seconds: number): string {
 /**
  * Node-compatible RSS feed generation (simplified version)
  */
-function generateRSSFeed(episodes: PodcastEpisode[], trailers: PodcastTrailer[], podcastConfig: Record<string, unknown>): string {
+function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[], podcastConfig: Record<string, unknown>): string {
   const baseUrl = podcastConfig.podcast.website || 'https://podstr.example';
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -209,22 +209,22 @@ function generateRSSFeed(episodes: PodcastEpisode[], trailers: PodcastTrailer[],
       `<podcast:trailer pubdate="${trailer.pubDate.toUTCString()}" url="${escapeXml(trailer.url)}"${trailer.length ? ` length="${trailer.length}"` : ''}${trailer.type ? ` type="${escapeXml(trailer.type)}"` : ''}${trailer.season ? ` season="${trailer.season}"` : ''}>${escapeXml(trailer.title)}</podcast:trailer>`
     ).join('\n    ')}
 
-    ${episodes.map(episode => {
+    ${releases.map(release => {
       return `
     <item>
-      <title>${escapeXml(episode.title)}</title>
-      <description>${escapeXml(episode.description || '')}</description>
-      <link>${escapeXml(baseUrl)}/${encodeEpisodeAsNaddr(episode.authorPubkey, episode.identifier)}</link>
-      <pubDate>${episode.publishDate.toUTCString()}</pubDate>
-      <guid isPermaLink="false">${episode.authorPubkey}:${episode.identifier}</guid>
-      <enclosure url="${escapeXml(episode.audioUrl)}" type="${episode.audioType}" length="0" />
-      ${episode.videoUrl ? `<enclosure url="${escapeXml(episode.videoUrl)}" type="${episode.videoType || 'video/mp4'}" length="0" />` : ''}
-      <itunes:duration>${episode.duration ? formatDurationForRSS(episode.duration) : '00:00'}</itunes:duration>
-      <itunes:explicit>${episode.explicit ? 'yes' : 'no'}</itunes:explicit>
-      ${episode.imageUrl ? `<itunes:image href="${escapeXml(episode.imageUrl)}" />` : ''}
-      ${episode.transcriptUrl ? `<podcast:transcript url="${escapeXml(episode.transcriptUrl)}" type="text/plain" />` : ''}
-      ${episode.chaptersUrl ? `<podcast:chapters url="${escapeXml(episode.chaptersUrl)}" type="application/json+chapters" />` : ''}
-      ${episode.content ? `<content:encoded><![CDATA[${episode.content}]]></content:encoded>` : ''}
+      <title>${escapeXml(release.title)}</title>
+      <description>${escapeXml(release.description || '')}</description>
+      <link>${escapeXml(baseUrl)}/${encodeReleaseAsNaddr(release.authorPubkey, release.identifier)}</link>
+      <pubDate>${release.publishDate.toUTCString()}</pubDate>
+      <guid isPermaLink="false">${release.authorPubkey}:${release.identifier}</guid>
+      <enclosure url="${escapeXml(release.audioUrl)}" type="${release.audioType}" length="0" />
+      ${release.videoUrl ? `<enclosure url="${escapeXml(release.videoUrl)}" type="${release.videoType || 'video/mp4'}" length="0" />` : ''}
+      <itunes:duration>${release.duration ? formatDurationForRSS(release.duration) : '00:00'}</itunes:duration>
+      <itunes:explicit>${release.explicit ? 'yes' : 'no'}</itunes:explicit>
+      ${release.imageUrl ? `<itunes:image href="${escapeXml(release.imageUrl)}" />` : ''}
+      ${release.transcriptUrl ? `<podcast:transcript url="${escapeXml(release.transcriptUrl)}" type="text/plain" />` : ''}
+      ${release.chaptersUrl ? `<podcast:chapters url="${escapeXml(release.chaptersUrl)}" type="application/json+chapters" />` : ''}
+      ${release.content ? `<content:encoded><![CDATA[${release.content}]]></content:encoded>` : ''}
     </item>`;
     }).join('')}
   </channel>
@@ -232,10 +232,10 @@ function generateRSSFeed(episodes: PodcastEpisode[], trailers: PodcastTrailer[],
 }
 
 /**
- * Validates if a Nostr event is a valid podcast episode
+ * Validates if a Nostr event is a valid podcast release
  */
-function validatePodcastEpisode(event: NostrEvent, creatorPubkeyHex: string): boolean {
-  if (event.kind !== PODCAST_KINDS.EPISODE) return false;
+function validatePodcastRelease(event: NostrEvent, creatorPubkeyHex: string): boolean {
+  if (event.kind !== PODCAST_KINDS.release) return false;
 
   // Check for required title tag
   const title = event.tags.find(([name]) => name === 'title')?.[1];
@@ -252,12 +252,12 @@ function validatePodcastEpisode(event: NostrEvent, creatorPubkeyHex: string): bo
 }
 
 /**
- * Converts a validated Nostr event to a PodcastEpisode object
+ * Converts a validated Nostr event to a PodcastRelease object
  */
-function eventToPodcastEpisode(event: NostrEvent): PodcastEpisode {
+function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
   const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
 
-  const title = tags.get('title')?.[0] || 'Untitled Episode';
+  const title = tags.get('title')?.[0] || 'Untitled release';
   const description = tags.get('description')?.[0];
   const imageUrl = tags.get('image')?.[0];
 
@@ -449,33 +449,33 @@ async function fetchPodcastMetadataMultiRelay(relays: Array<{url: string, relay:
 }
 
 /**
- * Fetch podcast episodes from multiple Nostr relays
+ * Fetch podcast releases from multiple Nostr relays
  */
-async function fetchPodcastEpisodesMultiRelay(relays: Array<{url: string, relay: NRelay1}>, creatorPubkeyHex: string) {
-  console.log('📡 Fetching podcast episodes from Nostr...');
+async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay: NRelay1}>, creatorPubkeyHex: string) {
+  console.log('📡 Fetching podcast releases from Nostr...');
 
   const relayPromises = relays.map(async ({url, relay}) => {
     try {
       const events = await Promise.race([
         relay.query([{
-          kinds: [PODCAST_KINDS.EPISODE],
+          kinds: [PODCAST_KINDS.release],
           authors: [creatorPubkeyHex],
           limit: 100
         }]),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Episodes query timeout for ${url}`)), 5000)
+          setTimeout(() => reject(new Error(`Releases query timeout for ${url}`)), 5000)
         )
       ]) as NostrEvent[];
 
-      const validEvents = events.filter(event => validatePodcastEpisode(event, creatorPubkeyHex));
+      const validEvents = events.filter(event => validatePodcastRelease(event, creatorPubkeyHex));
 
       if (validEvents.length > 0) {
-        console.log(`✅ Found ${validEvents.length} episodes from ${url}`);
+        console.log(`✅ Found ${validEvents.length} releases from ${url}`);
         return validEvents;
       }
       return [];
     } catch (error) {
-      console.log(`⚠️ Failed to fetch episodes from ${url}:`, (error as Error).message);
+      console.log(`⚠️ Failed to fetch releases from ${url}:`, (error as Error).message);
       return [];
     }
   });
@@ -491,27 +491,27 @@ async function fetchPodcastEpisodesMultiRelay(relays: Array<{url: string, relay:
   });
 
   // Deduplicate addressable events by 'd' tag identifier (keep only latest version)
-  const episodesByIdentifier = new Map<string, NostrEvent>();
+  const releasesByIdentifier = new Map<string, NostrEvent>();
   
   allEvents.forEach(event => {
     // Get the 'd' tag identifier for addressable events
     const identifier = event.tags.find(([name]) => name === 'd')?.[1];
     if (!identifier) return; // Skip events without 'd' tag
     
-    const existing = episodesByIdentifier.get(identifier);
+    const existing = releasesByIdentifier.get(identifier);
     // Keep the latest version (highest created_at timestamp)
     if (!existing || event.created_at > existing.created_at) {
-      episodesByIdentifier.set(identifier, event);
+      releasesByIdentifier.set(identifier, event);
     }
   });
 
-  const uniqueEvents = Array.from(episodesByIdentifier.values());
-  console.log(`✅ Found ${uniqueEvents.length} unique episodes from ${allResults.length} relays`);
+  const uniqueEvents = Array.from(releasesByIdentifier.values());
+  console.log(`✅ Found ${uniqueEvents.length} unique releases from ${allResults.length} relays`);
 
-  // Convert to PodcastEpisode format and sort by publishDate (newest first)
-  const episodes = uniqueEvents.map(event => eventToPodcastEpisode(event));
+  // Convert to PodcastRelease format and sort by publishDate (newest first)
+  const releases = uniqueEvents.map(event => eventToPodcastRelease(event));
 
-  return episodes.sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
+  return releases.sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
 }
 
 /**
@@ -635,29 +635,29 @@ async function _fetchPodcastMetadata(relay: NRelay1, creatorPubkeyHex: string) {
 }
 
 /**
- * Fetch podcast episodes from Nostr
+ * Fetch podcast releases from Nostr
  */
-async function _fetchPodcastEpisodes(relay: NRelay1, creatorPubkeyHex: string): Promise<PodcastEpisode[]> {
+async function _fetchPodcastReleases(relay: NRelay1, creatorPubkeyHex: string): Promise<PodcastRelease[]> {
   try {
-    console.log('📡 Fetching podcast episodes from Nostr...');
+    console.log('📡 Fetching podcast releases from Nostr...');
 
     // Add timeout to prevent hanging
     const events = await Promise.race([
       relay.query([{
-        kinds: [PODCAST_KINDS.EPISODE],
+        kinds: [PODCAST_KINDS.release],
         authors: [creatorPubkeyHex],
         limit: 100
       }]),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Episodes query timeout')), 5000)
+        setTimeout(() => reject(new Error('Releases query timeout')), 5000)
       )
     ]) as NostrEvent[];
 
     // Filter and validate events
-    const validEvents = events.filter(event => validatePodcastEpisode(event, creatorPubkeyHex));
+    const validEvents = events.filter(event => validatePodcastRelease(event, creatorPubkeyHex));
 
-    // Deduplicate episodes by title - keep only the latest version
-    const episodesByTitle = new Map<string, NostrEvent>();
+    // Deduplicate releases by title - keep only the latest version
+    const releasesByTitle = new Map<string, NostrEvent>();
     const originalEvents = new Set<string>();
 
     // Handle edit events
@@ -676,22 +676,22 @@ async function _fetchPodcastEpisodes(relay: NRelay1, creatorPubkeyHex: string): 
       // Skip if this is an original event that has been edited
       if (originalEvents.has(event.id)) return;
 
-      const existing = episodesByTitle.get(title);
+      const existing = releasesByTitle.get(title);
       if (!existing || event.created_at > existing.created_at) {
-        episodesByTitle.set(title, event);
+        releasesByTitle.set(title, event);
       }
     });
 
-    // Convert to podcast episodes and sort by date (newest first)
-    const episodes = Array.from(episodesByTitle.values())
-      .map(eventToPodcastEpisode)
+    // Convert to podcast releases and sort by date (newest first)
+    const releases = Array.from(releasesByTitle.values())
+      .map(eventToPodcastRelease)
       .sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
 
-    console.log(`✅ Found ${episodes.length} episodes from Nostr`);
-    return episodes;
+    console.log(`✅ Found ${releases.length} releases from Nostr`);
+    return releases;
 
   } catch (error) {
-    console.warn('⚠️  Failed to fetch episodes from Nostr:', error);
+    console.warn('⚠️  Failed to fetch releases from Nostr:', error);
     return [];
   }
 }
@@ -719,7 +719,7 @@ async function buildRSS() {
     const relays = relayUrls.map(url => ({ url, relay: new NRelay1(url) }));
 
     let finalConfig = baseConfig;
-    let episodes: PodcastEpisode[] = [];
+    let releases: PodcastRelease[] = [];
     let trailers: PodcastTrailer[] = [];
     let nostrMetadata: Record<string, unknown> | null = null;
 
@@ -741,8 +741,8 @@ async function buildRSS() {
         console.log('📄 Using podcast metadata from .env file');
       }
 
-      // Fetch episodes from multiple relays
-      episodes = await fetchPodcastEpisodesMultiRelay(relays, creatorPubkeyHex);
+      // Fetch releases from multiple relays
+      releases = await fetchPodcastReleasesMultiRelay(relays, creatorPubkeyHex);
 
       // Fetch trailers from multiple relays
       trailers = await fetchPodcastTrailersMultiRelay(relays, creatorPubkeyHex);
@@ -759,10 +759,10 @@ async function buildRSS() {
       console.log('🔌 Relay queries completed');
     }
 
-    console.log(`📊 Generating RSS with ${episodes.length} episodes and ${trailers.length} trailers`);
+    console.log(`📊 Generating RSS with ${releases.length} releases and ${trailers.length} trailers`);
 
     // Generate RSS feed with fetched data
-    const rssContent = generateRSSFeed(episodes, trailers, finalConfig);
+    const rssContent = generateRSSFeed(releases, trailers, finalConfig);
 
     // Ensure dist directory exists
     const distDir = path.resolve('dist');
@@ -781,14 +781,14 @@ async function buildRSS() {
       status: 'ok',
       endpoint: '/rss.xml',
       generatedAt: new Date().toISOString(),
-      episodeCount: episodes.length,
+      releaseCount: releases.length,
       trailerCount: trailers.length,
       feedSize: rssContent.length,
       environment: 'production',
       accessible: true,
       dataSource: {
         metadata: nostrMetadata ? 'nostr' : 'env',
-        episodes: episodes.length > 0 ? 'nostr' : 'none',
+        releases: releases.length > 0 ? 'nostr' : 'none',
         trailers: trailers.length > 0 ? 'nostr' : 'none',
         relays: relayUrls
       },

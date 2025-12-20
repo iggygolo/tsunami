@@ -13,67 +13,67 @@ import { Label } from '@/components/ui/label';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { encodeEpisodeAsNaddr } from '@/lib/nip19Utils';
-import type { PodcastEpisode } from '@/types/podcast';
+import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
+import type { PodcastRelease } from '@/types/podcast';
 
-interface ShareEpisodeDialogProps {
-  episode: PodcastEpisode | null;
+interface ShareReleaseDialogProps {
+  release: PodcastRelease | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function ShareEpisodeDialog({ episode, open, onOpenChange }: ShareEpisodeDialogProps) {
+export function ShareReleaseDialog({ release, open, onOpenChange }: ShareReleaseDialogProps) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const { mutateAsync: createEvent, isPending } = useNostrPublish();
   
   // Generate the default share message
-  const defaultMessage = episode ? 
-    `Just published a new episode: "${episode.title}"\n\n${episode.description || ''}\n\n${window.location.origin}/${encodeEpisodeAsNaddr(episode.authorPubkey, episode.identifier)}\n\n#podcast #nostr` 
+  const defaultMessage = release ? 
+    `Just published a new release: "${release.title}"\n\n${release.description || ''}\n\n${window.location.origin}/${encodeReleaseAsNaddr(release.authorPubkey, release.identifier)}\n\n#podcast #nostr` 
     : '';
     
   const [shareMessage, setShareMessage] = useState(defaultMessage);
 
-  // Update the message when the episode changes
+  // Update the message when the release changes
   useEffect(() => {
-    if (episode) {
-      const newMessage = `Just published a new episode: "${episode.title}"\n\n${episode.description || ''}\n\n${window.location.origin}/${encodeEpisodeAsNaddr(episode.authorPubkey, episode.identifier)}\n\n#podcast #nostr`;
+    if (release) {
+      const newMessage = `Just published a new release: "${release.title}"\n\n${release.description || ''}\n\n${window.location.origin}/${encodeReleaseAsNaddr(release.authorPubkey, release.identifier)}\n\n#podcast #nostr`;
       setShareMessage(newMessage);
     }
-  }, [episode]);
+  }, [release]);
 
   const handleShare = async () => {
-    if (!episode || !user) return;
+    if (!release || !user) return;
 
     try {
-      // Create a kind 1 note (root post) sharing the episode
+      // Create a kind 1 note (root post) sharing the release
       await createEvent({
         kind: 1,
         content: shareMessage,
         tags: [
-          ['a', `30054:${episode.authorPubkey}:${episode.identifier}`], // Reference the episode as addressable event (non-reply)
+          ['a', `30054:${release.authorPubkey}:${release.identifier}`], // Reference the release as addressable event (non-reply)
           ['t', 'podcast'], // Topic tag
           ['t', 'nostr'], // Topic tag
         ]
       });
 
       toast({
-        title: "Episode shared!",
+        title: "release shared!",
         description: "Your post has been published to Nostr.",
       });
 
       onOpenChange(false);
     } catch (error) {
-      console.error('Failed to share episode:', error);
+      console.error('Failed to share release:', error);
       toast({
-        title: "Failed to share episode",
+        title: "Failed to share release",
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
     }
   };
 
-  if (!episode) return null;
+  if (!release) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -81,10 +81,10 @@ export function ShareEpisodeDialog({ episode, open, onOpenChange }: ShareEpisode
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Share className="w-5 h-5" />
-            <span>Share Episode</span>
+            <span>Share Release</span>
           </DialogTitle>
           <DialogDescription>
-            Share this episode with your followers on Nostr.
+            Share this release with your followers on Nostr.
           </DialogDescription>
         </DialogHeader>
 
@@ -93,14 +93,14 @@ export function ShareEpisodeDialog({ episode, open, onOpenChange }: ShareEpisode
             <Label htmlFor="share-message">Post Content</Label>
             <Textarea
               id="share-message"
-              placeholder="Write something about your episode..."
+              placeholder="Write something about your release..."
               value={shareMessage}
               onChange={(e) => setShareMessage(e.target.value)}
               rows={8}
               className="mt-2"
             />
             <p className="text-sm text-muted-foreground mt-1">
-              Share this episode with your followers on Nostr. You can edit the message above.
+              Share this release with your followers on Nostr. You can edit the message above.
             </p>
           </div>
 
@@ -124,7 +124,7 @@ export function ShareEpisodeDialog({ episode, open, onOpenChange }: ShareEpisode
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Share Episode
+                  Share release
                 </>
               )}
             </Button>

@@ -1,6 +1,6 @@
 import { nip19 } from 'nostr-tools';
 import { useParams } from 'react-router-dom';
-import { EpisodePage } from '@/components/podcast/EpisodePage';
+import { ReleasePage } from '@/components/podcast/ReleasePage';
 import NotFound from './NotFound';
 
 export function NIP19Page() {
@@ -26,32 +26,32 @@ export function NIP19Page() {
       return <div>Profile placeholder</div>;
 
     case 'note': {
-      // Handle note1 identifiers - could be podcast episodes (kind 54)
+      // Handle note1 identifiers - could be podcast releases (kind 54)
       const noteId = decoded.data;
       return (
-        <EpisodePage
+        <ReleasePage
           eventId={noteId}
         />
       );
     }
 
     case 'nevent': {
-      // Handle nevent1 identifiers - could be podcast episodes (kind 54)
+      // Handle nevent1 identifiers - could be podcast releases (kind 54)
       const nevent = decoded.data;
       return (
-        <EpisodePage
+        <ReleasePage
           eventId={nevent.id}
         />
       );
     }
 
     case 'naddr': {
-      // Handle addressable events (podcast episodes are kind 30054)
+      // Handle addressable events (podcast releases are kind 30054)
       const naddr = decoded.data;
       if (naddr.kind === 30054) {
-        // This is a podcast episode - pass the addressable event parameters
+        // This is a podcast release - pass the addressable event parameters
         return (
-          <EpisodePage
+          <ReleasePage
             addressableEvent={{
               pubkey: naddr.pubkey,
               kind: naddr.kind,

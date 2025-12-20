@@ -18,7 +18,7 @@ import {
   Share
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { encodeEpisodeAsNaddr } from '@/lib/nip19Utils';
+import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,36 +42,36 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { usePodcastEpisodes } from '@/hooks/usePodcastEpisodes';
-import { useDeleteEpisode } from '@/hooks/usePublishEpisode';
+import { usePodcastReleases } from '@/hooks/usePodcastReleases';
+import { useDeleteRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { AudioPlayer } from '@/components/podcast/AudioPlayer';
-import type { PodcastEpisode, EpisodeSearchOptions } from '@/types/podcast';
+import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
 import { genRSSFeed } from '@/lib/rssGenerator';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
-import { EpisodeEditDialog } from './EpisodeEditDialog';
-import { ShareEpisodeDialog } from './ShareEpisodeDialog';
+import { ReleaseEditDialog } from './ReleaseEditDialog';
+import { ShareReleaseDialog } from './ShareReleaseDialog';
 
-interface EpisodeManagementProps {
+interface ReleaseManagementProps {
   className?: string;
 }
 
-export function EpisodeManagement({ className }: EpisodeManagementProps) {
+export function ReleaseManagement({ className }: ReleaseManagementProps) {
   const { toast } = useToast();
   const podcastConfig = usePodcastConfig();
-  const { mutateAsync: deleteEpisode, isPending: isDeleting } = useDeleteEpisode();
+  const { mutateAsync: deleteRelease, isPending: isDeleting } = useDeleteRelease();
 
-  const [searchOptions, setSearchOptions] = useState<EpisodeSearchOptions>({
+  const [searchOptions, setSearchOptions] = useState<ReleaseSearchOptions>({
     limit: 50,
     sortBy: 'date',
     sortOrder: 'desc'
   });
-  const [episodeToDelete, setEpisodeToDelete] = useState<PodcastEpisode | null>(null);
-  const [episodeToEdit, setEpisodeToEdit] = useState<PodcastEpisode | null>(null);
-  const [episodeToShare, setEpisodeToShare] = useState<PodcastEpisode | null>(null);
+  const [releaseToDelete, setReleaseToDelete] = useState<PodcastRelease | null>(null);
+  const [releaseToEdit, setReleaseToEdit] = useState<PodcastRelease | null>(null);
+  const [releaseToShare, setReleaseToShare] = useState<PodcastRelease | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
 
-  const { data: episodes, isLoading, error } = usePodcastEpisodes(searchOptions);
+  const { data: releases, isLoading, error } = usePodcastReleases(searchOptions);
 
   const handleSearch = (query: string) => {
     setSearchOptions(prev => ({ ...prev, query: query || undefined }));
@@ -80,7 +80,7 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
   const handleSortChange = (sortBy: string) => {
     setSearchOptions(prev => ({
       ...prev,
-      sortBy: sortBy as EpisodeSearchOptions['sortBy']
+      sortBy: sortBy as ReleaseSearchOptions['sortBy']
     }));
   };
 
@@ -91,44 +91,44 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
     }));
   };
 
-  const handleDeleteEpisode = async (episode: PodcastEpisode) => {
+  const handleDeleteRelease = async (release: PodcastRelease) => {
     try {
-      await deleteEpisode(episode.eventId);
+      await deleteRelease(release.eventId);
 
       // Regenerate RSS feed after deletion
-      const updatedEpisodes = episodes?.filter(e => e.id !== episode.id) || [];
-      await genRSSFeed(updatedEpisodes, podcastConfig);
+      const updatedReleases = releases?.filter(e => e.id !== release.id) || [];
+      await genRSSFeed(updatedReleases, podcastConfig);
 
       toast({
-        title: 'Episode deleted',
-        description: `"${episode.title}" has been deleted and RSS feed updated.`,
+        title: 'Release deleted',
+        description: `"${release.title}" has been deleted and RSS feed updated.`,
       });
 
-      setEpisodeToDelete(null);
+      setReleaseToDelete(null);
     } catch (error) {
       toast({
-        title: 'Failed to delete episode',
+        title: 'Failed to delete release',
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
     }
   };
 
-  const handleEpisodeUpdated = async () => {
-    console.log('handleEpisodeUpdated called');
+  const handlereleaseUpdated = async () => {
+    console.log('handlereleaseUpdated called');
     try {
       // Regenerate RSS feed after update
-      if (episodes) {
+      if (releases) {
         console.log('Regenerating RSS feed...');
-        await genRSSFeed(episodes, podcastConfig);
+        await genRSSFeed(releases, podcastConfig);
         console.log('RSS feed regenerated successfully');
       }
-      setEpisodeToEdit(null);
-      console.log('Episode edit dialog should close now');
+      setReleaseToEdit(null);
+      console.log('Release edit dialog should close now');
     } catch (error) {
-      console.error('Error in handleEpisodeUpdated:', error);
+      console.error('Error in handlereleaseUpdated:', error);
       // Still close the dialog even if RSS generation fails
-      setEpisodeToEdit(null);
+      setReleaseToEdit(null);
     }
   };
 
@@ -150,9 +150,9 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
       <Card className={className}>
         <CardContent className="py-12 px-8 text-center">
           <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-destructive" />
-          <h3 className="text-lg font-semibold mb-2">Failed to load episodes</h3>
+          <h3 className="text-lg font-semibold mb-2">Failed to load releases</h3>
           <p className="text-muted-foreground mb-4">
-            {error instanceof Error ? error.message : 'An error occurred while loading episodes'}
+            {error instanceof Error ? error.message : 'An error occurred while loading releases'}
           </p>
           <Button onClick={() => window.location.reload()}>
             Try Again
@@ -169,17 +169,17 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
               <Volume2 className="w-5 h-5" />
-              <span>Episode Management</span>
-              {episodes && (
+              <span>Release Management</span>
+              {releases && (
                 <Badge variant="secondary">
-                  {episodes.length} episode{episodes.length !== 1 ? 's' : ''}
+                  {releases.length} release{releases.length !== 1 ? 's' : ''}
                 </Badge>
               )}
             </CardTitle>
             <Button asChild size="sm" className="text-sm">
               <Link to="/publish">
                 <Plus className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">New Episode</span>
+                <span className="hidden sm:inline">New Release</span>
                 <span className="sm:hidden">New</span>
               </Link>
             </Button>
@@ -189,7 +189,7 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <div className="flex-1">
               <Input
-                placeholder="Search episodes..."
+                placeholder="Search releases..."
                 onChange={(e) => handleSearch(e.target.value)}
                 className="max-w-md"
               />
@@ -235,38 +235,38 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
                 </Card>
               ))}
             </div>
-          ) : !episodes || episodes.length === 0 ? (
+          ) : !releases || releases.length === 0 ? (
             <div className="text-center py-12">
               <Volume2 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-semibold mb-2">
-                {searchOptions.query ? 'No episodes found' : 'No episodes yet'}
+                {searchOptions.query ? 'No releases found' : 'No releases yet'}
               </h3>
               <p className="text-muted-foreground mb-6">
                 {searchOptions.query
                   ? 'Try adjusting your search terms'
-                  : 'Start by publishing your first episode'
+                  : 'Start by publishing your first release'
                 }
               </p>
               <Button asChild size="sm" className="text-sm">
                 <Link to="/publish">
                   <Plus className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Publish First Episode</span>
-                  <span className="sm:hidden">Publish Episode</span>
+                  <span className="hidden sm:inline">Publish First release</span>
+                  <span className="sm:hidden">Publish release</span>
                 </Link>
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              {episodes.map((episode) => (
-                <Card key={episode.id} className="border transition-colors hover:bg-muted/50">
+              {releases.map((release) => (
+                <Card key={release.id} className="border transition-colors hover:bg-muted/50">
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
-                      {/* Episode Artwork */}
+                      {/* release Artwork */}
                       <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        {episode.imageUrl ? (
+                        {release.imageUrl ? (
                           <img
-                            src={episode.imageUrl}
-                            alt={episode.title}
+                            src={release.imageUrl}
+                            alt={release.title}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -276,22 +276,22 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
                         )}
                       </div>
 
-                      {/* Episode Info */}
+                      {/* release Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-lg truncate mb-1">
-                              {episode.title}
+                              {release.title}
                             </h3>
                             <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-2">
                               <span className="flex items-center space-x-1">
                                 <Calendar className="w-3 h-3" />
-                                <span>{format(episode.publishDate, 'MMM d, yyyy')}</span>
+                                <span>{format(release.publishDate, 'MMM d, yyyy')}</span>
                               </span>
-                              {episode.duration && (
+                              {release.duration && (
                                 <span className="flex items-center space-x-1">
                                   <Clock className="w-3 h-3" />
-                                  <span>{formatDuration(episode.duration)}</span>
+                                  <span>{formatDuration(release.duration)}</span>
                                 </span>
                               )}
                             </div>
@@ -307,57 +307,57 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 onClick={() => setCurrentlyPlaying(
-                                  currentlyPlaying === episode.id ? null : episode.id
+                                  currentlyPlaying === release.id ? null : release.id
                                 )}
                               >
-                                {currentlyPlaying === episode.id ? (
+                                {currentlyPlaying === release.id ? (
                                   <Pause className="w-4 h-4 mr-2" />
                                 ) : (
                                   <Play className="w-4 h-4 mr-2" />
                                 )}
-                                {currentlyPlaying === episode.id ? 'Hide Player' : 'Play Episode'}
+                                {currentlyPlaying === release.id ? 'Hide Player' : 'Play release'}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setEpisodeToEdit(episode)}>
+                              <DropdownMenuItem onClick={() => setReleaseToEdit(release)}>
                                 <Edit className="w-4 h-4 mr-2" />
-                                Edit Episode
+                                Edit release
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
-                                <Link to={`/${encodeEpisodeAsNaddr(episode.authorPubkey, episode.identifier)}`}>
+                                <Link to={`/${encodeReleaseAsNaddr(release.authorPubkey, release.identifier)}`}>
                                   <Eye className="w-4 h-4 mr-2" />
                                   View Public Page
                                 </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setEpisodeToShare(episode)}>
+                              <DropdownMenuItem onClick={() => setReleaseToShare(release)}>
                                 <Share className="w-4 h-4 mr-2" />
-                                Share Episode
+                                Share release
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
-                                  if (episode.audioUrl) {
-                                    window.open(episode.audioUrl, '_blank');
+                                  if (release.audioUrl) {
+                                    window.open(release.audioUrl, '_blank');
                                   }
                                 }}
-                                disabled={!episode.audioUrl}
+                                disabled={!release.audioUrl}
                               >
                                 <ExternalLink className="w-4 h-4 mr-2" />
                                 Open Audio File
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
-                                onClick={() => setEpisodeToDelete(episode)}
+                                onClick={() => setReleaseToDelete(release)}
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Episode
+                                Delete release
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
 
-                        {/* Episode Description */}
-                        {episode.description && (
+                        {/* release Description */}
+                        {release.description && (
                           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                            {episode.description}
+                            {release.description}
                           </p>
                         )}
 
@@ -365,18 +365,18 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
                             {/* Tags */}
-                            {episode.tags.length > 0 && (
+                            {release.tags.length > 0 && (
                               <div className="flex items-center space-x-1">
                                 <Tags className="w-3 h-3 text-muted-foreground" />
                                 <div className="flex flex-wrap gap-1">
-                                  {episode.tags.slice(0, 3).map((tag) => (
+                                  {release.tags.slice(0, 3).map((tag) => (
                                     <Badge key={tag} variant="outline" className="text-xs">
                                       {tag}
                                     </Badge>
                                   ))}
-                                  {episode.tags.length > 3 && (
+                                  {release.tags.length > 3 && (
                                     <Badge variant="outline" className="text-xs">
-                                      +{episode.tags.length - 3}
+                                      +{release.tags.length - 3}
                                     </Badge>
                                   )}
                                 </div>
@@ -386,31 +386,31 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
 
                           {/* Stats */}
                           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                            {episode.zapCount && episode.zapCount > 0 && (
+                            {release.zapCount && release.zapCount > 0 && (
                               <span className="flex items-center space-x-1">
                                 <span className="text-yellow-500">⚡</span>
-                                <span>{episode.zapCount}</span>
+                                <span>{release.zapCount}</span>
                               </span>
                             )}
-                            {episode.commentCount && episode.commentCount > 0 && (
+                            {release.commentCount && release.commentCount > 0 && (
                               <span className="flex items-center space-x-1">
                                 <span>💬</span>
-                                <span>{episode.commentCount}</span>
+                                <span>{release.commentCount}</span>
                               </span>
                             )}
-                            {episode.repostCount && episode.repostCount > 0 && (
+                            {release.repostCount && release.repostCount > 0 && (
                               <span className="flex items-center space-x-1">
                                 <span>🔄</span>
-                                <span>{episode.repostCount}</span>
+                                <span>{release.repostCount}</span>
                               </span>
                             )}
                           </div>
                         </div>
 
                         {/* Audio Player */}
-                        {currentlyPlaying === episode.id && (
+                        {currentlyPlaying === release.id && (
                           <div className="mt-4 pt-4 border-t">
-                            <AudioPlayer episode={episode} />
+                            <AudioPlayer release={release} />
                           </div>
                         )}
                       </div>
@@ -425,45 +425,45 @@ export function EpisodeManagement({ className }: EpisodeManagementProps) {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog
-        open={!!episodeToDelete}
-        onOpenChange={() => setEpisodeToDelete(null)}
+        open={!!releaseToDelete}
+        onOpenChange={() => setReleaseToDelete(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Episode</AlertDialogTitle>
+            <AlertDialogTitle>Delete Eelease</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{episodeToDelete?.title}"?
+              Are you sure you want to delete "{releaseToDelete?.title}"?
               This action cannot be undone and will also update your RSS feed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => episodeToDelete && handleDeleteEpisode(episodeToDelete)}
+              onClick={() => releaseToDelete && handleDeleteRelease(releaseToDelete)}
               disabled={isDeleting}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {isDeleting ? 'Deleting...' : 'Delete Episode'}
+              {isDeleting ? 'Deleting...' : 'Delete release'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Episode Dialog */}
-      {episodeToEdit && (
-        <EpisodeEditDialog
-          episode={episodeToEdit}
-          open={!!episodeToEdit}
-          onOpenChange={() => setEpisodeToEdit(null)}
-          onSuccess={handleEpisodeUpdated}
+      {/* Edit release Dialog */}
+      {releaseToEdit && (
+        <ReleaseEditDialog
+          release={releaseToEdit}
+          open={!!releaseToEdit}
+          onOpenChange={() => setReleaseToEdit(null)}
+          onSuccess={handlereleaseUpdated}
         />
       )}
 
-      {/* Share Episode Dialog */}
-      <ShareEpisodeDialog
-        episode={episodeToShare}
-        open={!!episodeToShare}
-        onOpenChange={() => setEpisodeToShare(null)}
+      {/* Share release Dialog */}
+      <ShareReleaseDialog
+        release={releaseToShare}
+        open={!!releaseToShare}
+        onOpenChange={() => setReleaseToShare(null)}
       />
     </div>
   );

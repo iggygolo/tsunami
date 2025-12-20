@@ -2,14 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { getCreatorPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
-import type { PodcastEpisode } from '@/types/podcast';
+import type { PodcastRelease } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 /**
- * Validates if a Nostr event is a valid podcast episode (NIP-54)
+ * Validates if a Nostr event is a valid podcast release (NIP-54)
  */
-function validatePodcastEpisode(event: NostrEvent): boolean {
-  if (event.kind !== PODCAST_KINDS.EPISODE) return false;
+function validatePodcastRelease(event: NostrEvent): boolean {
+  if (event.kind !== PODCAST_KINDS.RELEASE) return false;
 
   // Check for required title tag (NIP-54)
   const title = event.tags.find(([name]) => name === 'title')?.[1];
@@ -26,12 +26,12 @@ function validatePodcastEpisode(event: NostrEvent): boolean {
 }
 
 /**
- * Converts a validated Nostr event to a PodcastEpisode object
+ * Converts a validated Nostr event to a PodcastRelease object
  */
-function eventToPodcastEpisode(event: NostrEvent): PodcastEpisode {
+function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
   const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
 
-  const title = tags.get('title')?.[0] || 'Untitled Episode';
+  const title = tags.get('title')?.[0] || 'Untitled Release';
   const description = tags.get('description')?.[0];
   const imageUrl = tags.get('image')?.[0];
 
@@ -83,7 +83,7 @@ function getOriginalEventId(event: NostrEvent): string | undefined {
 }
 
 /**
- * Hook to fetch podcast episodes and generate RSS feed
+ * Hook to fetch podcast releases and generate RSS feed
  */
 export function useRSSFeedGenerator() {
   const { nostr } = useNostr();
@@ -92,20 +92,20 @@ export function useRSSFeedGenerator() {
     queryKey: ['rss-feed-generator'],
     queryFn: async () => {
       try {
-        // Fetch podcast episodes (kind 54 for NIP-54 podcast episodes)
+        // Fetch podcast releases (kind 54 for NIP-54 podcast releases)
         const events = await nostr.query([
           {
-            kinds: [PODCAST_KINDS.EPISODE],
+            kinds: [PODCAST_KINDS.RELEASE],
             authors: [getCreatorPubkeyHex()],
             limit: 100,
           }
         ]);
 
         // Filter and validate events
-        const validEvents = events.filter(validatePodcastEpisode);
+        const validEvents = events.filter(validatePodcastRelease);
 
-        // Deduplicate episodes by title - keep only the latest version of each title
-        const episodesByTitle = new Map<string, NostrEvent>();
+        // Deduplicate releases by title - keep only the latest version of each title
+        const releasesByTitle = new Map<string, NostrEvent>();
         const originalEvents = new Set<string>(); // Track original events that have been edited
 
         // First pass: identify edited events and their originals
@@ -126,23 +126,23 @@ export function useRSSFeedGenerator() {
           // Skip if this is an original event that has been edited
           if (originalEvents.has(event.id)) return;
 
-          const existing = episodesByTitle.get(title);
+          const existing = releasesByTitle.get(title);
           if (!existing || event.created_at > existing.created_at) {
-            episodesByTitle.set(title, event);
+            releasesByTitle.set(title, event);
           }
         });
 
-        // Convert to podcast episodes
-        const episodes = Array.from(episodesByTitle.values()).map(eventToPodcastEpisode);
+        // Convert to podcast releases
+        const releases = Array.from(releasesByTitle.values()).map(eventToPodcastRelease);
 
         // Sort by publish date (newest first for RSS)
-        episodes.sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
+        releases.sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
 
-        // Generate RSS feed with the current configuration and episodes
-        await genRSSFeed(episodes);
+        // Generate RSS feed with the current configuration and releases
+        await genRSSFeed(releases);
 
         return {
-          episodes,
+          releases,
           rssGenerated: true,
           lastGenerated: new Date(),
         };

@@ -9,14 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NoteContent } from '@/components/NoteContent';
-import { EpisodeActions } from './EpisodeActions';
+import { ReleaseActions } from './ReleaseActions';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { Layout } from '@/components/Layout';
 import { Link, useNavigate } from 'react-router-dom';
 import { useNostr } from '@nostrify/react';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
-import type { PodcastEpisode } from '@/types/podcast';
+import type { PodcastRelease } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface AddressableEventParams {
@@ -25,24 +25,24 @@ interface AddressableEventParams {
   identifier: string;
 }
 
-interface EpisodePageProps {
+interface ReleasePageProps {
   eventId?: string; // For note1/nevent1
   addressableEvent?: AddressableEventParams; // For naddr1
 }
 
-export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
+export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   const { nostr } = useNostr();
   const navigate = useNavigate();
-  const { playEpisode } = useAudioPlayer();
+  const { playRelease } = useAudioPlayer();
   const podcastConfig = usePodcastConfig();
   const [showComments, setShowComments] = useState(true);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
   const [isChaptersOpen, setIsChaptersOpen] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
 
-  // Query for the episode event
-  const { data: episodeEvent, isLoading } = useQuery<NostrEvent | null>({
-    queryKey: ['episode', eventId || `${addressableEvent?.pubkey}:${addressableEvent?.kind}:${addressableEvent?.identifier}`],
+  // Query for the release event
+  const { data: releaseEvent, isLoading } = useQuery<NostrEvent | null>({
+    queryKey: ['release', eventId || `${addressableEvent?.pubkey}:${addressableEvent?.kind}:${addressableEvent?.identifier}`],
     queryFn: async (c) => {
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(5000)]);
 
@@ -67,7 +67,7 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
           return events[0];
         }
         
-        // Fallback: For legacy episodes that don't have 'd' tags,
+        // Fallback: For legacy releases that don't have 'd' tags,
         // try to find by event ID if the identifier looks like an event ID (64 hex chars)
         if (/^[0-9a-f]{64}$/.test(addressableEvent.identifier)) {
           const legacyEvents = await nostr.query([{
@@ -88,13 +88,13 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
     enabled: !!(eventId || addressableEvent)
   });
 
-  // Convert NostrEvent to PodcastEpisode format (NIP-54) - memoized to prevent unnecessary re-renders
-  const episode: PodcastEpisode | null = useMemo(() => {
-    if (!episodeEvent) return null;
+  // Convert NostrEvent to PodcastRelease format (NIP-54) - memoized to prevent unnecessary re-renders
+  const release: PodcastRelease | null = useMemo(() => {
+    if (!releaseEvent) return null;
 
-    const tags = new Map(episodeEvent.tags.map(([key, ...values]) => [key, values]));
+    const tags = new Map(releaseEvent.tags.map(([key, ...values]) => [key, values]));
 
-    const title = tags.get('title')?.[0] || 'Untitled Episode';
+    const title = tags.get('title')?.[0] || 'Untitled release';
     const description = tags.get('description')?.[0] || '';
     const imageUrl = tags.get('image')?.[0] || '';
 
@@ -109,13 +109,13 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
     const videoType = videoTag?.[1];
 
     // Extract all 't' tags for topics
-    const topicTags = episodeEvent.tags
+    const topicTags = releaseEvent.tags
       .filter(([name]) => name === 't')
       .map(([, value]) => value);
 
     // Extract identifier from 'd' tag (for addressable events)
     // CRITICAL: This must match the logic used everywhere else in the app
-    const identifier = tags.get('d')?.[0] || episodeEvent.id;
+    const identifier = tags.get('d')?.[0] || releaseEvent.id;
 
     // Extract duration from tag
     const durationStr = tags.get('duration')?.[0];
@@ -125,9 +125,9 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
     const pubdateStr = tags.get('pubdate')?.[0];
     let publishDate: Date;
     try {
-      publishDate = pubdateStr ? new Date(pubdateStr) : new Date(episodeEvent.created_at * 1000);
+      publishDate = pubdateStr ? new Date(pubdateStr) : new Date(releaseEvent.created_at * 1000);
     } catch {
-      publishDate = new Date(episodeEvent.created_at * 1000);
+      publishDate = new Date(releaseEvent.created_at * 1000);
     }
 
     // Extract transcript URL from tag
@@ -137,12 +137,12 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
     const chaptersUrl = tags.get('chapters')?.[0];
 
     return {
-      id: episodeEvent.id,
-      eventId: episodeEvent.id,
+      id: releaseEvent.id,
+      eventId: releaseEvent.id,
       title,
       description,
-      content: episodeEvent.content,
-      authorPubkey: episodeEvent.pubkey,
+      content: releaseEvent.content,
+      authorPubkey: releaseEvent.pubkey,
       identifier,
       audioUrl,
       audioType,
@@ -150,7 +150,7 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
       videoType,
       imageUrl,
       publishDate,
-      createdAt: new Date(episodeEvent.created_at * 1000),
+      createdAt: new Date(releaseEvent.created_at * 1000),
       duration,
       explicit: false, // Can be extended later if needed
       tags: topicTags,
@@ -160,16 +160,16 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
       commentCount: 0,
       repostCount: 0
     };
-  }, [episodeEvent]);
+  }, [releaseEvent]);
 
   // Fetch transcript content if URL is available
   const { data: transcriptContent, isLoading: isLoadingTranscript } = useQuery<string | null>({
-    queryKey: ['transcript', episode?.transcriptUrl],
+    queryKey: ['transcript', release?.transcriptUrl],
     queryFn: async () => {
-      if (!episode?.transcriptUrl) return null;
+      if (!release?.transcriptUrl) return null;
 
       try {
-        const response = await fetch(episode.transcriptUrl);
+        const response = await fetch(release.transcriptUrl);
         if (!response.ok) throw new Error('Failed to fetch transcript');
         return await response.text();
       } catch (error) {
@@ -177,18 +177,18 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
         return null;
       }
     },
-    enabled: !!episode?.transcriptUrl,
+    enabled: !!release?.transcriptUrl,
     staleTime: 300000, // 5 minutes
   });
 
   // Fetch chapters content if URL is available
   const { data: chaptersContent, isLoading: isLoadingChapters } = useQuery<Array<{ startTime: number; title: string; img?: string; url?: string }> | null>({
-    queryKey: ['chapters', episode?.chaptersUrl],
+    queryKey: ['chapters', release?.chaptersUrl],
     queryFn: async () => {
-      if (!episode?.chaptersUrl) return null;
+      if (!release?.chaptersUrl) return null;
 
       try {
-        const response = await fetch(episode.chaptersUrl);
+        const response = await fetch(release.chaptersUrl);
         if (!response.ok) throw new Error('Failed to fetch chapters');
         const data = await response.json();
 
@@ -207,15 +207,15 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
         return null;
       }
     },
-    enabled: !!episode?.chaptersUrl,
+    enabled: !!release?.chaptersUrl,
     staleTime: 300000, // 5 minutes
   });
 
-  // Update document title when episode loads
+  // Update document title when release loads
   useSeoMeta({
-    title: episode 
-      ? `${episode.title} | ${podcastConfig.podcast.title}`
-      : `Episode | ${podcastConfig.podcast.title}`,
+    title: release 
+      ? `${release.title} | ${podcastConfig.podcast.author}`
+      : `release | ${podcastConfig.podcast.author}`,
   });
 
   const formatDuration = (seconds?: number): string => {
@@ -272,7 +272,7 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
     );
   }
 
-  if (!episode) {
+  if (!release) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
@@ -284,12 +284,12 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
 
             <Card>
               <CardContent className="py-12 text-center">
-                <h2 className="text-xl font-semibold mb-2">Episode Not Found</h2>
+                <h2 className="text-xl font-semibold mb-2">Release Not Found</h2>
                 <p className="text-muted-foreground mb-4">
-                  This episode doesn't exist or hasn't been published yet.
+                  This release doesn't exist or hasn't been published yet.
                 </p>
                 <Button asChild>
-                  <Link to="/episodes">Browse All Episodes</Link>
+                  <Link to="/releases">Browse All Releases</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -305,49 +305,49 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
         <div className="max-w-4xl mx-auto space-y-6">
           <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Episodes
+            Back to Releases
           </Button>
 
-          {/* Episode Header */}
+          {/* release Header */}
           <Card>
             <CardHeader>
               <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-                {episode.imageUrl && (
+                {release.imageUrl && (
                   <img
-                    src={episode.imageUrl}
-                    alt={episode.title}
+                    src={release.imageUrl}
+                    alt={release.title}
                     className="w-32 h-32 lg:w-48 lg:h-48 rounded-lg object-cover flex-shrink-0 shadow-lg"
                   />
                 )}
 
                 <div className="flex-1 min-w-0 space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    {episode.explicit && (
+                    {release.explicit && (
                       <Badge variant="destructive">Explicit</Badge>
                     )}
                   </div>
 
                   <CardTitle className="text-2xl lg:text-3xl">
-                    {episode.title}
+                    {release.title}
                   </CardTitle>
 
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
-                      <span>{formatDistanceToNow(episode.publishDate, { addSuffix: true })}</span>
+                      <span>{formatDistanceToNow(release.publishDate, { addSuffix: true })}</span>
                     </div>
 
-                    {episode.duration && (
+                    {release.duration && (
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        <span>{formatDuration(episode.duration)}</span>
+                        <span>{formatDuration(release.duration)}</span>
                       </div>
                     )}
                   </div>
 
-                  {episode.tags.length > 0 && (
+                  {release.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {episode.tags.map((tag) => (
+                      {release.tags.map((tag) => (
                         <Badge key={tag} variant="outline" className="text-xs">
                           #{tag}
                         </Badge>
@@ -359,20 +359,20 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
             </CardHeader>
 
             <CardContent className="space-y-6">
-              {/* Episode Description */}
-              {episode.description && (
+              {/* release Description */}
+              {release.description && (
                 <div>
                   <p className="text-muted-foreground leading-relaxed">
-                    {episode.description}
+                    {release.description}
                   </p>
                 </div>
               )}
 
-              {/* Episode Content */}
-              {episode.content && (
+              {/* release Content */}
+              {release.content && (
                 <div className="prose prose-sm max-w-none">
                   <NoteContent
-                    event={episodeEvent!}
+                    event={releaseEvent!}
                     className="text-sm"
                   />
                 </div>
@@ -383,18 +383,18 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
                 <div className="flex items-center gap-3">
                   <Button
                     onClick={() => {
-                      if (episode.audioUrl) {
-                        playEpisode(episode);
+                      if (release.audioUrl) {
+                        playRelease(release);
                       }
                     }}
-                    disabled={!episode.audioUrl}
+                    disabled={!release.audioUrl}
                     className="flex items-center gap-2"
                   >
                     <Headphones className="w-4 h-4" />
                     Listen Now
                   </Button>
 
-                  {episode.videoUrl && (
+                  {release.videoUrl && (
                     <Button
                       onClick={() => setShowVideo(!showVideo)}
                       variant="secondary"
@@ -405,7 +405,7 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
                     </Button>
                   )}
 
-                  {!episode.audioUrl && !episode.videoUrl && (
+                  {!release.audioUrl && !release.videoUrl && (
                     <p className="text-sm text-muted-foreground">
                       No media available
                     </p>
@@ -413,8 +413,8 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
                 </div>
 
                 {/* Social Actions */}
-                <EpisodeActions
-                  episode={episode}
+                <ReleaseActions
+                  release={release}
                   showComments={showComments}
                   onToggleComments={() => setShowComments(!showComments)}
                 />
@@ -423,14 +423,14 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
           </Card>
 
           {/* Video Player Section */}
-          {showVideo && episode.videoUrl && (
+          {showVideo && release.videoUrl && (
             <Card>
               <CardContent className="p-0">
                 <video
                   controls
                   className="w-full aspect-video"
                 >
-                  <source src={episode.videoUrl} type={episode.videoType || 'video/mp4'} />
+                  <source src={release.videoUrl} type={release.videoType || 'video/mp4'} />
                   Your browser does not support the video tag.
                 </video>
               </CardContent>
@@ -438,7 +438,7 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
           )}
 
           {/* Chapters Section */}
-          {episode.chaptersUrl && (
+          {release.chaptersUrl && (
             <Card>
               <Collapsible open={isChaptersOpen} onOpenChange={setIsChaptersOpen}>
                 <CardHeader className="pb-3">
@@ -520,7 +520,7 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
                       <div className="text-center py-8">
                         <p className="text-muted-foreground mb-4">Failed to load chapters</p>
                         <a
-                          href={episode.chaptersUrl}
+                          href={release.chaptersUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-primary hover:underline"
@@ -537,7 +537,7 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
           )}
 
           {/* Transcript Section */}
-          {episode.transcriptUrl && (
+          {release.transcriptUrl && (
             <Card>
               <Collapsible open={isTranscriptOpen} onOpenChange={setIsTranscriptOpen}>
                 <CardHeader className="pb-3">
@@ -573,7 +573,7 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
                       <div className="text-center py-8">
                         <p className="text-muted-foreground mb-4">Failed to load transcript</p>
                         <a
-                          href={episode.transcriptUrl}
+                          href={release.transcriptUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 text-primary hover:underline"
@@ -594,32 +594,32 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
           {showComments && (
             <Card>
               <CardContent className="pt-6">
-                {episode ? (
+                {release ? (
                   <CommentsSection
                     root={{
-                      id: episode.eventId,
-                      pubkey: episode.authorPubkey,
-                      created_at: Math.floor(episode.createdAt.getTime() / 1000),
+                      id: release.eventId,
+                      pubkey: release.authorPubkey,
+                      created_at: Math.floor(release.createdAt.getTime() / 1000),
                       kind: 30054,
                       tags: [
-                        ['d', episode.identifier], // Use the extracted identifier, not the raw event's d tag
-                        ['title', episode.title],
-                        ['audio', episode.audioUrl, episode.audioType || 'audio/mpeg'],
-                        ...(episode.description ? [['description', episode.description]] : []),
-                        ...(episode.imageUrl ? [['image', episode.imageUrl]] : []),
-                        ...episode.tags.map(tag => ['t', tag])
+                        ['d', release.identifier], // Use the extracted identifier, not the raw event's d tag
+                        ['title', release.title],
+                        ['audio', release.audioUrl, release.audioType || 'audio/mpeg'],
+                        ...(release.description ? [['description', release.description]] : []),
+                        ...(release.imageUrl ? [['image', release.imageUrl]] : []),
+                        ...release.tags.map(tag => ['t', tag])
                       ],
-                      content: episode.content || '',
+                      content: release.content || '',
                       sig: ''
                     }}
-                    title="Episode Discussion"
+                    title="release Discussion"
                     emptyStateMessage="No comments yet"
-                    emptyStateSubtitle="Be the first to share your thoughts about this episode!"
+                    emptyStateSubtitle="Be the first to share your thoughts about this release!"
                     limit={100}
                   />
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    <p>Unable to load comments for this episode.</p>
+                    <p>Unable to load comments for this release.</p>
                   </div>
                 )}
               </CardContent>

@@ -40,7 +40,7 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import { isPodcastCreator, PODCAST_CONFIG, getCreatorPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
-import { EpisodeManagement } from '@/components/studio/EpisodeManagement';
+import { ReleaseManagement } from '@/components/studio/ReleaseManagement';
 import { TrailerManagement } from '@/components/studio/TrailerManagement';
 import { BlossomServerManager } from '@/components/studio/BlossomServerManager';
 
@@ -260,7 +260,7 @@ const Studio = () => {
 
   useSeoMeta({
     title: 'Studio - PODSTR',
-    description: 'Manage your podcast settings and publish new episodes',
+    description: 'Manage your podcast settings and publish new releases',
   });
 
   const handleProfileInputChange = (field: keyof ProfileFormData, value: string) => {
@@ -639,9 +639,9 @@ const Studio = () => {
                 <Settings className="w-4 h-4" />
                 <span>Settings</span>
               </TabsTrigger>
-              <TabsTrigger value="episodes" className="flex items-center space-x-2">
+              <TabsTrigger value="releases" className="flex items-center space-x-2">
                 <Mic className="w-4 h-4" />
-                <span>Episodes</span>
+                <span>Releases</span>
               </TabsTrigger>
               <TabsTrigger value="blossom" className="flex items-center space-x-2">
                 <Server className="w-4 h-4" />
@@ -1298,9 +1298,9 @@ const Studio = () => {
               </Card>
             </TabsContent>
 
-            {/* Episodes Tab */}
-            <TabsContent value="episodes" className="space-y-6">
-              <EpisodeManagement />
+            {/* Releases Tab */}
+            <TabsContent value="releases" className="space-y-6">
+              <ReleaseManagement />
             </TabsContent>
 
             {/* Trailers Tab */}
@@ -1331,9 +1331,9 @@ const Studio = () => {
                   <CardContent className="p-6 text-center">
                     <Mic className="w-12 h-12 mx-auto mb-4 text-primary" />
                     <div className="text-2xl font-bold">
-                      {analyticsLoading ? '...' : analytics?.totalEpisodes || 0}
+                      {analyticsLoading ? '...' : analytics?.totalReleases || 0}
                     </div>
-                    <div className="text-sm text-muted-foreground">Episodes</div>
+                    <div className="text-sm text-muted-foreground">Releases</div>
                   </CardContent>
                 </Card>
 
@@ -1369,10 +1369,10 @@ const Studio = () => {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Top Episodes */}
+                {/* Top Releases */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Top Episodes by Engagement</CardTitle>
+                    <CardTitle>Top Releases by Engagement</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {analyticsLoading ? (
@@ -1384,29 +1384,29 @@ const Studio = () => {
                           </div>
                         ))}
                       </div>
-                    ) : analytics?.topEpisodes && analytics.topEpisodes.length > 0 ? (
+                    ) : analytics?.topReleases && analytics.topReleases.length > 0 ? (
                       <div className="space-y-4">
-                        {analytics.topEpisodes.slice(0, 5).map((episode, index) => (
-                          <div key={episode.episode.id} className="flex items-center space-x-3 p-3 rounded-lg bg-muted">
+                        {analytics.topReleases.slice(0, 5).map((release, index) => (
+                          <div key={release.release.id} className="flex items-center space-x-3 p-3 rounded-lg bg-muted">
                             <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
                               {index + 1}
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="text-sm font-medium truncate">
-                                {episode.episode.title}
+                                {release.release.title}
                               </h4>
                               <div className="flex items-center space-x-4 text-xs text-muted-foreground">
                                 <span className="flex items-center">
                                   <Zap className="w-3 h-3 mr-1 text-yellow-500" />
-                                  {episode.zaps}
+                                  {release.zaps}
                                 </span>
                                 <span className="flex items-center">
                                   <MessageSquare className="w-3 h-3 mr-1 text-blue-500" />
-                                  {episode.comments}
+                                  {release.comments}
                                 </span>
                                 <span className="flex items-center">
                                   <Repeat2 className="w-3 h-3 mr-1 text-green-500" />
-                                  {episode.reposts}
+                                  {release.reposts}
                                 </span>
                               </div>
                             </div>
@@ -1416,8 +1416,8 @@ const Studio = () => {
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
                         <Mic className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>No episode engagement data yet.</p>
-                        <p className="text-sm">Publish episodes and engagement will appear here!</p>
+                        <p>No release engagement data yet.</p>
+                        <p className="text-sm">Publish releases and engagement will appear here!</p>
                       </div>
                     )}
                   </CardContent>
@@ -1466,7 +1466,7 @@ const Studio = () => {
                                    'Reposted'}
                                 </span>{' '}
                                 <span className="text-muted-foreground truncate">
-                                  {activity.episodeTitle}
+                                  {activity.releaseTitle}
                                 </span>
                               </p>
                               <p className="text-xs text-muted-foreground">

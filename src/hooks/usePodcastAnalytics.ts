@@ -1,18 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { PODCAST_KINDS, getCreatorPubkeyHex } from '@/lib/podcastConfig';
-import { usePodcastEpisodes } from '@/hooks/usePodcastEpisodes';
+import { usePodcastReleases } from '@/hooks/usePodcastReleases';
 import { usePodcastTrailers } from '@/hooks/usePodcastTrailers';
-import type { PodcastEpisode } from '@/types/podcast';
+import type { PodcastRelease } from '@/types/podcast';
 
 interface PodcastAnalytics {
-  totalEpisodes: number;
+  totalReleases: number;
   totalTrailers: number;
   totalZaps: number;
   totalComments: number;
   totalReposts: number;
-  topEpisodes: Array<{
-    episode: PodcastEpisode;
+  topReleases: Array<{
+    release: PodcastRelease;
     zaps: number;
     comments: number;
     reposts: number;
@@ -20,8 +20,8 @@ interface PodcastAnalytics {
   }>;
   recentActivity: Array<{
     type: 'zap' | 'comment' | 'repost';
-    episodeId: string;
-    episodeTitle: string;
+    releaseId: string;
+    releaseTitle: string;
     timestamp: Date;
     amount?: number; // for zaps
     author?: string; // for comments/reposts
@@ -40,7 +40,7 @@ interface PodcastAnalytics {
 export function usePodcastAnalytics() {
   const { nostr } = useNostr();
   const creatorPubkeyHex = getCreatorPubkeyHex();
-  const { data: episodes } = usePodcastEpisodes();
+  const { data: releases } = usePodcastReleases();
   const { data: trailers } = usePodcastTrailers();
 
   return useQuery<PodcastAnalytics>({
@@ -48,43 +48,43 @@ export function usePodcastAnalytics() {
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
 
-      if (!episodes || episodes.length === 0) {
-        // Return empty analytics if no episodes
+      if (!releases || releases.length === 0) {
+        // Return empty analytics if no releases
         return {
-          totalEpisodes: 0,
+          totalReleases: 0,
           totalTrailers: trailers?.length || 0,
           totalZaps: 0,
           totalComments: 0,
           totalReposts: 0,
-          topEpisodes: [],
+          topReleases: [],
           recentActivity: [],
           engagementOverTime: [],
         };
       }
 
-      // Get all episode event IDs for filtering
-      const episodeEventIds = episodes.map(ep => ep.eventId);
+      // Get all release event IDs for filtering
+      const releaseEventIds = releases.map(ep => ep.eventId);
 
       // Fetch all engagement events in parallel
       const [zapEvents, commentEvents, repostEvents] = await Promise.all([
-        // Zaps (kind 9735) targeting our episodes
+        // Zaps (kind 9735) targeting our releases
         nostr.query([{
           kinds: [9735],
-          '#e': episodeEventIds,
+          '#e': releaseEventIds,
           limit: 1000
         }], { signal }).catch(() => []),
 
-        // Comments (kind 1111) targeting our episodes  
+        // Comments (kind 1111) targeting our releases  
         nostr.query([{
           kinds: [PODCAST_KINDS.COMMENT],
-          '#e': episodeEventIds,
+          '#e': releaseEventIds,
           limit: 1000
         }], { signal }).catch(() => []),
 
-        // Reposts (kind 6 and 16) targeting our episodes
+        // Reposts (kind 6 and 16) targeting our releases
         nostr.query([{
           kinds: [6, 16],
-          '#e': episodeEventIds,
+          '#e': releaseEventIds,
           limit: 1000
         }], { signal }).catch(() => []),
       ]);
@@ -94,29 +94,29 @@ export function usePodcastAnalytics() {
       const totalComments = commentEvents.length;
       const totalReposts = repostEvents.length;
 
-      // Calculate per-episode engagement
-      const episodeEngagement = episodes.map(episode => {
-        const episodeZaps = zapEvents.filter(e => 
-          e.tags.some(([name, value]) => name === 'e' && value === episode.eventId)
+      // Calculate per-release engagement
+      const releaseEngagement = releases.map(release => {
+        const releaseZaps = zapEvents.filter(e => 
+          e.tags.some(([name, value]) => name === 'e' && value === release.eventId)
         );
-        const episodeComments = commentEvents.filter(e =>
-          e.tags.some(([name, value]) => name === 'e' && value === episode.eventId)  
+        const releaseComments = commentEvents.filter(e =>
+          e.tags.some(([name, value]) => name === 'e' && value === release.eventId)  
         );
-        const episodeReposts = repostEvents.filter(e =>
-          e.tags.some(([name, value]) => name === 'e' && value === episode.eventId)
+        const releaseReposts = repostEvents.filter(e =>
+          e.tags.some(([name, value]) => name === 'e' && value === release.eventId)
         );
 
         return {
-          episode,
-          zaps: episodeZaps.length,
-          comments: episodeComments.length,
-          reposts: episodeReposts.length,
-          totalEngagement: episodeZaps.length + episodeComments.length + episodeReposts.length
+          release,
+          zaps: releaseZaps.length,
+          comments: releaseComments.length,
+          reposts: releaseReposts.length,
+          totalEngagement: releaseZaps.length + releaseComments.length + releaseReposts.length
         };
       });
 
-      // Sort episodes by engagement
-      const topEpisodes = episodeEngagement
+      // Sort releases by engagement
+      const topReleases = releaseEngagement
         .sort((a, b) => b.totalEngagement - a.totalEngagement)
         .slice(0, 5);
 
@@ -144,13 +144,13 @@ export function usePodcastAnalytics() {
         .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
         .slice(0, 10)
         .map(activity => {
-          const episodeId = activity.event.tags.find(([name]) => name === 'e')?.[1] || '';
-          const episode = episodes.find(ep => ep.eventId === episodeId);
+          const releaseId = activity.event.tags.find(([name]) => name === 'e')?.[1] || '';
+          const release = releases.find(ep => ep.eventId === releaseId);
 
           return {
             type: activity.type,
-            episodeId,
-            episodeTitle: episode?.title || 'Unknown Episode',
+            releaseId,
+            releaseTitle: release?.title || 'Unknown Release',
             timestamp: activity.timestamp,
             author: activity.event.pubkey.slice(0, 8) + '...',
           };
@@ -187,19 +187,19 @@ export function usePodcastAnalytics() {
         .sort((a, b) => a.date.localeCompare(b.date));
 
       return {
-        totalEpisodes: episodes.length,
+        totalReleases: releases.length,
         totalTrailers: trailers?.length || 0,
         totalZaps,
         totalComments,
         totalReposts,
-        topEpisodes,
+        topReleases,
         recentActivity,
         engagementOverTime,
       };
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
-    enabled: !!episodes, // Only run when episodes are loaded
+    enabled: !!releases, // Only run when releases are loaded
   });
 }
 
@@ -211,11 +211,11 @@ export function usePodcastQuickStats() {
 
   return {
     data: analytics.data ? {
-      totalEpisodes: analytics.data.totalEpisodes,
+      totalReleases: analytics.data.totalReleases,
       totalZaps: analytics.data.totalZaps,
       totalComments: analytics.data.totalComments,
       totalReposts: analytics.data.totalReposts,
-      mostEngagedEpisode: analytics.data.topEpisodes[0]?.episode || null,
+      mostEngagedRelease: analytics.data.topReleases[0]?.release || null,
     } : null,
     isLoading: analytics.isLoading,
     error: analytics.error,

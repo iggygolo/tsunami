@@ -1,16 +1,16 @@
 # RSS Feed System for PODSTR
 
-This document explains how the RSS feed system works in PODSTR, including automatic updates when episodes are added, edited, or deleted.
+This document explains how the RSS feed system works in PODSTR, including automatic updates when releases are added, edited, or deleted.
 
 ## Overview
 
-The RSS feed system automatically generates and updates an RSS feed at `/rss.xml` that follows both standard RSS 2.0 specifications and Podcasting 2.0 enhancements. The feed is automatically updated whenever podcast episodes are added, edited, or deleted.
+The RSS feed system automatically generates and updates an RSS feed at `/rss.xml` that follows both standard RSS 2.0 specifications and Podcasting 2.0 enhancements. The feed is automatically updated whenever podcast releases are added, edited, or deleted.
 
 ## System Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   User Actions  │───▶│  Episode Hooks   │───▶│ RSS Generator   │
+│   User Actions  │───▶│  Release Hooks   │───▶│ RSS Generator   │
 │ (Add/Edit/Delete)│    │ (Invalidate RSS) │    │ (Update Feed)   │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
                                 │
@@ -28,29 +28,29 @@ The RSS feed system automatically generates and updates an RSS feed at `/rss.xml
 
 The RSS feed is automatically updated in these scenarios:
 
-#### **A. New Episode Published**
-- **Hook**: `usePublishEpisode`
-- **Trigger**: After successful episode creation
+#### **A. New Release Published**
+- **Hook**: `usePublishRelease`
+- **Trigger**: After successful release creation
 - **Action**: Invalidates `rss-feed-generator` query
-- **Result**: New episode appears in RSS feed
+- **Result**: New release appears in RSS feed
 
-#### **B. Episode Edited**
-- **Hook**: `useUpdateEpisode`
-- **Trigger**: After successful episode update
+#### **B. Release Edited**
+- **Hook**: `useUpdateRelease`
+- **Trigger**: After successful release update
 - **Action**: Invalidates `rss-feed-generator` query
-- **Result**: Updated episode content in RSS feed
+- **Result**: Updated release content in RSS feed
 
-#### **C. Episode Deleted**
-- **Hook**: `useDeleteEpisode`
-- **Trigger**: After successful episode deletion
+#### **C. Release Deleted**
+- **Hook**: `useDeleteRelease`
+- **Trigger**: After successful release deletion
 - **Action**: Invalidates `rss-feed-generator` query
-- **Result**: Episode removed from RSS feed
+- **Result**: Release removed from RSS feed
 
 ### 2. **Update Flow**
 
 ```typescript
-// 1. User action (e.g., publish episode)
-await publishEpisode(episodeData);
+// 1. User action (e.g., publish release)
+await publishRelease(releaseData);
 
 // 2. Hook automatically invalidates RSS cache
 await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
@@ -59,7 +59,7 @@ await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 const events = await nostr.query([{ kinds: [54], authors: [pubkey] }]);
 
 // 4. Feed is stored and served at /rss.xml
-await genRSSFeed(episodes);
+await genRSSFeed(releases);
 ```
 
 ## RSS Feed Generation Process
@@ -69,9 +69,9 @@ await genRSSFeed(episodes);
 The `useRSSFeedGenerator` hook:
 
 ```typescript
-// Fetch NIP-54 podcast episodes
+// Fetch NIP-54 podcast releases
 const events = await nostr.query([{
-  kinds: [PODCAST_KINDS.EPISODE], // kind:54
+  kinds: [PODCAST_KINDS.RELEASE], // kind:54
   authors: [getCreatorPubkeyHex()],
   limit: 100
 }]);
@@ -79,7 +79,7 @@ const events = await nostr.query([{
 
 ### 2. **Deduplication**
 
-Applies the same title-based deduplication as the main episode feed:
+Applies the same title-based deduplication as the main release feed:
 
 ```typescript
 // Identify edited events and their originals
@@ -94,16 +94,16 @@ validEvents.forEach(event => {
 validEvents.forEach(event => {
   if (originalEvents.has(event.id)) return; // Skip superseded versions
   // Keep newest version for each title
-  episodesByTitle.set(title, event);
+  releasesByTitle.set(title, event);
 });
 ```
 
 ### 3. **RSS Generation**
 
-Converts episodes to RSS 2.0 format with Podcasting 2.0 enhancements:
+Converts releases to RSS 2.0 format with Podcasting 2.0 enhancements:
 
 ```typescript
-const rssContent = generateRSSFeed(episodes, {
+const rssContent = generateRSSFeed(releases, {
   title: "PODSTR Podcast",
   description: "A Nostr-powered podcast",
   // ... full podcast configuration
@@ -127,12 +127,12 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
 - ✅ Proper `channel` and `item` elements
 - ✅ Required fields: `title`, `description`, `link`, `pubDate`
 - ✅ Enclosure tags for audio files
-- ✅ GUIDs for episode identification
+- ✅ GUIDs for release identification
 
 ### 2. **iTunes/Apple Podcasts Compatibility**
 - ✅ iTunes namespace declarations
 - ✅ iTunes-specific tags: `itunes:author`, `itunes:summary`, etc.
-- ✅ Episode and season numbering
+- ✅ Release and season numbering
 - ✅ Podcast artwork support
 
 ### 3. **Podcasting 2.0 Enhancements**
@@ -168,18 +168,17 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
 </channel>
 ```
 
-### **Episode Level**
+### **Release Level**
 ```xml
 <item>
-  <title>Episode Title</title>
-  <description>Episode description</description>
-  <link>https://podstr.example/nevent1...</link>
-  <guid>episode-event-id</guid>
+  <title>Release Title</title>
+  <description>Release description</description>
+  <link>https://podstr.example/naddr1...</link>
+  <guid>release-event-id</guid>
   <pubDate>Tue, 21 Nov 2023 12:00:00 GMT</pubDate>
-  <enclosure url="https://.../episode.mp3" length="0" type="audio/mpeg"/>
+  <enclosure url="https://.../release.mp3" length="0" type="audio/mpeg"/>
   <itunes:duration>45:32</itunes:duration>
-  <itunes:episode>1</itunes:episode>
-  <podcast:guid>episode-event-id</podcast:guid>
+  <podcast:guid>release-event-id</podcast:guid>
 </item>
 ```
 
@@ -188,7 +187,7 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
 ### 1. **Caching Strategy**
 - **LocalStorage**: Fast client-side caching
 - **Query Cache**: React Query caching with 5-minute stale time
-- **Conditional Updates**: Only regenerate when episodes change
+- **Conditional Updates**: Only regenerate when releases change
 
 ### 2. **Efficient Updates**
 - **Targeted Invalidation**: Only RSS-related queries are invalidated
@@ -197,14 +196,14 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
 
 ### 3. **Deduplication Benefits**
 - **Reduced Processing**: Only latest versions processed
-- **Smaller Feed Size**: No duplicate episodes
-- **Faster Generation**: Fewer episodes to convert
+- **Smaller Feed Size**: No duplicate releases
+- **Faster Generation**: Fewer releases to convert
 
 ## Monitoring and Debugging
 
 ### 1. **Console Logging**
 ```typescript
-console.log('RSS feed generated with episodes:', rssData.episodes.length);
+console.log('RSS feed generated with releases:', rssData.releases.length);
 console.log('RSS feed updated at:', new Date().toISOString());
 ```
 
@@ -223,7 +222,7 @@ localStorage.getItem('podcast-rss-updated');
 ## Error Handling
 
 ### 1. **Graceful Degradation**
-- Empty feed generated when no episodes exist
+- Empty feed generated when no releases exist
 - Cached content served when generation fails
 - Error messages logged for debugging
 
@@ -264,17 +263,17 @@ localStorage.getItem('podcast-rss-updated');
 - **Transcript Support**: Full text transcripts in RSS
 - **Chapter Marks**: Enhanced navigation support
 - **Geo-blocking**: Regional content restrictions
-- **Premium Content**: Paid episode support
+- **Premium Content**: Paid release support
 
 ### 2. **Performance Improvements**
 - **Static Generation**: Pre-generated feeds at build time
 - **CDN Distribution**: Edge caching for faster delivery
-- **Incremental Updates**: Only update changed episodes
+- **Incremental Updates**: Only update changed releases
 - **Compression**: Gzip compression for smaller feeds
 
 ### 3. **Monitoring and Analytics**
 - **Feed Analytics**: Track subscriber growth
-- **Download Metrics**: Measure episode popularity
+- **Download Metrics**: Measure release popularity
 - **Error Tracking**: Monitor feed health
 - **Performance Metrics**: Track generation times
 
@@ -282,10 +281,10 @@ localStorage.getItem('podcast-rss-updated');
 
 The PODSTR RSS feed system provides a robust, automatically updating RSS feed that:
 
-- ✅ **Updates Automatically**: When episodes are added, edited, or deleted
+- ✅ **Updates Automatically**: When releases are added, edited, or deleted
 - ✅ **Standards Compliant**: RSS 2.0 + Podcasting 2.0 + iTunes
 - ✅ **Performance Optimized**: Caching and efficient updates
 - ✅ **Feature Rich**: Lightning payments, transcripts, chapters
 - ✅ **Well Integrated**: Works with all major podcast platforms
 
-The system ensures that podcast directories and subscribers always have access to the latest episode content while maintaining high performance and reliability.
+The system ensures that podcast directories and subscribers always have access to the latest release content while maintaining high performance and reliability.

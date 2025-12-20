@@ -3,15 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AudioPlayer } from '@/components/podcast/AudioPlayer';
-import type { PodcastEpisode } from '@/types/podcast';
+import type { PodcastRelease } from '@/types/podcast';
 
 export default function DebugAudio() {
   const [testUrl, setTestUrl] = useState('https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav');
 
-  // Create a mock episode for testing
-  const createTestEpisode = (audioUrl: string): PodcastEpisode => ({
-    id: 'test-episode',
-    title: 'Test Audio Episode',
+  // Create a mock release for testing
+  const createTestRelease = (audioUrl: string): PodcastRelease => ({
+    id: 'test-release',
+    title: 'Test Audio Release',
     description: 'Testing audio playback functionality',
     audioUrl,
     audioType: 'audio/wav',
@@ -19,15 +19,15 @@ export default function DebugAudio() {
     tags: ['test'],
     eventId: 'test-event',
     authorPubkey: 'test-pubkey',
-    identifier: 'test-episode-identifier',
+    identifier: 'test-release-identifier',
     createdAt: new Date(),
   });
 
-  const [currentEpisode, setCurrentEpisode] = useState<PodcastEpisode | null>(null);
+  const [currentRelease, setCurrentRelease] = useState<PodcastRelease | null>(null);
 
   const handleTestAudio = () => {
     if (testUrl.trim()) {
-      setCurrentEpisode(createTestEpisode(testUrl.trim()));
+      setCurrentRelease(createTestRelease(testUrl.trim()));
     }
   };
 
@@ -89,7 +89,7 @@ export default function DebugAudio() {
                     variant="outline"
                     onClick={() => {
                       setTestUrl(preset.url);
-                      setCurrentEpisode(createTestEpisode(preset.url));
+                      setCurrentRelease(createTestRelease(preset.url));
                     }}
                   >
                     Test
@@ -100,10 +100,10 @@ export default function DebugAudio() {
           </div>
 
           {/* Audio Player */}
-          {currentEpisode && (
+          {currentRelease && (
             <div className="space-y-3">
               <h3 className="text-lg font-medium">Audio Player</h3>
-              <AudioPlayer episode={currentEpisode} />
+              <AudioPlayer release={currentRelease} />
             </div>
           )}
 

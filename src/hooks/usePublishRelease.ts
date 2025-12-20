@@ -3,14 +3,14 @@ import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
-import type { EpisodeFormData } from '@/types/podcast';
+import type { ReleaseFormData } from '@/types/podcast';
 import { PODCAST_KINDS, isPodcastCreator } from '@/lib/podcastConfig';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 
 /**
- * Hook for publishing podcast episodes (creator only)
+ * Hook for publishing podcast releases (creator only)
  */
-export function usePublishEpisode() {
+export function usePublishRelease() {
   const { user } = useCurrentUser();
   const { mutateAsync: createEvent } = useNostrPublish();
   const { mutateAsync: uploadFile } = useUploadFile();
@@ -18,25 +18,25 @@ export function usePublishEpisode() {
   const podcastConfig = usePodcastConfig();
 
   return useMutation({
-    mutationFn: async (episodeData: EpisodeFormData): Promise<string> => {
+    mutationFn: async (releaseData: ReleaseFormData): Promise<string> => {
       // Verify user is logged in and is the creator
       if (!user) {
-        throw new Error('You must be logged in to publish episodes');
+        throw new Error('You must be logged in to publish releases');
       }
 
       if (!isPodcastCreator(user.pubkey)) {
-        throw new Error('Only the podcast creator can publish episodes');
+        throw new Error('Only the podcast creator can publish releases');
       }
 
       // Upload audio file if provided
-      let audioUrl = episodeData.audioUrl;
-      let audioType = episodeData.audioType;
+      let audioUrl = releaseData.audioUrl;
+      let audioType = releaseData.audioType;
 
-      if (episodeData.audioFile) {
+      if (releaseData.audioFile) {
         try {
-          const audioTags = await uploadFile(episodeData.audioFile);
+          const audioTags = await uploadFile(releaseData.audioFile);
           audioUrl = audioTags[0][1]; // First tag contains the URL
-          audioType = episodeData.audioFile.type;
+          audioType = releaseData.audioFile.type;
         } catch (error) {
           throw new Error(`Failed to upload audio file: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -68,10 +68,10 @@ export function usePublishEpisode() {
       }
 
       // Upload image file if provided
-      let imageUrl = episodeData.imageUrl;
-      if (episodeData.imageFile) {
+      let imageUrl = releaseData.imageUrl;
+      if (releaseData.imageFile) {
         try {
-          const imageTags = await uploadFile(episodeData.imageFile);
+          const imageTags = await uploadFile(releaseData.imageFile);
           imageUrl = imageTags[0][1]; // First tag contains the URL
         } catch (error) {
           throw new Error(`Failed to upload image file: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -79,23 +79,23 @@ export function usePublishEpisode() {
       }
 
       // Upload video file if provided
-      let videoUrl = episodeData.videoUrl;
-      let videoType = episodeData.videoType;
-      if (episodeData.videoFile) {
+      let videoUrl = releaseData.videoUrl;
+      let videoType = releaseData.videoType;
+      if (releaseData.videoFile) {
         try {
-          const videoTags = await uploadFile(episodeData.videoFile);
+          const videoTags = await uploadFile(releaseData.videoFile);
           videoUrl = videoTags[0][1];
-          videoType = episodeData.videoFile.type;
+          videoType = releaseData.videoFile.type;
         } catch (error) {
           throw new Error(`Failed to upload video file: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 
       // Upload transcript file if provided
-      let transcriptUrl = episodeData.transcriptUrl;
-      if (episodeData.transcriptFile) {
+      let transcriptUrl = releaseData.transcriptUrl;
+      if (releaseData.transcriptFile) {
         try {
-          const transcriptTags = await uploadFile(episodeData.transcriptFile);
+          const transcriptTags = await uploadFile(releaseData.transcriptFile);
           transcriptUrl = transcriptTags[0][1];
         } catch (error) {
           throw new Error(`Failed to upload transcript file: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -103,31 +103,31 @@ export function usePublishEpisode() {
       }
 
       // Upload chapters file if provided
-      let chaptersUrl = episodeData.chaptersUrl;
-      if (episodeData.chaptersFile) {
+      let chaptersUrl = releaseData.chaptersUrl;
+      if (releaseData.chaptersFile) {
         try {
-          const chaptersTags = await uploadFile(episodeData.chaptersFile);
+          const chaptersTags = await uploadFile(releaseData.chaptersFile);
           chaptersUrl = chaptersTags[0][1];
         } catch (error) {
           throw new Error(`Failed to upload chapters file: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 
-      // Generate a unique identifier for this addressable episode
-      const episodeIdentifier = `episode-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // Generate a unique identifier for this addressable release
+      const releaseIdentifier = `release-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // Build tags for addressable podcast episode (kind 30054)
+      // Build tags for addressable podcast release (kind 30054)
       const tags: Array<[string, ...string[]]> = [
-        ['d', episodeIdentifier], // Addressable event identifier
-        ['title', episodeData.title], // Episode title
+        ['d', releaseIdentifier], // Addressable event identifier
+        ['title', releaseData.title], // release title
         ['audio', audioUrl, audioType || 'audio/mpeg'], // Audio URL with media type
         ['pubdate', new Date().toUTCString()], // RFC2822 format - set once when first published
-        ['alt', `Podcast episode: ${episodeData.title}`] // NIP-31 alt tag
+        ['alt', `Podcast release: ${releaseData.title}`] // NIP-31 alt tag
       ];
 
       // Add optional tags per NIP-54
-      if (episodeData.description) {
-        tags.push(['description', episodeData.description]);
+      if (releaseData.description) {
+        tags.push(['description', releaseData.description]);
       }
 
       if (imageUrl) {
@@ -140,8 +140,8 @@ export function usePublishEpisode() {
       }
 
       // Add duration if provided
-      if (episodeData.duration && episodeData.duration > 0) {
-        tags.push(['duration', episodeData.duration.toString()]);
+      if (releaseData.duration && releaseData.duration > 0) {
+        tags.push(['duration', releaseData.duration.toString()]);
       }
 
       // Add transcript URL if provided
@@ -155,7 +155,7 @@ export function usePublishEpisode() {
       }
 
       // Add topic tags
-      episodeData.tags.forEach(tag => {
+      releaseData.tags.forEach(tag => {
         if (tag.trim()) {
           tags.push(['t', tag.trim().toLowerCase()]);
         }
@@ -163,13 +163,13 @@ export function usePublishEpisode() {
 
       // Create and publish the event
       const event = await createEvent({
-        kind: PODCAST_KINDS.EPISODE,
-        content: episodeData.content || '',
+        kind: PODCAST_KINDS.RELEASE,
+        content: releaseData.content || '',
         tags
       });
 
       // Invalidate related queries to refresh the UI
-      await queryClient.invalidateQueries({ queryKey: ['podcast-episodes'] });
+      await queryClient.invalidateQueries({ queryKey: ['podcast-releases'] });
       await queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
       await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 
@@ -177,15 +177,15 @@ export function usePublishEpisode() {
     },
 
     onError: (error) => {
-      console.error('Failed to publish episode:', error);
+      console.error('Failed to publish release:', error);
     }
   });
 }
 
 /**
- * Hook for updating/editing existing episodes
+ * Hook for updating/editing existing releases
  */
-export function useUpdateEpisode() {
+export function useUpdateRelease() {
   const { user } = useCurrentUser();
   const { mutateAsync: createEvent } = useNostrPublish();
   const { mutateAsync: uploadFile } = useUploadFile();
@@ -195,32 +195,32 @@ export function useUpdateEpisode() {
 
   return useMutation({
     mutationFn: async ({
-      episodeId,
-      episodeIdentifier,
-      episodeData
+      releaseId,
+      releaseIdentifier,
+      releaseData
     }: {
-      episodeId: string;
-      episodeIdentifier: string;
-      episodeData: EpisodeFormData;
+      releaseId: string;
+      releaseIdentifier: string;
+      releaseData: ReleaseFormData;
     }): Promise<string> => {
       // Verify user is logged in and is the creator
       if (!user) {
-        throw new Error('You must be logged in to update episodes');
+        throw new Error('You must be logged in to update releases');
       }
 
       if (!isPodcastCreator(user.pubkey)) {
-        throw new Error('Only the podcast creator can update episodes');
+        throw new Error('Only the podcast creator can update releases');
       }
 
       // Upload new files if provided
-      let audioUrl = episodeData.audioUrl;
-      let audioType = episodeData.audioType;
+      let audioUrl = releaseData.audioUrl;
+      let audioType = releaseData.audioType;
 
-      if (episodeData.audioFile) {
+      if (releaseData.audioFile) {
         try {
-          const audioTags = await uploadFile(episodeData.audioFile);
+          const audioTags = await uploadFile(releaseData.audioFile);
           audioUrl = audioTags[0][1];
-          audioType = episodeData.audioFile.type;
+          audioType = releaseData.audioFile.type;
         } catch (error) {
           throw new Error(`Failed to upload audio file: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -251,10 +251,10 @@ export function useUpdateEpisode() {
         }
       }
 
-      let imageUrl = episodeData.imageUrl;
-      if (episodeData.imageFile) {
+      let imageUrl = releaseData.imageUrl;
+      if (releaseData.imageFile) {
         try {
-          const imageTags = await uploadFile(episodeData.imageFile);
+          const imageTags = await uploadFile(releaseData.imageFile);
           imageUrl = imageTags[0][1];
         } catch (error) {
           throw new Error(`Failed to upload image file: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -262,23 +262,23 @@ export function useUpdateEpisode() {
       }
 
       // Upload video file if provided
-      let videoUrl = episodeData.videoUrl;
-      let videoType = episodeData.videoType;
-      if (episodeData.videoFile) {
+      let videoUrl = releaseData.videoUrl;
+      let videoType = releaseData.videoType;
+      if (releaseData.videoFile) {
         try {
-          const videoTags = await uploadFile(episodeData.videoFile);
+          const videoTags = await uploadFile(releaseData.videoFile);
           videoUrl = videoTags[0][1];
-          videoType = episodeData.videoFile.type;
+          videoType = releaseData.videoFile.type;
         } catch (error) {
           throw new Error(`Failed to upload video file: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 
       // Upload transcript file if provided
-      let transcriptUrl = episodeData.transcriptUrl;
-      if (episodeData.transcriptFile) {
+      let transcriptUrl = releaseData.transcriptUrl;
+      if (releaseData.transcriptFile) {
         try {
-          const transcriptTags = await uploadFile(episodeData.transcriptFile);
+          const transcriptTags = await uploadFile(releaseData.transcriptFile);
           transcriptUrl = transcriptTags[0][1];
         } catch (error) {
           throw new Error(`Failed to upload transcript file: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -286,24 +286,24 @@ export function useUpdateEpisode() {
       }
 
       // Upload chapters file if provided
-      let chaptersUrl = episodeData.chaptersUrl;
-      if (episodeData.chaptersFile) {
+      let chaptersUrl = releaseData.chaptersUrl;
+      if (releaseData.chaptersFile) {
         try {
-          const chaptersTags = await uploadFile(episodeData.chaptersFile);
+          const chaptersTags = await uploadFile(releaseData.chaptersFile);
           chaptersUrl = chaptersTags[0][1];
         } catch (error) {
           throw new Error(`Failed to upload chapters file: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 
-      // Use the provided episode identifier to preserve the same addressable event
-      // This ensures comments and other references remain linked to the same episode
+      // Use the provided release identifier to preserve the same addressable event
+      // This ensures comments and other references remain linked to the same release
 
-      // Fetch the original episode to preserve its publication date
+      // Fetch the original release to preserve its publication date
       let originalPubdate: string | undefined;
       try {
         const originalEvents = await nostr.query([{
-          ids: [episodeId]
+          ids: [releaseId]
         }], { signal: AbortSignal.timeout(5000) });
 
         const originalEvent = originalEvents[0];
@@ -311,25 +311,25 @@ export function useUpdateEpisode() {
           originalPubdate = originalEvent.tags.find(([name]) => name === 'pubdate')?.[1];
         }
       } catch (error) {
-        console.warn('Could not fetch original episode for pubdate preservation:', error);
+        console.warn('Could not fetch original release for pubdate preservation:', error);
       }
 
-      // Fallback to current time if no original pubdate found (for episodes created before this feature)
+      // Fallback to current time if no original pubdate found (for releases created before this feature)
       const pubdate = originalPubdate || new Date().toUTCString();
 
-      // Build tags for updated addressable podcast episode (kind 30054)
+      // Build tags for updated addressable podcast release (kind 30054)
       const tags: Array<[string, ...string[]]> = [
-        ['d', episodeIdentifier], // Preserve the original addressable event identifier
-        ['title', episodeData.title], // Episode title
+        ['d', releaseIdentifier], // Preserve the original addressable event identifier
+        ['title', releaseData.title], // release title
         ['audio', audioUrl, audioType || 'audio/mpeg'], // Audio URL with media type
         ['pubdate', pubdate], // Preserve original publication date
-        ['alt', `Updated podcast episode: ${episodeData.title}`], // NIP-31 alt tag
-        ['edit', episodeId] // Reference to the original event being edited
+        ['alt', `Updated podcast release: ${releaseData.title}`], // NIP-31 alt tag
+        ['edit', releaseId] // Reference to the original event being edited
       ];
 
       // Add optional tags per NIP-54
-      if (episodeData.description) {
-        tags.push(['description', episodeData.description]);
+      if (releaseData.description) {
+        tags.push(['description', releaseData.description]);
       }
 
       if (imageUrl) {
@@ -342,8 +342,8 @@ export function useUpdateEpisode() {
       }
 
       // Add duration if provided
-      if (episodeData.duration && episodeData.duration > 0) {
-        tags.push(['duration', episodeData.duration.toString()]);
+      if (releaseData.duration && releaseData.duration > 0) {
+        tags.push(['duration', releaseData.duration.toString()]);
       }
 
       // Add transcript URL if provided
@@ -357,7 +357,7 @@ export function useUpdateEpisode() {
       }
 
       // Add topic tags
-      episodeData.tags.forEach(tag => {
+      releaseData.tags.forEach(tag => {
         if (tag.trim()) {
           tags.push(['t', tag.trim().toLowerCase()]);
         }
@@ -365,61 +365,61 @@ export function useUpdateEpisode() {
 
       // Create the updated event
       const event = await createEvent({
-        kind: PODCAST_KINDS.EPISODE,
-        content: episodeData.content || '',
+        kind: PODCAST_KINDS.RELEASE,
+        content: releaseData.content || '',
         tags
       });
 
       // Invalidate queries (don't await - let them happen in background)
-      queryClient.invalidateQueries({ queryKey: ['podcast-episodes'] });
-      queryClient.invalidateQueries({ queryKey: ['podcast-episode', episodeId] });
+      queryClient.invalidateQueries({ queryKey: ['podcast-releases'] });
+      queryClient.invalidateQueries({ queryKey: ['podcast-release', releaseId] });
       queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
       queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 
       return event.id;
     },
     onSuccess: (data) => {
-      console.log('Episode update successful:', data);
+      console.log('release update successful:', data);
     },
     onError: (error) => {
-      console.error('Episode update failed:', error);
+      console.error('release update failed:', error);
     },
     onSettled: (data, error) => {
-      console.log('Episode update settled:', { data, error });
+      console.log('release update settled:', { data, error });
     }
   });
 }
 
 /**
- * Hook for deleting episodes (creates deletion event)
+ * Hook for deleting releases (creates deletion event)
  */
-export function useDeleteEpisode() {
+export function useDeleteRelease() {
   const { user } = useCurrentUser();
   const { mutateAsync: createEvent } = useNostrPublish();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (episodeId: string): Promise<string> => {
+    mutationFn: async (releaseId: string): Promise<string> => {
       if (!user) {
-        throw new Error('You must be logged in to delete episodes');
+        throw new Error('You must be logged in to delete releases');
       }
 
       if (!isPodcastCreator(user.pubkey)) {
-        throw new Error('Only the podcast creator can delete episodes');
+        throw new Error('Only the podcast creator can delete releases');
       }
 
       // Create a deletion event (NIP-09)
       const event = await createEvent({
         kind: 5, // Deletion event
-        content: 'Deleted podcast episode',
+        content: 'Deleted podcast release',
         tags: [
-          ['e', episodeId]
+          ['e', releaseId]
         ]
       });
 
       // Invalidate queries
-      await queryClient.invalidateQueries({ queryKey: ['podcast-episodes'] });
-      await queryClient.invalidateQueries({ queryKey: ['podcast-episode', episodeId] });
+      await queryClient.invalidateQueries({ queryKey: ['podcast-releases'] });
+      await queryClient.invalidateQueries({ queryKey: ['podcast-release', releaseId] });
       await queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
       await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 

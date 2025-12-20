@@ -118,7 +118,7 @@ export function BlossomServerManager() {
             {isEditing && <Badge variant="secondary">Editing</Badge>}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Manage your media storage servers. These servers will be used for uploading podcast audio files, episode artwork, and images for social posts.
+            Manage your media storage servers. These servers will be used for uploading podcast audio files, release artwork, and images for social posts.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">

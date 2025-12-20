@@ -26,13 +26,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useUpdateEpisode } from '@/hooks/usePublishEpisode';
+import { useUpdateRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { getAudioDuration, formatDurationHuman } from '@/lib/audioDuration';
-import type { PodcastEpisode, EpisodeFormData } from '@/types/podcast';
+import type { PodcastRelease, ReleaseFormData } from '@/types/podcast';
 
-// Schema for episode editing (similar to publish but allows empty audio URLs for existing episodes)
-const episodeEditSchema = z.object({
+// Schema for release editing (similar to publish but allows empty audio URLs for existing releases)
+const releaseEditSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
   description: z.string().max(1000, 'Description too long').optional(),
   content: z.string().optional(),
@@ -46,24 +46,24 @@ const episodeEditSchema = z.object({
   tags: z.array(z.string()).default([]),
 });
 
-type EpisodeEditFormValues = z.infer<typeof episodeEditSchema>;
+type ReleaseEditFormValues = z.infer<typeof releaseEditSchema>;
 
-interface EpisodeEditDialogProps {
-  episode: PodcastEpisode;
+interface ReleaseEditDialogProps {
+  release: PodcastRelease;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
-export function EpisodeEditDialog({
-  episode,
+export function ReleaseEditDialog({
+  release: release,
   open,
   onOpenChange,
   onSuccess
-}: EpisodeEditDialogProps) {
+}: ReleaseEditDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { mutateAsync: updateEpisode, isPending } = useUpdateEpisode();
+  const { mutateAsync: updateRelease, isPending } = useUpdateRelease();
 
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -73,40 +73,40 @@ export function EpisodeEditDialog({
   const [currentTag, setCurrentTag] = useState('');
   const [isDetectingDuration, setIsDetectingDuration] = useState(false);
 
-  const form = useForm<EpisodeEditFormValues>({
-    resolver: zodResolver(episodeEditSchema),
+  const form = useForm<ReleaseEditFormValues>({
+    resolver: zodResolver(releaseEditSchema),
     defaultValues: {
-      title: episode.title,
-      description: episode.description || '',
-      content: episode.content || '',
-      audioUrl: episode.audioUrl || '',
-      videoUrl: episode.videoUrl || '',
-      imageUrl: episode.imageUrl || '',
-      transcriptUrl: episode.transcriptUrl || '',
-      chaptersUrl: episode.chaptersUrl || '',
-      duration: episode.duration,
-      explicit: episode.explicit || false,
-      tags: episode.tags || [],
+      title: release.title,
+      description: release.description || '',
+      content: release.content || '',
+      audioUrl: release.audioUrl || '',
+      videoUrl: release.videoUrl || '',
+      imageUrl: release.imageUrl || '',
+      transcriptUrl: release.transcriptUrl || '',
+      chaptersUrl: release.chaptersUrl || '',
+      duration: release.duration,
+      explicit: release.explicit || false,
+      tags: release.tags || [],
     },
   });
 
   const { watch, setValue, reset } = form;
   const tags = watch('tags');
 
-  // Reset form when episode changes
+  // Reset form when release changes
   useEffect(() => {
     reset({
-      title: episode.title,
-      description: episode.description || '',
-      content: episode.content || '',
-      audioUrl: episode.audioUrl || '',
-      videoUrl: episode.videoUrl || '',
-      imageUrl: episode.imageUrl || '',
-      transcriptUrl: episode.transcriptUrl || '',
-      chaptersUrl: episode.chaptersUrl || '',
-      duration: episode.duration,
-      explicit: episode.explicit || false,
-      tags: episode.tags || [],
+      title: release.title,
+      description: release.description || '',
+      content: release.content || '',
+      audioUrl: release.audioUrl || '',
+      videoUrl: release.videoUrl || '',
+      imageUrl: release.imageUrl || '',
+      transcriptUrl: release.transcriptUrl || '',
+      chaptersUrl: release.chaptersUrl || '',
+      duration: release.duration,
+      explicit: release.explicit || false,
+      tags: release.tags || [],
     });
     setAudioFile(null);
     setVideoFile(null);
@@ -115,7 +115,7 @@ export function EpisodeEditDialog({
     setChaptersFile(null);
     setCurrentTag('');
     setIsDetectingDuration(false);
-  }, [episode, reset]);
+  }, [release, reset]);
 
   const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -305,11 +305,11 @@ export function EpisodeEditDialog({
     }
   };
 
-  const onSubmit = async (data: EpisodeEditFormValues) => {
+  const onSubmit = async (data: ReleaseEditFormValues) => {
     try {
-      console.log('Starting episode update...');
+      console.log('Starting release update...');
 
-      const episodeData: EpisodeFormData = {
+      const releaseData: ReleaseFormData = {
         ...data,
         description: data.description || '',
         audioFile: audioFile || undefined,
@@ -324,27 +324,27 @@ export function EpisodeEditDialog({
         transcriptUrl: data.transcriptUrl || undefined,
         chaptersUrl: data.chaptersUrl || undefined,
         // Keep existing external references
-        externalRefs: episode.externalRefs,
+        externalRefs: release.externalRefs,
       };
 
-      console.log('Calling updateEpisode with:', { episodeId: episode.eventId, episodeIdentifier: episode.identifier, episodeData });
+      console.log('Calling updateRelease with:', { releaseId: release.eventId, releaseIdentifier: release.identifier, releaseData });
 
-      await updateEpisode({
-        episodeId: episode.eventId,
-        episodeIdentifier: episode.identifier,
-        episodeData
+      await updateRelease({
+        releaseId: release.eventId,
+        releaseIdentifier: release.identifier,
+        releaseData
       });
 
-      console.log('UpdateEpisode completed successfully');
+      console.log('Updaterelease completed successfully');
 
-      // Invalidate episode queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['episode'] });
-      queryClient.invalidateQueries({ queryKey: ['podcast-episodes'] });
-      queryClient.invalidateQueries({ queryKey: ['podcast-episode'] });
+      // Invalidate release queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['release'] });
+      queryClient.invalidateQueries({ queryKey: ['podcast-releases'] });
+      queryClient.invalidateQueries({ queryKey: ['podcast-release'] });
 
       toast({
-        title: 'Episode updated!',
-        description: 'Your episode has been updated successfully.',
+        title: 'release updated!',
+        description: 'Your release has been updated successfully.',
       });
 
       // Close dialog and trigger success callback
@@ -354,7 +354,7 @@ export function EpisodeEditDialog({
     } catch (error) {
       console.error('Error in onSubmit:', error);
       toast({
-        title: 'Failed to update episode',
+        title: 'Failed to update release',
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -365,9 +365,9 @@ export function EpisodeEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[95vh] w-[95vw] sm:w-full sm:max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Edit Episode</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Edit release</DialogTitle>
           <DialogDescription>
-            Update episode details, audio, artwork, and metadata.
+            Update release details, audio, artwork, and metadata.
           </DialogDescription>
         </DialogHeader>
 
@@ -380,9 +380,9 @@ export function EpisodeEditDialog({
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Episode Title *</FormLabel>
+                    <FormLabel>Release Title *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter episode title..." {...field} />
+                      <Input placeholder="Enter release title..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -398,7 +398,7 @@ export function EpisodeEditDialog({
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Brief description of the episode..."
+                        placeholder="Brief description of the release..."
                         rows={3}
                         {...field}
                       />
@@ -483,17 +483,17 @@ export function EpisodeEditDialog({
                 </div>
 
                 {/* Current audio info */}
-                {!audioFile && episode.audioUrl && (
+                {!audioFile && release.audioUrl && (
                   <div className="text-xs text-muted-foreground bg-muted/50 p-2 sm:p-3 rounded">
                     <strong>Current:</strong>
-                    <span className="break-all ml-1">{episode.audioUrl}</span>
+                    <span className="break-all ml-1">{release.audioUrl}</span>
                   </div>
                 )}
               </div>
 
               {/* Image Upload/URL */}
               <div className="space-y-4">
-                <Label>Episode Artwork</Label>
+                <Label>Release Artwork</Label>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                   <div>
@@ -547,10 +547,10 @@ export function EpisodeEditDialog({
                 </div>
 
                 {/* Current image preview */}
-                {!imageFile && episode.imageUrl && (
+                {!imageFile && release.imageUrl && (
                   <div className="flex items-center space-x-3 bg-muted/20 p-2 sm:p-3 rounded">
                     <img
-                      src={episode.imageUrl}
+                      src={release.imageUrl}
                       alt="Current artwork"
                       className="w-12 h-12 sm:w-16 sm:h-16 rounded object-cover flex-shrink-0"
                     />
@@ -616,10 +616,10 @@ export function EpisodeEditDialog({
                   </div>
                 </div>
 
-                {!videoFile && episode.videoUrl && (
+                {!videoFile && release.videoUrl && (
                   <div className="text-xs text-muted-foreground bg-muted/50 p-2 sm:p-3 rounded">
                     <strong>Current:</strong>
-                    <span className="break-all ml-1">{episode.videoUrl}</span>
+                    <span className="break-all ml-1">{release.videoUrl}</span>
                   </div>
                 )}
               </div>
@@ -679,10 +679,10 @@ export function EpisodeEditDialog({
                   </div>
                 </div>
 
-                {!transcriptFile && episode.transcriptUrl && (
+                {!transcriptFile && release.transcriptUrl && (
                   <div className="text-xs text-muted-foreground bg-muted/50 p-2 sm:p-3 rounded">
                     <strong>Current:</strong>
-                    <span className="break-all ml-1">{episode.transcriptUrl}</span>
+                    <span className="break-all ml-1">{release.transcriptUrl}</span>
                   </div>
                 )}
               </div>
@@ -742,15 +742,15 @@ export function EpisodeEditDialog({
                   </div>
                 </div>
 
-                {!chaptersFile && episode.chaptersUrl && (
+                {!chaptersFile && release.chaptersUrl && (
                   <div className="text-xs text-muted-foreground bg-muted/50 p-2 sm:p-3 rounded">
                     <strong>Current:</strong>
-                    <span className="break-all ml-1">{episode.chaptersUrl}</span>
+                    <span className="break-all ml-1">{release.chaptersUrl}</span>
                   </div>
                 )}
               </div>
 
-              {/* Episode Details */}
+              {/* release Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <FormField
                   control={form.control}
@@ -824,7 +824,7 @@ export function EpisodeEditDialog({
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Explicit Content</FormLabel>
                       <div className="text-sm text-muted-foreground">
-                        Mark if this episode contains explicit content
+                        Mark if this release contains explicit content
                       </div>
                     </div>
                     <FormControl>
@@ -857,7 +857,7 @@ export function EpisodeEditDialog({
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Update Episode
+                      Update release
                     </>
                   )}
                 </Button>

@@ -8,7 +8,7 @@ import { Layout } from '@/components/Layout';
 import { ZapDialog } from '@/components/ZapDialog';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { usePodcastStats } from '@/hooks/usePodcastEpisodes';
+import { usePodcastStats } from '@/hooks/usePodcastReleases';
 import { usePodcastTrailers } from '@/hooks/usePodcastTrailers';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { getCreatorPubkeyHex } from '@/lib/podcastConfig';
@@ -156,7 +156,7 @@ const About = () => {
                       <div className="pt-2 border-t">
                         <p className="text-sm text-muted-foreground">
                           <span className="font-medium">{trailers.length} trailers</span> available. 
-                          Check out our episodes to discover more content!
+                          Check out our releases to discover more content!
                         </p>
                       </div>
                     )}
@@ -177,8 +177,8 @@ const About = () => {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div>
-                        <div className="text-2xl font-bold">{stats.totalEpisodes}</div>
-                        <div className="text-xs text-muted-foreground">Episodes</div>
+                        <div className="text-2xl font-bold">{stats.totalReleases}</div>
+                        <div className="text-xs text-muted-foreground">Releases</div>
                       </div>
                       <div>
                         <div className="text-2xl font-bold">{stats.totalZaps}</div>
@@ -196,14 +196,14 @@ const About = () => {
 
                     <Separator />
 
-                    {stats.mostZappedEpisode && (
+                    {stats.mostZappedRelease && (
                       <div>
-                        <h4 className="font-medium mb-2">Most Zapped Episode</h4>
+                        <h4 className="font-medium mb-2">Most Zapped Release</h4>
                         <p className="text-sm text-muted-foreground line-clamp-2">
-                          {stats.mostZappedEpisode.title}
+                          {stats.mostZappedRelease.title}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {stats.mostZappedEpisode.zapCount} zaps
+                          {stats.mostZappedRelease.zapCount} zaps
                         </p>
                       </div>
                     )}
@@ -225,7 +225,7 @@ const About = () => {
                   </Button>
 
                   <p className="text-xs text-muted-foreground">
-                    Subscribe to the RSS feed in your favorite podcast app to get notified of new episodes.
+                    Subscribe to the RSS feed in your favorite value4value music app to get notified of new releases.
                   </p>
                 </CardContent>
               </Card>

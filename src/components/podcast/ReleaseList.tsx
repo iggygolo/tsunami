@@ -5,35 +5,35 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { EpisodeCard } from './EpisodeCard';
-import { usePodcastEpisodes } from '@/hooks/usePodcastEpisodes';
-import type { PodcastEpisode, EpisodeSearchOptions } from '@/types/podcast';
+import { ReleaseCard } from './ReleaseCard';
+import { usePodcastReleases } from '@/hooks/usePodcastReleases';
+import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
 
-interface EpisodeListProps {
+interface ReleaseListProps {
   showSearch?: boolean;
   _showPlayer?: boolean;
   limit?: number;
   className?: string;
-  onPlayEpisode?: (episode: PodcastEpisode) => void;
+  onPlayRelease?: (release: PodcastRelease) => void;
   _autoPlay?: boolean;
 }
 
-export function EpisodeList({
+export function ReleaseList({
   showSearch = true,
   _showPlayer = true,
   limit = 50,
   className,
-  onPlayEpisode,
+  onPlayRelease,
   _autoPlay = false
-}: EpisodeListProps) {
-  const [searchOptions, setSearchOptions] = useState<EpisodeSearchOptions>({
+}: ReleaseListProps) {
+  const [searchOptions, setSearchOptions] = useState<ReleaseSearchOptions>({
     limit,
     sortBy: 'date',
     sortOrder: 'desc'
   });
-  const _currentEpisode = useState<PodcastEpisode | null>(null);
+  const _currentRelease = useState<PodcastRelease | null>(null);
 
-  const { data: episodes, isLoading, error } = usePodcastEpisodes(searchOptions);
+  const { data: releases, isLoading, error } = usePodcastReleases(searchOptions);
 
   const handleSearch = (query: string) => {
     setSearchOptions(prev => ({ ...prev, query: query || undefined }));
@@ -42,7 +42,7 @@ export function EpisodeList({
   const handleSortChange = (sortBy: string) => {
     setSearchOptions(prev => ({
       ...prev,
-      sortBy: sortBy as EpisodeSearchOptions['sortBy']
+      sortBy: sortBy as ReleaseSearchOptions['sortBy']
     }));
   };
 
@@ -53,9 +53,9 @@ export function EpisodeList({
     }));
   };
 
-  const handlePlayEpisode = (episode: PodcastEpisode) => {
-    if (onPlayEpisode) {
-      onPlayEpisode(episode);
+  const handlePlayRelease = (release: PodcastRelease) => {
+    if (onPlayRelease) {
+      onPlayRelease(release);
     }
   };
 
@@ -66,7 +66,7 @@ export function EpisodeList({
           <CardContent className="py-12 px-8 text-center">
             <div className="max-w-sm mx-auto space-y-6">
               <p className="text-muted-foreground">
-                Failed to load episodes. Please try refreshing the page.
+                Failed to load releases. Please try refreshing the page.
               </p>
             </div>
           </CardContent>
@@ -83,7 +83,7 @@ export function EpisodeList({
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search episodes..."
+                placeholder="Search releases..."
                 className="pl-10"
                 onChange={(e) => handleSearch(e.target.value)}
               />
@@ -144,13 +144,13 @@ export function EpisodeList({
             </Card>
           ))}
         </div>
-      ) : episodes && episodes.length > 0 ? (
+      ) : releases && releases.length > 0 ? (
         <div className="space-y-6">
-          {episodes.map((episode) => (
-            <EpisodeCard
-              key={episode.id}
-              episode={episode}
-              onPlayEpisode={handlePlayEpisode}
+          {releases.map((release) => (
+            <ReleaseCard
+              key={release.id}
+              release={release}
+              onPlayRelease={handlePlayRelease}
             />
           ))}
         </div>
@@ -161,13 +161,13 @@ export function EpisodeList({
               <div className="max-w-sm mx-auto space-y-6">
                 <p className="text-muted-foreground">
                   {searchOptions.query
-                    ? `No episodes found for "${searchOptions.query}"`
-                    : "No episodes published yet"
+                    ? `No releases found for "${searchOptions.query}"`
+                    : "No releases published yet"
                   }
                 </p>
                 {!searchOptions.query && (
                   <p className="text-sm text-muted-foreground">
-                    Episodes will appear here once the creator publishes them.
+                    Releases will appear here once the creator publishes them.
                   </p>
                 )}
               </div>

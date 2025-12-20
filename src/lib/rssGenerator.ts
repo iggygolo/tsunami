@@ -1,12 +1,12 @@
-import type { PodcastEpisode, RSSItem } from '@/types/podcast';
+import type { PodcastRelease, RSSItem } from '@/types/podcast';
 import { PODCAST_CONFIG, type PodcastConfig } from './podcastConfig';
-import { encodeEpisodeAsNaddr } from './nip19Utils';
+import { encodeReleaseAsNaddr } from './nip19Utils';
 
 
 /**
- * Converts a PodcastEpisode to an RSS item
+ * Converts a PodcastRelease to an RSS item
  */
-function episodeToRSSItem(episode: PodcastEpisode, config?: PodcastConfig): RSSItem {
+function releaseToRSSItem(release: PodcastRelease, config?: PodcastConfig): RSSItem {
   const podcastConfig = config || PODCAST_CONFIG;
   // Get base URL - handle both server and client environments
   const getBaseUrl = () => {
@@ -18,21 +18,21 @@ function episodeToRSSItem(episode: PodcastEpisode, config?: PodcastConfig): RSSI
   };
 
   return {
-    title: episode.title,
-    description: episode.description || '',
-    link: `${getBaseUrl()}/${encodeEpisodeAsNaddr(episode.authorPubkey, episode.identifier)}`, // Use naddr links for addressable episodes
-    guid: `${episode.authorPubkey}:${episode.identifier}`, // Stable GUID that doesn't change on edits
-    pubDate: episode.publishDate.toUTCString(),
+    title: release.title,
+    description: release.description || '',
+    link: `${getBaseUrl()}/${encodeReleaseAsNaddr(release.authorPubkey, release.identifier)}`, // Use naddr links for addressable releases
+    guid: `${release.authorPubkey}:${release.identifier}`, // Stable GUID that doesn't change on edits
+    pubDate: release.publishDate.toUTCString(),
     author: `${podcastConfig.podcast.email} (${podcastConfig.podcast.author})`,
-    category: episode.tags,
+    category: release.tags,
     enclosure: {
-      url: episode.audioUrl,
+      url: release.audioUrl,
       length: 0, // TODO: We'd need to fetch file size
-      type: episode.audioType || 'audio/mpeg'
+      type: release.audioType || 'audio/mpeg'
     },
-    duration: episode.duration ? formatDuration(episode.duration) : undefined,
-    explicit: episode.explicit,
-    image: episode.imageUrl,
+    duration: release.duration ? formatDuration(release.duration) : undefined,
+    explicit: release.explicit,
+    image: release.imageUrl,
   };
 }
 
@@ -63,13 +63,13 @@ function escapeXml(text: string): string {
 }
 
 /**
- * Generates RSS XML for podcast episodes
+ * Generates RSS XML for podcast releases
  */
-export function generateRSSFeed(episodes: PodcastEpisode[], config?: PodcastConfig): string {
+export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConfig): string {
   const podcastConfig = config || PODCAST_CONFIG;
-  const rssItems = episodes
+  const rssItems = releases
     .sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime())
-    .map(episode => episodeToRSSItem(episode, podcastConfig));
+    .map(release => releaseToRSSItem(release, podcastConfig));
 
   // Get base URL - handle both server and client environments
   const getBaseUrl = () => {
@@ -198,8 +198,8 @@ export function generateRSSFeed(episodes: PodcastEpisode[], config?: PodcastConf
 /**
  * Downloads RSS feed as a file
  */
-export function downloadRSSFeed(episodes: PodcastEpisode[]): void {
-  const xml = generateRSSFeed(episodes);
+export function downloadRSSFeed(releases: PodcastRelease[]): void {
+  const xml = generateRSSFeed(releases);
   const blob = new Blob([xml], { type: 'application/rss+xml' });
   const url = URL.createObjectURL(blob);
 
@@ -215,26 +215,26 @@ export function downloadRSSFeed(episodes: PodcastEpisode[]): void {
 /**
  * Hook to generate RSS feed content
  */
-export function useRSSFeed(episodes: PodcastEpisode[] | undefined): string | null {
-  if (!episodes) return null;
-  return generateRSSFeed(episodes);
+export function useRSSFeed(releases: PodcastRelease[] | undefined): string | null {
+  if (!releases) return null;
+  return generateRSSFeed(releases);
 }
 
 /**
  * Generate RSS feed and make it available at /rss.xml
- * This function should be called when podcast metadata or episodes are updated
+ * This function should be called when podcast metadata or releases are updated
  */
-export async function genRSSFeed(episodes?: PodcastEpisode[], config?: PodcastConfig): Promise<void> {
+export async function genRSSFeed(releases?: PodcastRelease[], config?: PodcastConfig): Promise<void> {
   try {
-    // Fetch episodes if not provided
-    if (!episodes) {
-      // This is a placeholder - in a real implementation, you'd fetch episodes from your data source
-      console.warn('genRSSFeed called without episodes - using placeholder data');
-      episodes = [];
+    // Fetch releases if not provided
+    if (!releases) {
+      // This is a placeholder - in a real implementation, you'd fetch releases from your data source
+      console.warn('genRSSFeed called without releases - using placeholder data');
+      releases = [];
     }
 
     // Generate RSS XML with provided configuration or fallback to hardcoded config
-    const rssContent = generateRSSFeed(episodes, config);
+    const rssContent = generateRSSFeed(releases, config);
 
     // Create a blob and object URL
     const blob = new Blob([rssContent], { type: 'application/rss+xml' });

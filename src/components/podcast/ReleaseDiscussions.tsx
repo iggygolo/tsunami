@@ -10,62 +10,62 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { NoteContent } from '@/components/NoteContent';
 import { useAuthor } from '@/hooks/useAuthor';
-import { usePodcastEpisodes } from '@/hooks/usePodcastEpisodes';
+import { usePodcastReleases } from '@/hooks/usePodcastReleases';
 import { encodeEventIdAsNevent } from '@/lib/nip19Utils';
 import { genUserName } from '@/lib/genUserName';
 import type { NostrEvent } from '@nostrify/nostrify';
 
-interface _EpisodeComment {
+interface _releaseComment {
   comment: NostrEvent;
-  episodeId: string;
-  episodeTitle?: string;
+  releaseId: string;
+  releaseTitle?: string;
 }
 
-interface EpisodeDiscussionsProps {
+interface ReleaseDiscussionsProps {
   limit?: number;
   className?: string;
 }
 
-export function EpisodeDiscussions({ limit = 20, className }: EpisodeDiscussionsProps) {
+export function ReleaseDiscussions({ limit = 20, className }: ReleaseDiscussionsProps) {
   const { nostr } = useNostr();
-  const { data: episodes } = usePodcastEpisodes();
+  const { data: releases } = usePodcastReleases();
 
-  // Fetch all comments for podcast episodes
+  // Fetch all comments for podcast releases
   const { data: commentsData, isLoading, error } = useQuery({
-    queryKey: ['episode-discussions', limit],
+    queryKey: ['release-discussions', limit],
     queryFn: async (c) => {
-      if (!episodes || episodes.length === 0) {
+      if (!releases || releases.length === 0) {
         return [];
       }
 
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(10000)]);
 
-      // Query for all kind 1111 comments that reference our episodes
-      // Episodes are addressable events (kind 30054), so we need to query by #a tags
-      const addressableTags = episodes.map(ep => `30054:${ep.authorPubkey}:${ep.identifier}`);
+      // Query for all kind 1111 comments that reference our releases
+      // Releases are addressable events (kind 30054), so we need to query by #a tags
+      const addressableTags = releases.map(ep => `30054:${ep.authorPubkey}:${ep.identifier}`);
       
       const commentEvents = await nostr.query([{
         kinds: [1111], // NIP-22 comments
-        '#a': addressableTags, // Comments on our episodes using addressable event tags
+        '#a': addressableTags, // Comments on our releases using addressable event tags
         limit: limit * 2 // Get more to account for filtering
       }], { signal });
 
-      // Create episode lookup map by addressable event tag
-      const episodeMap = new Map(episodes.map(ep => [`30054:${ep.authorPubkey}:${ep.identifier}`, ep]));
+      // Create release lookup map by addressable event tag
+      const releaseMap = new Map(releases.map(ep => [`30054:${ep.authorPubkey}:${ep.identifier}`, ep]));
 
-      // Process and enrich comments with episode info
+      // Process and enrich comments with release info
       const enrichedComments = commentEvents
         .map(comment => {
-          // Find which episode this comment is for using addressable event tag
+          // Find which release this comment is for using addressable event tag
           const addressableTag = comment.tags.find(([name]) => name === 'a')?.[1];
           if (!addressableTag) return null;
 
-          const episode = episodeMap.get(addressableTag);
+          const release = releaseMap.get(addressableTag);
 
           return {
             comment,
-            episodeId: episode?.eventId || addressableTag, // Use eventId for linking
-            episodeTitle: episode?.title
+            releaseId: release?.eventId || addressableTag, // Use eventId for linking
+            releaseTitle: release?.title
           };
         })
         .filter((item): item is NonNullable<typeof item> => item !== null)
@@ -74,7 +74,7 @@ export function EpisodeDiscussions({ limit = 20, className }: EpisodeDiscussions
 
       return enrichedComments;
     },
-    enabled: !!episodes && episodes.length > 0,
+    enabled: !!releases && releases.length > 0,
     staleTime: 30000, // 30 seconds
   });
 
@@ -124,13 +124,13 @@ export function EpisodeDiscussions({ limit = 20, className }: EpisodeDiscussions
           <MessageCircle className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">No Discussions Yet</h3>
           <p className="text-muted-foreground mb-4">
-            Be the first to start a conversation about an episode!
+            Be the first to start a conversation about an release!
           </p>
           <Link
-            to="/episodes"
+            to="/releases"
             className="inline-flex items-center text-sm text-primary hover:underline"
           >
-            Browse Episodes
+            Browse Releases
             <ExternalLink className="w-3 h-3 ml-1" />
           </Link>
         </CardContent>
@@ -140,12 +140,12 @@ export function EpisodeDiscussions({ limit = 20, className }: EpisodeDiscussions
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {commentsData?.filter(item => item !== null).map(({ comment, episodeId, episodeTitle }) => (
+      {commentsData?.filter(item => item !== null).map(({ comment, releaseId, releaseTitle }) => (
         <CommentCard
           key={comment.id}
           comment={comment}
-          episodeId={episodeId}
-          episodeTitle={episodeTitle}
+          releaseId={releaseId}
+          releaseTitle={releaseTitle}
         />
       ))}
     </div>
@@ -154,11 +154,11 @@ export function EpisodeDiscussions({ limit = 20, className }: EpisodeDiscussions
 
 interface CommentCardProps {
   comment: NostrEvent;
-  episodeId: string;
-  episodeTitle?: string;
+  releaseId: string;
+  releaseTitle?: string;
 }
 
-function CommentCard({ comment, episodeId, episodeTitle }: CommentCardProps) {
+function CommentCard({ comment, releaseId, releaseTitle }: CommentCardProps) {
   const author = useAuthor(comment.pubkey);
   const metadata = author.data?.metadata;
   const displayName = metadata?.name ?? genUserName(comment.pubkey);
@@ -166,7 +166,7 @@ function CommentCard({ comment, episodeId, episodeTitle }: CommentCardProps) {
 
   // Generate links
   const authorNpub = nip19.npubEncode(comment.pubkey);
-  const episodeNevent = encodeEventIdAsNevent(episodeId, comment.pubkey);
+  const releaseNevent = encodeEventIdAsNevent(releaseId, comment.pubkey);
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -206,8 +206,8 @@ function CommentCard({ comment, episodeId, episodeTitle }: CommentCardProps) {
             <NoteContent event={comment} className="text-sm line-clamp-4" />
           </div>
 
-          {/* Episode Reference */}
-          {episodeTitle && (
+          {/* release Reference */}
+          {releaseTitle && (
             <div className="pt-2 border-t border-muted">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-xs text-muted-foreground">
@@ -215,10 +215,10 @@ function CommentCard({ comment, episodeId, episodeTitle }: CommentCardProps) {
                   <span>Discussing:</span>
                 </div>
                 <Link
-                  to={`/${episodeNevent}`}
+                  to={`/${releaseNevent}`}
                   className="text-xs text-primary hover:underline line-clamp-1 max-w-[60%]"
                 >
-                  {episodeTitle}
+                  {releaseTitle}
                 </Link>
               </div>
             </div>

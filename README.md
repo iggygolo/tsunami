@@ -7,31 +7,31 @@ A Nostr-powered podcast platform for single creator accounts that combines decen
 ### 🎙️ **Podcast Publishing**
 - **Creator-only publishing** with hardcoded npub authentication
 - Upload audio files to Blossom servers or reference external URLs
-- Rich episode metadata: title, description, cover art, transcripts, chapters
+- Rich release metadata: title, description, cover art, transcripts, chapters
 - Podcasting 2.0 value tags for Lightning payments and funding
-- Episode editing and management through intuitive Studio interface
+- Release editing and management through intuitive Studio interface
 
 ### 📡 **RSS Feed Generation**
 - Automatic Podcasting 2.0-compliant RSS feed at `/rss.xml`
 - Build-time RSS generation using `scripts/build-rss.ts`
 - Lightning value splits with modern `lnaddress` method (no keysend fallback)
 - iTunes and standard RSS 2.0 support with health monitoring
-- RSS feed pulls episodes from Nostr relays at build time
+- RSS feed pulls releases from Nostr relays at build time
 
 ### 🎧 **Listening Experience**
 - Clean, responsive audio player with progress tracking
-- Chronological episode listing with rich metadata
-- Episode search by title, description, and tags
+- Chronological release listing with rich metadata
+- Release search by title, description, and tags
 - Mobile-optimized interface
 
 ### 💬 **Community Interaction**
 - Creator social feed for updates and announcements  
-- Episode comments system with full threading (NIP-22)
+- Release comments system with full threading (NIP-22)
 - Fan engagement through Nostr protocol:
-  - Threaded comments and replies on episodes
+  - Threaded comments and replies on releases
   - Lightning zaps (NIP-57) with WebLN and NWC support
   - Social reactions and reposts
-- Zap leaderboards and episode popularity metrics
+- Zap leaderboards and release popularity metrics
 - Real-time comment updates and notifications
 
 ### 🔐 **Nostr Integration**
@@ -117,13 +117,13 @@ src/
 │   ├── ui/             # shadcn/ui components (48+ available)
 │   ├── auth/           # Authentication components (LoginArea, AccountSwitcher)
 │   ├── audio/          # Audio player components (PersistentAudioPlayer)
-│   ├── podcast/        # Podcast-specific components (EpisodeCard, etc.)
+│   ├── podcast/        # Podcast-specific components (ReleaseCard, etc.)
 │   ├── social/         # Social interaction components (PostActions, NoteComposer)
 │   ├── comments/       # Threading comment system (CommentsSection)
-│   └── studio/         # Creator studio components (EpisodeManagement, etc.)
+│   └── studio/         # Creator studio components (ReleaseManagement, etc.)
 ├── hooks/              # Custom React hooks (useNostr, useZaps, etc.)
 ├── lib/                # Utility functions and configurations
-├── pages/              # Route components (Index, Episodes, Studio, etc.)
+├── pages/              # Route components (Index, Releases, Studio, etc.)
 ├── contexts/           # React context providers (AppContext, NWCContext)
 └── types/              # TypeScript type definitions
 
@@ -140,9 +140,9 @@ dist/
 
 ## 🎯 Core Event Types
 
-- **Episodes**: `kind 30054` (Addressable/editable podcast episodes)
+- **Releases**: `kind 30054` (Addressable/editable podcast releases)
 - **Metadata**: `kind 30078` (Podcast configuration)
-- **Comments**: `kind 1111` (NIP-22 episode comments) 
+- **Comments**: `kind 1111` (NIP-22 release comments) 
 - **Social**: `kind 1` (Creator updates and announcements)
 
 ## 🔧 Deployment

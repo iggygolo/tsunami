@@ -12,13 +12,13 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { usePublishEpisode } from '@/hooks/usePublishEpisode';
+import { usePublishRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { isPodcastCreator } from '@/lib/podcastConfig';
 import { getAudioDuration, formatDurationHuman } from '@/lib/audioDuration';
-import type { EpisodeFormData } from '@/types/podcast';
+import type { ReleaseFormData } from '@/types/podcast';
 
-const episodeSchema = z.object({
+const releaseSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
   description: z.string().max(1000, 'Description too long'),
   content: z.string().optional(),
@@ -29,21 +29,21 @@ const episodeSchema = z.object({
   tags: z.array(z.string()).default([]),
 });
 
-type EpisodeFormValues = z.infer<typeof episodeSchema>;
+type ReleaseFormValues = z.infer<typeof releaseSchema>;
 
-interface PublishEpisodeFormProps {
-  onSuccess?: (episodeId: string) => void;
+interface PublishReleaseFormProps {
+  onSuccess?: (releaseId: string) => void;
   onCancel?: () => void;
   className?: string;
 }
 
-export function PublishEpisodeForm({ 
+export function PublishReleaseForm({ 
   onSuccess, 
   onCancel, 
   className 
-}: PublishEpisodeFormProps) {
+}: PublishReleaseFormProps) {
   const { user } = useCurrentUser();
-  const { mutateAsync: publishEpisode, isPending } = usePublishEpisode();
+  const { mutateAsync: publishrelease, isPending } = usePublishRelease();
   const { toast } = useToast();
   
   const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -51,8 +51,8 @@ export function PublishEpisodeForm({
   const [currentTag, setCurrentTag] = useState('');
   const [isDetectingDuration, setIsDetectingDuration] = useState(false);
 
-  const form = useForm<EpisodeFormValues>({
-    resolver: zodResolver(episodeSchema),
+  const form = useForm<ReleaseFormValues>({
+    resolver: zodResolver(releaseSchema),
     defaultValues: {
       title: '',
       description: '',
@@ -73,7 +73,7 @@ export function PublishEpisodeForm({
       <Card className={className}>
         <CardContent className="py-12 px-8 text-center">
           <p className="text-muted-foreground">
-            Only the podcast creator can publish episodes.
+            Only the podcast creator can publish releases.
           </p>
         </CardContent>
       </Card>
@@ -179,7 +179,7 @@ export function PublishEpisodeForm({
     }
   };
 
-  const onSubmit = async (data: EpisodeFormValues) => {
+  const onSubmit = async (data: ReleaseFormValues) => {
     try {
       console.log('Form submission data:', data);
       console.log('Audio file:', audioFile);
@@ -195,7 +195,7 @@ export function PublishEpisodeForm({
         return;
       }
       
-      const episodeData: EpisodeFormData = {
+      const releaseData: ReleaseFormData = {
         ...data,
         audioFile: audioFile || undefined,
         imageFile: imageFile || undefined,
@@ -204,15 +204,15 @@ export function PublishEpisodeForm({
         imageUrl: data.imageUrl || undefined,
       };
 
-      console.log('Publishing episode data:', episodeData);
-      const episodeId = await publishEpisode(episodeData);
+      console.log('Publishing release data:', releaseData);
+      const releaseId = await publishrelease(releaseData);
       
       toast({
-        title: 'Episode published!',
-        description: 'Your podcast episode has been published successfully.',
+        title: 'release published!',
+        description: 'Your podcast release has been published successfully.',
       });
 
-      onSuccess?.(episodeId);
+      onSuccess?.(releaseId);
       
       // Reset form
       form.reset();
@@ -222,7 +222,7 @@ export function PublishEpisodeForm({
       
     } catch (error) {
       toast({
-        title: 'Failed to publish episode',
+        title: 'Failed to publish release',
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -232,7 +232,7 @@ export function PublishEpisodeForm({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Publish New Episode</CardTitle>
+        <CardTitle>Publish New Release</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -243,9 +243,9 @@ export function PublishEpisodeForm({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Episode Title *</FormLabel>
+                  <FormLabel>Release Title *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter episode title..." {...field} />
+                    <Input placeholder="Enter release title..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -261,7 +261,7 @@ export function PublishEpisodeForm({
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Brief description of the episode..."
+                      placeholder="Brief description of the release..."
                       rows={3}
                       {...field}
                     />
@@ -348,7 +348,7 @@ export function PublishEpisodeForm({
 
             {/* Image Upload/URL */}
             <div className="space-y-4">
-              <Label>Episode Artwork (Optional)</Label>
+              <Label>Release Artwork (Optional)</Label>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -402,7 +402,7 @@ export function PublishEpisodeForm({
               </div>
             </div>
 
-            {/* Episode Details */}
+            {/* release Details */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
@@ -476,7 +476,7 @@ export function PublishEpisodeForm({
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Explicit Content</FormLabel>
                     <div className="text-sm text-muted-foreground">
-                      Mark if this episode contains explicit content
+                      Mark if this release contains explicit content
                     </div>
                   </div>
                   <FormControl>
@@ -497,7 +497,7 @@ export function PublishEpisodeForm({
                 </Button>
               )}
               <Button type="submit" disabled={isPending}>
-                {isPending ? 'Publishing...' : 'Publish Episode'}
+                {isPending ? 'Publishing...' : 'Publish release'}
               </Button>
             </div>
           </form>

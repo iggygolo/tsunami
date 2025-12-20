@@ -1,9 +1,9 @@
 import type { NostrEvent } from '@nostrify/nostrify';
 
 /**
- * Podcast episode metadata based on NIP-54
+ * Podcast release metadata based on NIP-54
  */
-export interface PodcastEpisode {
+export interface PodcastRelease {
   id: string;
   title: string;
   description?: string;
@@ -66,9 +66,9 @@ export interface ExternalReference {
 }
 
 /**
- * Podcast episode form data for publishing
+ * Podcast release form data for publishing
  */
-export interface EpisodeFormData {
+export interface ReleaseFormData {
   title: string;
   description: string;
   content?: string;
@@ -95,12 +95,12 @@ export interface EpisodeFormData {
  * Podcast statistics for dashboard/analytics
  */
 export interface PodcastStats {
-  totalEpisodes: number;
+  totalReleases: number;
   totalZaps: number;
   totalComments: number;
   totalReposts: number;
-  mostZappedEpisode?: PodcastEpisode;
-  mostCommentedEpisode?: PodcastEpisode;
+  mostZappedRelease?: PodcastRelease;
+  mostCommentedRelease?: PodcastRelease;
   recentEngagement: EngagementActivity[];
 }
 
@@ -109,8 +109,8 @@ export interface PodcastStats {
  */
 export interface EngagementActivity {
   type: 'zap' | 'comment' | 'repost';
-  episodeId: string;
-  episodeTitle: string;
+  releaseId: string;
+  releaseTitle: string;
   userPubkey: string;
   amount?: number; // for zaps
   timestamp: Date;
@@ -165,14 +165,14 @@ export interface RSSItem {
  * Utility type for Nostr event validation
  */
 export interface ValidatedPodcastEvent extends NostrEvent {
-  kind: 30023; // NIP-23 long-form content for podcast episodes
+  kind: 30023; // NIP-23 long-form content for podcast releases
   tags: Array<[string, ...string[]]>;
 }
 
 /**
- * Search and filter options for episodes
+ * Search and filter options for releases
  */
-export interface EpisodeSearchOptions {
+export interface ReleaseSearchOptions {
   query?: string;
   tags?: string[];
   sortBy?: 'date' | 'zaps' | 'comments' | 'title';
@@ -190,8 +190,8 @@ export interface AudioPlayerState {
   duration: number;
   volume: number;
   playbackRate: number;
-  currentEpisode?: PodcastEpisode;
-  playlist: PodcastEpisode[];
+  currentRelease?: PodcastRelease;
+  playlist: PodcastRelease[];
   currentIndex: number;
 }
 
@@ -204,7 +204,7 @@ export interface PodcastComment {
   authorPubkey: string;
   authorName?: string;
   authorImage?: string;
-  episodeId: string;
+  releaseId: string;
   parentCommentId?: string;
   createdAt: Date;
   zapCount?: number;

@@ -3,21 +3,21 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
-import { PublishEpisodeForm } from '@/components/podcast/PublishEpisodeForm';
+import { PublishReleaseForm } from '@/components/podcast/PublishReleaseForm';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { isPodcastCreator } from '@/lib/podcastConfig';
 
-const PublishEpisode = () => {
+const PublishRelease = () => {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const isCreator = user && isPodcastCreator(user.pubkey);
 
   useSeoMeta({
-    title: 'Publish Episode - PODSTR',
-    description: 'Publish a new podcast episode',
+    title: 'Publish Release - PODSTR',
+    description: 'Publish a new release',
   });
 
-  const handleSuccess = (_episodeId: string) => {
+  const handleSuccess = (_releaseId: string) => {
     navigate('/');
   };
 
@@ -32,7 +32,7 @@ const PublishEpisode = () => {
           <div className="max-w-md mx-auto text-center">
             <h1 className="text-2xl font-bold mb-4">Authentication Required</h1>
             <p className="text-muted-foreground mb-6">
-              You must be logged in to publish episodes.
+              You must be logged in to publish releases.
             </p>
             <Button asChild>
               <Link to="/">
@@ -53,7 +53,7 @@ const PublishEpisode = () => {
           <div className="max-w-md mx-auto text-center">
             <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
             <p className="text-muted-foreground mb-6">
-              Only the podcast creator can publish episodes.
+              Only the podcast creator can publish releases.
             </p>
             <Button asChild>
               <Link to="/">
@@ -72,13 +72,13 @@ const PublishEpisode = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Publish New Episode</h1>
+            <h1 className="text-3xl font-bold mb-2">Publish New Release</h1>
             <p className="text-muted-foreground">
-              Create and publish a new podcast episode
+              Create and publish a new release
             </p>
           </div>
 
-          <PublishEpisodeForm 
+          <PublishReleaseForm 
             onSuccess={handleSuccess}
             onCancel={handleCancel}
           />
@@ -88,4 +88,4 @@ const PublishEpisode = () => {
   );
 };
 
-export default PublishEpisode;
+export default PublishRelease;

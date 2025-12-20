@@ -333,7 +333,7 @@ export function PublishTrailerForm({
               <div className="text-sm text-blue-700">
                 <strong>Ideas for trailers:</strong>
                 <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li><strong>Audio:</strong> Highlight reels, upcoming episode previews, host introductions</li>
+                  <li><strong>Audio:</strong> Highlight reels, upcoming release previews, host introductions</li>
                   <li><strong>Video:</strong> Behind-the-scenes clips, visual introductions, animated previews</li>
                 </ul>
               </div>

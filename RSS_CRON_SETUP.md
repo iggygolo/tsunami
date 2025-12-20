@@ -4,13 +4,13 @@ This document explains how to set up automated RSS feed generation using the bui
 
 ## Overview
 
-The `scripts/build-rss.ts` script fetches podcast episodes from Nostr relays and generates a static `rss.xml` file during the build process. This solves the problem where RSS readers and podcast apps cannot execute JavaScript and therefore can't see the dynamically generated RSS feed.
+The `scripts/build-rss.ts` script fetches podcast releases from Nostr relays and generates a static `rss.xml` file during the build process. This solves the problem where RSS readers and podcast apps cannot execute JavaScript and therefore can't see the dynamically generated RSS feed.
 
 ## Script Features
 
-- ✅ Fetches podcast episodes from multiple Nostr relays
-- ✅ Validates episodes according to NIP-54 (podcast episodes)
-- ✅ Handles episode edits and deduplication
+- ✅ Fetches podcast releases from multiple Nostr relays
+- ✅ Validates releases according to NIP-54 (podcast releases)
+- ✅ Handles releases edits and deduplication
 - ✅ Generates complete RSS feed with iTunes and Podcasting 2.0 tags
 - ✅ Creates health check file for monitoring
 - ✅ Configurable relay URLs and base URL via environment variables
@@ -36,7 +36,7 @@ The RSS feed is automatically configured using:
 
 - Environment variables for creator npub and metadata
 - Nostr metadata events from the creator's profile
-- Build-time fetching of episode data
+- Build-time fetching of release data
 
 ## Manual Execution
 
@@ -155,7 +155,7 @@ Add this to your `.htaccess` or virtual host configuration:
 The script generates a health check file at `dist/rss-health.json` with information about:
 
 - Generation timestamp
-- Episode count  
+- Release count  
 - Feed size
 - Relay status
 - Configuration
@@ -254,10 +254,10 @@ For modern deployment platforms, RSS feed updates can be automated through:
 
 ### Build-Time Generation (Recommended)
 - **Vercel/Netlify**: RSS is automatically generated on each deployment
-- **GitHub Pages**: Use GitHub Actions to trigger builds when new episodes are published
+- **GitHub Pages**: Use GitHub Actions to trigger builds when new releases are published
 - **Self-hosted**: Use the cron setup above for periodic RSS updates
 
 ### Webhook-Triggered Builds
-Set up webhooks to trigger new builds when episodes are published, ensuring immediate RSS updates without waiting for scheduled builds.
+Set up webhooks to trigger new builds when releases are published, ensuring immediate RSS updates without waiting for scheduled builds.
 
 This approach ensures that RSS readers and podcast apps always have access to fresh content without requiring JavaScript execution.

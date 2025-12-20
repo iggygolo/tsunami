@@ -93,13 +93,13 @@ export function encodeAddressableEvent(
 }
 
 /**
- * Encode a podcast episode as naddr (for addressable episode events)
- * @param pubkey The episode author's pubkey
- * @param identifier The episode 'd' tag identifier
+ * Encode a podcast release as naddr (for addressable release events)
+ * @param pubkey The release author's pubkey
+ * @param identifier The release 'd' tag identifier
  * @param customRelays Optional custom relays to include
- * @returns naddr string for the episode
+ * @returns naddr string for the release
  */
-export function encodeEpisodeAsNaddr(
+export function encodeReleaseAsNaddr(
   pubkey: string,
   identifier: string,
   customRelays?: string[]
@@ -109,7 +109,7 @@ export function encodeEpisodeAsNaddr(
   return nip19.naddrEncode({
     identifier,
     pubkey,
-    kind: 30054, // PODCAST_KINDS.EPISODE
+    kind: 30054, // PODCAST_KINDS.RELEASE
     relays
   });
 }

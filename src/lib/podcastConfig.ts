@@ -175,13 +175,13 @@ export const PODCAST_CONFIG: PodcastConfig = {
  * Nostr event kinds used by PODSTR
  */
 export const PODCAST_KINDS = {
-  /** Addressable Podcast episodes (editable, replaceable) */
-  EPISODE: 30054,
+  /** Addressable Podcast releases (editable, replaceable) */
+  RELEASE: 30054,
   /** Addressable Podcast trailers (editable, replaceable) */
   TRAILER: 30055,
-  /** NIP-22: Comments on podcast episodes */
+  /** NIP-22: Comments on podcast releases */
   COMMENT: 1111,
-  /** Standard text notes that may reference episodes */
+  /** Standard text notes that may reference releases */
   NOTE: 1,
   /** Profile metadata */
   PROFILE: 0,

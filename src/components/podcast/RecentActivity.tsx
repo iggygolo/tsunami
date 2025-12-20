@@ -5,20 +5,20 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useRecentZapActivity } from '@/hooks/useZapLeaderboard';
-import { usePodcastEpisode } from '@/hooks/usePodcastEpisodes';
+import { usePodcastRelease } from '@/hooks/usePodcastReleases';
 import { genUserName } from '@/lib/genUserName';
 
 interface ActivityItemProps {
   userPubkey: string;
   type: 'zap' | 'comment' | 'repost';
   amount?: number;
-  episodeId?: string;
+  releaseId?: string;
   timestamp: Date;
 }
 
-function ActivityItem({ userPubkey, type, amount, episodeId, timestamp }: ActivityItemProps) {
+function ActivityItem({ userPubkey, type, amount, releaseId, timestamp }: ActivityItemProps) {
   const { data: author } = useAuthor(userPubkey);
-  const { data: episode } = usePodcastEpisode(episodeId || '');
+  const { data: release } = usePodcastRelease(releaseId || '');
   const metadata = author?.metadata;
 
   const displayName = metadata?.name || metadata?.display_name || genUserName(userPubkey);
@@ -35,15 +35,15 @@ function ActivityItem({ userPubkey, type, amount, episodeId, timestamp }: Activi
   };
 
   const getActivityText = () => {
-    const episodeTitle = episode?.title ? ` "${episode.title}"` : '';
+    const releaseTitle = release?.title ? ` "${release.title}"` : '';
     
     switch (type) {
       case 'zap':
-        return `zapped${episodeTitle}${amount ? ` ${formatAmount(amount)} sats` : ''}`;
+        return `zapped${releaseTitle}${amount ? ` ${formatAmount(amount)} sats` : ''}`;
       case 'comment':
-        return `commented on${episodeTitle}`;
+        return `commented on${releaseTitle}`;
       case 'repost':
-        return `reposted${episodeTitle}`;
+        return `reposted${releaseTitle}`;
     }
   };
 
@@ -157,7 +157,7 @@ export function RecentActivity({
                 userPubkey={activity.userPubkey}
                 type="zap"
                 amount={activity.amount}
-                episodeId={activity.episodeId || undefined}
+                releaseId={activity.releaseId || undefined}
                 timestamp={activity.timestamp}
               />
             ))}

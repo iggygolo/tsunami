@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Layout } from '@/components/Layout';
-import { EpisodeList } from '@/components/podcast/EpisodeList';
+import { ReleaseList } from '@/components/podcast/ReleaseList';
 import { ZapLeaderboard } from '@/components/podcast/ZapLeaderboard';
 import { RecentActivity } from '@/components/podcast/RecentActivity';
 import { ZapDialog } from '@/components/ZapDialog';
-import type { PodcastEpisode } from '@/types/podcast';
-import { useLatestEpisode } from '@/hooks/usePodcastEpisodes';
+import type { PodcastRelease } from '@/types/podcast';
+import { useLatestRelease } from '@/hooks/usePodcastReleases';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -19,16 +19,16 @@ import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { getCreatorPubkeyHex } from '@/lib/podcastConfig';
 
 const Index = () => {
-  const { data: latestEpisode } = useLatestEpisode();
+  const { data: latestRelease } = useLatestRelease();
   const podcastConfig = usePodcastConfig();
   const { data: creator } = useAuthor(getCreatorPubkeyHex());
   const { user } = useCurrentUser();
-  const { playEpisode } = useAudioPlayer();
-  const _currentEpisode = useState<PodcastEpisode | null>(null);
+  const { playRelease } = useAudioPlayer();
+  const _currentRelease = useState<PodcastRelease | null>(null);
 
-  const handlePlayLatestEpisode = () => {
-    if (latestEpisode) {
-      playEpisode(latestEpisode);
+  const handlePlayLatestRelease = () => {
+    if (latestRelease) {
+      playRelease(latestRelease);
     }
   };
 
@@ -43,22 +43,22 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-8">
-            {/* Latest Episode Highlight */}
-            {latestEpisode && (
+            {/* Latest Release Highlight */}
+            {latestRelease && (
               <section className="animate-fade-in">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-3xl font-bold gradient-text">Latest Episode</h2>
+                  <h2 className="text-3xl font-bold gradient-text">Latest Release</h2>
                   <Badge variant="secondary" className="animate-pulse-slow">New</Badge>
                 </div>
 
                 <Card className="card-hover bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/5 border-primary/20 overflow-hidden">
                   <CardContent className="p-6">
                     <div className="flex flex-col lg:flex-row items-start space-y-6 lg:space-y-0 lg:space-x-6">
-                      {latestEpisode.imageUrl && (
+                      {latestRelease.imageUrl && (
                         <div className="relative group">
                           <img
-                            src={latestEpisode.imageUrl}
-                            alt={latestEpisode.title}
+                            src={latestRelease.imageUrl}
+                            alt={latestRelease.title}
                             className="w-32 h-32 lg:w-40 lg:h-40 rounded-xl object-cover flex-shrink-0 shadow-lg group-hover:shadow-xl transition-shadow duration-300"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -67,27 +67,27 @@ const Index = () => {
 
                       <div className="flex-1 min-w-0 space-y-4">
                         <h3 className="text-2xl lg:text-3xl font-bold line-clamp-2 leading-tight">
-                          {latestEpisode.title}
+                          {latestRelease.title}
                         </h3>
 
-                        {latestEpisode.description && (
+                        {latestRelease.description && (
                           <p className="text-muted-foreground mb-4 line-clamp-3 leading-relaxed">
-                            {latestEpisode.description}
+                            {latestRelease.description}
                           </p>
                         )}
 
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                          <Button onClick={handlePlayLatestEpisode} className="btn-primary focus-ring">
+                          <Button onClick={handlePlayLatestRelease} className="btn-primary focus-ring">
                             <Headphones className="w-4 h-4 mr-2" />
                             Listen Now
                           </Button>
 
                           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                            {user && latestEpisode.totalSats && latestEpisode.totalSats > 0 && (
+                            {user && latestRelease.totalSats && latestRelease.totalSats > 0 && (
                               <div className="flex items-center space-x-1 bg-primary/10 px-2 py-1 rounded-full">
                                 <Zap className="w-3 h-3 text-primary" />
                                 <span className="font-medium">
-                                  {latestEpisode.totalSats.toLocaleString()} sats
+                                  {latestRelease.totalSats.toLocaleString()} sats
                                 </span>
                               </div>
                             )}
@@ -104,16 +104,16 @@ const Index = () => {
             <section className="animate-fade-in-up">
               <h2 className="text-3xl font-bold mb-6 gradient-text">Explore</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Link to="/episodes" className="group">
+                <Link to="/releases" className="group">
                   <Card className="card-hover border-primary/20 hover:border-primary/40 bg-gradient-to-br from-primary/5 to-transparent h-full">
                     <CardContent className="p-6 text-center space-y-4">
                       <div className="relative">
                         <Headphones className="w-12 h-12 mx-auto text-primary group-hover:scale-110 transition-transform duration-300" />
                         <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </div>
-                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">All Episodes</h3>
+                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">All Releases</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        Browse and listen to all podcast episodes
+                        Browse and listen to all podcast releases
                       </p>
                     </CardContent>
                   </Card>
@@ -152,13 +152,13 @@ const Index = () => {
             </section>
 
 
-            {/* Recent Episodes Preview */}
+            {/* Recent Releases Preview */}
             <section className="animate-fade-in-up">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-bold gradient-text">Recent Episodes</h2>
+                <h2 className="text-3xl font-bold gradient-text">Recent Releases</h2>
                 <Button variant="outline" asChild className="focus-ring">
-                  <Link to="/episodes" className="group">
-                    View All Episodes
+                  <Link to="/releases" className="group">
+                    View All Releases
                     <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -166,12 +166,12 @@ const Index = () => {
                 </Button>
               </div>
 
-              <EpisodeList
+              <ReleaseList
                 showSearch={false}
                 _showPlayer={false}
                 limit={3}
-                onPlayEpisode={(episode) => {
-                  playEpisode(episode);
+                onPlayRelease={(release) => {
+                  playRelease(release);
                 }}
               />
             </section>

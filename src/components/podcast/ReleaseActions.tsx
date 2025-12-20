@@ -7,9 +7,9 @@ import { useToast } from '@/hooks/useToast';
 import { useNostr } from '@nostrify/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useComments } from '@/hooks/useComments';
-import { encodeEpisodeAsNaddr } from '@/lib/nip19Utils';
+import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import type { NostrEvent } from '@nostrify/nostrify';
-import type { PodcastEpisode } from '@/types/podcast';
+import type { PodcastRelease } from '@/types/podcast';
 import { cn } from '@/lib/utils';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 
@@ -23,31 +23,31 @@ interface UserInteractions {
   hasLiked: boolean;
 }
 
-interface EpisodeActionsProps {
-  episode: PodcastEpisode;
+interface ReleaseActionsProps {
+  release: PodcastRelease;
   className?: string;
   showComments?: boolean;
   onToggleComments?: () => void;
 }
 
-// Create a NostrEvent-like object from PodcastEpisode
-function createEventFromEpisode(episode: PodcastEpisode): NostrEvent {
+// Create a NostrEvent-like object from PodcastRelease
+function createEventFromrelease(release: PodcastRelease): NostrEvent {
   return {
-    id: episode.eventId,
-    kind: 30054, // Addressable podcast episode
-    pubkey: episode.authorPubkey,
-    created_at: Math.floor(episode.createdAt.getTime() / 1000),
+    id: release.eventId,
+    kind: 30054, // Addressable podcast release
+    pubkey: release.authorPubkey,
+    created_at: Math.floor(release.createdAt.getTime() / 1000),
     tags: [
-      ['d', episode.identifier], // Addressable event identifier
-      ['title', episode.title],
+      ['d', release.identifier], // Addressable event identifier
+      ['title', release.title],
       ['t', 'podcast'],
     ],
-    content: episode.content || episode.description || '',
+    content: release.content || release.description || '',
     sig: '' // Not needed for actions
   } as NostrEvent;
 }
 
-export function EpisodeActions({ episode, className, showComments, onToggleComments }: EpisodeActionsProps) {
+export function ReleaseActions({ release, className, showComments, onToggleComments }: ReleaseActionsProps) {
   const { user } = useCurrentUser();
   const { mutate: createEvent } = useNostrPublish();
   const { toast } = useToast();
@@ -55,25 +55,25 @@ export function EpisodeActions({ episode, className, showComments, onToggleComme
   const queryClient = useQueryClient();
 
 
-  const event = createEventFromEpisode(episode);
+  const event = createEventFromrelease(release);
 
-  // Query for episode comments (NIP-22 comments)
+  // Query for release comments (NIP-22 comments)
   const { data: commentsData } = useComments(event);
   const commentCount = commentsData?.topLevelComments?.length || 0;
 
-  // Query for user's interactions with this episode
+  // Query for user's interactions with this release
   const { data: userInteractions } = useQuery<UserInteractions>({
-    queryKey: ['episode-user-interactions', episode.eventId, user?.pubkey],
+    queryKey: ['release-user-interactions', release.eventId, user?.pubkey],
     queryFn: async (c) => {
       if (!user?.pubkey) return { hasLiked: false };
 
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(3000)]);
 
-      // Query for user's likes of this episode
+      // Query for user's likes of this release
       const interactions = await nostr.query([{
         kinds: [7], // Likes
         authors: [user.pubkey],
-        '#e': [episode.eventId],
+        '#e': [release.eventId],
         limit: 10
       }], { signal });
 
@@ -87,14 +87,14 @@ export function EpisodeActions({ episode, className, showComments, onToggleComme
 
   // Query for interaction counts
   const { data: interactionCounts } = useQuery<InteractionCounts>({
-    queryKey: ['episode-interaction-counts', episode.eventId],
+    queryKey: ['release-interaction-counts', release.eventId],
     queryFn: async (c) => {
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(3000)]);
 
-      // Query for all interactions with this episode
+      // Query for all interactions with this release
       const interactions = await nostr.query([{
         kinds: [7, 9735], // Likes, zaps (no longer counting replies here)
-        '#e': [episode.eventId],
+        '#e': [release.eventId],
         limit: 500
       }], { signal });
 
@@ -128,19 +128,19 @@ export function EpisodeActions({ episode, className, showComments, onToggleComme
     if (userInteractions?.hasLiked) {
       toast({
         title: "Already liked",
-        description: "You have already liked this episode.",
+        description: "You have already liked this release.",
       });
       return;
     }
 
     try {
       // Optimistically update user interactions
-      queryClient.setQueryData(['episode-user-interactions', episode.eventId, user.pubkey], (_old: UserInteractions | undefined) => {
+      queryClient.setQueryData(['release-user-interactions', release.eventId, user.pubkey], (_old: UserInteractions | undefined) => {
         return { hasLiked: true };
       });
 
       // Optimistically update interaction counts
-      queryClient.setQueryData(['episode-interaction-counts', episode.eventId], (old: InteractionCounts | undefined) => {
+      queryClient.setQueryData(['release-interaction-counts', release.eventId], (old: InteractionCounts | undefined) => {
         if (!old) return { likes: 1, zaps: 0, totalSats: 0 };
         return { ...old, likes: old.likes + 1 };
       });
@@ -150,8 +150,8 @@ export function EpisodeActions({ episode, className, showComments, onToggleComme
         kind: 7,
         content: '+',
         tags: [
-          ['e', episode.eventId],
-          ['p', episode.authorPubkey],
+          ['e', release.eventId],
+          ['p', release.authorPubkey],
           ['k', '30023'] // Kind of the event being liked
         ]
       });
@@ -163,16 +163,16 @@ export function EpisodeActions({ episode, className, showComments, onToggleComme
 
       // Delay invalidation to allow network propagation
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['episode-user-interactions', episode.eventId, user.pubkey] });
-        queryClient.invalidateQueries({ queryKey: ['episode-interaction-counts', episode.eventId] });
+        queryClient.invalidateQueries({ queryKey: ['release-user-interactions', release.eventId, user.pubkey] });
+        queryClient.invalidateQueries({ queryKey: ['release-interaction-counts', release.eventId] });
       }, 2000);
     } catch {
       // Revert optimistic updates on error
-      queryClient.setQueryData(['episode-user-interactions', episode.eventId, user.pubkey], (_old: UserInteractions | undefined) => {
+      queryClient.setQueryData(['release-user-interactions', release.eventId, user.pubkey], (_old: UserInteractions | undefined) => {
         return { hasLiked: false };
       });
 
-      queryClient.setQueryData(['episode-interaction-counts', episode.eventId], (old: InteractionCounts | undefined) => {
+      queryClient.setQueryData(['release-interaction-counts', release.eventId], (old: InteractionCounts | undefined) => {
         if (!old) return { likes: 0, zaps: 0, totalSats: 0 };
         return { ...old, likes: Math.max(0, old.likes - 1) };
       });
@@ -187,14 +187,14 @@ export function EpisodeActions({ episode, className, showComments, onToggleComme
 
   const handleShare = async () => {
     try {
-      const naddr = encodeEpisodeAsNaddr(episode.authorPubkey, episode.identifier);
+      const naddr = encodeReleaseAsNaddr(release.authorPubkey, release.identifier);
       const url = `${window.location.origin}/${naddr}`;
 
       await navigator.clipboard.writeText(url);
 
       toast({
         title: "Link copied!",
-        description: "The episode link has been copied to your clipboard.",
+        description: "The release link has been copied to your clipboard.",
       });
     } catch {
       toast({
@@ -257,7 +257,7 @@ export function EpisodeActions({ episode, className, showComments, onToggleComme
         hideWhenEmpty={false}
         onZapSuccess={(amount: number) => {
           // Optimistically update interaction counts when zap succeeds
-          queryClient.setQueryData(['episode-interaction-counts', episode.eventId], (old: InteractionCounts | undefined) => {
+          queryClient.setQueryData(['release-interaction-counts', release.eventId], (old: InteractionCounts | undefined) => {
             if (!old) return { likes: 0, zaps: 1, totalSats: amount };
             return { ...old, zaps: old.zaps + 1, totalSats: old.totalSats + amount };
           });

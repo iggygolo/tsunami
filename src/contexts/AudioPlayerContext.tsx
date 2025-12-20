@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ReactNode } from 'react';
 import { AudioPlayerContext, type AudioPlayerState, type AudioPlayerContextType } from './AudioPlayerContext';
-import type { PodcastEpisode } from '@/types/podcast';
+import type { PodcastRelease } from '@/types/podcast';
 
 interface AudioPlayerProviderProps {
   children: ReactNode;
@@ -10,7 +10,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const [state, setState] = useState<AudioPlayerState>({
-    currentEpisode: null,
+    currentRelease: null,
     isPlaying: false,
     currentTime: 0,
     duration: 0,
@@ -100,24 +100,24 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   }, []);
 
   // Actions
-  const playEpisode = (episode: PodcastEpisode) => {
+  const playRelease = (release: PodcastRelease) => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // If it's a different episode, load it
-    if (state.currentEpisode?.eventId !== episode.eventId) {
+    // If it's a different release, load it
+    if (state.currentRelease?.eventId !== release.eventId) {
       setState(prev => ({
         ...prev,
-        currentEpisode: episode,
+        currentRelease: release,
         currentTime: 0,
         error: null
       }));
 
-      audio.src = episode.audioUrl;
+      audio.src = release.audioUrl;
       audio.load();
     }
 
-    // Play the episode
+    // Play the release
     audio.play().catch(error => {
       console.error('Failed to play audio:', error);
       setState(prev => ({
@@ -130,7 +130,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const play = () => {
     const audio = audioRef.current;
-    if (!audio || !state.currentEpisode) return;
+    if (!audio || !state.currentRelease) return;
 
     audio.play().catch(error => {
       console.error('Failed to play audio:', error);
@@ -155,7 +155,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     audio.currentTime = 0;
     setState(prev => ({
       ...prev,
-      currentEpisode: null,
+      currentRelease: null,
       currentTime: 0,
       isPlaying: false
     }));
@@ -186,7 +186,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const contextValue: AudioPlayerContextType = {
     state,
-    playEpisode,
+    playRelease,
     play,
     pause,
     stop,

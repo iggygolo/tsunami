@@ -1,10 +1,10 @@
-# Editing and Deletion for NIP-54 Podcast Episodes
+# Editing and Deletion for NIP-54 Podcast Releases
 
-This document explains how episode editing and deletion work in the PODSTR implementation using NIP-54 (`kind:54`) podcast episodes.
+This document explains how release editing and deletion work in the PODSTR implementation using NIP-54 (`kind:54`) podcast releases.
 
 ## Overview
 
-Since NIP-54 podcast episodes are **regular Nostr events** (not addressable events), they behave differently than replaceable or addressable events when it comes to editing and deletion.
+Since NIP-54 podcast releases are **regular Nostr events** (not addressable events), they behave differently than replaceable or addressable events when it comes to editing and deletion.
 
 ## Key Differences from Addressable Events
 
@@ -25,25 +25,25 @@ With regular events, there's no built-in mechanism to "update" an existing event
 We implement a smart deduplication strategy that:
 
 1. **Tracks Edit Relationships**: Edited events include an `edit` tag referencing the original event
-2. **Prioritizes Latest Versions**: Only shows the most recent version of each episode title
+2. **Prioritizes Latest Versions**: Only shows the most recent version of each release title
 3. **Hides Superseded Versions**: Original events that have been edited are hidden from the feed
 
 ### Implementation Details
 
 #### 1. Edit Event Creation
-When a user edits an episode, we create a new `kind:54` event with:
+When a user edits an release, we create a new `kind:54` event with:
 
 ```typescript
 const tags = [
   ['title', updatedTitle],
   ['audio', updatedAudioUrl, audioType],
-  ['alt', `Updated podcast episode: ${updatedTitle}`],
+  ['alt', `Updated podcast release: ${updatedTitle}`],
   ['edit', originalEventId] // References the original event
 ];
 ```
 
 #### 2. Query-Time Deduplication
-When fetching episodes, we:
+When fetching releases, we:
 
 1. **Identify Edit Relationships**: Find all events with `edit` tags
 2. **Track Superseded Events**: Mark original events that have been edited
@@ -66,15 +66,15 @@ validEvents.forEach(event => {
   if (originalEvents.has(event.id)) return;
   
   // Keep the latest version for each title
-  const existing = episodesByTitle.get(title);
+  const existing = releasesByTitle.get(title);
   if (!existing || event.created_at > existing.created_at) {
-    episodesByTitle.set(title, event);
+    releasesByTitle.set(title, event);
   }
 });
 ```
 
 #### 3. User Experience
-- **Seamless Editing**: Users see only the latest version of each episode
+- **Seamless Editing**: Users see only the latest version of each release
 - **No Duplicates**: Original and edited versions don't appear together
 - **Preserved History**: All event versions exist on relays (audit trail)
 - **Link Stability**: nevent links to original events still work (redirect to latest)
@@ -82,14 +82,14 @@ validEvents.forEach(event => {
 ### Benefits of This Approach
 
 #### ✅ **Advantages**
-- **User-Friendly**: No duplicate episodes in feeds
+- **User-Friendly**: No duplicate releases in feeds
 - **Preserves History**: Full edit history available on relays
 - **Link Stability**: Old links still work (show latest version)
 - **Audit Trail**: Complete edit history for moderation/compliance
 - **No Data Loss**: Original content never deleted, just superseded
 
 #### ⚠️ **Limitations**
-- **Title Changes**: Changing episode title creates a "new" episode
+- **Title Changes**: Changing release title creates a "new" release
 - **Storage Growth**: Multiple versions consume relay storage
 - **Client Complexity**: Requires sophisticated deduplication logic
 - **Network Load**: More events to query and process
@@ -101,14 +101,14 @@ validEvents.forEach(event => {
 Deletion works exactly like standard Nostr deletion and is **fully supported**:
 
 #### 1. Deletion Event Creation
-When a user deletes an episode, we create a `kind:5` deletion event:
+When a user deletes an release, we create a `kind:5` deletion event:
 
 ```typescript
 const deletionEvent = await createEvent({
   kind: 5, // Deletion event
-  content: 'Deleted podcast episode',
+  content: 'Deleted podcast release',
   tags: [
-    ['e', episodeId] // References the episode to delete
+    ['e', releaseId] // References the release to delete
   ]
 });
 ```
@@ -123,7 +123,7 @@ Our implementation includes client-side filtering:
 ```typescript
 // Filter out deleted events in queries
 const events = await nostr.query([{
-  kinds: [PODCAST_KINDS.EPISODE],
+  kinds: [PODCAST_KINDS.RELEASE],
   authors: [getCreatorPubkeyHex()]
 }]);
 
@@ -139,7 +139,7 @@ const nonDeletedEvents = events.filter(event =>
 - **Immediate Effect**: Deletion works instantly on supporting relays
 - **Standard Compliance**: Follows NIP-09 specification exactly
 - **Client Support**: Most Nostr clients respect deletion events
-- **Clean UI**: Deleted episodes disappear from feeds
+- **Clean UI**: Deleted releases disappear from feeds
 
 #### ⚠️ **Considerations**
 - **Relay Support**: Effectiveness depends on relay NIP-09 support
@@ -178,7 +178,7 @@ const nonDeletedEvents = events.filter(event =>
 
 #### 1. Edit History UI
 ```typescript
-interface EpisodeVersion {
+interface releaseVersion {
   eventId: string;
   timestamp: Date;
   editReason?: string;
@@ -186,8 +186,8 @@ interface EpisodeVersion {
 }
 
 // Show edit history to users
-function EpisodeHistory({ episodeId }: EpisodeHistoryProps) {
-  // Fetch and display all versions of an episode
+function releaseHistory({ releaseId }: releaseHistoryProps) {
+  // Fetch and display all versions of an release
 }
 ```
 
@@ -206,7 +206,7 @@ interface EditDiff {
 // Multiple editors with approval workflow
 interface EditProposal {
   targetEvent: string;
-  proposedChanges: EpisodeFormData;
+  proposedChanges: releaseFormData;
   proposer: string;
   approvals: string[];
   status: 'pending' | 'approved' | 'rejected';
@@ -215,7 +215,7 @@ interface EditProposal {
 
 ## Conclusion
 
-Our implementation provides a robust editing and deletion system for NIP-54 podcast episodes:
+Our implementation provides a robust editing and deletion system for NIP-54 podcast releases:
 
 - **Editing**: Uses title-based deduplication with edit tracking for a seamless user experience
 - **Deletion**: Follows standard NIP-09 for reliable content removal

@@ -3,16 +3,16 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent } from '@/components/ui/card';
-import { EpisodeActions } from './EpisodeActions';
-import type { PodcastEpisode } from '@/types/podcast';
+import { ReleaseActions } from './ReleaseActions';
+import type { PodcastRelease } from '@/types/podcast';
 
 interface AudioPlayerProps {
-  episode: PodcastEpisode;
+  release: PodcastRelease;
   className?: string;
   autoPlay?: boolean;
 }
 
-export function AudioPlayer({ episode, className, autoPlay = false }: AudioPlayerProps) {
+export function AudioPlayer({ release, className, autoPlay = false }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -24,16 +24,16 @@ export function AudioPlayer({ episode, className, autoPlay = false }: AudioPlaye
   
   // Initialize error state on mount
   useEffect(() => {
-    if (!episode.audioUrl) {
-      setError('No audio URL provided for this episode');
+    if (!release.audioUrl) {
+      setError('No audio URL provided for this release');
     } else {
       setError(null);
     }
-  }, [episode]);
+  }, [release]);
 
-  // Auto-play effect when episode changes
+  // Auto-play effect when release changes
   useEffect(() => {
-    if (autoPlay && episode.audioUrl) {
+    if (autoPlay && release.audioUrl) {
       const audio = audioRef.current;
       if (audio) {
         // Small delay to ensure audio element is ready
@@ -49,7 +49,7 @@ export function AudioPlayer({ episode, className, autoPlay = false }: AudioPlaye
         return () => clearTimeout(timer);
       }
     }
-  }, [episode.id, autoPlay, episode.audioUrl]);
+  }, [release.id, autoPlay, release.audioUrl]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -179,7 +179,7 @@ export function AudioPlayer({ episode, className, autoPlay = false }: AudioPlaye
       <CardContent className="p-4">
         <audio
           ref={audioRef}
-          src={episode.audioUrl}
+          src={release.audioUrl}
           preload="metadata"
           crossOrigin="anonymous"
         />
@@ -190,22 +190,22 @@ export function AudioPlayer({ episode, className, autoPlay = false }: AudioPlaye
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-sm text-red-700">{error}</p>
               <p className="text-xs text-red-600 mt-1 font-mono break-all">
-                URL: {episode.audioUrl || 'No audio URL'}
+                URL: {release.audioUrl || 'No audio URL'}
               </p>
-              {episode.audioType && (
+              {release.audioType && (
                 <p className="text-xs text-red-600 font-mono">
-                  Type: {episode.audioType}
+                  Type: {release.audioType}
                 </p>
               )}
             </div>
           )}
           
-          {/* Episode Info */}
+          {/* release Info */}
           <div className="flex items-center space-x-3">
-            {episode.imageUrl && (
+            {release.imageUrl && (
               <img
-                src={episode.imageUrl}
-                alt={episode.title}
+                src={release.imageUrl}
+                alt={release.title}
                 className="w-12 h-12 rounded object-cover"
               />
             )}
@@ -213,7 +213,7 @@ export function AudioPlayer({ episode, className, autoPlay = false }: AudioPlaye
 
           {/* Social Actions */}
           <div className="flex justify-center">
-            <EpisodeActions episode={episode} />
+            <ReleaseActions release={release} />
           </div>
 
           {/* Progress Bar */}
@@ -246,9 +246,9 @@ export function AudioPlayer({ episode, className, autoPlay = false }: AudioPlaye
               
               <Button
                 onClick={togglePlay}
-                disabled={loading || !episode.audioUrl}
+                disabled={loading || !release.audioUrl}
                 size="sm"
-                title={!episode.audioUrl ? 'No audio URL available' : isPlaying ? 'Pause' : 'Play'}
+                title={!release.audioUrl ? 'No audio URL available' : isPlaying ? 'Pause' : 'Play'}
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

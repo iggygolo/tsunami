@@ -17,8 +17,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { encodeEpisodeAsNaddr } from '@/lib/nip19Utils';
-import { EpisodeActions } from '@/components/podcast/EpisodeActions';
+import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
+import { ReleaseActions } from '@/components/podcast/ReleaseActions';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -39,33 +39,33 @@ export function PersistentAudioPlayer() {
   const [isMuted, setIsMuted] = useState(false);
   const [previousVolume, setPreviousVolume] = useState(1);
 
-  // Don't render if no episode is loaded
-  if (!state.currentEpisode) {
+  // Don't render if no release is loaded
+  if (!state.currentRelease) {
     return null;
   }
 
-  const episode = state.currentEpisode;
-  const episodeNaddr = encodeEpisodeAsNaddr(episode.authorPubkey, episode.identifier);
+  const release = state.currentRelease;
+  const releaseNaddr = encodeReleaseAsNaddr(release.authorPubkey, release.identifier);
 
-  // Create NostrEvent for social features - must match the real episode event structure
+  // Create NostrEvent for social features - must match the real release event structure
   // For addressable events (kind 30054), comments are identified by #a tag: kind:pubkey:identifier
   // CRITICAL: Use the same identifier logic as everywhere else in the app
-  const episodeIdentifier = episode.identifier || episode.eventId;
+  const releaseIdentifier = release.identifier || release.eventId;
   
-  const episodeEvent: NostrEvent = {
-    id: episode.eventId, // Real event ID from the episode
-    pubkey: episode.authorPubkey,
-    created_at: Math.floor(episode.createdAt.getTime() / 1000),
-    kind: 30054, // Addressable podcast episode
+  const releaseEvent: NostrEvent = {
+    id: release.eventId, // Real event ID from the release
+    pubkey: release.authorPubkey,
+    created_at: Math.floor(release.createdAt.getTime() / 1000),
+    kind: 30054, // Addressable podcast release
     tags: [
-      ['d', episodeIdentifier], // CRITICAL: Must match identifier logic used in EpisodePage
-      ['title', episode.title],
-      ['audio', episode.audioUrl, episode.audioType || 'audio/mpeg'],
-      ...(episode.description ? [['description', episode.description]] : []),
-      ...(episode.imageUrl ? [['image', episode.imageUrl]] : []),
-      ...episode.tags.map(tag => ['t', tag])
+      ['d', releaseIdentifier], // CRITICAL: Must match identifier logic used in ReleasePage
+      ['title', release.title],
+      ['audio', release.audioUrl, release.audioType || 'audio/mpeg'],
+      ...(release.description ? [['description', release.description]] : []),
+      ...(release.imageUrl ? [['image', release.imageUrl]] : []),
+      ...release.tags.map(tag => ['t', tag])
     ],
-    content: episode.content || '',
+    content: release.content || '',
     sig: ''
   };
 
@@ -130,21 +130,21 @@ export function PersistentAudioPlayer() {
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         {/* Main Player Bar */}
         <div className="px-4 py-3">
-          {/* Episode Info Row */}
+          {/* release Info Row */}
           <div className="flex items-center space-x-3 mb-3">
-            {episode.imageUrl && (
+            {release.imageUrl && (
               <img
-                src={episode.imageUrl}
-                alt={episode.title}
+                src={release.imageUrl}
+                alt={release.title}
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
               />
             )}
             <div className="min-w-0 flex-1">
               <Link
-                to={`/${episodeNaddr}`}
+                to={`/${releaseNaddr}`}
                 className="font-medium text-xs sm:text-sm hover:text-primary transition-colors line-clamp-1"
               >
-                {episode.title}
+                {release.title}
               </Link>
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                 {state.error && (
@@ -189,7 +189,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handleSkipBack}
-              disabled={!episode.audioUrl}
+              disabled={!release.audioUrl}
               className="h-10 w-10 sm:h-11 sm:w-11 p-0"
             >
               <SkipBack className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -199,7 +199,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handlePlayPause}
-              disabled={!episode.audioUrl || state.isLoading}
+              disabled={!release.audioUrl || state.isLoading}
               className="h-12 w-12 sm:h-14 sm:w-14 p-0 bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {state.isPlaying ? (
@@ -213,7 +213,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handleSkipForward}
-              disabled={!episode.audioUrl}
+              disabled={!release.audioUrl}
               className="h-10 w-10 sm:h-11 sm:w-11 p-0"
             >
               <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -246,10 +246,10 @@ export function PersistentAudioPlayer() {
             </div>
           </div>
 
-          {/* Episode Actions Row - Centered */}
+          {/* release Actions Row - Centered */}
           <div className="flex items-center justify-center mb-2">
-            <EpisodeActions
-              episode={episode}
+            <ReleaseActions
+              release={release}
               showComments={showComments}
               onToggleComments={() => {
                 if (!showComments) {
@@ -274,7 +274,7 @@ export function PersistentAudioPlayer() {
                 step={1}
                 onValueChange={handleSeek}
                 className="cursor-pointer"
-                disabled={!episode.audioUrl || state.isLoading}
+                disabled={!release.audioUrl || state.isLoading}
               />
             </div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground min-w-0 flex-shrink-0">
@@ -291,39 +291,39 @@ export function PersistentAudioPlayer() {
             <Card className="mt-4">
               <CardContent className="p-4">
                 <div className="space-y-4">
-                  {/* Episode Details */}
+                  {/* release Details */}
                   <div>
                     <h4 className="font-semibold mb-2">Now Playing</h4>
                     <div className="flex items-start space-x-3">
-                      {episode.imageUrl && (
+                      {release.imageUrl && (
                         <img
-                          src={episode.imageUrl}
-                          alt={episode.title}
+                          src={release.imageUrl}
+                          alt={release.title}
                           className="w-16 h-16 rounded object-cover flex-shrink-0"
                         />
                       )}
                       <div className="min-w-0 flex-1">
                         <Link
-                          to={`/${episodeNaddr}`}
+                          to={`/${releaseNaddr}`}
                           className="font-medium hover:text-primary transition-colors block"
                         >
-                          {episode.title}
+                          {release.title}
                         </Link>
-                        {episode.description && (
+                        {release.description && (
                           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {episode.description}
+                            {release.description}
                           </p>
                         )}
-                        {episode.tags.length > 0 && (
+                        {release.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
-                            {episode.tags.slice(0, 3).map((tag) => (
+                            {release.tags.slice(0, 3).map((tag) => (
                               <Badge key={tag} variant="outline" className="text-xs">
                                 #{tag}
                               </Badge>
                             ))}
-                            {episode.tags.length > 3 && (
+                            {release.tags.length > 3 && (
                               <Badge variant="outline" className="text-xs">
-                                +{episode.tags.length - 3} more
+                                +{release.tags.length - 3} more
                               </Badge>
                             )}
                           </div>
@@ -385,29 +385,29 @@ export function PersistentAudioPlayer() {
                   {/* Comments Section */}
                   {showComments && (
                     <div>
-                      <h4 className="font-semibold mb-2">Episode Discussion</h4>
+                      <h4 className="font-semibold mb-2">Release Discussion</h4>
                       <div className="max-h-60 sm:max-h-96 overflow-y-auto">
                         <CommentsSection
-                          root={episodeEvent}
+                          root={releaseEvent}
                           title=""
                           emptyStateMessage="No comments yet"
-                          emptyStateSubtitle="Be the first to share your thoughts about this episode!"
+                          emptyStateSubtitle="Be the first to share your thoughts about this release!"
                           limit={50}
                         />
                       </div>
                     </div>
                   )}
 
-                  {/* Additional Episode Actions */}
+                  {/* Additional release Actions */}
                   <div className="flex items-center justify-between pt-2 border-t">
                     <div className="text-sm text-muted-foreground">
                       Playing from {window.location.hostname}
                     </div>
                     <Link
-                      to={`/${episodeNaddr}`}
+                      to={`/${releaseNaddr}`}
                       className="text-sm text-primary hover:underline"
                     >
-                      View Episode Page
+                      View release Page
                     </Link>
                   </div>
                 </div>

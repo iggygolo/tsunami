@@ -109,14 +109,14 @@ export function useRecentZapActivity(limit: number = 20) {
           // Extract the actual zapper's pubkey (from P tag, not event pubkey)
           const zapperPubkey = extractZapperPubkey(zapEvent);
           
-          // Extract the episode being zapped
-          const episodeId = extractZappedEventId(zapEvent);
+          // Extract the release being zapped
+          const releaseId = extractZappedEventId(zapEvent);
 
           return {
             id: zapEvent.id,
             userPubkey: zapperPubkey || zapEvent.pubkey, // Fallback to event pubkey if no P tag
             amount,
-            episodeId,
+            releaseId,
             timestamp: new Date(zapEvent.created_at * 1000),
             zapEvent
           };
