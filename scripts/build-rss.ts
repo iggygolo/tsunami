@@ -159,7 +159,7 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
      xmlns:content="http://purl.org/rss/1.0/modules/content/"
      xmlns:podcast="https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md">
   <channel>
-    <title>${escapeXml(podcastConfig.podcast.title)}</title>
+    <title>${escapeXml(podcastConfig.podcast.author)}</title>
     <description>${escapeXml(podcastConfig.podcast.description)}</description>
     <link>${escapeXml(podcastConfig.podcast.website || baseUrl)}</link>
     <language>${escapeXml(podcastConfig.podcast.language)}</language>
