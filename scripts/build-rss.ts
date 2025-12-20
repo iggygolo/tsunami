@@ -232,7 +232,7 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
  * Validates if a Nostr event is a valid podcast release
  */
 function validatePodcastRelease(event: NostrEvent, creatorPubkeyHex: string): boolean {
-  if (event.kind !== PODCAST_KINDS.release) return false;
+  if (event.kind !== PODCAST_KINDS.EPISODE) return false;
 
   // Check for required title tag
   const title = event.tags.find(([name]) => name === 'title')?.[1];
@@ -455,7 +455,7 @@ async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay:
     try {
       const events = await Promise.race([
         relay.query([{
-          kinds: [PODCAST_KINDS.release],
+          kinds: [PODCAST_KINDS.EPISODE],
           authors: [creatorPubkeyHex],
           limit: 100
         }]),
@@ -641,7 +641,7 @@ async function _fetchPodcastReleases(relay: NRelay1, creatorPubkeyHex: string): 
     // Add timeout to prevent hanging
     const events = await Promise.race([
       relay.query([{
-        kinds: [PODCAST_KINDS.release],
+        kinds: [PODCAST_KINDS.EPISODE],
         authors: [creatorPubkeyHex],
         limit: 100
       }]),
@@ -699,7 +699,7 @@ async function buildRSS() {
 
     // Get base config from environment variables
     const baseConfig = createNodejsConfig();
-    const creatorPubkeyHex = getCreatorPubkeyHex(baseConfig.creatorNpub);
+    const creatorPubkeyHex = getCreatorPubkeyHex(baseConfig.creatorNpub || '');
 
     console.log(`👤 Creator: ${baseConfig.creatorNpub}`);
 
