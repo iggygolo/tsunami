@@ -162,7 +162,6 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
     <title>${escapeXml(podcastConfig.podcast.author)}</title>
     <description>${escapeXml(podcastConfig.podcast.description)}</description>
     <link>${escapeXml(podcastConfig.podcast.website || baseUrl)}</link>
-    <language>${escapeXml(podcastConfig.podcast.language)}</language>
     <copyright>${escapeXml(podcastConfig.podcast.copyright)}</copyright>
     <managingEditor>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.author)})</managingEditor>
     <webMaster>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.author)})</webMaster>
@@ -171,7 +170,7 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
     <ttl>${podcastConfig.rss.ttl}</ttl>
 
     <!-- iTunes/Apple Podcasts tags -->
-    <itunes:title>${escapeXml(podcastConfig.podcast.title)}</itunes:title>
+    <itunes:title>${escapeXml(podcastConfig.podcast.author)}</itunes:title>
     <itunes:summary>${escapeXml(podcastConfig.podcast.description)}</itunes:summary>
     <itunes:author>${escapeXml(podcastConfig.podcast.author)}</itunes:author>
     <itunes:owner>
@@ -179,7 +178,6 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
       <itunes:email>${escapeXml(podcastConfig.podcast.email)}</itunes:email>
     </itunes:owner>
     <itunes:image href="${escapeXml(podcastConfig.podcast.image)}" />
-    <itunes:type>${escapeXml(podcastConfig.podcast.type)}</itunes:type>
 
     <!-- Podcasting 2.0 tags -->
     <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.creatorNpub)}</podcast:guid>
