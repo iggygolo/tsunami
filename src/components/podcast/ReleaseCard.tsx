@@ -225,7 +225,7 @@ export function ReleaseCard({
           <div className="mt-6 pt-6 border-t">
             <CommentsSection
               root={releaseEvent}
-              title="release Discussion"
+              title="Release Discussion"
               emptyStateMessage="No comments yet"
               emptyStateSubtitle="Be the first to share your thoughts about this release!"
             />

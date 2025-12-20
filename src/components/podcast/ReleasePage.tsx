@@ -612,7 +612,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                       content: release.content || '',
                       sig: ''
                     }}
-                    title="release Discussion"
+                    title="Release Discussion"
                     emptyStateMessage="No comments yet"
                     emptyStateSubtitle="Be the first to share your thoughts about this release!"
                     limit={100}

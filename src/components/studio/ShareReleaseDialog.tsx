@@ -58,7 +58,7 @@ export function ShareReleaseDialog({ release, open, onOpenChange }: ShareRelease
       });
 
       toast({
-        title: "release shared!",
+        title: "Release shared!",
         description: "Your post has been published to Nostr.",
       });
 
