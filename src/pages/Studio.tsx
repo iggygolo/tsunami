@@ -201,7 +201,6 @@ const Studio = () => {
       currency: PODCAST_CONFIG.podcast.value.currency,
       recipients: PODCAST_CONFIG.podcast.value.recipients || []
     },
-    type: PODCAST_CONFIG.podcast.type,
     complete: PODCAST_CONFIG.podcast.complete,
     // New Podcasting 2.0 defaults
     guid: PODCAST_CONFIG.podcast.guid || PODCAST_CONFIG.creatorNpub,
@@ -242,7 +241,6 @@ const Studio = () => {
           currency: PODCAST_CONFIG.podcast.value.currency,
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
-        type: podcastMetadata.type || PODCAST_CONFIG.podcast.type,
         complete: podcastMetadata.complete ?? PODCAST_CONFIG.podcast.complete,
         // Podcasting 2.0 fields
         guid: (podcastMetadata as ExtendedPodcastMetadata).guid || PODCAST_CONFIG.creatorNpub,
@@ -563,7 +561,6 @@ const Studio = () => {
           currency: PODCAST_CONFIG.podcast.value.currency,
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
-        type: podcastMetadata.type || PODCAST_CONFIG.podcast.type,
         complete: podcastMetadata.complete ?? PODCAST_CONFIG.podcast.complete,
         // Podcasting 2.0 fields
         guid: (podcastMetadata as ExtendedPodcastMetadata).guid || PODCAST_CONFIG.creatorNpub,
