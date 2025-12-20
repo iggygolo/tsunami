@@ -163,7 +163,7 @@ export function usePublishRelease() {
 
       // Create and publish the event
       const event = await createEvent({
-        kind: PODCAST_KINDS.RELEASE,
+        kind: PODCAST_KINDS.EPISODE,
         content: releaseData.content || '',
         tags
       });
@@ -365,7 +365,7 @@ export function useUpdateRelease() {
 
       // Create the updated event
       const event = await createEvent({
-        kind: PODCAST_KINDS.RELEASE,
+        kind: PODCAST_KINDS.EPISODE,
         content: releaseData.content || '',
         tags
       });

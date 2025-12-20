@@ -109,7 +109,7 @@ export function encodeReleaseAsNaddr(
   return nip19.naddrEncode({
     identifier,
     pubkey,
-    kind: 30054, // PODCAST_KINDS.RELEASE
+    kind: 30054, // PODCAST_KINDS.EPISODE
     relays
   });
 }

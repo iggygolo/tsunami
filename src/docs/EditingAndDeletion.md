@@ -123,7 +123,7 @@ Our implementation includes client-side filtering:
 ```typescript
 // Filter out deleted events in queries
 const events = await nostr.query([{
-  kinds: [PODCAST_KINDS.RELEASE],
+  kinds: [PODCAST_KINDS.EPISODE],
   authors: [getCreatorPubkeyHex()]
 }]);
 

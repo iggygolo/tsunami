@@ -9,7 +9,7 @@ import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
  * Validates if a Nostr event is a valid podcast release (NIP-54)
  */
 function validatePodcastRelease(event: NostrEvent): boolean {
-  if (event.kind !== PODCAST_KINDS.RELEASE) return false;
+  if (event.kind !== PODCAST_KINDS.EPISODE) return false;
 
   // Check for required title tag (NIP-54)
   const title = event.tags.find(([name]) => name === 'title')?.[1];
@@ -125,7 +125,7 @@ export function usePodcastReleases(options: ReleaseSearchOptions = {}) {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
       const events = await nostr.query([{
-        kinds: [PODCAST_KINDS.RELEASE],
+        kinds: [PODCAST_KINDS.EPISODE],
         authors: [getCreatorPubkeyHex()],
         limit: options.limit || 100
       }], { signal });
