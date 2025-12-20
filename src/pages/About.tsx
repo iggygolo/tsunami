@@ -61,20 +61,6 @@ const About = () => {
                   </p>
 
                   <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">Language:</span>
-                      <span className="text-muted-foreground">
-                        {podcastConfig.podcast.language.toUpperCase()}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">Content Rating:</span>
-                      <Badge variant={podcastConfig.podcast.explicit ? "destructive" : "secondary"}>
-                        {podcastConfig.podcast.explicit ? "Explicit" : "Clean"}
-                      </Badge>
-                    </div>
-
                     <div className="flex flex-wrap gap-3 pt-2">
                       {creator?.metadata?.website && (
                         <Button variant="outline" size="sm" asChild>

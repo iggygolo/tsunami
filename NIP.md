@@ -132,8 +132,6 @@ The content field SHOULD contain a JSON object with podcast metadata including:
   "author": "John Doe",
   "email": "john@example.com",
   "image": "https://example.com/artwork.jpg",
-  "language": "en",
-  "explicit": false,
   "website": "https://example.com",
   "copyright": "© 2023 John Doe",
   "funding": ["https://example.com/donate"],

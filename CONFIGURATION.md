@@ -42,11 +42,6 @@ These are the minimum settings you should configure:
 - `VITE_PODCAST_WEBSITE` - Your podcast website URL
 - `VITE_PODCAST_COPYRIGHT` - Copyright notice
 
-### 🏷️ Discovery & Classification
-
-- `VITE_PODCAST_LANGUAGE` - Language code (e.g., "en-us", "es-es")
-- `VITE_PODCAST_EXPLICIT` - Set to "true" if explicit content
-
 ### ⚡ Lightning Value-for-Value
 
 Configure Lightning payments for listener support:
@@ -133,8 +128,6 @@ VITE_PODCAST_FUNDING=lightning:your@address.com,https://donate.example.com,bitco
 | `VITE_PODCAST_DESCRIPTION` | string | Podcast description | Example description |
 | `VITE_PODCAST_EMAIL` | string | Contact email | "creator@podstr.example" |
 | `VITE_PODCAST_IMAGE` | string | Cover art URL | Example image URL |
-| `VITE_PODCAST_LANGUAGE` | string | Language code | "en-us" |
-| `VITE_PODCAST_EXPLICIT` | boolean | Explicit content flag | false |
 | `VITE_PODCAST_WEBSITE` | string | Podcast website | "https://podstr.example" |
 | `VITE_PODCAST_COPYRIGHT` | string | Copyright notice | "© 2025 PODSTR Creator" |
 | `VITE_PODCAST_VALUE_AMOUNT` | number | Sats per minute | 1000 |

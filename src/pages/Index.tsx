@@ -66,12 +66,6 @@ const Index = () => {
                       )}
 
                       <div className="flex-1 min-w-0 space-y-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {latestEpisode.explicit && (
-                            <Badge variant="destructive" className="animate-pulse">Explicit</Badge>
-                          )}
-                        </div>
-
                         <h3 className="text-2xl lg:text-3xl font-bold line-clamp-2 leading-tight">
                           {latestEpisode.title}
                         </h3>

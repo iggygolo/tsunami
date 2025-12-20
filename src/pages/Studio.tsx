@@ -60,8 +60,6 @@ interface PodcastFormData {
   description: string;
   email: string;
   image: string;
-  language: string;
-  explicit: boolean;
   website: string;
   copyright: string;
   funding: string[];
@@ -109,8 +107,6 @@ interface ExtendedPodcastMetadata {
   author: string;
   email: string;
   image: string;
-  language: string;
-  explicit: boolean;
   website: string;
   copyright: string;
   funding?: string[];
@@ -185,8 +181,6 @@ const Studio = () => {
     author: PODCAST_CONFIG.podcast.author,
     email: PODCAST_CONFIG.podcast.email,
     image: PODCAST_CONFIG.podcast.image,
-    language: PODCAST_CONFIG.podcast.language,
-    explicit: PODCAST_CONFIG.podcast.explicit,
     website: PODCAST_CONFIG.podcast.website,
     copyright: PODCAST_CONFIG.podcast.copyright,
     funding: PODCAST_CONFIG.podcast.funding || [],
@@ -223,8 +217,6 @@ const Studio = () => {
         description: podcastMetadata.description,
         email: podcastMetadata.email,
         image: podcastMetadata.image,
-        language: podcastMetadata.language,
-        explicit: podcastMetadata.explicit,
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
         funding: podcastMetadata.funding || PODCAST_CONFIG.podcast.funding || [],
@@ -439,8 +431,6 @@ const Studio = () => {
             description: formData.description,
             email: formData.email,
             image: formData.image,
-            language: formData.language,
-            explicit: formData.explicit,
             website: formData.website,
             copyright: formData.copyright,
             funding: absoluteFundingUrls,
@@ -528,8 +518,6 @@ const Studio = () => {
         description: podcastMetadata.description,
         email: podcastMetadata.email,
         image: podcastMetadata.image,
-        language: podcastMetadata.language,
-        explicit: podcastMetadata.explicit,
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
         funding: podcastMetadata.funding || PODCAST_CONFIG.podcast.funding || [],
@@ -930,16 +918,6 @@ const Studio = () => {
                             )}
                           </div>
                         </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="explicit"
-                          checked={formData.explicit}
-                          onCheckedChange={(checked) => handleInputChange('explicit', checked)}
-                          disabled={editingSection !== 'podcast'}
-                        />
-                        <Label htmlFor="explicit">Explicit Content</Label>
                       </div>
                     </div>
                   </div>

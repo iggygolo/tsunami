@@ -133,7 +133,6 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
 - ✅ iTunes namespace declarations
 - ✅ iTunes-specific tags: `itunes:author`, `itunes:summary`, etc.
 - ✅ Episode and season numbering
-- ✅ Explicit content marking
 - ✅ Podcast artwork support
 
 ### 3. **Podcasting 2.0 Enhancements**

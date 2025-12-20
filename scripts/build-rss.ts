@@ -72,8 +72,6 @@ function createNodejsConfig() {
       author: process.env.VITE_PODCAST_AUTHOR || "PODSTR Creator",
       email: process.env.VITE_PODCAST_EMAIL || "creator@podstr.example",
       image: process.env.VITE_PODCAST_IMAGE || "https://image.nostr.build/59bb1cffa12d11cb7cb6905283ecc75b259733e9ecf44a6053b3805d1f01bb7a.jpg",
-      language: process.env.VITE_PODCAST_LANGUAGE || "en-us",
-      explicit: process.env.VITE_PODCAST_EXPLICIT === "true",
       website: process.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
       copyright: process.env.VITE_PODCAST_COPYRIGHT || "© 2025 PODSTR Creator",
       funding: process.env.VITE_PODCAST_FUNDING ?
@@ -186,7 +184,6 @@ function generateRSSFeed(episodes: PodcastEpisode[], trailers: PodcastTrailer[],
       <itunes:email>${escapeXml(podcastConfig.podcast.email)}</itunes:email>
     </itunes:owner>
     <itunes:image href="${escapeXml(podcastConfig.podcast.image)}" />
-    <itunes:explicit>${podcastConfig.podcast.explicit ? 'yes' : 'no'}</itunes:explicit>
     <itunes:type>${escapeXml(podcastConfig.podcast.type)}</itunes:type>
 
     <!-- Podcasting 2.0 tags -->

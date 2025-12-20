@@ -92,7 +92,6 @@ export function generateRSSFeed(episodes: PodcastEpisode[], config?: PodcastConf
     <title>${escapeXml(podcastConfig.podcast.author)}</title>
     <description>${escapeXml(podcastConfig.podcast.description)}</description>
     <link>${escapeXml(podcastConfig.podcast.website || baseUrl)}</link>
-    <language>${escapeXml(podcastConfig.podcast.language)}</language>
     <copyright>${escapeXml(podcastConfig.podcast.copyright)}</copyright>
     <managingEditor>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.author)})</managingEditor>
     <webMaster>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.author)})</webMaster>
@@ -109,7 +108,6 @@ export function generateRSSFeed(episodes: PodcastEpisode[], config?: PodcastConf
       <itunes:email>${escapeXml(podcastConfig.podcast.email)}</itunes:email>
     </itunes:owner>
     ${podcastConfig.podcast.image ? `<itunes:image href="${escapeXml(podcastConfig.podcast.image)}" />` : ''}
-    <itunes:explicit>${podcastConfig.podcast.explicit ? 'true' : 'false'}</itunes:explicit>
 
     <!-- Podcasting 2.0 tags -->
     <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.creatorNpub)}</podcast:guid>

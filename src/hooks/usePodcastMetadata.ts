@@ -7,8 +7,6 @@ interface PodcastMetadata {
   description: string;
   email: string;
   image: string;
-  language: string;
-  explicit: boolean;
   website: string;
   copyright: string;
   funding: string[];
@@ -73,8 +71,6 @@ export function usePodcastMetadata() {
         author: PODCAST_CONFIG.podcast.author,
         email: PODCAST_CONFIG.podcast.email,
         image: PODCAST_CONFIG.podcast.image,
-        language: PODCAST_CONFIG.podcast.language,
-        explicit: PODCAST_CONFIG.podcast.explicit,
         website: PODCAST_CONFIG.podcast.website,
         copyright: PODCAST_CONFIG.podcast.copyright,
         funding: PODCAST_CONFIG.podcast.funding || [],
