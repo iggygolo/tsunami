@@ -62,17 +62,6 @@ const About = () => {
 
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
-                      <span className="font-medium">Categories:</span>
-                      <div className="flex flex-wrap gap-2">
-                        {podcastConfig.podcast.categories.map((category) => (
-                          <Badge key={category} variant="outline">
-                            {category}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
                       <span className="font-medium">Language:</span>
                       <span className="text-muted-foreground">
                         {podcastConfig.podcast.language.toUpperCase()}

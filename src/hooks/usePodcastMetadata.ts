@@ -9,7 +9,6 @@ interface PodcastMetadata {
   email: string;
   image: string;
   language: string;
-  categories: string[];
   explicit: boolean;
   website: string;
   copyright: string;
@@ -77,7 +76,6 @@ export function usePodcastMetadata() {
         email: PODCAST_CONFIG.podcast.email,
         image: PODCAST_CONFIG.podcast.image,
         language: PODCAST_CONFIG.podcast.language,
-        categories: PODCAST_CONFIG.podcast.categories,
         explicit: PODCAST_CONFIG.podcast.explicit,
         website: PODCAST_CONFIG.podcast.website,
         copyright: PODCAST_CONFIG.podcast.copyright,
@@ -88,7 +86,6 @@ export function usePodcastMetadata() {
           currency: PODCAST_CONFIG.podcast.value.currency,
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
-        type: PODCAST_CONFIG.podcast.type,
         complete: PODCAST_CONFIG.podcast.complete,
         updated_at: 0
       };

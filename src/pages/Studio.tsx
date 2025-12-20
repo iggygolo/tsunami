@@ -62,7 +62,6 @@ interface PodcastFormData {
   email: string;
   image: string;
   language: string;
-  categories: string[];
   explicit: boolean;
   website: string;
   copyright: string;
@@ -112,7 +111,6 @@ interface ExtendedPodcastMetadata {
   email: string;
   image: string;
   language: string;
-  categories: string[];
   explicit: boolean;
   website: string;
   copyright: string;
@@ -190,7 +188,6 @@ const Studio = () => {
     email: PODCAST_CONFIG.podcast.email,
     image: PODCAST_CONFIG.podcast.image,
     language: PODCAST_CONFIG.podcast.language,
-    categories: PODCAST_CONFIG.podcast.categories,
     explicit: PODCAST_CONFIG.podcast.explicit,
     website: PODCAST_CONFIG.podcast.website,
     copyright: PODCAST_CONFIG.podcast.copyright,
@@ -230,7 +227,6 @@ const Studio = () => {
         email: podcastMetadata.email,
         image: podcastMetadata.image,
         language: podcastMetadata.language,
-        categories: podcastMetadata.categories,
         explicit: podcastMetadata.explicit,
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
@@ -295,16 +291,6 @@ const Studio = () => {
       ...prev,
       [field]: value
     }));
-  };
-
-  const handleCategoryAdd = (category: string) => {
-    if (category && !formData.categories.includes(category)) {
-      handleInputChange('categories', [...formData.categories, category]);
-    }
-  };
-
-  const handleCategoryRemove = (category: string) => {
-    handleInputChange('categories', formData.categories.filter(c => c !== category));
   };
 
   const handleFundingAdd = (funding: string) => {
@@ -458,14 +444,12 @@ const Studio = () => {
             email: formData.email,
             image: formData.image,
             language: formData.language,
-            categories: formData.categories,
             explicit: formData.explicit,
             website: formData.website,
             copyright: formData.copyright,
             funding: absoluteFundingUrls,
             locked: formData.locked,
             value: formData.value,
-            type: formData.type,
             complete: formData.complete,
             // Podcasting 2.0 fields
             guid: formData.guid,
@@ -550,7 +534,6 @@ const Studio = () => {
         email: podcastMetadata.email,
         image: podcastMetadata.image,
         language: podcastMetadata.language,
-        categories: podcastMetadata.categories,
         explicit: podcastMetadata.explicit,
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
@@ -1161,56 +1144,6 @@ const Studio = () => {
                         />
                       </div>
                     </div>
-                  </div>
-
-                  {/* Categories */}
-                  <div>
-                    <Label>Categories</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {formData.categories.map((category) => (
-                        <Badge key={category} variant="secondary" className="flex items-center space-x-1">
-                          <span>{category}</span>
-                          {editingSection === 'podcast' && (
-                            <button
-                              onClick={() => handleCategoryRemove(category)}
-                              className="ml-1 hover:text-destructive"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          )}
-                        </Badge>
-                      ))}
-                    </div>
-
-                    {editingSection === 'podcast' && (
-                      <div className="flex space-x-2 mt-2">
-                        <Input
-                          placeholder="Add category"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              handleCategoryAdd((e.target as HTMLInputElement).value);
-                              (e.target as HTMLInputElement).value = '';
-                            }
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            const input = document.querySelector('input[placeholder="Add category"]') as HTMLInputElement;
-                            if (input?.value) {
-                              handleCategoryAdd(input.value);
-                              input.value = '';
-                            }
-                          }}
-                        >
-                          Add
-                        </Button>
-                      </div>
-                    )}
-
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Add categories that best describe your podcast content. This helps with discovery in podcast directories.
-                    </p>
                   </div>
 
                   {/* Funding Links */}

@@ -39,7 +39,6 @@ export interface PodcastConfig {
     email: string;
     image: string;
     language: string;
-    categories: string[];
     explicit: boolean;
     website: string;
     copyright: string;
@@ -114,7 +113,6 @@ export const PODCAST_CONFIG: PodcastConfig = {
     email: import.meta.env.VITE_PODCAST_EMAIL || "creator@podstr.example",
     image: import.meta.env.VITE_PODCAST_IMAGE || "https://example.com/podcast-artwork.jpg",
     language: import.meta.env.VITE_PODCAST_LANGUAGE || "en-us",
-    categories: parseArrayEnv(import.meta.env.VITE_PODCAST_CATEGORIES, ["Technology", "Social Networking", "Society & Culture"]),
     explicit: import.meta.env.VITE_PODCAST_EXPLICIT === "true",
     website: import.meta.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
     copyright: import.meta.env.VITE_PODCAST_COPYRIGHT || "© 2025 PODSTR Creator",

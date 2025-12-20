@@ -220,16 +220,6 @@ const Index = () => {
                     <span className="font-medium text-muted-foreground">Language:</span>
                     <span className="font-medium">{podcastConfig.podcast.language.toUpperCase()}</span>
                   </div>
-                  <div>
-                    <span className="font-medium text-muted-foreground block mb-2">Categories:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {podcastConfig.podcast.categories.map((category) => (
-                        <Badge key={category} variant="outline" className="text-xs border-primary/30 text-primary">
-                          {category}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
                 </div>
 
                 <Button variant="outline" className="w-full focus-ring" asChild>

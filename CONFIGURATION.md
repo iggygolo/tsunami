@@ -46,7 +46,6 @@ These are the minimum settings you should configure:
 
 ### 🏷️ Discovery & Classification
 
-- `VITE_PODCAST_CATEGORIES` - Comma-separated categories (e.g., "Technology,Education")
 - `VITE_PODCAST_LANGUAGE` - Language code (e.g., "en-us", "es-es")
 - `VITE_PODCAST_EXPLICIT` - Set to "true" if explicit content
 
@@ -138,7 +137,6 @@ VITE_PODCAST_FUNDING=lightning:your@address.com,https://donate.example.com,bitco
 | `VITE_PODCAST_EMAIL` | string | Contact email | "creator@podstr.example" |
 | `VITE_PODCAST_IMAGE` | string | Cover art URL | Example image URL |
 | `VITE_PODCAST_LANGUAGE` | string | Language code | "en-us" |
-| `VITE_PODCAST_CATEGORIES` | string | Comma-separated categories | "Technology,Social Networking" |
 | `VITE_PODCAST_EXPLICIT` | boolean | Explicit content flag | false |
 | `VITE_PODCAST_WEBSITE` | string | Podcast website | "https://podstr.example" |
 | `VITE_PODCAST_COPYRIGHT` | string | Copyright notice | "© 2025 PODSTR Creator" |

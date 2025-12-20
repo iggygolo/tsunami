@@ -74,9 +74,6 @@ function createNodejsConfig() {
       email: process.env.VITE_PODCAST_EMAIL || "creator@podstr.example",
       image: process.env.VITE_PODCAST_IMAGE || "https://image.nostr.build/59bb1cffa12d11cb7cb6905283ecc75b259733e9ecf44a6053b3805d1f01bb7a.jpg",
       language: process.env.VITE_PODCAST_LANGUAGE || "en-us",
-      categories: process.env.VITE_PODCAST_CATEGORIES ?
-        process.env.VITE_PODCAST_CATEGORIES.split(',').map(s => s.trim()).filter(s => s.length > 0) :
-        ["Technology", "Social Networking", "Society & Culture"],
       explicit: process.env.VITE_PODCAST_EXPLICIT === "true",
       website: process.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
       copyright: process.env.VITE_PODCAST_COPYRIGHT || "© 2025 PODSTR Creator",
@@ -190,7 +187,6 @@ function generateRSSFeed(episodes: PodcastEpisode[], trailers: PodcastTrailer[],
       <itunes:email>${escapeXml(podcastConfig.podcast.email)}</itunes:email>
     </itunes:owner>
     <itunes:image href="${escapeXml(podcastConfig.podcast.image)}" />
-    <itunes:category text="${escapeXml(podcastConfig.podcast.categories[0] || 'Technology')}" />
     <itunes:explicit>${podcastConfig.podcast.explicit ? 'yes' : 'no'}</itunes:explicit>
     <itunes:type>${escapeXml(podcastConfig.podcast.type)}</itunes:type>
 
