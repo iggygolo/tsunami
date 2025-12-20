@@ -641,7 +641,7 @@ const Studio = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="settings" className="flex items-center space-x-2">
                 <Settings className="w-4 h-4" />
                 <span>Settings</span>
@@ -649,10 +649,6 @@ const Studio = () => {
               <TabsTrigger value="episodes" className="flex items-center space-x-2">
                 <Mic className="w-4 h-4" />
                 <span>Episodes</span>
-              </TabsTrigger>
-              <TabsTrigger value="trailers" className="flex items-center space-x-2">
-                <Play className="w-4 h-4" />
-                <span>Trailers</span>
               </TabsTrigger>
               <TabsTrigger value="blossom" className="flex items-center space-x-2">
                 <Server className="w-4 h-4" />
