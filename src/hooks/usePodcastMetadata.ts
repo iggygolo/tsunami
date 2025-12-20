@@ -25,7 +25,6 @@ interface PodcastMetadata {
     }>;
   };
   complete: boolean;
-  useOP3?: boolean;
   updated_at: number;
 }
 

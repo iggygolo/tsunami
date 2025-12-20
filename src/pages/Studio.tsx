@@ -43,7 +43,6 @@ import { genRSSFeed } from '@/lib/rssGenerator';
 import { EpisodeManagement } from '@/components/studio/EpisodeManagement';
 import { TrailerManagement } from '@/components/studio/TrailerManagement';
 import { BlossomServerManager } from '@/components/studio/BlossomServerManager';
-import { OP3Analytics } from '@/components/studio/OP3Analytics';
 
 interface ProfileFormData {
   name: string;
@@ -98,7 +97,6 @@ interface PodcastFormData {
     identifier: string;
     url?: string;
   };
-  useOP3: boolean;
 }
 
 interface ExtendedPodcastMetadata {
@@ -145,7 +143,6 @@ interface ExtendedPodcastMetadata {
     identifier: string;
     url?: string;
   };
-  useOP3?: boolean;
 }
 
 const Studio = () => {
@@ -206,7 +203,6 @@ const Studio = () => {
       identifier: 'CC BY 4.0',
       url: 'https://creativecommons.org/licenses/by/4.0/'
     },
-    useOP3: PODCAST_CONFIG.podcast.useOP3 || false
   });
 
   // Update form data when metadata loads
@@ -243,7 +239,6 @@ const Studio = () => {
           identifier: 'CC BY 4.0',
           url: 'https://creativecommons.org/licenses/by/4.0/'
         },
-        useOP3: (podcastMetadata as ExtendedPodcastMetadata).useOP3 || false
       });
     }
   }, [podcastMetadata, isLoadingMetadata]);
@@ -444,7 +439,6 @@ const Studio = () => {
             location: formData.location,
             person: formData.person,
             license: formData.license,
-            useOP3: formData.useOP3,
             updated_at: Math.floor(Date.now() / 1000)
           }),
           tags: [
@@ -544,7 +538,6 @@ const Studio = () => {
           identifier: 'CC BY 4.0',
           url: 'https://creativecommons.org/licenses/by/4.0/'
         },
-        useOP3: (podcastMetadata as ExtendedPodcastMetadata).useOP3 || false
       });
     }
 
@@ -971,35 +964,6 @@ const Studio = () => {
                           disabled={editingSection !== 'podcast'}
                         />
                         <Label htmlFor="complete">Complete</Label>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="useOP3"
-                          checked={formData.useOP3}
-                          onCheckedChange={(checked) => handleInputChange('useOP3', checked)}
-                          disabled={editingSection !== 'podcast'}
-                        />
-                        <Label htmlFor="useOP3" className="flex items-center space-x-1">
-                          <span>Use OP3 Analytics</span>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-xs bg-popover text-popover-foreground border border-border shadow-md">
-                                <p className="font-semibold mb-1">What is OP3?</p>
-                                <p className="text-sm">
-                                  OP3.dev (Open Podcast Prefix Project) provides podcast analytics by prefixing episode URLs.
-                                  When enabled, all episode URLs will be automatically prefixed with https://op3.dev/e/ to track downloads and plays.
-                                </p>
-                                <a href="https://op3.dev" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-2 block">
-                                  Learn more at OP3.dev →
-                                </a>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </Label>
                       </div>
                     </div>
 
@@ -1551,9 +1515,6 @@ const Studio = () => {
                   </CardContent>
                 </Card>
               )}
-
-              {/* OP3.dev Analytics Section */}
-              <OP3Analytics />
             </TabsContent>
           </Tabs>
         </div>
