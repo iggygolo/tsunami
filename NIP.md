@@ -135,7 +135,6 @@ The content field SHOULD contain a JSON object with podcast metadata including:
   "website": "https://example.com",
   "copyright": "© 2023 John Doe",
   "funding": ["https://example.com/donate"],
-  "locked": false,
   "value": {
     "amount": 100000,
     "currency": "sat",
@@ -147,8 +146,7 @@ The content field SHOULD contain a JSON object with podcast metadata including:
         "split": 100
       }
     ]
-  },
-  "complete": false
+  }
 }
 ```
 

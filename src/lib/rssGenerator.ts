@@ -111,7 +111,6 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
 
     <!-- Podcasting 2.0 tags -->
     <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.creatorNpub)}</podcast:guid>
-    <podcast:locked>${podcastConfig.podcast.locked ? 'yes' : 'no'}</podcast:locked>
     ${podcastConfig.podcast.medium ? `<podcast:medium>${escapeXml(podcastConfig.podcast.medium)}</podcast:medium>` : ''}
     ${podcastConfig.podcast.publisher ? `<podcast:publisher>${escapeXml(podcastConfig.podcast.publisher)}</podcast:publisher>` : ''}
     ${podcastConfig.podcast.license ?

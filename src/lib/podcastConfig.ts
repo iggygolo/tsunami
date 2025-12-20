@@ -40,7 +40,6 @@ export interface PodcastConfig {
     website: string;
     copyright: string;
     funding: string[];
-    locked: boolean;
     value: {
       amount: number;
       currency: string;
@@ -54,7 +53,6 @@ export interface PodcastConfig {
         fee?: boolean;
       }>;
     };
-    complete: boolean;
     // New Podcasting 2.0 fields
     guid?: string; // Unique podcast identifier
     medium?: 'podcast' | 'music' | 'video' | 'film' | 'audiobook' | 'newsletter' | 'blog';
@@ -110,7 +108,6 @@ export const PODCAST_CONFIG: PodcastConfig = {
     website: import.meta.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
     copyright: import.meta.env.VITE_PODCAST_COPYRIGHT || "© 2025 PODSTR Creator",
     funding: parseArrayEnv(import.meta.env.VITE_PODCAST_FUNDING, ["/about"]),
-    locked: import.meta.env.VITE_PODCAST_LOCKED === "true",
     value: {
       amount: parseInt(import.meta.env.VITE_PODCAST_VALUE_AMOUNT || "1000", 10),
       currency: import.meta.env.VITE_PODCAST_VALUE_CURRENCY || "sats",
@@ -139,7 +136,6 @@ export const PODCAST_CONFIG: PodcastConfig = {
         }
       ])
     },
-    complete: import.meta.env.VITE_PODCAST_COMPLETE === "true",
     // Podcasting 2.0 fields from environment
     guid: import.meta.env.VITE_PODCAST_GUID || import.meta.env.VITE_CREATOR_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
     medium: (import.meta.env.VITE_PODCAST_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",

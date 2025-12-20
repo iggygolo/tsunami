@@ -10,7 +10,6 @@ interface PodcastMetadata {
   website: string;
   copyright: string;
   funding: string[];
-  locked: boolean;
   value: {
     amount: number;
     currency: string;
@@ -24,7 +23,6 @@ interface PodcastMetadata {
       fee?: boolean;
     }>;
   };
-  complete: boolean;
   updated_at: number;
 }
 
@@ -73,13 +71,11 @@ export function usePodcastMetadata() {
         website: PODCAST_CONFIG.podcast.website,
         copyright: PODCAST_CONFIG.podcast.copyright,
         funding: PODCAST_CONFIG.podcast.funding || [],
-        locked: PODCAST_CONFIG.podcast.locked,
         value: {
           amount: PODCAST_CONFIG.podcast.value.amount,
           currency: PODCAST_CONFIG.podcast.value.currency,
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
-        complete: PODCAST_CONFIG.podcast.complete,
         updated_at: 0
       };
     },

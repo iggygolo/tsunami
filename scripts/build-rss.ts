@@ -75,13 +75,11 @@ function createNodejsConfig() {
       funding: process.env.VITE_PODCAST_FUNDING ?
         process.env.VITE_PODCAST_FUNDING.split(',').map(s => s.trim()).filter(s => s.length > 0) :
         [],
-      locked: process.env.VITE_PODCAST_LOCKED === "true",
       value: {
         amount: parseInt(process.env.VITE_PODCAST_VALUE_AMOUNT || "1000", 10),
         currency: process.env.VITE_PODCAST_VALUE_CURRENCY || "sats",
         recipients
       },
-      complete: process.env.VITE_PODCAST_COMPLETE === "true",
       // Podcasting 2.0 fields
       guid: process.env.VITE_PODCAST_GUID || creatorNpub,
       medium: (process.env.VITE_PODCAST_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
@@ -186,7 +184,6 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
     <!-- Podcasting 2.0 tags -->
     <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.creatorNpub)}</podcast:guid>
     <podcast:medium>${escapeXml(podcastConfig.podcast.medium || 'podcast')}</podcast:medium>
-    <podcast:locked>${podcastConfig.podcast.locked ? 'yes' : 'no'}</podcast:locked>
 
     ${podcastConfig.podcast.funding && podcastConfig.podcast.funding.length > 0 ?
       podcastConfig.podcast.funding.map(url =>

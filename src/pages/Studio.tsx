@@ -62,7 +62,6 @@ interface PodcastFormData {
   website: string;
   copyright: string;
   funding: string[];
-  locked: boolean;
   value: {
     amount: number;
     currency: string;
@@ -76,7 +75,6 @@ interface PodcastFormData {
       fee?: boolean;
     }>;
   };
-  complete: boolean;
   // New Podcasting 2.0 fields
   guid: string;
   medium: 'podcast' | 'music' | 'video' | 'film' | 'audiobook' | 'newsletter' | 'blog';
@@ -108,7 +106,6 @@ interface ExtendedPodcastMetadata {
   website: string;
   copyright: string;
   funding?: string[];
-  locked?: boolean;
   value?: {
     amount: number;
     currency: string;
@@ -122,7 +119,6 @@ interface ExtendedPodcastMetadata {
       fee?: boolean;
     }>;
   };
-  complete?: boolean;
   // Podcasting 2.0 fields
   guid?: string;
   medium?: 'podcast' | 'music' | 'video' | 'film' | 'audiobook' | 'newsletter' | 'blog';
@@ -181,13 +177,11 @@ const Studio = () => {
     website: PODCAST_CONFIG.podcast.website,
     copyright: PODCAST_CONFIG.podcast.copyright,
     funding: PODCAST_CONFIG.podcast.funding || [],
-    locked: PODCAST_CONFIG.podcast.locked,
     value: {
       amount: PODCAST_CONFIG.podcast.value.amount,
       currency: PODCAST_CONFIG.podcast.value.currency,
       recipients: PODCAST_CONFIG.podcast.value.recipients || []
     },
-    complete: PODCAST_CONFIG.podcast.complete,
     // New Podcasting 2.0 defaults
     guid: PODCAST_CONFIG.podcast.guid || PODCAST_CONFIG.creatorNpub,
     medium: PODCAST_CONFIG.podcast.medium || 'podcast',
@@ -216,13 +210,11 @@ const Studio = () => {
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
         funding: podcastMetadata.funding || PODCAST_CONFIG.podcast.funding || [],
-        locked: podcastMetadata.locked ?? PODCAST_CONFIG.podcast.locked,
         value: podcastMetadata.value || {
           amount: PODCAST_CONFIG.podcast.value.amount,
           currency: PODCAST_CONFIG.podcast.value.currency,
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
-        complete: podcastMetadata.complete ?? PODCAST_CONFIG.podcast.complete,
         // Podcasting 2.0 fields
         guid: (podcastMetadata as ExtendedPodcastMetadata).guid || PODCAST_CONFIG.creatorNpub,
         medium: (podcastMetadata as ExtendedPodcastMetadata).medium || 'podcast',
@@ -429,9 +421,7 @@ const Studio = () => {
             website: formData.website,
             copyright: formData.copyright,
             funding: absoluteFundingUrls,
-            locked: formData.locked,
             value: formData.value,
-            complete: formData.complete,
             // Podcasting 2.0 fields
             guid: formData.guid,
             medium: formData.medium,
@@ -515,13 +505,11 @@ const Studio = () => {
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
         funding: podcastMetadata.funding || PODCAST_CONFIG.podcast.funding || [],
-        locked: podcastMetadata.locked ?? PODCAST_CONFIG.podcast.locked,
         value: podcastMetadata.value || {
           amount: PODCAST_CONFIG.podcast.value.amount,
           currency: PODCAST_CONFIG.podcast.value.currency,
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
-        complete: podcastMetadata.complete ?? PODCAST_CONFIG.podcast.complete,
         // Podcasting 2.0 fields
         guid: (podcastMetadata as ExtendedPodcastMetadata).guid || PODCAST_CONFIG.creatorNpub,
         medium: (podcastMetadata as ExtendedPodcastMetadata).medium || 'podcast',
@@ -944,26 +932,6 @@ const Studio = () => {
                           <option value="newsletter">Newsletter</option>
                           <option value="blog">Blog</option>
                         </select>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="locked"
-                          checked={formData.locked}
-                          onCheckedChange={(checked) => handleInputChange('locked', checked)}
-                          disabled={editingSection !== 'podcast'}
-                        />
-                        <Label htmlFor="locked">Locked (Paid)</Label>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="complete"
-                          checked={formData.complete}
-                          onCheckedChange={(checked) => handleInputChange('complete', checked)}
-                          disabled={editingSection !== 'podcast'}
-                        />
-                        <Label htmlFor="complete">Complete</Label>
                       </div>
                     </div>
 
