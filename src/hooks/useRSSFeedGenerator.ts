@@ -57,8 +57,6 @@ function eventToPodcastEpisode(event: NostrEvent): PodcastEpisode {
     audioType,
     imageUrl,
     duration: undefined, // Can be extended later if needed
-    episodeNumber: undefined, // Can be extended later if needed
-    seasonNumber: undefined, // Can be extended later if needed
     publishDate: new Date(event.created_at * 1000),
     explicit: false, // Can be extended later if needed
     tags: topicTags,

@@ -25,8 +25,6 @@ const episodeSchema = z.object({
   audioUrl: z.string().url().optional().or(z.literal('')),
   imageUrl: z.string().url().optional().or(z.literal('')),
   duration: z.number().positive().optional(),
-  episodeNumber: z.number().positive().optional(),
-  seasonNumber: z.number().positive().optional(),
   explicit: z.boolean().default(false),
   tags: z.array(z.string()).default([]),
 });
@@ -406,44 +404,6 @@ export function PublishEpisodeForm({
 
             {/* Episode Details */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="episodeNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Episode Number</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="1"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="seasonNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Season Number</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="1"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="duration"

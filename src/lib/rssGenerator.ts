@@ -31,8 +31,6 @@ function episodeToRSSItem(episode: PodcastEpisode, config?: PodcastConfig): RSSI
       type: episode.audioType || 'audio/mpeg'
     },
     duration: episode.duration ? formatDuration(episode.duration) : undefined,
-    episodeNumber: episode.episodeNumber,
-    seasonNumber: episode.seasonNumber,
     explicit: episode.explicit,
     image: episode.imageUrl,
   };
@@ -187,8 +185,6 @@ export function generateRSSFeed(episodes: PodcastEpisode[], config?: PodcastConf
       <itunes:summary>${escapeXml(item.description)}</itunes:summary>
       <itunes:author>${escapeXml(podcastConfig.podcast.author)}</itunes:author>
       ${item.duration ? `<itunes:duration>${item.duration}</itunes:duration>` : ''}
-      ${item.episodeNumber ? `<itunes:episode>${item.episodeNumber}</itunes:episode>` : ''}
-      ${item.seasonNumber ? `<itunes:season>${item.seasonNumber}</itunes:season>` : ''}
       <itunes:explicit>${item.explicit ? 'true' : 'false'}</itunes:explicit>
       ${item.image ? `<itunes:image href="${escapeXml(item.image)}" />` : ''}
 

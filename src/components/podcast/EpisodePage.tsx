@@ -151,8 +151,6 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
       imageUrl,
       publishDate,
       createdAt: new Date(episodeEvent.created_at * 1000),
-      episodeNumber: undefined, // Can be extended later if needed
-      seasonNumber: undefined, // Can be extended later if needed
       duration,
       explicit: false, // Can be extended later if needed
       tags: topicTags,
@@ -324,16 +322,6 @@ export function EpisodePage({ eventId, addressableEvent }: EpisodePageProps) {
 
                 <div className="flex-1 min-w-0 space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    {episode.episodeNumber && (
-                      <Badge variant="secondary">
-                        Episode {episode.episodeNumber}
-                      </Badge>
-                    )}
-                    {episode.seasonNumber && (
-                      <Badge variant="outline">
-                        Season {episode.seasonNumber}
-                      </Badge>
-                    )}
                     {episode.explicit && (
                       <Badge variant="destructive">Explicit</Badge>
                     )}

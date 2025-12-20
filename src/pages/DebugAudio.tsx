@@ -21,8 +21,6 @@ export default function DebugAudio() {
     authorPubkey: 'test-pubkey',
     identifier: 'test-episode-identifier',
     createdAt: new Date(),
-    episodeNumber: 1,
-    seasonNumber: undefined
   });
 
   const [currentEpisode, setCurrentEpisode] = useState<PodcastEpisode | null>(null);

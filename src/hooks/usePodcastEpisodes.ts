@@ -100,8 +100,6 @@ function eventToPodcastEpisode(event: NostrEvent): PodcastEpisode {
     videoType,
     imageUrl,
     duration,
-    episodeNumber: undefined, // Can be extended later if needed
-    seasonNumber: undefined, // Can be extended later if needed
     publishDate,
     explicit: false, // Can be extended later if needed
     tags: topicTags,

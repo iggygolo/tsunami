@@ -14,8 +14,6 @@ export interface PodcastEpisode {
   videoType?: string;
   imageUrl?: string;
   duration?: number; // in seconds
-  episodeNumber?: number;
-  seasonNumber?: number;
   publishDate: Date;
   explicit?: boolean;
   tags: string[];
@@ -88,8 +86,6 @@ export interface EpisodeFormData {
   chaptersFile?: File;
   chaptersUrl?: string;
   duration?: number;
-  episodeNumber?: number;
-  seasonNumber?: number;
   explicit?: boolean;
   tags: string[];
   externalRefs?: ExternalReference[];
@@ -154,8 +150,6 @@ export interface RSSItem {
     type: string;
   };
   duration?: string; // HH:MM:SS format
-  episodeNumber?: number;
-  seasonNumber?: number;
   explicit?: boolean;
   image?: string;
   // Transcript and chapters as URL references
