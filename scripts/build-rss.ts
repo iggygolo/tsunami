@@ -183,7 +183,7 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
 
     <!-- Podcasting 2.0 tags -->
     <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.creatorNpub)}</podcast:guid>
-    <podcast:medium>${escapeXml(podcastConfig.podcast.medium || 'podcast')}</podcast:medium>
+    <podcast:medium>${escapeXml(podcastConfig.podcast.medium || 'music')}</podcast:medium>
 
     ${podcastConfig.podcast.funding && podcastConfig.podcast.funding.length > 0 ?
       podcastConfig.podcast.funding.map(url =>

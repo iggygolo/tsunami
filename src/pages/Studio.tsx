@@ -184,7 +184,7 @@ const Studio = () => {
     },
     // New Podcasting 2.0 defaults
     guid: PODCAST_CONFIG.podcast.guid || PODCAST_CONFIG.creatorNpub,
-    medium: PODCAST_CONFIG.podcast.medium || 'podcast',
+    medium: PODCAST_CONFIG.podcast.medium || 'music',
     publisher: PODCAST_CONFIG.podcast.publisher || PODCAST_CONFIG.podcast.author,
     person: PODCAST_CONFIG.podcast.person || [
       {
@@ -217,7 +217,7 @@ const Studio = () => {
         },
         // Podcasting 2.0 fields
         guid: (podcastMetadata as ExtendedPodcastMetadata).guid || PODCAST_CONFIG.creatorNpub,
-        medium: (podcastMetadata as ExtendedPodcastMetadata).medium || 'podcast',
+        medium: (podcastMetadata as ExtendedPodcastMetadata).medium || 'music',
         publisher: (podcastMetadata as ExtendedPodcastMetadata).publisher || podcastMetadata.author,
         location: (podcastMetadata as ExtendedPodcastMetadata).location,
         person: (podcastMetadata as ExtendedPodcastMetadata).person || [
@@ -512,7 +512,7 @@ const Studio = () => {
         },
         // Podcasting 2.0 fields
         guid: (podcastMetadata as ExtendedPodcastMetadata).guid || PODCAST_CONFIG.creatorNpub,
-        medium: (podcastMetadata as ExtendedPodcastMetadata).medium || 'podcast',
+        medium: (podcastMetadata as ExtendedPodcastMetadata).medium || 'music',
         publisher: (podcastMetadata as ExtendedPodcastMetadata).publisher || podcastMetadata.author,
         location: (podcastMetadata as ExtendedPodcastMetadata).location,
         person: (podcastMetadata as ExtendedPodcastMetadata).person || [
