@@ -1,6 +1,6 @@
-# RSS Feed System for PODSTR
+# RSS Feed System for Tsunami
 
-This document explains how the RSS feed system works in PODSTR, including automatic updates when releases are added, edited, or deleted.
+This document explains how the RSS feed system works in Tsunami, including automatic updates when releases are added, edited, or deleted.
 
 ## Overview
 
@@ -104,7 +104,7 @@ Converts releases to RSS 2.0 format with Podcasting 2.0 enhancements:
 
 ```typescript
 const rssContent = generateRSSFeed(releases, {
-  title: "PODSTR Podcast",
+  title: "Tsunami Podcast",
   description: "A Nostr-powered podcast",
   // ... full podcast configuration
 });
@@ -149,9 +149,9 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
 ### **Channel Level**
 ```xml
 <channel>
-  <title>PODSTR Podcast</title>
+  <title>Tsunami Podcast</title>
   <description>A Nostr-powered podcast</description>
-  <link>https://podstr.example</link>
+  <link>https://tsunami.example</link>
   <language>en-us</language>
   <podcast:guid>npub1...</podcast:guid>
   <podcast:value type="BTC" method="lightning">
@@ -165,7 +165,7 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
 <item>
   <title>Release Title</title>
   <description>Release description</description>
-  <link>https://podstr.example/naddr1...</link>
+  <link>https://tsunami.example/naddr1...</link>
   <guid>release-event-id</guid>
   <pubDate>Tue, 21 Nov 2023 12:00:00 GMT</pubDate>
   <enclosure url="https://.../release.mp3" length="0" type="audio/mpeg"/>
@@ -270,7 +270,7 @@ localStorage.getItem('podcast-rss-updated');
 
 ## Conclusion
 
-The PODSTR RSS feed system provides a robust, automatically updating RSS feed that:
+The Tsunami RSS feed system provides a robust, automatically updating RSS feed that:
 
 - ✅ **Updates Automatically**: When releases are added, edited, or deleted
 - ✅ **Standards Compliant**: RSS 2.0 + Podcasting 2.0

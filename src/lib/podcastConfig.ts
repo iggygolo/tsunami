@@ -1,7 +1,7 @@
 import { nip19 } from 'nostr-tools';
 
 /**
- * Podcast configuration for PODSTR
+ * Podcast configuration for Tsunami
  * This defines the podcast metadata and creator information
  * Values are loaded from environment variables with fallbacks
  */
@@ -97,19 +97,19 @@ export interface PodcastConfig {
 
 export const PODCAST_CONFIG: PodcastConfig = {
   // Creator npub - loaded from environment
-  creatorNpub: import.meta.env.VITE_CREATOR_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
+  creatorNpub: import.meta.env.VITE_ARTIST_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
 
   podcast: {
     artistName: import.meta.env.VITE_ARTIST_NAME || "Tsunami Artist",
-    description: import.meta.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
-    image: import.meta.env.VITE_PODCAST_IMAGE || "",
-    website: import.meta.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
-    copyright: import.meta.env.VITE_PODCAST_COPYRIGHT || "© 2025 Tsunami Artist",
-    funding: parseArrayEnv(import.meta.env.VITE_PODCAST_FUNDING, ["/about"]),
+    description: import.meta.env.VITE_MUSIC_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
+    image: import.meta.env.VITE_ARTIST_IMAGE || "",
+    website: import.meta.env.VITE_ARTIST_WEBSITE || "https://tsunami.example",
+    copyright: import.meta.env.VITE_ARTIST_COPYRIGHT || "© 2025 Tsunami Artist",
+    funding: parseArrayEnv(import.meta.env.VITE_ARTIST_FUNDING, ["/about"]),
     value: {
-      amount: parseInt(import.meta.env.VITE_PODCAST_VALUE_AMOUNT || "1000", 10),
-      currency: import.meta.env.VITE_PODCAST_VALUE_CURRENCY || "sats",
-      recipients: parseJsonEnv(import.meta.env.VITE_PODCAST_VALUE_RECIPIENTS, [
+      amount: parseInt(import.meta.env.VITE_MUSIC_VALUE_AMOUNT || "1000", 10),
+      currency: import.meta.env.VITE_MUSIC_VALUE_CURRENCY || "sats",
+      recipients: parseJsonEnv(import.meta.env.VITE_MUSIC_VALUE_RECIPIENTS, [
         {
           name: "Artist",
           type: "node" as const,
@@ -135,38 +135,38 @@ export const PODCAST_CONFIG: PodcastConfig = {
       ])
     },
     // Podcasting 2.0 fields from environment
-    guid: import.meta.env.VITE_PODCAST_GUID || import.meta.env.VITE_CREATOR_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
-    medium: (import.meta.env.VITE_PODCAST_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
-    publisher: import.meta.env.VITE_PODCAST_PUBLISHER || import.meta.env.VITE_ARTIST_NAME || "PODSTR Creator",
-    location: import.meta.env.VITE_PODCAST_LOCATION_NAME ? {
-      name: import.meta.env.VITE_PODCAST_LOCATION_NAME,
-      geo: import.meta.env.VITE_PODCAST_LOCATION_GEO || undefined,
-      osm: import.meta.env.VITE_PODCAST_LOCATION_OSM || undefined
+    guid: import.meta.env.VITE_MUSIC_GUID || import.meta.env.VITE_ARTIST_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
+    medium: (import.meta.env.VITE_MUSIC_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
+    publisher: import.meta.env.VITE_ARTIST_PUBLISHER || import.meta.env.VITE_ARTIST_NAME || "Tsunami Artist",
+    location: import.meta.env.VITE_ARTIST_LOCATION_NAME ? {
+      name: import.meta.env.VITE_ARTIST_LOCATION_NAME,
+      geo: import.meta.env.VITE_ARTIST_LOCATION_GEO || undefined,
+      osm: import.meta.env.VITE_ARTIST_LOCATION_OSM || undefined
     } : undefined,
-    person: parseJsonEnv(import.meta.env.VITE_PODCAST_PERSON, [
+    person: parseJsonEnv(import.meta.env.VITE_MUSIC_PERSON, [
       {
-        name: import.meta.env.VITE_ARTIST_NAME || "PODSTR Creator",
+        name: import.meta.env.VITE_ARTIST_NAME || "Tsunami Artist",
         role: "artist",
         group: "cast"
       }
     ]),
     license: {
-      identifier: import.meta.env.VITE_PODCAST_LICENSE_IDENTIFIER || "CC BY 4.0",
-      url: import.meta.env.VITE_PODCAST_LICENSE_URL || "https://creativecommons.org/licenses/by/4.0/"
+      identifier: import.meta.env.VITE_MUSIC_LICENSE_IDENTIFIER || "CC BY 4.0",
+      url: import.meta.env.VITE_MUSIC_LICENSE_URL || "https://creativecommons.org/licenses/by/4.0/"
     },
-    txt: parseJsonEnv(import.meta.env.VITE_PODCAST_TXT, undefined),
-    remoteItem: parseJsonEnv(import.meta.env.VITE_PODCAST_REMOTE_ITEM, undefined),
-    block: parseJsonEnv(import.meta.env.VITE_PODCAST_BLOCK, undefined),
-    newFeedUrl: import.meta.env.VITE_PODCAST_NEW_FEED_URL || undefined,
+    txt: parseJsonEnv(import.meta.env.VITE_MUSIC_TXT, undefined),
+    remoteItem: parseJsonEnv(import.meta.env.VITE_MUSIC_REMOTE_ITEM, undefined),
+    block: parseJsonEnv(import.meta.env.VITE_MUSIC_BLOCK, undefined),
+    newFeedUrl: import.meta.env.VITE_MUSIC_NEW_FEED_URL || undefined,
   },
 
   rss: {
-    ttl: parseInt(import.meta.env.VITE_RSS_TTL || "60", 10)
+    ttl: parseInt(import.meta.env.VITE_MUSIC_RSS_TTL || "60", 10)
   }
 };
 
 /**
- * Nostr event kinds used by PODSTR
+ * Nostr event kinds used by Tsunami
  */
 export const PODCAST_KINDS = {
   /** Addressable Podcast releases (editable, replaceable) */

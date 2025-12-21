@@ -22,7 +22,7 @@ function getCurrentSiteUrl(): string {
   }
   
   // Fallback for SSR or non-browser environments
-  return 'https://podstr.com';
+  return 'https://tsunami.com';
 }
 
 export function useUpdateNowPlaying() {

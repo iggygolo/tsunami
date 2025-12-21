@@ -1,4 +1,4 @@
-# PODSTR
+# Tsunami
 
 A Nostr-powered podcast platform for single creator accounts that combines decentralized publishing with Podcasting 2.0 standards.
 
@@ -49,8 +49,8 @@ A Nostr-powered podcast platform for single creator accounts that combines decen
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/podstr.git
-cd podstr
+git clone https://github.com/your-username/tsunami.git
+cd tsunami
 
 # Install dependencies
 npm install
@@ -84,15 +84,15 @@ Edit `.env` to customize your podcast:
 
 ```env
 # Creator Configuration
-VITE_CREATOR_NPUB=npub1...
+VITE_ARTIST_NPUB=npub1...
 
 # Podcast Metadata  
 VITE_ARTIST_NAME=Your Artist Name
-VITE_PODCAST_DESCRIPTION=Your artist description
-VITE_PODCAST_IMAGE=https://image.example/avatar.png
+VITE_MUSIC_DESCRIPTION=Your artist description
+VITE_ARTIST_IMAGE=https://image.example/avatar.png
 
 # Podcasting 2.0 Value
-VITE_PODCAST_VALUE_RECIPIENTS=[{"name":"Host","type":"lightning-address","address":"you@domain.com","split":100}]
+VITE_MUSIC_VALUE_RECIPIENTS=[{"name":"Host","type":"lightning-address","address":"you@domain.com","split":100}]
 ```
 
 ## 🛠️ Technology Stack

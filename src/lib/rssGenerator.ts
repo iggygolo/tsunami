@@ -14,7 +14,7 @@ function releaseToRSSItem(release: PodcastRelease, config?: PodcastConfig): RSSI
       return window.location.origin;
     }
     // Server-side fallback
-    return process.env.BASE_URL || 'https://podstr.example';
+    return process.env.BASE_URL || 'https://tsunami.example';
   };
 
   return {
@@ -77,7 +77,7 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
       return window.location.origin;
     }
     // Server-side fallback
-    return process.env.BASE_URL || 'https://podstr.example';
+    return process.env.BASE_URL || 'https://tsunami.example';
   };
 
   const baseUrl = getBaseUrl();
@@ -147,7 +147,7 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
     }
 
     <!-- Generator -->
-    <generator>PODSTR - Nostr Podcast Platform</generator>
+    <generator>Tsunami - Nostr Podcast Platform</generator>
 
     ${rssItems.map(item => `
     <item>

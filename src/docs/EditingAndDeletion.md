@@ -1,6 +1,6 @@
 # Editing and Deletion for NIP-54 Podcast Releases
 
-This document explains how release editing and deletion work in the PODSTR implementation using NIP-54 (`kind:54`) podcast releases.
+This document explains how release editing and deletion work in the Tsunami implementation using NIP-54 (`kind:54`) podcast releases.
 
 ## Overview
 

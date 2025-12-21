@@ -24,13 +24,13 @@ config();
  * This replicates the PODCAST_CONFIG structure but uses process.env instead of import.meta.env
  */
 function createNodejsConfig() {
-  const creatorNpub = process.env.VITE_CREATOR_NPUB;
+  const creatorNpub = process.env.VITE_ARTIST_NPUB;
 
   // Parse recipients safely
   let recipients = [];
   try {
-    if (process.env.VITE_PODCAST_VALUE_RECIPIENTS) {
-      recipients = JSON.parse(process.env.VITE_PODCAST_VALUE_RECIPIENTS);
+    if (process.env.VITE_MUSIC_VALUE_RECIPIENTS) {
+      recipients = JSON.parse(process.env.VITE_MUSIC_VALUE_RECIPIENTS);
     } else {
       // Default recipients if no env var
       recipients = [
@@ -59,45 +59,45 @@ function createNodejsConfig() {
       ];
     }
   } catch {
-    console.warn('Failed to parse VITE_PODCAST_VALUE_RECIPIENTS, using defaults');
+    console.warn('Failed to parse VITE_MUSIC_VALUE_RECIPIENTS, using defaults');
     recipients = [];
   }
 
   return {
     creatorNpub,
     podcast: {
-      description: process.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
+      description: process.env.VITE_MUSIC_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
       artistName: process.env.VITE_ARTIST_NAME || "Tsunami Artist",
-      image: process.env.VITE_PODCAST_IMAGE || "",
-      website: process.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
-      copyright: process.env.VITE_PODCAST_COPYRIGHT || "© 2025 Tsunami",
-      funding: process.env.VITE_PODCAST_FUNDING ?
-        process.env.VITE_PODCAST_FUNDING.split(',').map(s => s.trim()).filter(s => s.length > 0) :
+      image: process.env.VITE_ARTIST_IMAGE || "",
+      website: process.env.VITE_ARTIST_WEBSITE || "https://tsunami.example",
+      copyright: process.env.VITE_ARTIST_COPYRIGHT || "© 2025 Tsunami",
+      funding: process.env.VITE_ARTIST_FUNDING ?
+        process.env.VITE_ARTIST_FUNDING.split(',').map(s => s.trim()).filter(s => s.length > 0) :
         [],
       value: {
-        amount: parseInt(process.env.VITE_PODCAST_VALUE_AMOUNT || "1000", 10),
-        currency: process.env.VITE_PODCAST_VALUE_CURRENCY || "sats",
+        amount: parseInt(process.env.VITE_MUSIC_VALUE_AMOUNT || "1000", 10),
+        currency: process.env.VITE_MUSIC_VALUE_CURRENCY || "sats",
         recipients
       },
       // Podcasting 2.0 fields
-      guid: process.env.VITE_PODCAST_GUID || creatorNpub,
-      medium: (process.env.VITE_PODCAST_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
-      publisher: process.env.VITE_PODCAST_PUBLISHER || process.env.VITE_ARTIST_NAME || "Tsunami Artist",
-      location: process.env.VITE_PODCAST_LOCATION_NAME ? {
-        name: process.env.VITE_PODCAST_LOCATION_NAME,
-        geo: process.env.VITE_PODCAST_LOCATION_GEO || undefined,
-        osm: process.env.VITE_PODCAST_LOCATION_OSM || undefined
+      guid: process.env.VITE_MUSIC_GUID || creatorNpub,
+      medium: (process.env.VITE_MUSIC_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
+      publisher: process.env.VITE_ARTIST_PUBLISHER || process.env.VITE_ARTIST_NAME || "Tsunami Artist",
+      location: process.env.VITE_ARTIST_LOCATION_NAME ? {
+        name: process.env.VITE_ARTIST_LOCATION_NAME,
+        geo: process.env.VITE_ARTIST_LOCATION_GEO || undefined,
+        osm: process.env.VITE_ARTIST_LOCATION_OSM || undefined
       } : undefined,
-      person: process.env.VITE_PODCAST_PERSON ?
-        JSON.parse(process.env.VITE_PODCAST_PERSON) :
-        [{ name: process.env.VITE_ARTIST_NAME || "PODSTR Creator", role: "artist", group: "cast" }],
+      person: process.env.VITE_MUSIC_PERSON ?
+        JSON.parse(process.env.VITE_MUSIC_PERSON) :
+        [{ name: process.env.VITE_ARTIST_NAME || "Tsunami Artist", role: "artist", group: "cast" }],
       license: {
-        identifier: process.env.VITE_PODCAST_LICENSE_IDENTIFIER || "CC BY 4.0",
-        url: process.env.VITE_PODCAST_LICENSE_URL || "https://creativecommons.org/licenses/by/4.0/"
+        identifier: process.env.VITE_MUSIC_LICENSE_IDENTIFIER || "CC BY 4.0",
+        url: process.env.VITE_MUSIC_LICENSE_URL || "https://creativecommons.org/licenses/by/4.0/"
       }
     },
     rss: {
-      ttl: parseInt(process.env.VITE_RSS_TTL || "60", 10)
+      ttl: parseInt(process.env.VITE_MUSIC_RSS_TTL || "60", 10)
     }
   };
 }
@@ -135,7 +135,7 @@ function escapeXml(unsafe: string): string {
  * Node-compatible RSS feed generation (simplified version)
  */
 function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[], podcastConfig: Record<string, unknown>): string {
-  const baseUrl = podcastConfig.podcast.website || 'https://podstr.example';
+  const baseUrl = podcastConfig.podcast.website || 'https://tsunami.example';
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"

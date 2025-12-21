@@ -25,8 +25,8 @@ The new implementation provides a proper server-side endpoint for the RSS feed, 
 ## Features
 
 ### ✅ **Command-Line Tool Compatibility**
-- **curl**: `curl https://podstr.example/rss.xml`
-- **wget**: `wget https://podstr.example/rss.xml`
+- **curl**: `curl https://tsunami.example/rss.xml`
+- **wget**: `wget https://tsunami.example/rss.xml`
 - **HTTP clients**: Any standard HTTP client library
 
 ### ✅ **Proper HTTP Headers**
@@ -66,7 +66,7 @@ Last-Modified: Mon, 04 Aug 2025 03:19:22 GMT
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>PODSTR Podcast</title>
+    <title>Tsunami Podcast</title>
     <description>A Nostr-powered podcast...</description>
     <!-- Full RSS content -->
   </channel>
@@ -105,46 +105,46 @@ GET /rss-health
 #### **curl**
 ```bash
 # Basic request
-curl https://podstr.example/rss.xml
+curl https://tsunami.example/rss.xml
 
 # Save to file
-curl -o podcast.xml https://podstr.example/rss.xml
+curl -o podcast.xml https://tsunami.example/rss.xml
 
 # Follow redirects
-curl -L https://podstr.example/rss.xml
+curl -L https://tsunami.example/rss.xml
 
 # Show headers
-curl -I https://podstr.example/rss.xml
+curl -I https://tsunami.example/rss.xml
 
 # Check if modified since
-curl -z "Mon, 04 Aug 2025 03:19:22 GMT" https://podstr.example/rss.xml
+curl -z "Mon, 04 Aug 2025 03:19:22 GMT" https://tsunami.example/rss.xml
 ```
 
 #### **wget**
 ```bash
 # Basic download
-wget https://podstr.example/rss.xml
+wget https://tsunami.example/rss.xml
 
 # Continue interrupted download
-wget -c https://podstr.example/rss.xml
+wget -c https://tsunami.example/rss.xml
 
 # Show headers
-wget -S https://podstr.example/rss.xml
+wget -S https://tsunami.example/rss.xml
 
 # Timestamp-based download
-wget -N https://podstr.example/rss.xml
+wget -N https://tsunami.example/rss.xml
 ```
 
 #### **HTTPie**
 ```bash
 # Pretty-printed response
-http https://podstr.example/rss.xml
+http https://tsunami.example/rss.xml
 
 # Show headers
-http --headers https://podstr.example/rss.xml
+http --headers https://tsunami.example/rss.xml
 
 # Follow redirects
-http --follow https://podstr.example/rss.xml
+http --follow https://tsunami.example/rss.xml
 ```
 
 ### **Programming Languages**
@@ -154,7 +154,7 @@ http --follow https://podstr.example/rss.xml
 import requests
 
 # Fetch RSS feed
-response = requests.get('https://podstr.example/rss.xml')
+response = requests.get('https://tsunami.example/rss.xml')
 response.raise_for_status()
 
 print(f"Content-Type: {response.headers['content-type']}")
@@ -165,7 +165,7 @@ print(f"RSS Feed: {response.text[:100]}...")
 #### **JavaScript/Node.js**
 ```javascript
 // Fetch API
-const response = await fetch('https://podstr.example/rss.xml');
+const response = await fetch('https://tsunami.example/rss.xml');
 const rssContent = await response.text();
 
 console.log('Content-Type:', response.headers.get('content-type'));
@@ -173,7 +173,7 @@ console.log('RSS Feed:', rssContent.substring(0, 100) + '...');
 
 // Axios
 const axios = require('axios');
-const response = await axios.get('https://podstr.example/rss.xml');
+const response = await axios.get('https://tsunami.example/rss.xml');
 console.log(response.data);
 ```
 
@@ -181,7 +181,7 @@ console.log(response.data);
 ```php
 <?php
 // cURL
-$ch = curl_init('https://podstr.example/rss.xml');
+$ch = curl_init('https://tsunami.example/rss.xml');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HEADER, false);
 $rssContent = curl_exec($ch);
@@ -190,7 +190,7 @@ curl_close($ch);
 echo "RSS Feed: " . substr($rssContent, 0, 100) . "...\n";
 
 // file_get_contents
-$rssContent = file_get_contents('https://podstr.example/rss.xml');
+$rssContent = file_get_contents('https://tsunami.example/rss.xml');
 echo $rssContent;
 ?>
 ```
@@ -201,19 +201,19 @@ echo $rssContent;
 ```bash
 # Submit to Apple Podcasts
 # The RSS feed at /rss.xml is fully compatible
-curl -I https://podstr.example/rss.xml
+curl -I https://tsunami.example/rss.xml
 ```
 
 #### **Spotify for Podcasters**
 ```bash
 # Spotify can consume the RSS feed directly
-wget https://podstr.example/rss.xml -O podcast-feed.xml
+wget https://tsunami.example/rss.xml -O podcast-feed.xml
 ```
 
 #### **Google Podcasts**
 ```bash
 # Google Podcasts Manager
-curl -s https://podstr.example/rss.xml | xmllint --format -
+curl -s https://tsunami.example/rss.xml | xmllint --format -
 ```
 
 ## Server Implementation
@@ -266,7 +266,7 @@ app.get('/rss.xml', async (req, res) => {
     res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>PODSTR Podcast</title>
+    <title>Tsunami Podcast</title>
     <description>Temporarily unavailable</description>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
   </channel>
@@ -312,7 +312,7 @@ Last-Modified: Mon, 04 Aug 2025 03:19:22 GMT
 ```bash
 # Clients can send conditional requests
 curl -H "If-None-Match: \"33a64df551425fcc55e4d42a148795d9\"" \
-     https://podstr.example/rss.xml
+     https://tsunami.example/rss.xml
 
 # Returns 304 Not Modified if unchanged
 ```
@@ -328,7 +328,7 @@ The RSS endpoint is CDN-friendly with proper cache headers:
 ### **Health Check**
 ```bash
 # Check RSS endpoint health
-curl https://podstr.example/rss-health
+curl https://tsunami.example/rss-health
 
 # Response includes status, file info, and accessibility
 ```

@@ -69,7 +69,7 @@ npx tsx scripts/build-rss.ts
 
 ### 2. Create a wrapper script (for cron setup)
 
-Create `/usr/local/bin/update-podstr-rss.sh`:
+Create `/usr/local/bin/update-tsunami-rss.sh`:
 
 ```bash
 #!/bin/bash
@@ -87,7 +87,7 @@ npx tsx scripts/build-rss.ts >> /var/log/podstr-rss.log 2>&1
 
 Make it executable:
 ```bash
-chmod +x /usr/local/bin/update-podstr-rss.sh
+chmod +x /usr/local/bin/update-tsunami-rss.sh
 ```
 
 ### 3. Set up the cron job
@@ -101,16 +101,16 @@ Add one of these entries based on your update frequency needs:
 
 ```bash
 # Every 15 minutes (for frequent updates)
-*/15 * * * * /usr/local/bin/update-podstr-rss.sh
+*/15 * * * * /usr/local/bin/update-tsunami-rss.sh
 
 # Every hour (recommended for most use cases)
 0 * * * * /usr/local/bin/update-podstr-rss.sh
 
 # Every 6 hours (for less frequent updates)
-0 */6 * * * /usr/local/bin/update-podstr-rss.sh
+0 */6 * * * /usr/local/bin/update-tsunami-rss.sh
 
 # Daily at 2 AM
-0 2 * * * /usr/local/bin/update-podstr-rss.sh
+0 2 * * * /usr/local/bin/update-tsunami-rss.sh
 ```
 
 ## Web Server Configuration
@@ -121,13 +121,13 @@ Add this to your nginx configuration to serve the RSS feed:
 
 ```nginx
 location /rss.xml {
-    alias /full/path/to/your/podstr/project/dist/rss.xml;
+    alias /full/path/to/your/tsunami/project/dist/rss.xml;
     add_header Content-Type application/rss+xml;
     add_header Cache-Control "public, max-age=300"; # 5 minute cache
 }
 
 location /rss-health.json {
-    alias /full/path/to/your/podstr/project/dist/rss-health.json;
+    alias /full/path/to/your/tsunami/project/dist/rss-health.json;
     add_header Content-Type application/json;
 }
 ```
@@ -168,13 +168,13 @@ Enable logging by redirecting output to a log file:
 
 ```bash
 # In your wrapper script or cron job
-/usr/bin/node scripts/generate-rss.js >> /var/log/podstr-rss.log 2>&1
+/usr/bin/node scripts/generate-rss.js >> /var/log/tsunami-rss.log 2>&1
 ```
 
-Rotate logs with logrotate by creating `/etc/logrotate.d/podstr-rss`:
+Rotate logs with logrotate by creating `/etc/logrotate.d/tsunami-rss`:
 
 ```
-/var/log/podstr-rss.log {
+/var/log/tsunami-rss.log {
     daily
     rotate 7
     compress
@@ -217,12 +217,12 @@ journalctl -f -u cron
 
 Here's a complete example for a production deployment:
 
-1. **Wrapper script** (`/usr/local/bin/update-podstr-rss.sh`):
+1. **Wrapper script** (`/usr/local/bin/update-tsunami-rss.sh`):
 ```bash
 #!/bin/bash
 export BASE_URL="https://mypodcast.com"
 export NOSTR_RELAYS="wss://relay.nostr.band,wss://relay.damus.io"
-cd /var/www/podstr
+cd /var/www/tsunami
 npx tsx scripts/build-rss.ts >> /var/log/podstr-rss.log 2>&1
 
 # Optional: notify monitoring service
@@ -236,13 +236,13 @@ fi
 2. **Crontab entry**:
 ```bash
 # Update RSS every 30 minutes
-*/30 * * * * /usr/local/bin/update-podstr-rss.sh
+*/30 * * * * /usr/local/bin/update-tsunami-rss.sh
 ```
 
 3. **Nginx config**:
 ```nginx
 location /rss.xml {
-    alias /var/www/podstr/dist/rss.xml;
+    alias /var/www/tsunami/dist/rss.xml;
     add_header Content-Type application/rss+xml;
     add_header Cache-Control "public, max-age=1800";
 }
