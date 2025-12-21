@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import {
   Play,
   Pause,
+  RotateCcw,
+  RotateCw,
   SkipBack,
   SkipForward,
   Volume2,
@@ -31,7 +33,9 @@ export function PersistentAudioPlayer() {
     stop,
     seekTo,
     setVolume,
-    setPlaybackRate
+    setPlaybackRate,
+    nextTrack,
+    previousTrack
   } = useAudioPlayer();
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -143,8 +147,11 @@ export function PersistentAudioPlayer() {
                 to={`/${releaseNaddr}`}
                 className="font-medium text-xs sm:text-sm hover:text-primary transition-colors line-clamp-1"
               >
-                {release.title}
+                {release.tracks[state.currentTrackIndex]?.title || `Track ${state.currentTrackIndex + 1}`}
               </Link>
+              <p className="text-xs text-muted-foreground line-clamp-1">
+                {release.title}
+              </p>
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                 {state.error && (
                   <Badge variant="destructive" className="text-xs">
@@ -182,16 +189,35 @@ export function PersistentAudioPlayer() {
             </div>
           </div>
 
-          {/* Playback Controls Row - Centered on desktop, full width on mobile */}
-          <div className="flex items-center justify-center sm:justify-center space-x-3 sm:space-x-4 mb-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSkipBack}
-              disabled={!release.tracks || release.tracks.length === 0}
-              className="h-10 w-10 sm:h-11 sm:w-11 p-0"
-            >
-              <SkipBack className="h-5 w-5 sm:h-6 sm:w-6" />
+          {/* Playback Controls Row - Centered with volume on the right */}
+          <div className="flex items-center justify-between mb-3">
+            {/* Spacer for balance on desktop */}
+            <div className="hidden sm:block w-28" />
+            
+            {/* Center: Playback Controls */}
+            <div className="flex items-center justify-center space-x-2 sm:space-x-3 flex-1 sm:flex-none">
+              {/* Previous Track */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={previousTrack}
+                disabled={!release.tracks || release.tracks.length <= 1 || state.currentTrackIndex === 0}
+                className="h-9 w-9 sm:h-10 sm:w-10 p-0"
+                title="Previous track"
+              >
+                <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+
+              {/* Rewind 15s */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSkipBack}
+                disabled={!release.tracks || release.tracks.length === 0}
+                className="h-10 w-10 sm:h-11 sm:w-11 p-0"
+                title="Rewind 15 seconds"
+              >
+                <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
 
             <Button
@@ -208,18 +234,33 @@ export function PersistentAudioPlayer() {
               )}
             </Button>
 
+            {/* Forward 15s */}
             <Button
               variant="ghost"
               size="sm"
               onClick={handleSkipForward}
               disabled={!release.tracks || release.tracks.length === 0}
               className="h-10 w-10 sm:h-11 sm:w-11 p-0"
+              title="Forward 15 seconds"
             >
-              <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
+              <RotateCw className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
 
-            {/* Volume Controls - Visible on desktop only */}
-            <div className="hidden sm:flex items-center space-x-2 ml-4">
+            {/* Next Track */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={nextTrack}
+              disabled={!release.tracks || release.tracks.length <= 1 || state.currentTrackIndex >= release.tracks.length - 1}
+              className="h-9 w-9 sm:h-10 sm:w-10 p-0"
+              title="Next track"
+            >
+              <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+            </div>
+
+            {/* Right: Volume Controls - Visible on desktop only */}
+            <div className="hidden sm:flex items-center space-x-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -302,9 +343,12 @@ export function PersistentAudioPlayer() {
                         />
                       )}
                       <div className="min-w-0 flex-1">
+                        <p className="font-medium">
+                          {release.tracks[state.currentTrackIndex]?.title || `Track ${state.currentTrackIndex + 1}`}
+                        </p>
                         <Link
                           to={`/${releaseNaddr}`}
-                          className="font-medium hover:text-primary transition-colors block"
+                          className="text-sm text-muted-foreground hover:text-primary transition-colors block"
                         >
                           {release.title}
                         </Link>
