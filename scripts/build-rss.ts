@@ -137,61 +137,62 @@ function escapeXml(unsafe: string): string {
 function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[], podcastConfig: Record<string, unknown>): string {
   const baseUrl = podcastConfig.podcast.website || 'https://tsunami.example';
 
+  const channels = releases.map(release => (`
+<channel>
+  <itunes:author>${escapeXml(podcastConfig.podcast.artistName)}</itunes:author>
+  <title>${escapeXml(release.title)}</title>
+  <description>${escapeXml(release.description || '')}</description>
+  <link>${escapeXml(podcastConfig.podcast.website || baseUrl)}</link>
+  <copyright>${escapeXml(podcastConfig.podcast.copyright)}</copyright>
+  <pubDate>${new Date().toUTCString()}</pubDate>
+  <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+  <ttl>${podcastConfig.rss.ttl}</ttl>
+
+  <!-- Podcasting 2.0 tags -->
+  <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.artistNpub)}</podcast:guid>
+  <podcast:medium>${escapeXml(podcastConfig.podcast.medium || 'music')}</podcast:medium>
+
+  ${podcastConfig.podcast.funding && podcastConfig.podcast.funding.length > 0 ?
+    podcastConfig.podcast.funding.map(url =>
+      `<podcast:funding url="${escapeXml(url)}">Support the artist</podcast:funding>`
+    ).join('\n    ') : ''
+  }
+
+  ${podcastConfig.podcast.value && podcastConfig.podcast.value.amount > 0 ?
+    `<podcast:value type="lightning" method="lnaddress">
+      ${podcastConfig.podcast.value.recipients && podcastConfig.podcast.value.recipients.length > 0 ?
+        podcastConfig.podcast.value.recipients.map(recipient =>
+          `<podcast:valueRecipient name="${escapeXml(recipient.name)}" type="${escapeXml(recipient.type)}" address="${escapeXml(recipient.address)}" split="${recipient.split}"${recipient.customKey ? ` customKey="${escapeXml(recipient.customKey)}"` : ''}${recipient.customValue ? ` customValue="${escapeXml(recipient.customValue)}"` : ''}${recipient.fee ? ` fee="true"` : ''} />`
+        ).join('\n        ') :
+        `<podcast:valueRecipient name="${escapeXml(podcastConfig.podcast.artistName)}" type="lnaddress" address="${escapeXml(podcastConfig.podcast.funding?.[0] || '')}" split="100" />`
+      }
+    </podcast:value>` : ''
+  }
+
+  ${trailers.map(trailer => 
+    `<podcast:trailer pubdate="${trailer.pubDate.toUTCString()}" url="${escapeXml(trailer.url)}"${trailer.length ? ` length="${trailer.length}"` : ''}${trailer.type ? ` type="${escapeXml(trailer.type)}"` : ''}${trailer.season ? ` season="${trailer.season}"` : ''}>${escapeXml(trailer.title)}</podcast:trailer>`
+  ).join('\n    ')}
+
+  ${release.tracks.map(track => {
+    return `
+  <item>
+    <title>${escapeXml(release.title)}</title>
+    <description>${escapeXml(release.description || '')}</description>
+    <link>${escapeXml(baseUrl)}/${encodeReleaseAsNaddr(release.artistPubkey, release.identifier)}</link>
+    <pubDate>${release.publishDate.toUTCString()}</pubDate>
+      <guid isPermaLink="false">${release.artistPubkey}:${release.identifier}</guid>
+      <enclosure url="${escapeXml(track.audioUrl)}" type="${escapeXml(track.audioType || 'audio/mpeg')}" length="${track.duration ? String(track.duration) : '0'}" />
+    ${release.transcriptUrl ? `<podcast:transcript url="${escapeXml(release.transcriptUrl)}" type="text/plain" />` : ''}
+    ${release.content ? `<content:encoded><![CDATA[${release.content}]]></content:encoded>` : ''}
+  </item>`;
+  }).join('')}
+</channel>`));
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
      xmlns:content="http://purl.org/rss/1.0/modules/content/"
      xmlns:podcast="https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md">
-  <channel>
-    <title>${escapeXml(podcastConfig.podcast.artistName)}</title>
-    <description>${escapeXml(podcastConfig.podcast.description)}</description>
-    <link>${escapeXml(podcastConfig.podcast.website || baseUrl)}</link>
-    <copyright>${escapeXml(podcastConfig.podcast.copyright)}</copyright>
-    <pubDate>${new Date().toUTCString()}</pubDate>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <ttl>${podcastConfig.rss.ttl}</ttl>
-
-    <!-- Podcasting 2.0 tags -->
-    <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.artistNpub)}</podcast:guid>
-    <podcast:medium>${escapeXml(podcastConfig.podcast.medium || 'music')}</podcast:medium>
-
-    ${podcastConfig.podcast.funding && podcastConfig.podcast.funding.length > 0 ?
-      podcastConfig.podcast.funding.map(url =>
-        `<podcast:funding url="${escapeXml(url)}">Support the artist</podcast:funding>`
-      ).join('\n    ') : ''
-    }
-
-    ${podcastConfig.podcast.value && podcastConfig.podcast.value.amount > 0 ?
-      `<podcast:value type="lightning" method="lnaddress">
-        ${podcastConfig.podcast.value.recipients && podcastConfig.podcast.value.recipients.length > 0 ?
-          podcastConfig.podcast.value.recipients.map(recipient =>
-            `<podcast:valueRecipient name="${escapeXml(recipient.name)}" type="${escapeXml(recipient.type)}" address="${escapeXml(recipient.address)}" split="${recipient.split}"${recipient.customKey ? ` customKey="${escapeXml(recipient.customKey)}"` : ''}${recipient.customValue ? ` customValue="${escapeXml(recipient.customValue)}"` : ''}${recipient.fee ? ` fee="true"` : ''} />`
-          ).join('\n        ') :
-          `<podcast:valueRecipient name="${escapeXml(podcastConfig.podcast.artistName)}" type="lnaddress" address="${escapeXml(podcastConfig.podcast.funding?.[0] || '')}" split="100" />`
-        }
-      </podcast:value>` : ''
-    }
-
-    ${trailers.map(trailer => 
-      `<podcast:trailer pubdate="${trailer.pubDate.toUTCString()}" url="${escapeXml(trailer.url)}"${trailer.length ? ` length="${trailer.length}"` : ''}${trailer.type ? ` type="${escapeXml(trailer.type)}"` : ''}${trailer.season ? ` season="${trailer.season}"` : ''}>${escapeXml(trailer.title)}</podcast:trailer>`
-    ).join('\n    ')}
-
-    ${releases.map(release => {
-      return `
-    <item>
-      <title>${escapeXml(release.title)}</title>
-      <description>${escapeXml(release.description || '')}</description>
-      <link>${escapeXml(baseUrl)}/${encodeReleaseAsNaddr(release.artistPubkey, release.identifier)}</link>
-      <pubDate>${release.publishDate.toUTCString()}</pubDate>
-        <guid isPermaLink="false">${release.artistPubkey}:${release.identifier}</guid>
-        ${release.tracks && release.tracks.length > 0 ? release.tracks.map(track =>
-          `<enclosure url="${escapeXml(track.audioUrl)}" type="${escapeXml(track.audioType || 'audio/mpeg')}" length="${track.duration ? String(track.duration) : '0'}" />`
-        ).join('\n      ') : ''}
-        ${release.videoUrl ? `<enclosure url="${escapeXml(release.videoUrl)}" type="${escapeXml(release.videoType || 'video/mp4')}" length="0" />` : ''}
-      ${release.transcriptUrl ? `<podcast:transcript url="${escapeXml(release.transcriptUrl)}" type="text/plain" />` : ''}
-      ${release.content ? `<content:encoded><![CDATA[${release.content}]]></content:encoded>` : ''}
-    </item>`;
-    }).join('')}
-  </channel>
+    ${channels.join('\n    ')}
 </rss>`;
 }
 
