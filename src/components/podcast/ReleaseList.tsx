@@ -120,32 +120,19 @@ export function ReleaseList({
 
 
       {isLoading ? (
-        <div className="space-y-6">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <Skeleton className="w-20 h-20 rounded-lg" />
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Skeleton className="h-5 w-20" />
-                      <Skeleton className="h-5 w-16" />
-                    </div>
-                    <Skeleton className="h-6 w-3/4" />
-                    <div className="flex items-center space-x-4">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-4 w-16" />
-                    </div>
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="w-full aspect-square" />
+              <CardContent className="p-3">
+                <Skeleton className="h-4 w-3/4 mb-2" />
+                <Skeleton className="h-3 w-1/2" />
               </CardContent>
             </Card>
           ))}
         </div>
       ) : releases && releases.length > 0 ? (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {releases.map((release) => (
             <ReleaseCard
               key={release.id}

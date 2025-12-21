@@ -55,6 +55,35 @@ export function useArtistPosts(limit: number = 20) {
 }
 
 /**
+ * Hook to get the total count of artist's posts (kind 1 text notes)
+ */
+export function useArtistPostCount() {
+  const { nostr } = useNostr();
+
+  return useQuery({
+    queryKey: ['artist-post-count'],
+    queryFn: async (context) => {
+      const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
+
+      // Query for all text notes from the artist
+      const events = await nostr.query([{
+        kinds: [1],
+        authors: [getArtistPubkeyHex()],
+        limit: 500, // Get a large number for counting
+      }], { signal });
+
+      // Filter out replies to count only root notes
+      const rootNotes = events.filter(event =>
+        !event.tags.some(tag => tag[0] === 'e')
+      );
+
+      return rootNotes.length;
+    },
+    staleTime: 60000, // 1 minute
+  });
+}
+
+/**
  * Hook to fetch the artist's reposts (kind 6 and 16)
  */
 export function useArtistReposts(limit: number = 50) {

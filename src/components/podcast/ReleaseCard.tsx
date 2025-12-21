@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock, Calendar, MessageCircle, Play, Share } from 'lucide-react';
+import { MessageCircle, Play, Share } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -98,128 +98,119 @@ export function ReleaseCard({
   };
 
   return (
-    <Card className={className}>
-      <CardContent className="p-4">
-        <div className="flex gap-4">
-          {/* Cover Image */}
-          {release.imageUrl && (
-            <Link to={`/${releaseNaddr}`} className="flex-shrink-0">
-              <img
-                src={release.imageUrl}
-                alt={release.title}
-                className="w-24 h-24 rounded-lg object-cover hover:opacity-90 transition-opacity"
-              />
-            </Link>
-          )}
-
-          {/* Release Info */}
-          <div className="flex-1 min-w-0 flex flex-col justify-between">
-            <div>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <Link to={`/${releaseNaddr}`} className="block group">
-                    <h3 className="font-semibold text-base leading-tight line-clamp-1 group-hover:text-primary transition-colors">
-                      {release.title}
-                    </h3>
-                  </Link>
-                  
-                  <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {formatDistanceToNow(release.publishDate, { addSuffix: true })}
-                    </span>
-                    {totalDuration > 0 && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {formatDuration(totalDuration)}
-                      </span>
-                    )}
-                    {firstTrack?.explicit && (
-                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">E</Badge>
-                    )}
-                  </div>
-                </div>
-
-                {/* Social Actions - Right Side */}
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "text-muted-foreground hover:text-primary h-8 px-2",
-                      commentsVisible && "text-primary"
-                    )}
-                    onClick={() => setCommentsVisible(!commentsVisible)}
-                  >
-                    <MessageCircle className={cn("w-4 h-4", commentsVisible && "fill-current")} />
-                    <span className="text-xs ml-1">{commentCount}</span>
-                  </Button>
-                  <ZapButton
-                    target={releaseEvent}
-                    className="h-8 px-2"
-                    zapData={{
-                      count: release.zapCount || 0,
-                      totalSats: release.totalSats || 0,
-                      isLoading: false
-                    }}
-                    hideWhenEmpty={false}
-                  />
-                  <Button variant="ghost" size="sm" onClick={handleShare} className="h-8 px-2 text-muted-foreground hover:text-primary">
-                    <Share className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Tags */}
-              {release.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {release.tags.slice(0, 4).map((tag, index) => (
-                    <span
-                      key={tag}
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                        index % 3 === 0 
-                          ? 'bg-primary/10 text-primary' 
-                          : index % 3 === 1 
-                            ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
-                            : 'bg-pink-500/10 text-pink-600 dark:text-pink-400'
-                      }`}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {release.tags.length > 4 && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
-                      +{release.tags.length - 4}
-                    </span>
-                  )}
-                </div>
-              )}
+    <Card className={cn("overflow-hidden", className)}>
+      {/* Cover Image - Top */}
+      {release.imageUrl && (
+        <Link to={`/${releaseNaddr}`} className="block relative group">
+          <img
+            src={release.imageUrl}
+            alt={release.title}
+            className="w-full aspect-square object-cover group-hover:opacity-90 transition-opacity"
+          />
+          {/* Play overlay on hover */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div 
+              className="w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center shadow-lg cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                playRelease(release);
+                onPlayRelease?.(release);
+              }}
+            >
+              <Play className="w-6 h-6 text-white fill-current ml-0.5" />
             </div>
-
-            {/* Description - Compact */}
-            {(release.description || release.content) && (
-              <p className="text-xs text-muted-foreground line-clamp-1 mt-2">
-                {release.description || release.content}
-              </p>
-            )}
           </div>
+        </Link>
+      )}
+
+      <CardContent className="p-3">
+        {/* Title & Meta */}
+        <Link to={`/${releaseNaddr}`} className="block group">
+          <h3 className="font-semibold text-sm leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+            {release.title}
+          </h3>
+        </Link>
+        
+        <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+          <span>{formatDistanceToNow(release.publishDate, { addSuffix: true })}</span>
+          {totalDuration > 0 && (
+            <>
+              <span>•</span>
+              <span>{formatDuration(totalDuration)}</span>
+            </>
+          )}
+          {firstTrack?.explicit && (
+            <Badge variant="destructive" className="text-[9px] px-1 py-0 h-3.5">E</Badge>
+          )}
         </div>
 
-        {/* Play Button - Full Width */}
-        <Button
-          onClick={() => {
-            playRelease(release);
-            onPlayRelease?.(release);
-          }}
-          className="w-full mt-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-          size="sm"
-        >
-          <Play className="w-4 h-4 fill-current mr-2" />
-          Play Release
-        </Button>
+        {/* Tags */}
+        {release.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {release.tags.slice(0, 2).map((tag, index) => (
+              <span
+                key={tag}
+                className={`inline-flex items-center px-1.5 py-0 rounded-full text-[10px] font-medium ${
+                  index % 2 === 0 
+                    ? 'bg-primary/10 text-primary' 
+                    : 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                }`}
+              >
+                {tag}
+              </span>
+            ))}
+            {release.tags.length > 2 && (
+              <span className="inline-flex items-center px-1.5 py-0 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+                +{release.tags.length - 2}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center justify-between mt-3 pt-2 border-t">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "text-muted-foreground hover:text-primary h-7 px-1.5",
+                commentsVisible && "text-primary"
+              )}
+              onClick={() => setCommentsVisible(!commentsVisible)}
+            >
+              <MessageCircle className={cn("w-3.5 h-3.5", commentsVisible && "fill-current")} />
+              <span className="text-[11px] ml-0.5">{commentCount}</span>
+            </Button>
+            <ZapButton
+              target={releaseEvent}
+              className="h-7 px-1.5"
+              zapData={{
+                count: release.zapCount || 0,
+                totalSats: release.totalSats || 0,
+                isLoading: false
+              }}
+              hideWhenEmpty={false}
+            />
+            <Button variant="ghost" size="sm" onClick={handleShare} className="h-7 px-1.5 text-muted-foreground hover:text-primary">
+              <Share className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+          <Button
+            onClick={() => {
+              playRelease(release);
+              onPlayRelease?.(release);
+            }}
+            size="sm"
+            className="h-6 px-2.5 text-[11px] bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600"
+          >
+            <Play className="w-3 h-3 fill-current mr-1" />
+            Play
+          </Button>
+        </div>
 
         {commentsVisible && (
-          <div className="mt-4 pt-4 border-t">
+          <div className="mt-3 pt-3 border-t">
             <CommentsSection
               root={releaseEvent}
               title="Release Discussion"

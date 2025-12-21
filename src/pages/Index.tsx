@@ -13,16 +13,20 @@ import { RecentActivity } from '@/components/podcast/RecentActivity';
 import { PostCard } from '@/components/social/PostCard';
 import { ZapDialog } from '@/components/ZapDialog';
 import type { PodcastRelease } from '@/types/podcast';
-import { useLatestRelease } from '@/hooks/usePodcastReleases';
+import { useLatestRelease, useReleases } from '@/hooks/usePodcastReleases';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { useArtistPosts } from '@/hooks/useArtistPosts';
+import { useArtistPosts, useArtistPostCount } from '@/hooks/useArtistPosts';
+import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
 import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 const Index = () => {
   const { data: latestRelease } = useLatestRelease();
+  const { data: allReleases } = useReleases({ limit: 100 });
+  const { data: leaderboard } = useZapLeaderboard(100);
+  const { data: postCount } = useArtistPostCount();
   const podcastConfig = usePodcastConfig();
   const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { user } = useCurrentUser();
@@ -32,6 +36,11 @@ const Index = () => {
   
   // Flatten the first page of posts for preview
   const recentPosts = postsData?.pages.flat().slice(0, 3) || [];
+  
+  // Stats for Explore cards
+  const releaseCount = allReleases?.length || 0;
+  const supporterCount = leaderboard?.length || 0;
+  const totalPostCount = postCount || 0;
 
   const handlePlayLatestRelease = () => {
     if (latestRelease) {
@@ -76,23 +85,34 @@ const Index = () => {
                 {/* Release Info */}
                 <div className="flex-1 text-center lg:text-left space-y-4">
                   <div className="space-y-2">
-                    <Badge variant="secondary" className="mb-2">
+                    <Badge className="mb-2 bg-cyan-500/15 border-cyan-500/30 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/20">
                       <Sparkles className="w-3 h-3 mr-1" />
                       Latest Release
                     </Badge>
                     <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
                       {latestRelease.title}
                     </h1>
-                    <Link to="/about" className="inline-flex items-center gap-2 text-lg text-muted-foreground hover:text-foreground transition-colors">
-                      {podcastConfig.podcast.image && (
-                        <img
-                          src={podcastConfig.podcast.image}
-                          alt={podcastConfig.podcast.artistName}
-                          className="w-6 h-6 rounded-full object-cover"
-                        />
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <Link to="/about" className="inline-flex items-center gap-2 text-lg text-muted-foreground hover:text-foreground transition-colors">
+                        {podcastConfig.podcast.image && (
+                          <img
+                            src={podcastConfig.podcast.image}
+                            alt={podcastConfig.podcast.artistName}
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                        )}
+                        <span className="font-medium">{podcastConfig.podcast.artistName}</span>
+                      </Link>
+                      {latestRelease.tags && latestRelease.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 justify-center lg:justify-start">
+                          {latestRelease.tags.slice(0, 3).map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs bg-background/50">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
                       )}
-                      {podcastConfig.podcast.artistName}
-                    </Link>
+                    </div>
                   </div>
 
                   {latestRelease.description && (
@@ -102,9 +122,9 @@ const Index = () => {
                   )}
 
                   <div className="flex flex-wrap gap-3 justify-center lg:justify-start pt-2">
-                    <Button onClick={handlePlayLatestRelease} size="lg" className="bg-primary hover:bg-primary/90">
-                      <Headphones className="w-5 h-5 mr-2" />
-                      Listen Now
+                    <Button onClick={handlePlayLatestRelease} size="lg" className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white border-0">
+                      <Play className="w-5 h-5 mr-2" fill="currentColor" />
+                      Play
                     </Button>
 
                     <Button variant="outline" size="lg" asChild>
@@ -150,116 +170,6 @@ const Index = () => {
                 playRelease(release);
               }}
             />
-          </section>
-
-          {/* Quick Navigation Cards */}
-          <section>
-            <h2 className="text-2xl font-bold mb-6">Explore</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Link to="/releases" className="group">
-                <Card className="h-full hover:border-cyan-500/50 transition-colors">
-                  <CardContent className="p-5 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
-                      <Headphones className="w-6 h-6 text-cyan-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold group-hover:text-cyan-500 transition-colors">All Releases</h3>
-                      <p className="text-sm text-muted-foreground">Browse catalog</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              <Link to="/community" className="group">
-                <Card className="h-full hover:border-yellow-500/50 transition-colors">
-                  <CardContent className="p-5 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center group-hover:bg-yellow-500/20 transition-colors">
-                      <Users className="w-6 h-6 text-yellow-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold group-hover:text-yellow-500 transition-colors">Community</h3>
-                      <p className="text-sm text-muted-foreground">Join discussions</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              <Link to="/social" className="group">
-                <Card className="h-full hover:border-purple-500/50 transition-colors">
-                  <CardContent className="p-5 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
-                      <MessageSquare className="w-6 h-6 text-purple-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold group-hover:text-purple-500 transition-colors">Social Feed</h3>
-                      <p className="text-sm text-muted-foreground">Latest updates</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              <a href="/rss.xml" target="_blank" rel="noopener noreferrer" className="group">
-                <Card className="h-full hover:border-orange-500/50 transition-colors">
-                  <CardContent className="p-5 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
-                      <Rss className="w-6 h-6 text-orange-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold group-hover:text-orange-500 transition-colors">RSS Feed</h3>
-                      <p className="text-sm text-muted-foreground">Subscribe</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </a>
-            </div>
-          </section>
-
-          {/* Social Feed Preview */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Social Feed</h2>
-              <Button variant="ghost" asChild>
-                <Link to="/social" className="group text-muted-foreground hover:text-foreground">
-                  View All
-                  <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
-            </div>
-
-            {postsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[...Array(3)].map((_, i) => (
-                  <Card key={i}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start space-x-3">
-                        <Skeleton className="w-9 h-9 rounded-full" />
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Skeleton className="h-4 w-24" />
-                            <Skeleton className="h-3 w-16" />
-                          </div>
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-3/4" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : recentPosts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {recentPosts.map((post) => (
-                  <PostCard key={post.id} event={post} previewMode className="h-44" />
-                ))}
-              </div>
-            ) : (
-              <Card className="border-dashed">
-                <CardContent className="py-8 text-center">
-                  <MessageSquare className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground">No posts yet</p>
-                </CardContent>
-              </Card>
-            )}
           </section>
 
           {/* Community Section */}
@@ -326,6 +236,122 @@ const Index = () => {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+          </section>
+
+          {/* Social Feed Preview */}
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Social Feed</h2>
+              <Button variant="ghost" asChild>
+                <Link to="/social" className="group text-muted-foreground hover:text-foreground">
+                  View All
+                  <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
+
+            {postsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start space-x-3">
+                        <Skeleton className="w-9 h-9 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-3/4" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : recentPosts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {recentPosts.map((post) => (
+                  <PostCard key={post.id} event={post} previewMode className="h-44" />
+                ))}
+              </div>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="py-8 text-center">
+                  <MessageSquare className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">No posts yet</p>
+                </CardContent>
+              </Card>
+            )}
+          </section>
+
+          {/* Quick Navigation Cards */}
+          <section>
+            <h2 className="text-2xl font-bold mb-6">Explore</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Link to="/releases" className="group">
+                <Card className="h-full hover:border-cyan-500/50 transition-colors">
+                  <CardContent className="p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                      <Headphones className="w-6 h-6 text-cyan-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold group-hover:text-cyan-500 transition-colors">All Releases</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {releaseCount > 0 ? `${releaseCount} tracks` : 'Browse catalog'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link to="/community" className="group">
+                <Card className="h-full hover:border-yellow-500/50 transition-colors">
+                  <CardContent className="p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center group-hover:bg-yellow-500/20 transition-colors">
+                      <Users className="w-6 h-6 text-yellow-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold group-hover:text-yellow-500 transition-colors">Community</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {supporterCount > 0 ? `${supporterCount} supporters` : 'Join discussions'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link to="/social" className="group">
+                <Card className="h-full hover:border-purple-500/50 transition-colors">
+                  <CardContent className="p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                      <MessageSquare className="w-6 h-6 text-purple-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold group-hover:text-purple-500 transition-colors">Social Feed</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {totalPostCount > 0 ? `${totalPostCount} posts` : 'Latest updates'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <a href="/rss.xml" target="_blank" rel="noopener noreferrer" className="group">
+                <Card className="h-full hover:border-orange-500/50 transition-colors">
+                  <CardContent className="p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                      <Rss className="w-6 h-6 text-orange-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold group-hover:text-orange-500 transition-colors">RSS Feed</h3>
+                      <p className="text-sm text-muted-foreground">Subscribe</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </a>
             </div>
           </section>
 
