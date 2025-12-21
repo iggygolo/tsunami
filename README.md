@@ -87,9 +87,9 @@ Edit `.env` to customize your podcast:
 VITE_CREATOR_NPUB=npub1...
 
 # Podcast Metadata  
-VITE_ARTIST_NAME=Your Name
-VITE_PODCAST_DESCRIPTION=Your podcast description
-VITE_PODCAST_IMAGE=/assets/avatar.png
+VITE_ARTIST_NAME=Your Artist Name
+VITE_PODCAST_DESCRIPTION=Your artist description
+VITE_PODCAST_IMAGE=https://image.example/avatar.png
 
 # Podcasting 2.0 Value
 VITE_PODCAST_VALUE_RECIPIENTS=[{"name":"Host","type":"lightning-address","address":"you@domain.com","split":100}]
