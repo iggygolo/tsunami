@@ -186,7 +186,6 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
       <enclosure url="${escapeXml(release.audioUrl)}" type="${release.audioType}" length="0" />
       ${release.videoUrl ? `<enclosure url="${escapeXml(release.videoUrl)}" type="${release.videoType || 'video/mp4'}" length="0" />` : ''}
       ${release.transcriptUrl ? `<podcast:transcript url="${escapeXml(release.transcriptUrl)}" type="text/plain" />` : ''}
-      ${release.chaptersUrl ? `<podcast:chapters url="${escapeXml(release.chaptersUrl)}" type="application/json+chapters" />` : ''}
       ${release.content ? `<content:encoded><![CDATA[${release.content}]]></content:encoded>` : ''}
     </item>`;
     }).join('')}
@@ -258,9 +257,6 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
   // Extract transcript URL from tag
   const transcriptUrl = tags.get('transcript')?.[0];
 
-  // Extract chapters URL from tag
-  const chaptersUrl = tags.get('chapters')?.[0];
-
   // Content is just the show notes (plain text)
   const content = event.content || undefined;
 
@@ -275,7 +271,6 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
     videoType,
     imageUrl,
     transcriptUrl,
-    chaptersUrl,
     duration,
     publishDate,
     explicit: false,

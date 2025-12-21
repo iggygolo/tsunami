@@ -17,9 +17,8 @@ export interface PodcastRelease {
   publishDate: Date;
   explicit?: boolean;
   tags: string[];
-  // Transcript and chapters as URL references
+  // Transcript as URL references
   transcriptUrl?: string;
-  chaptersUrl?: string;
   guests?: PodcastGuest[];
   externalRefs?: ExternalReference[];
 
@@ -83,8 +82,6 @@ export interface ReleaseFormData {
   transcriptFile?: File;
   transcriptUrl?: string;
   transcriptType?: string;
-  chaptersFile?: File;
-  chaptersUrl?: string;
   duration?: number;
   explicit?: boolean;
   tags: string[];
@@ -152,9 +149,8 @@ export interface RSSItem {
   duration?: string; // HH:MM:SS format
   explicit?: boolean;
   image?: string;
-  // Transcript and chapters as URL references
+  // Transcript as URL references
   transcriptUrl?: string;
-  chaptersUrl?: string;
   funding?: Array<{
     url: string;
     message: string;

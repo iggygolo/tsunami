@@ -1,5 +1,5 @@
 import { useSeoMeta } from '@unhead/react';
-import { Globe, Rss, Zap, Hash, Play, Info } from 'lucide-react';
+import { Globe, Rss, Zap, Hash, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';

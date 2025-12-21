@@ -100,17 +100,6 @@ export function usePublishRelease() {
         }
       }
 
-      // Upload chapters file if provided
-      let chaptersUrl = releaseData.chaptersUrl;
-      if (releaseData.chaptersFile) {
-        try {
-          const chaptersTags = await uploadFile(releaseData.chaptersFile);
-          chaptersUrl = chaptersTags[0][1];
-        } catch (error) {
-          throw new Error(`Failed to upload chapters file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
-
       // Generate a unique identifier for this addressable release
       const releaseIdentifier = `release-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -145,11 +134,6 @@ export function usePublishRelease() {
       // Add transcript URL if provided
       if (transcriptUrl) {
         tags.push(['transcript', transcriptUrl]);
-      }
-
-      // Add chapters URL if provided
-      if (chaptersUrl) {
-        tags.push(['chapters', chaptersUrl]);
       }
 
       // Add topic tags
@@ -282,17 +266,6 @@ export function useUpdateRelease() {
         }
       }
 
-      // Upload chapters file if provided
-      let chaptersUrl = releaseData.chaptersUrl;
-      if (releaseData.chaptersFile) {
-        try {
-          const chaptersTags = await uploadFile(releaseData.chaptersFile);
-          chaptersUrl = chaptersTags[0][1];
-        } catch (error) {
-          throw new Error(`Failed to upload chapters file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
-
       // Use the provided release identifier to preserve the same addressable event
       // This ensures comments and other references remain linked to the same release
 
@@ -346,11 +319,6 @@ export function useUpdateRelease() {
       // Add transcript URL if provided
       if (transcriptUrl) {
         tags.push(['transcript', transcriptUrl]);
-      }
-
-      // Add chapters URL if provided
-      if (chaptersUrl) {
-        tags.push(['chapters', chaptersUrl]);
       }
 
       // Add topic tags

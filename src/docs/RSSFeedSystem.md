@@ -275,7 +275,7 @@ The Tsunami RSS feed system provides a robust, automatically updating RSS feed t
 - ✅ **Updates Automatically**: When releases are added, edited, or deleted
 - ✅ **Standards Compliant**: RSS 2.0 + Podcasting 2.0
 - ✅ **Performance Optimized**: Caching and efficient updates
-- ✅ **Feature Rich**: Lightning payments, transcripts, chapters
+- ✅ **Feature Rich**: Lightning payments, transcripts
 - ✅ **Well Integrated**: Works with all major podcast platforms
 
 The system ensures that podcast directories and subscribers always have access to the latest release content while maintaining high performance and reliability.

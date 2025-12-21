@@ -40,7 +40,6 @@ const releaseEditSchema = z.object({
   videoUrl: z.string().url().optional().or(z.literal('')),
   imageUrl: z.string().url().optional().or(z.literal('')),
   transcriptUrl: z.string().url().optional().or(z.literal('')),
-  chaptersUrl: z.string().url().optional().or(z.literal('')),
   duration: z.number().positive().optional(),
   explicit: z.boolean().default(false),
   tags: z.array(z.string()).default([]),
@@ -69,7 +68,6 @@ export function ReleaseEditDialog({
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [transcriptFile, setTranscriptFile] = useState<File | null>(null);
-  const [chaptersFile, setChaptersFile] = useState<File | null>(null);
   const [currentTag, setCurrentTag] = useState('');
   const [isDetectingDuration, setIsDetectingDuration] = useState(false);
 
@@ -83,7 +81,6 @@ export function ReleaseEditDialog({
       videoUrl: release.videoUrl || '',
       imageUrl: release.imageUrl || '',
       transcriptUrl: release.transcriptUrl || '',
-      chaptersUrl: release.chaptersUrl || '',
       duration: release.duration,
       explicit: release.explicit || false,
       tags: release.tags || [],
@@ -103,7 +100,6 @@ export function ReleaseEditDialog({
       videoUrl: release.videoUrl || '',
       imageUrl: release.imageUrl || '',
       transcriptUrl: release.transcriptUrl || '',
-      chaptersUrl: release.chaptersUrl || '',
       duration: release.duration,
       explicit: release.explicit || false,
       tags: release.tags || [],
@@ -112,7 +108,6 @@ export function ReleaseEditDialog({
     setVideoFile(null);
     setImageFile(null);
     setTranscriptFile(null);
-    setChaptersFile(null);
     setCurrentTag('');
     setIsDetectingDuration(false);
   }, [release, reset]);
@@ -254,39 +249,6 @@ export function ReleaseEditDialog({
     }
   };
 
-  const handleChaptersFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.includes('json') && !file.name.endsWith('.json')) {
-        toast({
-          title: 'Invalid file type',
-          description: 'Please select a JSON file for chapters.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Validate file size (1MB limit)
-      if (file.size > 1024 * 1024) {
-        toast({
-          title: 'File too large',
-          description: 'Chapters file must be less than 1MB.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      setChaptersFile(file);
-      setValue('chaptersUrl', '');
-
-      toast({
-        title: 'Chapters file selected',
-        description: `${file.name}`,
-      });
-    }
-  };
-
   const addTag = () => {
     if (currentTag.trim() && !tags.includes(currentTag.trim())) {
       setValue('tags', [...tags, currentTag.trim()]);
@@ -316,13 +278,11 @@ export function ReleaseEditDialog({
         videoFile: videoFile || undefined,
         imageFile: imageFile || undefined,
         transcriptFile: transcriptFile || undefined,
-        chaptersFile: chaptersFile || undefined,
         // Clean up empty URL strings
         audioUrl: data.audioUrl || undefined,
         videoUrl: data.videoUrl || undefined,
         imageUrl: data.imageUrl || undefined,
         transcriptUrl: data.transcriptUrl || undefined,
-        chaptersUrl: data.chaptersUrl || undefined,
         // Keep existing external references
         externalRefs: release.externalRefs,
       };
@@ -683,69 +643,6 @@ export function ReleaseEditDialog({
                   <div className="text-xs text-muted-foreground bg-muted/50 p-2 sm:p-3 rounded">
                     <strong>Current:</strong>
                     <span className="break-all ml-1">{release.transcriptUrl}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Chapters Upload/URL */}
-              <div className="space-y-4">
-                <Label>Chapters (Optional)</Label>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Upload Chapters</Label>
-                    <div className="mt-1">
-                      <input
-                        type="file"
-                        accept=".json,application/json"
-                        onChange={handleChaptersFileChange}
-                        className="hidden"
-                        id="chapters-upload-edit"
-                      />
-                      <label htmlFor="chapters-upload-edit">
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 sm:p-4 text-center cursor-pointer hover:border-gray-400 transition-colors">
-                          <Upload className="w-6 h-6 mx-auto mb-2 text-gray-400" />
-                          <p className="text-sm text-gray-500">
-                            {chaptersFile ? (
-                              <span className="text-green-600 font-medium">
-                                ✓ {chaptersFile.name}
-                              </span>
-                            ) : (
-                              'JSON chapters file'
-                            )}
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div>
-                    <FormField
-                      control={form.control}
-                      name="chaptersUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-muted-foreground">
-                            Or Chapters URL
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="https://example.com/chapters.json"
-                              disabled={!!chaptersFile}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {!chaptersFile && release.chaptersUrl && (
-                  <div className="text-xs text-muted-foreground bg-muted/50 p-2 sm:p-3 rounded">
-                    <strong>Current:</strong>
-                    <span className="break-all ml-1">{release.chaptersUrl}</span>
                   </div>
                 )}
               </div>

@@ -7,7 +7,7 @@ A Nostr-powered podcast platform for single artist accounts that combines decent
 ### 🎙️ **Podcast Publishing**
 - **Artist-only publishing** with hardcoded npub authentication
 - Upload audio files to Blossom servers or reference external URLs
-- Rich release metadata: title, description, cover art, transcripts, chapters
+- Rich release metadata: title, description, cover art, transcripts
 - Podcasting 2.0 value tags for Lightning payments and funding
 - Release editing and management through intuitive Studio interface
 

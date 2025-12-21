@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useSeoMeta } from '@unhead/react';
-import { Clock, Calendar, ArrowLeft, Headphones, BookOpen, List, ExternalLink, ChevronDown, ChevronUp, Video } from 'lucide-react';
+import { Clock, Calendar, ArrowLeft, Headphones, BookOpen, ExternalLink, ChevronDown, ChevronUp, Video } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +37,6 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   const podcastConfig = usePodcastConfig();
   const [showComments, setShowComments] = useState(true);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
-  const [isChaptersOpen, setIsChaptersOpen] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
 
   // Query for the release event
@@ -133,9 +132,6 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
     // Extract transcript URL from tag
     const transcriptUrl = tags.get('transcript')?.[0];
 
-    // Extract chapters URL from tag
-    const chaptersUrl = tags.get('chapters')?.[0];
-
     return {
       id: releaseEvent.id,
       eventId: releaseEvent.id,
@@ -155,7 +151,6 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
       explicit: false, // Can be extended later if needed
       tags: topicTags,
       transcriptUrl,
-      chaptersUrl,
       zapCount: 0,
       commentCount: 0,
       repostCount: 0
@@ -178,36 +173,6 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
       }
     },
     enabled: !!release?.transcriptUrl,
-    staleTime: 300000, // 5 minutes
-  });
-
-  // Fetch chapters content if URL is available
-  const { data: chaptersContent, isLoading: isLoadingChapters } = useQuery<Array<{ startTime: number; title: string; img?: string; url?: string }> | null>({
-    queryKey: ['chapters', release?.chaptersUrl],
-    queryFn: async () => {
-      if (!release?.chaptersUrl) return null;
-
-      try {
-        const response = await fetch(release.chaptersUrl);
-        if (!response.ok) throw new Error('Failed to fetch chapters');
-        const data = await response.json();
-
-        // Handle both formats:
-        // 1. Podcasting 2.0 format: { "version": "1.2.0", "chapters": [...] }
-        // 2. Simple array format: [...]
-        if (Array.isArray(data)) {
-          return data;
-        } else if (data && typeof data === 'object' && Array.isArray(data.chapters)) {
-          return data.chapters;
-        }
-
-        return null;
-      } catch (error) {
-        console.error('Error fetching chapters:', error);
-        return null;
-      }
-    },
-    enabled: !!release?.chaptersUrl,
     staleTime: 300000, // 5 minutes
   });
 
@@ -434,105 +399,6 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                   Your browser does not support the video tag.
                 </video>
               </CardContent>
-            </Card>
-          )}
-
-          {/* Chapters Section */}
-          {release.chaptersUrl && (
-            <Card>
-              <Collapsible open={isChaptersOpen} onOpenChange={setIsChaptersOpen}>
-                <CardHeader className="pb-3">
-                  <CollapsibleTrigger asChild>
-                    <button className="flex items-center justify-between w-full text-left hover:opacity-80 transition-opacity">
-                      <CardTitle className="flex items-center gap-2">
-                        <List className="w-5 h-5" />
-                        Chapters
-                        {chaptersContent && (
-                          <Badge variant="secondary" className="ml-2">
-                            {chaptersContent.length}
-                          </Badge>
-                        )}
-                      </CardTitle>
-                      {isChaptersOpen ? (
-                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </button>
-                  </CollapsibleTrigger>
-                </CardHeader>
-                <CollapsibleContent>
-                  <CardContent>
-                    {isLoadingChapters ? (
-                      <div className="space-y-3">
-                        {[...Array(3)].map((_, i) => (
-                          <div key={i} className="flex items-start gap-3">
-                            <Skeleton className="w-16 h-16 rounded flex-shrink-0" />
-                            <div className="flex-1 space-y-2">
-                              <Skeleton className="h-4 w-24" />
-                              <Skeleton className="h-4 w-full" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : chaptersContent && chaptersContent.length > 0 ? (
-                      <div className="space-y-3">
-                        {chaptersContent.map((chapter, index) => (
-                          <div
-                            key={index}
-                            className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                            onClick={() => {
-                              // TODO: Seek to chapter time in audio player
-                              console.log('Seek to:', chapter.startTime);
-                            }}
-                          >
-                            {chapter.img && (
-                              <img
-                                src={chapter.img}
-                                alt={chapter.title}
-                                className="w-16 h-16 rounded object-cover flex-shrink-0"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-baseline gap-2">
-                                <span className="text-sm font-medium text-muted-foreground">
-                                  {formatDuration(chapter.startTime)}
-                                </span>
-                                <h3 className="font-semibold truncate">{chapter.title}</h3>
-                              </div>
-                              {chapter.url && (
-                                <a
-                                  href={chapter.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sm text-primary hover:underline flex items-center gap-1 mt-1"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  Learn more
-                                  <ExternalLink className="w-3 h-3" />
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground mb-4">Failed to load chapters</p>
-                        <a
-                          href={release.chaptersUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-primary hover:underline"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          View Chapters File
-                        </a>
-                      </div>
-                    )}
-                  </CardContent>
-                </CollapsibleContent>
-              </Collapsible>
             </Card>
           )}
 

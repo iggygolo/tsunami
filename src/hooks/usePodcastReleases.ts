@@ -83,9 +83,6 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
   // Extract transcript URL from tag
   const transcriptUrl = tags.get('transcript')?.[0];
 
-  // Extract chapters URL from tag
-  const chaptersUrl = tags.get('chapters')?.[0];
-
   // Content is just the show notes (plain text)
   const content = event.content || undefined;
 
@@ -104,7 +101,6 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
     explicit: false, // Can be extended later if needed
     tags: topicTags,
     transcriptUrl,
-    chaptersUrl,
     externalRefs: [],
     eventId: event.id,
     authorPubkey: event.pubkey,
