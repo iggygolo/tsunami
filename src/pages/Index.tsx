@@ -85,7 +85,7 @@ const Index = () => {
                 {/* Release Info */}
                 <div className="flex-1 text-center lg:text-left space-y-4">
                   <div className="space-y-2">
-                    <Badge className="mb-2 bg-cyan-500/15 border-cyan-500/30 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/20">
+                    <Badge variant="primary" className="mb-2">
                       <Sparkles className="w-3 h-3 mr-1" />
                       Latest Release
                     </Badge>

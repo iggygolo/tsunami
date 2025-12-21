@@ -50,7 +50,7 @@ const About = () => {
               {/* Artist Info */}
               <div className="flex-1 text-center md:text-left space-y-4">
                 <div className="space-y-2">
-                  <Badge variant="secondary" className="mb-2">
+                  <Badge variant="primary" className="mb-2">
                     <Sparkles className="w-3 h-3 mr-1" />
                     Value4Value Music
                   </Badge>
