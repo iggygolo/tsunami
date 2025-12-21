@@ -2,6 +2,7 @@ import { MessageCircle, Zap, Share, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useRecentZapActivity } from '@/hooks/useZapLeaderboard';
@@ -26,7 +27,7 @@ function ActivityItem({ userPubkey, type, amount, releaseId, timestamp }: Activi
   const getActivityIcon = () => {
     switch (type) {
       case 'zap':
-        return <Zap className="w-4 h-4 text-yellow-500" />;
+        return null; // Icon shown in badge
       case 'comment':
         return <MessageCircle className="w-4 h-4 text-blue-500" />;
       case 'repost':
@@ -35,15 +36,15 @@ function ActivityItem({ userPubkey, type, amount, releaseId, timestamp }: Activi
   };
 
   const getActivityText = () => {
-    const releaseTitle = release?.title ? ` "${release.title}"` : '';
+    const releaseTitle = release?.title ? `"${release.title}"` : '';
     
     switch (type) {
       case 'zap':
-        return `zapped${releaseTitle}${amount ? ` ${formatAmount(amount)} sats` : ''}`;
+        return releaseTitle;
       case 'comment':
-        return `commented on${releaseTitle}`;
+        return `commented on ${releaseTitle}`;
       case 'repost':
-        return `reposted${releaseTitle}`;
+        return `reposted ${releaseTitle}`;
     }
   };
 
@@ -66,12 +67,20 @@ function ActivityItem({ userPubkey, type, amount, releaseId, timestamp }: Activi
       </Avatar>
       
       <div className="flex-1 min-w-0">
-        <div className="flex items-center space-x-2 mb-1">
-          {getActivityIcon()}
-          <p className="text-sm">
-            <span className="font-medium">{displayName}</span>{' '}
-            <span className="text-muted-foreground">{getActivityText()}</span>
-          </p>
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center space-x-2">
+            {getActivityIcon()}
+            <p className="text-sm">
+              <span className="font-medium">{displayName}</span>{' '}
+              <span className="text-muted-foreground">{getActivityText()}</span>
+            </p>
+          </div>
+          {type === 'zap' && amount && (
+            <Badge variant="secondary" className="text-xs bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/30">
+              <Zap className="w-3 h-3 mr-1" />
+              {formatAmount(amount)}
+            </Badge>
+          )}
         </div>
         
         <div className="flex items-center space-x-1 text-xs text-muted-foreground">
@@ -116,61 +125,62 @@ export function RecentActivity({
 }: RecentActivityProps) {
   const { data: recentZaps, isLoading, error } = useRecentZapActivity(limit);
 
-  if (error) {
+  const content = () => {
+    if (error) {
+      return (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          Failed to load activity
+        </p>
+      );
+    }
+
+    if (isLoading) {
+      return <ActivitySkeleton />;
+    }
+
+    if (recentZaps && recentZaps.length > 0) {
+      return (
+        <div className="space-y-1">
+          {recentZaps.map((activity) => (
+            <ActivityItem
+              key={activity.id}
+              userPubkey={activity.userPubkey}
+              type="zap"
+              amount={activity.amount}
+              releaseId={activity.releaseId || undefined}
+              timestamp={activity.timestamp}
+            />
+          ))}
+        </div>
+      );
+    }
+
     return (
-      <Card className={className}>
-        {showTitle && (
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Clock className="w-5 h-5" />
-              <span>Recent Activity</span>
-            </CardTitle>
-          </CardHeader>
-        )}
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Failed to load activity
-          </p>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <Clock className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+        <p className="text-sm text-muted-foreground">No recent activity</p>
+        <p className="text-xs text-muted-foreground">
+          Activity will appear here as people engage with the podcast
+        </p>
+      </div>
     );
+  };
+
+  // When showTitle is false, render without Card wrapper
+  if (!showTitle) {
+    return <div className={className}>{content()}</div>;
   }
 
   return (
     <Card className={className}>
-      {showTitle && (
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Clock className="w-5 h-5" />
-            <span>Recent Activity</span>
-          </CardTitle>
-        </CardHeader>
-      )}
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Clock className="w-5 h-5" />
+          <span>Recent Activity</span>
+        </CardTitle>
+      </CardHeader>
       <CardContent className="pt-0">
-        {isLoading ? (
-          <ActivitySkeleton />
-        ) : recentZaps && recentZaps.length > 0 ? (
-          <div className="space-y-1 max-h-96 overflow-y-auto">
-            {recentZaps.map((activity) => (
-              <ActivityItem
-                key={activity.id}
-                userPubkey={activity.userPubkey}
-                type="zap"
-                amount={activity.amount}
-                releaseId={activity.releaseId || undefined}
-                timestamp={activity.timestamp}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Clock className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">No recent activity</p>
-            <p className="text-xs text-muted-foreground">
-              Activity will appear here as people engage with the podcast
-            </p>
-          </div>
-        )}
+        {content()}
       </CardContent>
     </Card>
   );

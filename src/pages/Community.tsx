@@ -1,7 +1,6 @@
 import { useSeoMeta } from '@unhead/react';
 import { MessageCircle, Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Layout } from '@/components/Layout';
 import { ZapLeaderboard } from '@/components/podcast/ZapLeaderboard';
 import { RecentActivity } from '@/components/podcast/RecentActivity';
@@ -25,58 +24,50 @@ const Community = () => {
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
-            {/* Main Content */}
-            <div>
-              <Tabs defaultValue="activity" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="activity" className="flex items-center space-x-2">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>Recent Activity</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="discussions" className="flex items-center space-x-2">
-                    <MessageCircle className="w-4 h-4" />
-                    <span>Discussions</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="supporters" className="flex items-center space-x-2">
-                    <Users className="w-4 h-4" />
-                    <span>Top Supporters</span>
-                  </TabsTrigger>
-                </TabsList>
+          {/* Two-column layout for Discussions and Activity/Supporters */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left column - Discussions */}
+            <div className="lg:col-span-2">
+              <Card className="h-fit">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <MessageCircle className="w-5 h-5 text-primary" />
+                    Release Discussions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ReleaseDiscussions limit={20} />
+                </CardContent>
+              </Card>
+            </div>
 
-                <TabsContent value="activity" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Recent Community Activity</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <RecentActivity limit={20} showTitle={false} />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+            {/* Right column - Supporters & Activity */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Top Supporters */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Users className="w-5 h-5 text-primary" />
+                    Top Supporters
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ZapLeaderboard limit={5} showTitle={false} />
+                </CardContent>
+              </Card>
 
-                <TabsContent value="discussions" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Release Discussions</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ReleaseDiscussions limit={15} />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="supporters" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Top Supporters</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ZapLeaderboard limit={20} showTitle={false} />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+              {/* Recent Activity */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <RecentActivity limit={15} showTitle={false} />
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>

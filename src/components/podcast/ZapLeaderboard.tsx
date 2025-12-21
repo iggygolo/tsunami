@@ -64,7 +64,7 @@ function LeaderboardEntry({ entry, rank }: LeaderboardEntryProps) {
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium truncate">{displayName}</p>
           <div className="flex items-center space-x-2">
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/30">
               <Zap className="w-3 h-3 mr-1" />
               {formatAmount(entry.totalAmount)}
             </Badge>
@@ -115,58 +115,59 @@ export function ZapLeaderboard({
 }: ZapLeaderboardProps) {
   const { data: leaderboard, isLoading, error } = useZapLeaderboard(limit);
 
-  if (error) {
+  const content = () => {
+    if (error) {
+      return (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          Failed to load leaderboard
+        </p>
+      );
+    }
+
+    if (isLoading) {
+      return <LeaderboardSkeleton />;
+    }
+
+    if (leaderboard && leaderboard.length > 0) {
+      return (
+        <div className="space-y-1">
+          {leaderboard.map((entry, index) => (
+            <LeaderboardEntry
+              key={entry.userPubkey}
+              entry={entry}
+              rank={index + 1}
+            />
+          ))}
+        </div>
+      );
+    }
+
     return (
-      <Card className={className}>
-        {showTitle && (
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Zap className="w-5 h-5" />
-              <span>Top Supporters</span>
-            </CardTitle>
-          </CardHeader>
-        )}
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Failed to load leaderboard
-          </p>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <Zap className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+        <p className="text-sm text-muted-foreground">No zaps yet</p>
+        <p className="text-xs text-muted-foreground">
+          Be the first to support this podcast!
+        </p>
+      </div>
     );
+  };
+
+  // When showTitle is false, render without Card wrapper
+  if (!showTitle) {
+    return <div className={className}>{content()}</div>;
   }
 
   return (
     <Card className={className}>
-      {showTitle && (
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Zap className="w-5 h-5" />
-            <span>Top Supporters</span>
-          </CardTitle>
-        </CardHeader>
-      )}
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Zap className="w-5 h-5" />
+          <span>Top Supporters</span>
+        </CardTitle>
+      </CardHeader>
       <CardContent className="pt-0">
-        {isLoading ? (
-          <LeaderboardSkeleton />
-        ) : leaderboard && leaderboard.length > 0 ? (
-          <div className="space-y-1">
-            {leaderboard.map((entry, index) => (
-              <LeaderboardEntry
-                key={entry.userPubkey}
-                entry={entry}
-                rank={index + 1}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Zap className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">No zaps yet</p>
-            <p className="text-xs text-muted-foreground">
-              Be the first to support this podcast!
-            </p>
-          </div>
-        )}
+        {content()}
       </CardContent>
     </Card>
   );
