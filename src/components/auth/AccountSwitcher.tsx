@@ -32,7 +32,7 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <button className='flex items-center gap-3 p-3 rounded-full hover:bg-accent transition-all w-full text-foreground'>
+        <button className='flex items-center gap-3 p-3 rounded-full hover:bg-purple-500/10 transition-all w-full text-foreground'>
           <Avatar className='w-10 h-10'>
             <AvatarImage src={currentUser.metadata.picture} alt={getDisplayName(currentUser)} />
             <AvatarFallback>{getDisplayName(currentUser).charAt(0)}</AvatarFallback>
@@ -43,41 +43,41 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
           <ChevronDown className='w-4 h-4 text-muted-foreground' />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className='w-56 p-2 animate-scale-in'>
-        <div className='font-medium text-sm px-2 py-1.5'>Switch Relay</div>
+      <DropdownMenuContent className='w-64 p-2 animate-scale-in'>
+        <div className='font-medium text-xs uppercase tracking-wider text-muted-foreground px-2 py-2'>Switch Relay</div>
         <RelaySelector className="w-full" />
-        <DropdownMenuSeparator />
-        <div className='font-medium text-sm px-2 py-1.5'>Switch Account</div>
+        <DropdownMenuSeparator className="my-2" />
+        <div className='font-medium text-xs uppercase tracking-wider text-muted-foreground px-2 py-2'>Switch Account</div>
         {otherUsers.map((user) => (
           <DropdownMenuItem
             key={user.id}
             onClick={() => setLogin(user.id)}
-            className='flex items-center gap-2 cursor-pointer p-2 rounded-md'
+            className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
           >
-            <Avatar className='w-8 h-8'>
+            <Avatar className='w-8 h-8 ring-2 ring-transparent hover:ring-purple-500/30 transition-all'>
               <AvatarImage src={user.metadata.picture} alt={getDisplayName(user)} />
-              <AvatarFallback>{getDisplayName(user)?.charAt(0) || <UserIcon />}</AvatarFallback>
+              <AvatarFallback className="bg-purple-500/10 text-purple-600">{getDisplayName(user)?.charAt(0) || <UserIcon />}</AvatarFallback>
             </Avatar>
             <div className='flex-1 truncate'>
               <p className='text-sm font-medium'>{getDisplayName(user)}</p>
             </div>
-            {user.id === currentUser.id && <div className='w-2 h-2 rounded-full bg-primary'></div>}
+            {user.id === currentUser.id && <div className='w-2 h-2 rounded-full bg-purple-500'></div>}
           </DropdownMenuItem>
         ))}
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="my-2" />
         <WalletModal>
           <DropdownMenuItem
-            className='flex items-center gap-2 cursor-pointer p-2 rounded-md'
+            className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
             onSelect={(e) => e.preventDefault()}
           >
-            <Wallet className='w-4 h-4' />
+            <Wallet className='w-4 h-4 text-purple-500' />
             <span>Wallet Settings</span>
           </DropdownMenuItem>
         </WalletModal>
-        <DropdownMenuSeparator />
-        <div className='font-medium text-sm px-2 py-1.5'>Appearance</div>
+        <DropdownMenuSeparator className="my-2" />
+        <div className='font-medium text-xs uppercase tracking-wider text-muted-foreground px-2 py-2'>Appearance</div>
         <DropdownMenuItem
-          className='flex items-center gap-2 cursor-pointer p-2 rounded-md'
+          className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
           onSelect={(e) => e.preventDefault()}
         >
           <ThemeToggle />
@@ -85,14 +85,14 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onAddAccountClick}
-          className='flex items-center gap-2 cursor-pointer p-2 rounded-md'
+          className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
         >
-          <UserPlus className='w-4 h-4' />
+          <UserPlus className='w-4 h-4 text-purple-500' />
           <span>Add another account</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => removeLogin(currentUser.id)}
-          className='flex items-center gap-2 cursor-pointer p-2 rounded-md text-red-500'
+          className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-red-500/10 focus:bg-red-500/10 text-red-500 hover:text-red-500 focus:text-red-500 transition-all duration-200'
         >
           <LogOut className='w-4 h-4' />
           <span>Log out</span>
