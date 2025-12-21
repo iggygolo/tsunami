@@ -5,7 +5,6 @@ import { PODCAST_CONFIG, PODCAST_KINDS, getCreatorPubkeyHex } from '@/lib/podcas
 interface PodcastMetadata {
   artistName: string;
   description: string;
-  email: string;
   image: string;
   website: string;
   copyright: string;
@@ -86,7 +85,6 @@ export function usePodcastMetadata() {
       return {
         description: PODCAST_CONFIG.podcast.description,
         artistName: PODCAST_CONFIG.podcast.artistName,
-        email: PODCAST_CONFIG.podcast.email,
         image: PODCAST_CONFIG.podcast.image,
         website: PODCAST_CONFIG.podcast.website,
         copyright: PODCAST_CONFIG.podcast.copyright,

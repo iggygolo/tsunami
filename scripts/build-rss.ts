@@ -68,7 +68,6 @@ function createNodejsConfig() {
     podcast: {
       description: process.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered podcast exploring decentralized conversations",
       artistName: process.env.VITE_ARTIST_NAME || "PODSTR Creator",
-      email: process.env.VITE_PODCAST_EMAIL || "creator@podstr.example",
       image: process.env.VITE_PODCAST_IMAGE || "https://image.nostr.build/59bb1cffa12d11cb7cb6905283ecc75b259733e9ecf44a6053b3805d1f01bb7a.jpg",
       website: process.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
       copyright: process.env.VITE_PODCAST_COPYRIGHT || "© 2025 PODSTR Creator",
@@ -133,21 +132,6 @@ function escapeXml(unsafe: string): string {
 }
 
 /**
- * Format duration in seconds to HH:MM:SS format for iTunes RSS
- */
-function formatDurationForRSS(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  if (hours > 0) {
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  } else {
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-}
-
-/**
  * Node-compatible RSS feed generation (simplified version)
  */
 function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[], podcastConfig: Record<string, unknown>): string {
@@ -155,7 +139,6 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
-     xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
      xmlns:content="http://purl.org/rss/1.0/modules/content/"
      xmlns:podcast="https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md">
   <channel>
@@ -163,21 +146,9 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
     <description>${escapeXml(podcastConfig.podcast.description)}</description>
     <link>${escapeXml(podcastConfig.podcast.website || baseUrl)}</link>
     <copyright>${escapeXml(podcastConfig.podcast.copyright)}</copyright>
-    <managingEditor>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.artistName)})</managingEditor>
-    <webMaster>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.artistName)})</webMaster>
     <pubDate>${new Date().toUTCString()}</pubDate>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <ttl>${podcastConfig.rss.ttl}</ttl>
-
-    <!-- iTunes/Apple Podcasts tags -->
-    <itunes:title>${escapeXml(podcastConfig.podcast.artistName)}</itunes:title>
-    <itunes:summary>${escapeXml(podcastConfig.podcast.description)}</itunes:summary>
-    <itunes:author>${escapeXml(podcastConfig.podcast.artistName)}</itunes:author>
-    <itunes:owner>
-      <itunes:name>${escapeXml(podcastConfig.podcast.artistName)}</itunes:name>
-      <itunes:email>${escapeXml(podcastConfig.podcast.email)}</itunes:email>
-    </itunes:owner>
-    <itunes:image href="${escapeXml(podcastConfig.podcast.image)}" />
 
     <!-- Podcasting 2.0 tags -->
     <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.creatorNpub)}</podcast:guid>
@@ -214,9 +185,6 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
       <guid isPermaLink="false">${release.authorPubkey}:${release.identifier}</guid>
       <enclosure url="${escapeXml(release.audioUrl)}" type="${release.audioType}" length="0" />
       ${release.videoUrl ? `<enclosure url="${escapeXml(release.videoUrl)}" type="${release.videoType || 'video/mp4'}" length="0" />` : ''}
-      <itunes:duration>${release.duration ? formatDurationForRSS(release.duration) : '00:00'}</itunes:duration>
-      <itunes:explicit>${release.explicit ? 'yes' : 'no'}</itunes:explicit>
-      ${release.imageUrl ? `<itunes:image href="${escapeXml(release.imageUrl)}" />` : ''}
       ${release.transcriptUrl ? `<podcast:transcript url="${escapeXml(release.transcriptUrl)}" type="text/plain" />` : ''}
       ${release.chaptersUrl ? `<podcast:chapters url="${escapeXml(release.chaptersUrl)}" type="application/json+chapters" />` : ''}
       ${release.content ? `<content:encoded><![CDATA[${release.content}]]></content:encoded>` : ''}

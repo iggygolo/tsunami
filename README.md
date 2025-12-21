@@ -15,7 +15,6 @@ A Nostr-powered podcast platform for single creator accounts that combines decen
 - Automatic Podcasting 2.0-compliant RSS feed at `/rss.xml`
 - Build-time RSS generation using `scripts/build-rss.ts`
 - Lightning value splits with modern `lnaddress` method (no keysend fallback)
-- iTunes and standard RSS 2.0 support with health monitoring
 - RSS feed pulls releases from Nostr relays at build time
 
 ### 🎧 **Listening Experience**
@@ -90,7 +89,6 @@ VITE_CREATOR_NPUB=npub1...
 # Podcast Metadata  
 VITE_ARTIST_NAME=Your Name
 VITE_PODCAST_DESCRIPTION=Your podcast description
-VITE_PODCAST_EMAIL=your@email.com
 VITE_PODCAST_IMAGE=https://your-image-url.jpg
 
 # Podcasting 2.0 Value

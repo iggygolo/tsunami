@@ -55,7 +55,6 @@ interface ProfileFormData {
 interface PodcastFormData {
   author: string;
   description: string;
-  email: string;
   image: string;
   website: string;
   copyright: string;
@@ -126,7 +125,6 @@ const Studio = () => {
   const [formData, setFormData] = useState<PodcastFormData>({
     description: PODCAST_CONFIG.podcast.description,
     author: PODCAST_CONFIG.podcast.artistName,
-    email: PODCAST_CONFIG.podcast.email,
     image: PODCAST_CONFIG.podcast.image,
     website: PODCAST_CONFIG.podcast.website,
     copyright: PODCAST_CONFIG.podcast.copyright,
@@ -159,7 +157,6 @@ const Studio = () => {
       setFormData({
         author: podcastMetadata.artistName,
         description: podcastMetadata.description,
-        email: podcastMetadata.email,
         image: podcastMetadata.image,
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
@@ -370,7 +367,6 @@ const Studio = () => {
           content: JSON.stringify({
             author: formData.author,
             description: formData.description,
-            email: formData.email,
             image: formData.image,
             website: formData.website,
             copyright: formData.copyright,
@@ -454,7 +450,6 @@ const Studio = () => {
       setFormData({
         author: podcastMetadata.artistName,
         description: podcastMetadata.description,
-        email: podcastMetadata.email,
         image: podcastMetadata.image,
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
@@ -754,18 +749,6 @@ const Studio = () => {
                           onChange={(e) => handleInputChange('author', e.target.value)}
                           disabled={editingSection !== 'podcast'}
                           placeholder="Enter artist name"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="email">Contact Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
-                          placeholder="Enter contact email"
                         />
                       </div>
                     </div>

@@ -35,7 +35,6 @@ export interface PodcastConfig {
   podcast: {
     artistName: string;
     description: string;
-    email: string;
     image: string;
     website: string;
     copyright: string;
@@ -103,7 +102,6 @@ export const PODCAST_CONFIG: PodcastConfig = {
   podcast: {
     artistName: import.meta.env.VITE_ARTIST_NAME || "PODSTR Creator",
     description: import.meta.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered podcast exploring decentralized conversations",
-    email: import.meta.env.VITE_PODCAST_EMAIL || "creator@podstr.example",
     image: import.meta.env.VITE_PODCAST_IMAGE || "https://example.com/podcast-artwork.jpg",
     website: import.meta.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
     copyright: import.meta.env.VITE_PODCAST_COPYRIGHT || "© 2025 PODSTR Creator",

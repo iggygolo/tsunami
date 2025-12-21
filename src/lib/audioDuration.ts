@@ -116,21 +116,6 @@ export function getAudioDurationFromUrl(url: string): Promise<number> {
 }
 
 /**
- * Format duration in seconds to HH:MM:SS format for iTunes RSS
- */
-export function formatDurationForRSS(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  if (hours > 0) {
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  } else {
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-}
-
-/**
  * Format duration in seconds to a human-readable string
  */
 export function formatDurationHuman(seconds: number): string {

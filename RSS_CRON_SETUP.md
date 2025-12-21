@@ -11,7 +11,7 @@ The `scripts/build-rss.ts` script fetches podcast releases from Nostr relays and
 - ✅ Fetches podcast releases from multiple Nostr relays
 - ✅ Validates releases according to NIP-54 (podcast releases)
 - ✅ Handles releases edits and deduplication
-- ✅ Generates complete RSS feed with iTunes and Podcasting 2.0 tags
+- ✅ Generates complete RSS feed with Podcasting 2.0 tags
 - ✅ Creates health check file for monitoring
 - ✅ Configurable relay URLs and base URL via environment variables
 - ✅ Comprehensive error handling and logging

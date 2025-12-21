@@ -1,5 +1,5 @@
 import { useSeoMeta } from '@unhead/react';
-import { Mail, Globe, Rss, Zap, Hash, Play, Info } from 'lucide-react';
+import { Globe, Rss, Zap, Hash, Play, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -66,15 +66,6 @@ const About = () => {
                           <a href={creator.metadata.website} target="_blank" rel="noopener noreferrer">
                             <Globe className="w-4 h-4 mr-2" />
                             Website
-                          </a>
-                        </Button>
-                      )}
-
-                      {podcastConfig.podcast.email && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={`mailto:${podcastConfig.podcast.email}`}>
-                            <Mail className="w-4 h-4 mr-2" />
-                            Contact
                           </a>
                         </Button>
                       )}

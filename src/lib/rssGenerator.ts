@@ -23,7 +23,7 @@ function releaseToRSSItem(release: PodcastRelease, config?: PodcastConfig): RSSI
     link: `${getBaseUrl()}/${encodeReleaseAsNaddr(release.authorPubkey, release.identifier)}`, // Use naddr links for addressable releases
     guid: `${release.authorPubkey}:${release.identifier}`, // Stable GUID that doesn't change on edits
     pubDate: release.publishDate.toUTCString(),
-    author: `${podcastConfig.podcast.email} (${podcastConfig.podcast.artistName})`,
+    author: podcastConfig.podcast.artistName,
     category: release.tags,
     enclosure: {
       url: release.audioUrl,
@@ -85,7 +85,6 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
-     xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
      xmlns:podcast="https://podcastindex.org/namespace/1.0"
      xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
@@ -93,21 +92,9 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
     <description>${escapeXml(podcastConfig.podcast.description)}</description>
     <link>${escapeXml(podcastConfig.podcast.website || baseUrl)}</link>
     <copyright>${escapeXml(podcastConfig.podcast.copyright)}</copyright>
-    <managingEditor>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.artistName)})</managingEditor>
-    <webMaster>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.artistName)})</webMaster>
     <pubDate>${new Date().toUTCString()}</pubDate>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <ttl>${podcastConfig.rss.ttl}</ttl>
-
-    <!-- iTunes/Apple Podcasts tags -->
-    <itunes:title>${escapeXml(podcastConfig.podcast.artistName)}</itunes:title>
-    <itunes:summary>${escapeXml(podcastConfig.podcast.description)}</itunes:summary>
-    <itunes:author>${escapeXml(podcastConfig.podcast.artistName)}</itunes:author>
-    <itunes:owner>
-      <itunes:name>${escapeXml(podcastConfig.podcast.artistName)}</itunes:name>
-      <itunes:email>${escapeXml(podcastConfig.podcast.email)}</itunes:email>
-    </itunes:owner>
-    ${podcastConfig.podcast.image ? `<itunes:image href="${escapeXml(podcastConfig.podcast.image)}" />` : ''}
 
     <!-- Podcasting 2.0 tags -->
     <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.creatorNpub)}</podcast:guid>
@@ -169,21 +156,13 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
       <link>${escapeXml(item.link)}</link>
       <guid isPermaLink="false">${escapeXml(item.guid)}</guid>
       <pubDate>${item.pubDate}</pubDate>
-      <author>${escapeXml(item.author || podcastConfig.podcast.email)}</author>
+      <author>${escapeXml(item.author || podcastConfig.podcast.artistName)}</author>
       ${item.category?.map(cat => `<category>${escapeXml(cat)}</category>`).join('\n      ') || ''}
 
       <!-- Enclosure (required for podcasts) -->
       <enclosure url="${escapeXml(item.enclosure.url)}"
                  length="${item.enclosure.length}"
                  type="${escapeXml(item.enclosure.type)}" />
-
-      <!-- iTunes tags -->
-      <itunes:title>${escapeXml(item.title)}</itunes:title>
-      <itunes:summary>${escapeXml(item.description)}</itunes:summary>
-      <itunes:author>${escapeXml(podcastConfig.podcast.artistName)}</itunes:author>
-      ${item.duration ? `<itunes:duration>${item.duration}</itunes:duration>` : ''}
-      <itunes:explicit>${item.explicit ? 'true' : 'false'}</itunes:explicit>
-      ${item.image ? `<itunes:image href="${escapeXml(item.image)}" />` : ''}
 
       <!-- Podcasting 2.0 tags -->
       <podcast:guid>${escapeXml(item.guid)}</podcast:guid>

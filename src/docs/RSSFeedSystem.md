@@ -129,13 +129,7 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
 - ✅ Enclosure tags for audio files
 - ✅ GUIDs for release identification
 
-### 2. **iTunes/Apple Podcasts Compatibility**
-- ✅ iTunes namespace declarations
-- ✅ iTunes-specific tags: `itunes:author`, `itunes:summary`, etc.
-- ✅ Release and season numbering
-- ✅ Podcast artwork support
-
-### 3. **Podcasting 2.0 Enhancements**
+### 2. **Podcasting 2.0 Enhancements**
 - ✅ Value tags for Lightning payments
 - ✅ Funding tags for support options
 - ✅ Person tags for host/guest information
@@ -144,7 +138,7 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
 - ✅ Locked feed support
 - ✅ Remote item references
 
-### 4. **NIP-19 Integration**
+### 3. **NIP-19 Integration**
 - ✅ Uses `nevent1` identifiers with relay hints
 - ✅ Better discoverability for podcast platforms
 - ✅ Relay hints for improved reliability
@@ -159,8 +153,6 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
   <description>A Nostr-powered podcast</description>
   <link>https://podstr.example</link>
   <language>en-us</language>
-  <itunes:author>PODSTR Creator</itunes:author>
-  <itunes:image href="https://example.com/artwork.jpg"/>
   <podcast:guid>npub1...</podcast:guid>
   <podcast:value type="BTC" method="lightning">
     <podcast:valueRecipient name="Host" type="node" address="..." split="100"/>
@@ -177,7 +169,6 @@ localStorage.setItem('podcast-rss-updated', Date.now().toString());
   <guid>release-event-id</guid>
   <pubDate>Tue, 21 Nov 2023 12:00:00 GMT</pubDate>
   <enclosure url="https://.../release.mp3" length="0" type="audio/mpeg"/>
-  <itunes:duration>45:32</itunes:duration>
   <podcast:guid>release-event-id</podcast:guid>
 </item>
 ```
@@ -282,7 +273,7 @@ localStorage.getItem('podcast-rss-updated');
 The PODSTR RSS feed system provides a robust, automatically updating RSS feed that:
 
 - ✅ **Updates Automatically**: When releases are added, edited, or deleted
-- ✅ **Standards Compliant**: RSS 2.0 + Podcasting 2.0 + iTunes
+- ✅ **Standards Compliant**: RSS 2.0 + Podcasting 2.0
 - ✅ **Performance Optimized**: Caching and efficient updates
 - ✅ **Feature Rich**: Lightning payments, transcripts, chapters
 - ✅ **Well Integrated**: Works with all major podcast platforms
