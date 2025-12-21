@@ -13,6 +13,7 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useQueryClient } from '@tanstack/react-query';
 import { getArtistPubkeyHex, isArtist, PODCAST_CONFIG } from '@/lib/podcastConfig';
+import Footer from '@/components/Footer';
 import { genUserName } from '@/lib/genUserName';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -117,6 +118,35 @@ const SocialFeed = () => {
               Follow the latest updates and thoughts from the music artist
             </p>
           </div>
+
+          {/* Artist Info Card */}
+          <Card className="mt-4 mb-4">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                {artist?.metadata?.picture && (
+                  <img
+                    src={artist.metadata.picture}
+                    alt={artistName}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                )}
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold">{artistName}</h3>
+                  {artist?.metadata?.about && (
+                    <p className="text-muted-foreground mt-1">
+                      {artist.metadata.about}
+                    </p>
+                  )}
+                  <div className="flex items-center space-x-4 mt-3 text-sm text-muted-foreground">
+                    <span>Music Artist</span>
+                    {artist?.metadata?.nip05 && (
+                      <span>✓ {artist.metadata.nip05}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Note Composer - Only show for the artist */}
           {isArtist_user && (
@@ -230,38 +260,9 @@ const SocialFeed = () => {
               )}
             </TabsContent>
           </Tabs>
-
-
-          {/* Artist Info Card */}
-          <Card className="mt-8">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                {artist?.metadata?.picture && (
-                  <img
-                    src={artist.metadata.picture}
-                    alt={artistName}
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                )}
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold">{artistName}</h3>
-                  {artist?.metadata?.about && (
-                    <p className="text-muted-foreground mt-1">
-                      {artist.metadata.about}
-                    </p>
-                  )}
-                  <div className="flex items-center space-x-4 mt-3 text-sm text-muted-foreground">
-                    <span>Music Artist</span>
-                    {artist?.metadata?.nip05 && (
-                      <span>✓ {artist.metadata.nip05}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
+      <Footer />
     </Layout>
   );
 };

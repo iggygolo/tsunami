@@ -357,9 +357,7 @@ const Index = () => {
           </section>
 
           {/* Footer */}
-          <div className="pt-4">
-            <Footer />
-          </div>
+          <Footer />
         </div>
       </div>
     </Layout>

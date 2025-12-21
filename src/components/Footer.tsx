@@ -5,7 +5,7 @@ export default function Footer() {
   const podcastConfig = usePodcastConfig();
 
   return (
-    <div className="text-center">
+    <div className="text-center mt-8 pb-8">
       <p className="text-sm text-muted-foreground">
         {podcastConfig.podcast.copyright}
       </p>
