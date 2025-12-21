@@ -107,7 +107,7 @@ export function usePublishTrailer() {
 
       // Invalidate related queries to refresh the UI
       await queryClient.invalidateQueries({ queryKey: ['podcast-trailers'] });
-      await queryClient.invalidateQueries({ queryKey: ['podcast-metadata'] });
+      await queryClient.invalidateQueries({ queryKey: ['artist-metadata'] });
       await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 
       return event.id;
@@ -226,7 +226,7 @@ export function useUpdateTrailer() {
       // Invalidate queries
       await queryClient.invalidateQueries({ queryKey: ['podcast-trailers'] });
       await queryClient.invalidateQueries({ queryKey: ['podcast-trailer', trailerId] });
-      await queryClient.invalidateQueries({ queryKey: ['podcast-metadata'] });
+      await queryClient.invalidateQueries({ queryKey: ['artist-metadata'] });
       await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 
       return event.id;

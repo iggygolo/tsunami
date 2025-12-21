@@ -89,7 +89,7 @@ VITE_CREATOR_NPUB=npub1...
 # Podcast Metadata  
 VITE_ARTIST_NAME=Your Name
 VITE_PODCAST_DESCRIPTION=Your podcast description
-VITE_PODCAST_IMAGE=https://your-image-url.jpg
+VITE_PODCAST_IMAGE=/assets/avatar.png
 
 # Podcasting 2.0 Value
 VITE_PODCAST_VALUE_RECIPIENTS=[{"name":"Host","type":"lightning-address","address":"you@domain.com","split":100}]

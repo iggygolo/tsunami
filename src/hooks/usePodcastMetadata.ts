@@ -49,7 +49,7 @@ export function usePodcastMetadata() {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['podcast-metadata'],
+    queryKey: ['artist-metadata'],
     queryFn: async (context): Promise<PodcastMetadata> => {
       try {
         // Query for podcast metadata events with shorter timeout for speed
@@ -60,7 +60,7 @@ export function usePodcastMetadata() {
           {
             kinds: [PODCAST_KINDS.PODCAST_METADATA], // Addressable podcast metadata event
             authors: [getCreatorPubkeyHex()],
-            '#d': ['podcast-metadata'],
+            '#d': ['artist-metadata'],
             limit: 1 // Only need the most recent event
           }
         ], { signal });
@@ -72,6 +72,9 @@ export function usePodcastMetadata() {
           );
 
           const metadata = JSON.parse(latestEvent.content);
+
+          console.log('Fetched podcast metadata from Nostr:', metadata);
+
           return {
             ...metadata,
             updated_at: latestEvent.created_at

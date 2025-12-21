@@ -100,11 +100,11 @@ export const PODCAST_CONFIG: PodcastConfig = {
   creatorNpub: import.meta.env.VITE_CREATOR_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
 
   podcast: {
-    artistName: import.meta.env.VITE_ARTIST_NAME || "PODSTR Creator",
-    description: import.meta.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered podcast exploring decentralized conversations",
-    image: import.meta.env.VITE_PODCAST_IMAGE || "https://example.com/podcast-artwork.jpg",
+    artistName: import.meta.env.VITE_ARTIST_NAME || "Tsunami Artist",
+    description: import.meta.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
+    image: import.meta.env.VITE_PODCAST_IMAGE || "",
     website: import.meta.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
-    copyright: import.meta.env.VITE_PODCAST_COPYRIGHT || "© 2025 PODSTR Creator",
+    copyright: import.meta.env.VITE_PODCAST_COPYRIGHT || "© 2025 Tsunami Artist",
     funding: parseArrayEnv(import.meta.env.VITE_PODCAST_FUNDING, ["/about"]),
     value: {
       amount: parseInt(import.meta.env.VITE_PODCAST_VALUE_AMOUNT || "1000", 10),

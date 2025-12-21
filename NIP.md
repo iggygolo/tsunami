@@ -116,7 +116,7 @@ Podcast publishers SHOULD use `kind 30078` addressable events to store podcast-l
 
 #### Recommended Tags for Podcast Metadata
 
-- `d` - Should be set to `"podcast-metadata"` for podcast configuration
+- `d` - Should be set to `"artist-metadata"` for podcast configuration
 - `title` - Podcast title
 - `image` - Podcast artwork URL
 - `description` - Podcast description

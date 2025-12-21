@@ -66,11 +66,11 @@ function createNodejsConfig() {
   return {
     creatorNpub,
     podcast: {
-      description: process.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered podcast exploring decentralized conversations",
-      artistName: process.env.VITE_ARTIST_NAME || "PODSTR Creator",
-      image: process.env.VITE_PODCAST_IMAGE || "https://image.nostr.build/59bb1cffa12d11cb7cb6905283ecc75b259733e9ecf44a6053b3805d1f01bb7a.jpg",
+      description: process.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
+      artistName: process.env.VITE_ARTIST_NAME || "Tsunami Artist",
+      image: process.env.VITE_PODCAST_IMAGE || "",
       website: process.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
-      copyright: process.env.VITE_PODCAST_COPYRIGHT || "© 2025 PODSTR Creator",
+      copyright: process.env.VITE_PODCAST_COPYRIGHT || "© 2025 Tsunami",
       funding: process.env.VITE_PODCAST_FUNDING ?
         process.env.VITE_PODCAST_FUNDING.split(',').map(s => s.trim()).filter(s => s.length > 0) :
         [],
@@ -82,7 +82,7 @@ function createNodejsConfig() {
       // Podcasting 2.0 fields
       guid: process.env.VITE_PODCAST_GUID || creatorNpub,
       medium: (process.env.VITE_PODCAST_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
-      publisher: process.env.VITE_PODCAST_PUBLISHER || process.env.VITE_ARTIST_NAME || "PODSTR Creator",
+      publisher: process.env.VITE_PODCAST_PUBLISHER || process.env.VITE_ARTIST_NAME || "Tsunami Artist",
       location: process.env.VITE_PODCAST_LOCATION_NAME ? {
         name: process.env.VITE_PODCAST_LOCATION_NAME,
         geo: process.env.VITE_PODCAST_LOCATION_GEO || undefined,
@@ -363,7 +363,7 @@ async function fetchPodcastMetadataMultiRelay(relays: Array<{url: string, relay:
         relay.query([{
           kinds: [PODCAST_KINDS.PODCAST_METADATA],
           authors: [creatorPubkeyHex],
-          '#d': ['podcast-metadata'],
+          '#d': ['artist-metadata'],
           limit: 5
         }]),
         new Promise((_, reject) =>
@@ -558,105 +558,6 @@ async function fetchPodcastTrailersMultiRelay(relays: Array<{url: string, relay:
   
   // Sort by pubDate (newest first)
   return finalTrailers.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
-}
-
-/**
- * Fetch podcast metadata from single Nostr relay (legacy function)
- */
-async function _fetchPodcastMetadata(relay: NRelay1, creatorPubkeyHex: string) {
-  try {
-    console.log('📡 Fetching podcast metadata from Nostr...');
-
-    // Add timeout to prevent hanging
-    const events = await Promise.race([
-      relay.query([{
-        kinds: [PODCAST_KINDS.PODCAST_METADATA],
-        authors: [creatorPubkeyHex],
-        '#d': ['podcast-metadata'],
-        limit: 5
-      }]),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Metadata query timeout')), 5000)
-      )
-    ]) as NostrEvent[];
-
-    if (events.length > 0) {
-      // Get the most recent event
-      const latestEvent = events.reduce((latest, current) =>
-        current.created_at > latest.created_at ? current : latest
-      );
-
-      const metadata = JSON.parse(latestEvent.content);
-      console.log(`✅ Found podcast metadata from Nostr (updated: ${new Date(latestEvent.created_at * 1000).toISOString()})`);
-      return metadata;
-    }
-  } catch (error) {
-    console.warn('⚠️  Failed to fetch podcast metadata from Nostr:', error);
-  }
-
-  return null;
-}
-
-/**
- * Fetch podcast releases from Nostr
- */
-async function _fetchPodcastReleases(relay: NRelay1, creatorPubkeyHex: string): Promise<PodcastRelease[]> {
-  try {
-    console.log('📡 Fetching podcast releases from Nostr...');
-
-    // Add timeout to prevent hanging
-    const events = await Promise.race([
-      relay.query([{
-        kinds: [PODCAST_KINDS.EPISODE],
-        authors: [creatorPubkeyHex],
-        limit: 100
-      }]),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Releases query timeout')), 5000)
-      )
-    ]) as NostrEvent[];
-
-    // Filter and validate events
-    const validEvents = events.filter(event => validatePodcastRelease(event, creatorPubkeyHex));
-
-    // Deduplicate releases by title - keep only the latest version
-    const releasesByTitle = new Map<string, NostrEvent>();
-    const originalEvents = new Set<string>();
-
-    // Handle edit events
-    validEvents.forEach(event => {
-      const editTag = event.tags.find(([name]) => name === 'edit');
-      if (editTag && editTag[1]) {
-        originalEvents.add(editTag[1]);
-      }
-    });
-
-    // Select the best version for each title
-    validEvents.forEach(event => {
-      const title = event.tags.find(([name]) => name === 'title')?.[1] || '';
-      if (!title) return;
-
-      // Skip if this is an original event that has been edited
-      if (originalEvents.has(event.id)) return;
-
-      const existing = releasesByTitle.get(title);
-      if (!existing || event.created_at > existing.created_at) {
-        releasesByTitle.set(title, event);
-      }
-    });
-
-    // Convert to podcast releases and sort by date (newest first)
-    const releases = Array.from(releasesByTitle.values())
-      .map(eventToPodcastRelease)
-      .sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
-
-    console.log(`✅ Found ${releases.length} releases from Nostr`);
-    return releases;
-
-  } catch (error) {
-    console.warn('⚠️  Failed to fetch releases from Nostr:', error);
-    return [];
-  }
 }
 
 async function buildRSS() {

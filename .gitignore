@@ -28,4 +28,5 @@ dist-ssr
 # Vercel
 .vercel
 
-# Configuration is now in src/lib/podcastConfig.ts
+# public
+/public/assets

@@ -382,7 +382,7 @@ const Studio = () => {
             updated_at: Math.floor(Date.now() / 1000)
           }),
           tags: [
-            ['d', 'podcast-metadata'], // Identifier for this type of event
+            ['d', 'artist-metadata'], // Identifier for this type of event
             ['title', formData.author]
           ],
           created_at: Math.floor(Date.now() / 1000)
@@ -390,8 +390,8 @@ const Studio = () => {
 
         await createEvent(podcastMetadataEvent);
 
-        // Invalidate podcast metadata cache to force refetch with new data
-        queryClient.invalidateQueries({ queryKey: ['podcast-metadata'] });
+        // Invalidate artist metadata cache to force refetch with new data
+        queryClient.invalidateQueries({ queryKey: ['artist-metadata'] });
 
         // Update RSS feed with the new configuration (non-blocking)
         try {
@@ -777,14 +777,14 @@ const Studio = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor="image">Cover Image</Label>
+                        <Label htmlFor="image">Artist Image</Label>
                         <div className="space-y-2">
                           <Input
                             id="image"
                             value={formData.image}
                             onChange={(e) => handleInputChange('image', e.target.value)}
                             disabled={editingSection !== 'podcast'}
-                            placeholder="https://example.com/image.jpg"
+                            placeholder="Select or upload artist image"
                           />
                           <div className="flex items-center space-x-2">
                             <input 
@@ -814,7 +814,7 @@ const Studio = () => {
                               <div className="h-10 w-16 rounded overflow-hidden">
                                 <img 
                                   src={formData.image} 
-                                  alt="Podcast cover preview" 
+                                  alt="Artist image preview" 
                                   className="h-full w-full object-cover"
                                 />
                               </div>
