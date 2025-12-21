@@ -53,12 +53,15 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
     title,
     description,
     content: event.content || undefined,
-    audioUrl,
-    audioType,
+    tracks: audioUrl ? [{
+      title: title,
+      audioUrl,
+      audioType,
+      duration: undefined,
+      explicit: false,
+    }] : [],
     imageUrl,
-    duration: undefined, // Can be extended later if needed
     publishDate: new Date(event.created_at * 1000),
-    explicit: false, // Can be extended later if needed
     tags: topicTags,
     externalRefs: [],
     eventId: event.id,

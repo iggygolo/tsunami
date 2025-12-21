@@ -287,10 +287,10 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                                 <Calendar className="w-3 h-3" />
                                 <span>{format(release.publishDate, 'MMM d, yyyy')}</span>
                               </span>
-                              {release.duration && (
+                              {release.tracks?.[0]?.duration && (
                                 <span className="flex items-center space-x-1">
                                   <Clock className="w-3 h-3" />
-                                  <span>{formatDuration(release.duration)}</span>
+                                  <span>{formatDuration(release.tracks[0].duration)}</span>
                                 </span>
                               )}
                             </div>
@@ -332,11 +332,12 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
-                                  if (release.audioUrl) {
-                                    window.open(release.audioUrl, '_blank');
+                                  const audioUrl = release.tracks?.[0]?.audioUrl;
+                                  if (audioUrl) {
+                                    window.open(audioUrl, '_blank');
                                   }
                                 }}
-                                disabled={!release.audioUrl}
+                                disabled={!release.tracks?.[0]?.audioUrl}
                               >
                                 <ExternalLink className="w-4 h-4 mr-2" />
                                 Open Audio File

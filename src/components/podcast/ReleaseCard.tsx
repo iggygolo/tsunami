@@ -47,6 +47,9 @@ export function ReleaseCard({
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Get first track for audio info
+  const firstTrack = release.tracks?.[0];
+  
   // Create a mock NostrEvent for the CommentsSection
   const releaseEvent: NostrEvent = {
     id: release.eventId,
@@ -56,7 +59,7 @@ export function ReleaseCard({
     tags: [
       ['d', release.identifier], // Addressable event identifier
       ['title', release.title],
-      ['audio', release.audioUrl, release.audioType || 'audio/mpeg'],
+      ...(firstTrack ? [['audio', firstTrack.audioUrl, firstTrack.audioType || 'audio/mpeg']] : []),
       ...(release.description ? [['description', release.description]] : []),
       ...(release.imageUrl ? [['image', release.imageUrl]] : []),
       ...release.tags.map(tag => ['t', tag])
@@ -107,7 +110,7 @@ export function ReleaseCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
-                {release.explicit && (
+                {firstTrack?.explicit && (
                   <Badge variant="destructive">Explicit</Badge>
                 )}
               </div>
@@ -148,10 +151,10 @@ export function ReleaseCard({
                 <span>{formatDistanceToNow(release.publishDate, { addSuffix: true })}</span>
               </div>
 
-              {release.duration && (
+              {firstTrack?.duration && (
                 <div className="flex items-center space-x-1">
                   <Clock className="w-3 h-3" />
-                  <span>{formatDuration(release.duration)}</span>
+                  <span>{formatDuration(firstTrack.duration)}</span>
                 </div>
               )}
             </div>

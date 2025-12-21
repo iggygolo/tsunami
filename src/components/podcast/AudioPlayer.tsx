@@ -22,18 +22,23 @@ export function AudioPlayer({ release, className, autoPlay = false }: AudioPlaye
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // Get audio from first track
+  const currentTrack = release.tracks?.[0];
+  const audioUrl = currentTrack?.audioUrl;
+  const audioType = currentTrack?.audioType;
+  
   // Initialize error state on mount
   useEffect(() => {
-    if (!release.audioUrl) {
+    if (!audioUrl) {
       setError('No audio URL provided for this release');
     } else {
       setError(null);
     }
-  }, [release]);
+  }, [audioUrl]);
 
   // Auto-play effect when release changes
   useEffect(() => {
-    if (autoPlay && release.audioUrl) {
+    if (autoPlay && audioUrl) {
       const audio = audioRef.current;
       if (audio) {
         // Small delay to ensure audio element is ready
@@ -49,7 +54,7 @@ export function AudioPlayer({ release, className, autoPlay = false }: AudioPlaye
         return () => clearTimeout(timer);
       }
     }
-  }, [release.id, autoPlay, release.audioUrl]);
+  }, [release.id, autoPlay, audioUrl]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -179,7 +184,7 @@ export function AudioPlayer({ release, className, autoPlay = false }: AudioPlaye
       <CardContent className="p-4">
         <audio
           ref={audioRef}
-          src={release.audioUrl}
+          src={audioUrl}
           preload="metadata"
           crossOrigin="anonymous"
         />
@@ -190,11 +195,11 @@ export function AudioPlayer({ release, className, autoPlay = false }: AudioPlaye
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <p className="text-sm text-red-700">{error}</p>
               <p className="text-xs text-red-600 mt-1 font-mono break-all">
-                URL: {release.audioUrl || 'No audio URL'}
+                URL: {audioUrl || 'No audio URL'}
               </p>
-              {release.audioType && (
+              {audioType && (
                 <p className="text-xs text-red-600 font-mono">
-                  Type: {release.audioType}
+                  Type: {audioType}
                 </p>
               )}
             </div>
@@ -246,9 +251,9 @@ export function AudioPlayer({ release, className, autoPlay = false }: AudioPlaye
               
               <Button
                 onClick={togglePlay}
-                disabled={loading || !release.audioUrl}
+                disabled={loading || !audioUrl}
                 size="sm"
-                title={!release.audioUrl ? 'No audio URL available' : isPlaying ? 'Pause' : 'Play'}
+                title={!audioUrl ? 'No audio URL available' : isPlaying ? 'Pause' : 'Play'}
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

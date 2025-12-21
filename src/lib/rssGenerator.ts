@@ -8,6 +8,9 @@ import { encodeReleaseAsNaddr } from './nip19Utils';
  */
 function releaseToRSSItem(release: PodcastRelease, config?: PodcastConfig): RSSItem {
   const podcastConfig = config || PODCAST_CONFIG;
+  // Get first track for RSS item
+  const firstTrack = release.tracks?.[0];
+  
   // Get base URL - handle both server and client environments
   const getBaseUrl = () => {
     if (typeof window !== 'undefined') {
@@ -26,12 +29,12 @@ function releaseToRSSItem(release: PodcastRelease, config?: PodcastConfig): RSSI
     author: podcastConfig.podcast.artistName,
     category: release.tags,
     enclosure: {
-      url: release.audioUrl,
+      url: firstTrack?.audioUrl || '',
       length: 0, // TODO: We'd need to fetch file size
-      type: release.audioType || 'audio/mpeg'
+      type: firstTrack?.audioType || 'audio/mpeg'
     },
-    duration: release.duration ? formatDuration(release.duration) : undefined,
-    explicit: release.explicit,
+    duration: firstTrack?.duration ? formatDuration(firstTrack.duration) : undefined,
+    explicit: firstTrack?.explicit,
     image: release.imageUrl,
   };
 }

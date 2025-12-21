@@ -46,7 +46,8 @@ export function useUpdateNowPlaying() {
       
       // Calculate expiration based on release duration (if available)
       // Default to 2 hours if no duration specified
-      const durationSeconds = release.duration || 7200; // 2 hours default
+      const firstTrackDuration = release.tracks?.[0]?.duration;
+      const durationSeconds = firstTrackDuration || 7200; // 2 hours default
       const expiration = Math.floor(Date.now() / 1000) + durationSeconds;
 
       // Generate nevent URL for the release

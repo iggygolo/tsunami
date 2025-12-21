@@ -13,8 +13,11 @@ export default function DebugAudio() {
     id: 'test-release',
     title: 'Test Audio Release',
     description: 'Testing audio playback functionality',
-    audioUrl,
-    audioType: 'audio/wav',
+    tracks: [{
+      title: 'Test Track',
+      audioUrl,
+      audioType: 'audio/wav',
+    }],
     publishDate: new Date(),
     tags: ['test'],
     eventId: 'test-event',

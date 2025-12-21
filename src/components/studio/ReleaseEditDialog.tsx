@@ -71,18 +71,21 @@ export function ReleaseEditDialog({
   const [currentTag, setCurrentTag] = useState('');
   const [isDetectingDuration, setIsDetectingDuration] = useState(false);
 
+  // Get first track for form defaults
+  const firstTrack = release.tracks?.[0];
+  
   const form = useForm<ReleaseEditFormValues>({
     resolver: zodResolver(releaseEditSchema),
     defaultValues: {
       title: release.title,
       description: release.description || '',
       content: release.content || '',
-      audioUrl: release.audioUrl || '',
-      videoUrl: release.videoUrl || '',
+      audioUrl: firstTrack?.audioUrl || '',
+      videoUrl: '',
       imageUrl: release.imageUrl || '',
       transcriptUrl: release.transcriptUrl || '',
-      duration: release.duration,
-      explicit: release.explicit || false,
+      duration: firstTrack?.duration,
+      explicit: firstTrack?.explicit || false,
       tags: release.tags || [],
     },
   });
@@ -92,16 +95,17 @@ export function ReleaseEditDialog({
 
   // Reset form when release changes
   useEffect(() => {
+    const track = release.tracks?.[0];
     reset({
       title: release.title,
       description: release.description || '',
       content: release.content || '',
-      audioUrl: release.audioUrl || '',
-      videoUrl: release.videoUrl || '',
+      audioUrl: track?.audioUrl || '',
+      videoUrl: '',
       imageUrl: release.imageUrl || '',
       transcriptUrl: release.transcriptUrl || '',
-      duration: release.duration,
-      explicit: release.explicit || false,
+      duration: track?.duration,
+      explicit: track?.explicit || false,
       tags: release.tags || [],
     });
     setAudioFile(null);
@@ -424,10 +428,10 @@ export function ReleaseEditDialog({
                 </div>
 
                 {/* Current audio info */}
-                {!audioFile && release.audioUrl && (
+                {!audioFile && firstTrack?.audioUrl && (
                   <div className="text-xs text-muted-foreground bg-muted/50 p-2 sm:p-3 rounded">
                     <strong>Current:</strong>
-                    <span className="break-all ml-1">{release.audioUrl}</span>
+                    <span className="break-all ml-1">{firstTrack.audioUrl}</span>
                   </div>
                 )}
               </div>
@@ -556,13 +560,6 @@ export function ReleaseEditDialog({
                     />
                   </div>
                 </div>
-
-                {!videoFile && release.videoUrl && (
-                  <div className="text-xs text-muted-foreground bg-muted/50 p-2 sm:p-3 rounded">
-                    <strong>Current:</strong>
-                    <span className="break-all ml-1">{release.videoUrl}</span>
-                  </div>
-                )}
               </div>
 
               {/* Transcript Upload/URL */}
