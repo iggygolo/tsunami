@@ -182,9 +182,11 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
       <description>${escapeXml(release.description || '')}</description>
       <link>${escapeXml(baseUrl)}/${encodeReleaseAsNaddr(release.artistPubkey, release.identifier)}</link>
       <pubDate>${release.publishDate.toUTCString()}</pubDate>
-      <guid isPermaLink="false">${release.artistPubkey}:${release.identifier}</guid>
-      <enclosure url="${escapeXml(release.audioUrl)}" type="${release.audioType}" length="0" />
-      ${release.videoUrl ? `<enclosure url="${escapeXml(release.videoUrl)}" type="${release.videoType || 'video/mp4'}" length="0" />` : ''}
+        <guid isPermaLink="false">${release.artistPubkey}:${release.identifier}</guid>
+        ${release.tracks && release.tracks.length > 0 ? release.tracks.map(track =>
+          `<enclosure url="${escapeXml(track.audioUrl)}" type="${escapeXml(track.audioType || 'audio/mpeg')}" length="${track.duration ? String(track.duration) : '0'}" />`
+        ).join('\n      ') : ''}
+        ${release.videoUrl ? `<enclosure url="${escapeXml(release.videoUrl)}" type="${escapeXml(release.videoType || 'video/mp4')}" length="0" />` : ''}
       ${release.transcriptUrl ? `<podcast:transcript url="${escapeXml(release.transcriptUrl)}" type="text/plain" />` : ''}
       ${release.content ? `<content:encoded><![CDATA[${release.content}]]></content:encoded>` : ''}
     </item>`;
@@ -203,9 +205,25 @@ function validatePodcastRelease(event: NostrEvent, artistPubkeyHex: string): boo
   const title = event.tags.find(([name]) => name === 'title')?.[1];
   if (!title) return false;
 
-  // Check for required audio tag
+  // Check for required audio tag or a JSON tracklist in content
   const audio = event.tags.find(([name]) => name === 'audio')?.[1];
-  if (!audio) return false;
+  if (!audio) {
+    // Try parsing content as a JSON tracklist
+    try {
+      if (event.content) {
+        const parsed = JSON.parse(event.content);
+        if (Array.isArray(parsed) && parsed.length > 0 && (parsed[0].audioUrl || parsed[0].url)) {
+          // valid tracklist
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+  }
 
   // Verify it's from the music artist
   if (event.pubkey !== artistPubkeyHex) return false;
@@ -223,12 +241,35 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
   const description = tags.get('description')?.[0];
   const imageUrl = tags.get('image')?.[0];
 
-  // Extract audio URL and type from audio tag
-  const audioTag = tags.get('audio');
-  const audioUrl = audioTag?.[0] || '';
-  const audioType = audioTag?.[1] || 'audio/mpeg';
+  // Build tracks - prefer a JSON tracklist in the event content, fallback to single 'audio' tag
+  let tracks: PodcastRelease['tracks'] = [];
+  try {
+    if (event.content) {
+      const parsed = JSON.parse(event.content);
+      if (Array.isArray(parsed)) {
+        tracks = parsed.map((t: unknown) => {
+          const tt = t as Record<string, unknown>;
+          return {
+            title: typeof tt.title === 'string' ? tt.title : (tt.title ? String(tt.title) : ''),
+            audioUrl: typeof tt.audioUrl === 'string' ? tt.audioUrl : (typeof tt.url === 'string' ? tt.url : ''),
+            audioType: typeof tt.audioType === 'string' ? tt.audioType : (typeof tt.type === 'string' ? tt.type : 'audio/mpeg'),
+            duration: typeof tt.duration === 'number' ? tt.duration : (typeof tt.duration === 'string' ? parseInt(tt.duration, 10) : undefined),
+            explicit: typeof tt.explicit === 'boolean' ? tt.explicit : false,
+          };
+        });
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to parse tracklist from event content:', error);
+  }
 
-  // Extract video URL and type from video tag
+  // Fallback to single audio tag if no tracks parsed
+  const audioTag = tags.get('audio');
+  if (tracks.length === 0 && audioTag) {
+    tracks = [{ title: '', audioUrl: audioTag[0] || '', audioType: audioTag[1] || 'audio/mpeg' }];
+  }
+
+  // Extract optional video URL and type from video tag
   const videoTag = tags.get('video');
   const videoUrl = videoTag?.[0];
   const videoType = videoTag?.[1] || 'video/mp4';
@@ -262,8 +303,7 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
     title,
     description,
     content: undefined,
-    audioUrl,
-    audioType,
+    tracks,
     videoUrl,
     videoType,
     imageUrl,
