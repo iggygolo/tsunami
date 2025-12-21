@@ -162,7 +162,7 @@ export function PostActions({ event, className }: PostActionsProps) {
       // Delay invalidation to allow network propagation
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['interaction-counts', event.id] });
-        queryClient.invalidateQueries({ queryKey: ['creator-replies'] });
+        queryClient.invalidateQueries({ queryKey: ['artist-replies'] });
       }, 2000); // 2 second delay
 
       toast({
@@ -237,7 +237,7 @@ export function PostActions({ event, className }: PostActionsProps) {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['user-interactions', event.id, user.pubkey] });
         queryClient.invalidateQueries({ queryKey: ['interaction-counts', event.id] });
-        queryClient.invalidateQueries({ queryKey: ['creator-reposts'] });
+        queryClient.invalidateQueries({ queryKey: ['artist-reposts'] });
       }, 2000); // 2 second delay
     } catch {
       // Revert optimistic updates on error

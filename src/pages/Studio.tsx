@@ -36,7 +36,7 @@ import { usePodcastAnalytics } from '@/hooks/usePodcastAnalytics';
 import { useRSSFeedGenerator } from '@/hooks/useRSSFeedGenerator';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useUploadFile } from '@/hooks/useUploadFile';
-import { isPodcastCreator, PODCAST_CONFIG, getCreatorPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
+import { isArtist, PODCAST_CONFIG, getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
 import { ReleaseManagement } from '@/components/studio/ReleaseManagement';
 import { TrailerManagement } from '@/components/studio/TrailerManagement';
@@ -103,10 +103,10 @@ const Studio = () => {
   const { data: podcastMetadata, isLoading: isLoadingMetadata } = usePodcastMetadata();
   const podcastConfig = usePodcastConfig();
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
-  const { data: creator } = useAuthor(getCreatorPubkeyHex());
+  const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
   const { data: analytics, isLoading: analyticsLoading } = usePodcastAnalytics();
-  const isCreator = user && isPodcastCreator(user.pubkey);
+  const isArtist_user = user && isArtist(user.pubkey);
 
   const [activeTab, setActiveTab] = useState('settings');
   const [isSaving, setIsSaving] = useState(false);
@@ -135,7 +135,7 @@ const Studio = () => {
       recipients: PODCAST_CONFIG.podcast.value.recipients || []
     },
     // New Podcasting 2.0 defaults
-    guid: PODCAST_CONFIG.podcast.guid || PODCAST_CONFIG.creatorNpub,
+    guid: PODCAST_CONFIG.podcast.guid || PODCAST_CONFIG.artistNpub,
     medium: PODCAST_CONFIG.podcast.medium || 'music',
     publisher: PODCAST_CONFIG.podcast.publisher || PODCAST_CONFIG.podcast.artistName,
     person: PODCAST_CONFIG.podcast.person || [
@@ -167,7 +167,7 @@ const Studio = () => {
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
         // Podcasting 2.0 fields
-        guid: podcastMetadata.guid || PODCAST_CONFIG.creatorNpub,
+        guid: podcastMetadata.guid || PODCAST_CONFIG.artistNpub,
         medium: podcastMetadata.medium || 'music',
         publisher: podcastMetadata.publisher || podcastMetadata.artistName,
         location: podcastMetadata.location,
@@ -186,20 +186,20 @@ const Studio = () => {
     }
   }, [podcastMetadata, isLoadingMetadata]);
 
-  // Update profile data when creator data loads
+  // Update profile data when artist data loads
   useEffect(() => {
-    if (creator?.metadata) {
+    if (artist?.metadata) {
       setProfileData({
-        name: creator.metadata.name || '',
-        displayName: creator.metadata.display_name || '',
-        about: creator.metadata.about || '',
-        picture: creator.metadata.picture || '',
-        website: creator.metadata.website || '',
-        lud16: creator.metadata.lud16 || '',
-        nip05: creator.metadata.nip05 || '',
+        name: artist.metadata.name || '',
+        displayName: artist.metadata.display_name || '',
+        about: artist.metadata.about || '',
+        picture: artist.metadata.picture || '',
+        website: artist.metadata.website || '',
+        lud16: artist.metadata.lud16 || '',
+        nip05: artist.metadata.nip05 || '',
       });
     }
-  }, [creator]);
+  }, [artist]);
 
   useSeoMeta({
     title: 'Studio',
@@ -434,15 +434,15 @@ const Studio = () => {
   };
 
   const handleCancel = () => {
-    if (editingSection === 'profile' && creator?.metadata) {
+    if (editingSection === "profile" && artist?.metadata) {
       setProfileData({
-        name: creator.metadata.name || '',
-        displayName: creator.metadata.display_name || '',
-        about: creator.metadata.about || '',
-        picture: creator.metadata.picture || '',
-        website: creator.metadata.website || '',
-        lud16: creator.metadata.lud16 || '',
-        nip05: creator.metadata.nip05 || '',
+        name: artist.metadata.name || '',
+        displayName: artist.metadata.display_name || '',
+        about: artist.metadata.about || '',
+        picture: artist.metadata.picture || '',
+        website: artist.metadata.website || '',
+        lud16: artist.metadata.lud16 || '',
+        nip05: artist.metadata.nip05 || '',
       });
     }
 
@@ -460,7 +460,7 @@ const Studio = () => {
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
         // Podcasting 2.0 fields
-        guid: podcastMetadata.guid || PODCAST_CONFIG.creatorNpub,
+        guid: podcastMetadata.guid || PODCAST_CONFIG.artistNpub,
         medium: podcastMetadata.medium || 'music',
         publisher: podcastMetadata.publisher || podcastMetadata.artistName,
         location: podcastMetadata.location,
@@ -501,7 +501,7 @@ const Studio = () => {
     );
   }
 
-  if (!isCreator) {
+  if (!isArtist_user) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
@@ -509,7 +509,7 @@ const Studio = () => {
             <CardContent className="p-6 text-center">
               <h2 className="text-xl font-semibold mb-4">Access Denied</h2>
               <p className="text-muted-foreground mb-4">
-                Only the podcast creator can access the Studio.
+                Only the music artist can access the Studio.
               </p>
               <Button onClick={() => navigate('/')}>
                 Go to Homepage

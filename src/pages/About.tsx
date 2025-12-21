@@ -10,11 +10,11 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePodcastStats } from '@/hooks/usePodcastReleases';
 import { usePodcastTrailers } from '@/hooks/usePodcastTrailers';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
-import { getCreatorPubkeyHex } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 const About = () => {
   const { data: stats } = usePodcastStats();
-  const { data: creator } = useAuthor(getCreatorPubkeyHex());
+  const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { data: trailers } = usePodcastTrailers();
   const { user } = useCurrentUser();
   const podcastConfig = usePodcastConfig();
@@ -56,9 +56,9 @@ const About = () => {
 
                   <div className="space-y-3">
                     <div className="flex flex-wrap gap-3 pt-2">
-                      {creator?.metadata?.website && (
+                      {artist?.metadata?.website && (
                         <Button variant="outline" size="sm" asChild>
-                          <a href={creator.metadata.website} target="_blank" rel="noopener noreferrer">
+                          <a href={artist.metadata.website} target="_blank" rel="noopener noreferrer">
                             <Globe className="w-4 h-4 mr-2" />
                             Website
                           </a>
@@ -66,7 +66,7 @@ const About = () => {
                       )}
 
                       <Button variant="outline" size="sm" asChild>
-                        <a href={`https://njump.me/${podcastConfig.creatorNpub}`} target="_blank" rel="noopener noreferrer">
+                        <a href={`https://njump.me/${podcastConfig.artistNpub}`} target="_blank" rel="noopener noreferrer">
                           <Hash className="w-4 h-4 mr-2" />
                           Nostr
                         </a>
@@ -225,8 +225,8 @@ const About = () => {
                     Support us by zapping albums, sharing with friends, and engaging with the community.
                   </p>
 
-                  {creator?.event && user && (creator.metadata?.lud16 || creator.metadata?.lud06) ? (
-                    <ZapDialog target={creator.event}>
+                  {artist?.event && user && (artist.metadata?.lud16 || artist.metadata?.lud06) ? (
+                    <ZapDialog target={artist.event}>
                       <Button variant="outline" className="w-full">
                         <Zap className="w-4 h-4 mr-2" />
                         Zap the Show
@@ -235,7 +235,7 @@ const About = () => {
                   ) : (
                     <Button variant="outline" className="w-full" disabled>
                       <Zap className="w-4 h-4 mr-2" />
-                      {!user ? "Login to Zap" : "Creator has no Lightning address"}
+                      {!user ? "Login to Zap" : "Artist has no Lightning address"}
                     </Button>
                   )}
                 </CardContent>

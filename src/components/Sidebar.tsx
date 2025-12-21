@@ -3,7 +3,7 @@ import { Headphones, List, Users, MessageSquare, User, Rss, Settings } from 'luc
 import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
-import { isPodcastCreator } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/podcastConfig';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -14,7 +14,7 @@ export function Sidebar({ className }: SidebarProps) {
   const location = useLocation();
   const { user } = useCurrentUser();
   const podcastConfig = usePodcastConfig();
-  const isCreator = user && isPodcastCreator(user.pubkey);
+  const isArtist_user = user && isArtist(user.pubkey);
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -40,7 +40,7 @@ export function Sidebar({ className }: SidebarProps) {
       path: '/social',
       icon: MessageSquare,
       label: 'Social',
-      description: 'Creator updates'
+      description: 'Artist updates'
     },
     {
       path: '/community',
@@ -165,10 +165,10 @@ export function Sidebar({ className }: SidebarProps) {
           })}
         </div>
 
-        {/* Creator Studio */}
-        {isCreator && (
+        {/* Artist Studio */}
+        {isArtist_user && (
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Creator</h3>
+            <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Artist</h3>
             <Button
               size="sm"
               asChild
@@ -178,7 +178,7 @@ export function Sidebar({ className }: SidebarProps) {
                 <Settings className="w-5 h-5 mt-0.5 flex-shrink-0" />
                 <div className="text-left min-w-0">
                   <div className="font-medium">Studio</div>
-                  <div className="text-xs text-secondary-foreground/70 truncate">Creator tools</div>
+                  <div className="text-xs text-secondary-foreground/70 truncate">Artist tools</div>
                 </div>
               </Link>
             </Button>

@@ -34,8 +34,8 @@ export NOSTR_RELAYS="wss://relay.nostr.band,wss://relay.damus.io,wss://nos.lol,w
 
 The RSS feed is automatically configured using:
 
-- Environment variables for creator npub and metadata
-- Nostr metadata events from the creator's profile
+- Environment variables for artist npub and metadata
+- Nostr metadata events from the artist's profile
 - Build-time fetching of release data
 
 ## Manual Execution

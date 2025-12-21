@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { PODCAST_KINDS, getCreatorPubkeyHex } from '@/lib/podcastConfig';
+import { PODCAST_KINDS, getArtistPubkeyHex } from '@/lib/podcastConfig';
 import type { PodcastTrailer } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -69,17 +69,17 @@ function eventToPodcastTrailer(event: NostrEvent): PodcastTrailer {
  */
 export function usePodcastTrailers() {
   const { nostr } = useNostr();
-  const creatorPubkeyHex = getCreatorPubkeyHex();
+  const artistPubkeyHex = getArtistPubkeyHex();
 
   return useQuery<PodcastTrailer[]>({
     queryKey: ['podcast-trailers'],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(1500)]);
       
-      // Query for trailer events from the podcast creator
+      // Query for trailer events from the music artist
       const events = await nostr.query([{
         kinds: [PODCAST_KINDS.TRAILER],
-        authors: [creatorPubkeyHex],
+        authors: [artistPubkeyHex],
         limit: 50
       }], { signal });
 
@@ -131,7 +131,7 @@ export function usePodcastTrailers() {
  */
 export function usePodcastTrailer(identifier: string) {
   const { nostr } = useNostr();
-  const creatorPubkeyHex = getCreatorPubkeyHex();
+  const artistPubkeyHex = getArtistPubkeyHex();
 
   return useQuery<PodcastTrailer | null>({
     queryKey: ['podcast-trailer', identifier],
@@ -141,7 +141,7 @@ export function usePodcastTrailer(identifier: string) {
       // Query for specific trailer by identifier
       const events = await nostr.query([{
         kinds: [PODCAST_KINDS.TRAILER],
-        authors: [creatorPubkeyHex],
+        authors: [artistPubkeyHex],
         '#d': [identifier],
         limit: 5
       }], { signal });

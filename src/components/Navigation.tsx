@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sheet';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
-import { isPodcastCreator } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/podcastConfig';
 import { cn } from '@/lib/utils';
 
 interface NavigationProps {
@@ -24,7 +24,7 @@ export function Navigation({ className }: NavigationProps) {
   const location = useLocation();
   const { user } = useCurrentUser();
   const podcastConfig = usePodcastConfig();
-  const isCreator = user && isPodcastCreator(user.pubkey);
+  const isArtist_user = user && isArtist(user.pubkey);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
@@ -51,7 +51,7 @@ export function Navigation({ className }: NavigationProps) {
       path: '/social',
       icon: MessageSquare,
       label: 'Social',
-      description: 'Creator updates'
+      description: 'Artist updates'
     },
     {
       path: '/community',
@@ -161,8 +161,8 @@ export function Navigation({ className }: NavigationProps) {
               })}
             </div>
 
-            {/* Creator studio button */}
-            {isCreator && (
+            {/* Artist studio button */}
+            {isArtist_user && (
               <Button size="sm" asChild className="btn-secondary focus-ring hidden sm:flex">
                 <Link to="/studio">
                   <Settings className="w-4 h-4 mr-2" />
@@ -270,10 +270,10 @@ export function Navigation({ className }: NavigationProps) {
                 })}
               </div>
 
-              {/* Creator Studio Button */}
-              {isCreator && (
+              {/* Artist Studio Button */}
+              {isArtist_user && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground px-3">Creator</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground px-3">Artist</h3>
                   <Button
                     size="sm"
                     asChild

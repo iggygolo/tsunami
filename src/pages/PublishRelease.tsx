@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
 import { PublishReleaseForm } from '@/components/podcast/PublishReleaseForm';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { isPodcastCreator } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/podcastConfig';
 
 const PublishRelease = () => {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
-  const isCreator = user && isPodcastCreator(user.pubkey);
+  const isArtist_user = user && isArtist(user.pubkey);
 
   useSeoMeta({
     title: 'Publish Release',
@@ -46,14 +46,14 @@ const PublishRelease = () => {
     );
   }
 
-  if (!isCreator) {
+  if (!isArtist_user) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-md mx-auto text-center">
             <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
             <p className="text-muted-foreground mb-6">
-              Only the podcast creator can publish releases.
+              Only the music artist can publish releases.
             </p>
             <Button asChild>
               <Link to="/">

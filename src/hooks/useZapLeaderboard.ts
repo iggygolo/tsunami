@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { ZapLeaderboardEntry } from '@/types/podcast';
-import { getCreatorPubkeyHex } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 import { extractZapAmount, extractZapperPubkey, validateZapEvent, extractZappedEventId } from '@/lib/zapUtils';
 
 /**
@@ -15,10 +15,10 @@ export function useZapLeaderboard(limit: number = 10) {
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
       
-      // Query for zap events (kind 9735) that reference the podcast creator
+      // Query for zap events (kind 9735) that reference the music artist
       const zapEvents = await nostr.query([{
         kinds: [9735], // Zap events
-        '#p': [getCreatorPubkeyHex()], // Zaps to the creator
+        '#p': [getArtistPubkeyHex()], // Zaps to the artist
         limit: 1000 // Get more zaps to aggregate
       }], { signal });
 
@@ -94,7 +94,7 @@ export function useRecentZapActivity(limit: number = 20) {
       // Get recent zap events
       const zapEvents = await nostr.query([{
         kinds: [9735],
-        '#p': [getCreatorPubkeyHex()],
+        '#p': [getArtistPubkeyHex()],
         limit: limit
       }], { signal });
 

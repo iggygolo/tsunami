@@ -25,7 +25,7 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDeleteNote } from '@/hooks/useDeleteNote';
 import { genUserName } from '@/lib/genUserName';
-import { isPodcastCreator } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/podcastConfig';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -47,9 +47,9 @@ export function PostCard({ event, isCompact = false, className }: PostCardProps)
     return <RepostCard event={event} className={className} />;
   }
 
-  // Check if current user can delete this note (must be the creator and the author)
+  // Check if current user can delete this note (must be the artist and the author)
   const canDelete = user && 
-    isPodcastCreator(user.pubkey) && 
+    isArtist(user.pubkey) && 
     event.pubkey === user.pubkey;
 
   const handleDelete = () => {
@@ -111,7 +111,7 @@ export function PostCard({ event, isCompact = false, className }: PostCardProps)
                 </time>
               </div>
 
-              {/* Delete menu - only show for creator's own notes */}
+              {/* Delete menu - only show for artist's own notes */}
               {canDelete && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

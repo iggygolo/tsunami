@@ -167,7 +167,7 @@ export function ReleaseList({
                 </p>
                 {!searchOptions.query && (
                   <p className="text-sm text-muted-foreground">
-                    Releases will appear here once the creator publishes them.
+                    Releases will appear here once the artist publishes them.
                   </p>
                 )}
               </div>

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { getCreatorPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
 import type { PodcastRelease } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -19,8 +19,8 @@ function validatePodcastRelease(event: NostrEvent): boolean {
   const audio = event.tags.find(([name]) => name === 'audio')?.[1];
   if (!audio) return false;
 
-  // Verify it's from the podcast creator
-  if (event.pubkey !== getCreatorPubkeyHex()) return false;
+  // Verify it's from the music artist
+  if (event.pubkey !== getArtistPubkeyHex()) return false;
 
   return true;
 }
@@ -96,7 +96,7 @@ export function useRSSFeedGenerator() {
         const events = await nostr.query([
           {
             kinds: [PODCAST_KINDS.EPISODE],
-            authors: [getCreatorPubkeyHex()],
+            authors: [getArtistPubkeyHex()],
             limit: 100,
           }
         ]);

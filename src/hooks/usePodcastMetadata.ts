@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { PODCAST_CONFIG, PODCAST_KINDS, getCreatorPubkeyHex } from '@/lib/podcastConfig';
+import { PODCAST_CONFIG, PODCAST_KINDS, getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 interface PodcastMetadata {
   artistName: string;
@@ -59,7 +59,7 @@ export function usePodcastMetadata() {
         const events = await nostr.query([
           {
             kinds: [PODCAST_KINDS.PODCAST_METADATA], // Addressable podcast metadata event
-            authors: [getCreatorPubkeyHex()],
+            authors: [getArtistPubkeyHex()],
             '#d': ['artist-metadata'],
             limit: 1 // Only need the most recent event
           }

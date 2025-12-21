@@ -16,12 +16,12 @@ import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { getCreatorPubkeyHex } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 const Index = () => {
   const { data: latestRelease } = useLatestRelease();
   const podcastConfig = usePodcastConfig();
-  const { data: creator } = useAuthor(getCreatorPubkeyHex());
+  const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { user } = useCurrentUser();
   const { playRelease } = useAudioPlayer();
   const _currentRelease = useState<PodcastRelease | null>(null);
@@ -143,7 +143,7 @@ const Index = () => {
                       </div>
                       <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">Social Feed</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        Follow the creator's latest updates
+                        Follow the artist's latest updates
                       </p>
                     </CardContent>
                   </Card>
@@ -249,8 +249,8 @@ const Index = () => {
                    Support us by zapping albums, sharing with friends, and engaging with the community.
                 </p>
 
-                {creator?.event && user && (creator.metadata?.lud16 || creator.metadata?.lud06) ? (
-                  <ZapDialog target={creator.event}>
+                {artist?.event && user && (artist.metadata?.lud16 || artist.metadata?.lud06) ? (
+                  <ZapDialog target={artist.event}>
                     <Button variant="outline" className="w-full btn-primary focus-ring">
                       <Zap className="w-4 h-4 mr-2 animate-pulse" />
                       Zap the Show
@@ -259,7 +259,7 @@ const Index = () => {
                 ) : (
                   <Button variant="outline" className="w-full" disabled>
                     <Zap className="w-4 h-4 mr-2" />
-                    {!user ? "Login to Zap" : "Creator has no Lightning address"}
+                    {!user ? "Login to Zap" : "Artist has no Lightning address"}
                   </Button>
                 )}
               </CardContent>

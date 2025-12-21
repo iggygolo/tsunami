@@ -42,12 +42,12 @@ export function useDeleteNote() {
       });
 
       // Invalidate relevant queries to update the UI
-      queryClient.invalidateQueries({ queryKey: ['creator-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['creator-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['creator-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['artist-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['artist-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['artist-notes'] });
       
       // Optimistically remove the deleted event from cache
-      queryClient.setQueryData(['creator-posts'], (oldData: unknown) => {
+      queryClient.setQueryData(['artist-posts'], (oldData: unknown) => {
         if (!oldData || typeof oldData !== 'object' || !('pages' in oldData)) return oldData;
         
         const typedOldData = oldData as { pages: NostrEvent[][] };

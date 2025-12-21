@@ -8,11 +8,11 @@ import { PostCard } from '@/components/social/PostCard';
 import { ConversationThread } from '@/components/social/ConversationThread';
 import { NoteComposer } from '@/components/social/NoteComposer';
 import { InfiniteScroll } from '@/components/ui/InfiniteScroll';
-import { useCreatorPosts, useCreatorRepliesTab } from '@/hooks/useCreatorPosts';
+import { useArtistPosts, useArtistRepliesTab } from '@/hooks/useArtistPosts';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useQueryClient } from '@tanstack/react-query';
-import { getCreatorPubkeyHex, isPodcastCreator, PODCAST_CONFIG } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex, isArtist, PODCAST_CONFIG } from '@/lib/podcastConfig';
 import { genUserName } from '@/lib/genUserName';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -24,7 +24,7 @@ const SocialFeed = () => {
     isFetching: isFetchingPosts,
     isLoading: postsLoading,
     error: postsError,
-  } = useCreatorPosts(20);
+  } = useArtistPosts(20);
 
   const {
     data: repliesData,
@@ -32,26 +32,26 @@ const SocialFeed = () => {
     hasNextPage: hasNextReplies,
     isFetching: isFetchingReplies,
     isLoading: repliesLoading,
-  } = useCreatorRepliesTab(20);
+  } = useArtistRepliesTab(20);
 
-  const { data: creator } = useAuthor(getCreatorPubkeyHex());
+  const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { user } = useCurrentUser();
   const queryClient = useQueryClient();
 
-  // Check if the current user is the podcast creator
-  const isCreator = user ? isPodcastCreator(user.pubkey) : false;
+  // Check if the current user is the music artist
+  const isArtist_user = user ? isArtist(user.pubkey) : false;
 
   // Flatten infinite query data for rendering
   const notesColumnData = postsData?.pages.flat() || [];
   const repliesColumnData = repliesData?.pages.flat() || [];
 
-  const creatorName = creator?.metadata?.name ||
-                     creator?.metadata?.display_name ||
-                     genUserName(getCreatorPubkeyHex());
+  const artistName = artist?.metadata?.name ||
+                     artist?.metadata?.display_name ||
+                     genUserName(getArtistPubkeyHex());
 
   useSeoMeta({
-    title: `${creatorName}'s Social Feed - ${PODCAST_CONFIG.podcast.artistName}`,
-    description: `Follow ${creatorName}'s social updates and posts`,
+    title: `${artistName}'s Social Feed - ${PODCAST_CONFIG.podcast.artistName}`,
+    description: `Follow ${artistName}'s social updates and posts`,
   });
 
   const PostSkeleton = () => (
@@ -112,20 +112,20 @@ const SocialFeed = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">{creatorName}'s Social Feed</h1>
+            <h1 className="text-3xl font-bold mb-2">{artistName}'s Social Feed</h1>
             <p className="text-muted-foreground">
-              Follow the latest updates and thoughts from the podcast creator
+              Follow the latest updates and thoughts from the music artist
             </p>
           </div>
 
-          {/* Note Composer - Only show for the creator */}
-          {isCreator && (
+          {/* Note Composer - Only show for the artist */}
+          {isArtist_user && (
             <div className="mb-8">
               <NoteComposer 
                 placeholder="Share your thoughts with your audience..."
                 onSuccess={(newEvent) => {
                   // Optimistically add the new note to the top of the feed
-                  queryClient.setQueryData(['creator-posts'], (oldData: unknown) => {
+                  queryClient.setQueryData(['artist-posts'], (oldData: unknown) => {
                     if (!oldData || typeof oldData !== 'object' || !('pages' in oldData)) return oldData;
                     
                     const typedOldData = oldData as { pages: NostrEvent[][] };
@@ -158,7 +158,7 @@ const SocialFeed = () => {
                   // Then refresh from network to get the confirmed version
                   setTimeout(() => {
                     queryClient.invalidateQueries({ 
-                      queryKey: ['creator-posts'] 
+                      queryKey: ['artist-posts'] 
                     });
                   }, 1000);
                 }}
@@ -200,7 +200,7 @@ const SocialFeed = () => {
               ) : (
                 <EmptyState
                   message="No notes found"
-                  subtitle="The creator hasn't posted anything yet, or posts may be on a different relay."
+                  subtitle="The artist hasn't posted anything yet, or posts may be on a different relay."
                 />
               )}
             </TabsContent>
@@ -225,35 +225,35 @@ const SocialFeed = () => {
               ) : (
                 <EmptyState
                   message="No replies found"
-                  subtitle="The creator hasn't replied to anyone yet, or replies may be on a different relay."
+                  subtitle="The artist hasn't replied to anyone yet, or replies may be on a different relay."
                 />
               )}
             </TabsContent>
           </Tabs>
 
 
-          {/* Creator Info Card */}
+          {/* Artist Info Card */}
           <Card className="mt-8">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                {creator?.metadata?.picture && (
+                {artist?.metadata?.picture && (
                   <img
-                    src={creator.metadata.picture}
-                    alt={creatorName}
+                    src={artist.metadata.picture}
+                    alt={artistName}
                     className="w-16 h-16 rounded-full object-cover"
                   />
                 )}
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold">{creatorName}</h3>
-                  {creator?.metadata?.about && (
+                  <h3 className="text-xl font-semibold">{artistName}</h3>
+                  {artist?.metadata?.about && (
                     <p className="text-muted-foreground mt-1">
-                      {creator.metadata.about}
+                      {artist.metadata.about}
                     </p>
                   )}
                   <div className="flex items-center space-x-4 mt-3 text-sm text-muted-foreground">
-                    <span>Podcast Creator</span>
-                    {creator?.metadata?.nip05 && (
-                      <span>✓ {creator.metadata.nip05}</span>
+                    <span>Music Artist</span>
+                    {artist?.metadata?.nip05 && (
+                      <span>✓ {artist.metadata.nip05}</span>
                     )}
                   </div>
                 </div>

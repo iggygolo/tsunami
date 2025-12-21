@@ -2,7 +2,7 @@ import { nip19 } from 'nostr-tools';
 
 /**
  * Podcast configuration for Tsunami
- * This defines the podcast metadata and creator information
+ * This defines the music metadata and artist information
  * Values are loaded from environment variables with fallbacks
  */
 
@@ -28,8 +28,8 @@ function parseArrayEnv(envValue: string | undefined, fallback: string[]): string
 }
 
 export interface PodcastConfig {
-  /** The hardcoded npub of the podcast creator */
-  creatorNpub: string;
+  /** The hardcoded npub of the music artist */
+  artistNpub: string;
 
   /** Podcast metadata */
   podcast: {
@@ -96,8 +96,8 @@ export interface PodcastConfig {
 }
 
 export const PODCAST_CONFIG: PodcastConfig = {
-  // Creator npub - loaded from environment
-  creatorNpub: import.meta.env.VITE_ARTIST_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
+  // Artist npub - loaded from environment
+  artistNpub: import.meta.env.VITE_ARTIST_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
 
   podcast: {
     artistName: import.meta.env.VITE_ARTIST_NAME || "Tsunami Artist",
@@ -184,26 +184,26 @@ export const PODCAST_KINDS = {
 } as const;
 
 /**
- * Get the creator's pubkey in hex format (for Nostr queries)
+ * Get the artist's pubkey in hex format (for Nostr queries)
  */
-export function getCreatorPubkeyHex(): string {
+export function getArtistPubkeyHex(): string {
   try {
-    const decoded = nip19.decode(PODCAST_CONFIG.creatorNpub);
+    const decoded = nip19.decode(PODCAST_CONFIG.artistNpub);
     if (decoded.type === 'npub') {
       return decoded.data;
     }
     throw new Error('Invalid npub format');
   } catch (error) {
-    console.error('Failed to decode creator npub:', error);
+    console.error('Failed to decode artist npub:', error);
     // Fallback to the original value in case it's already hex
-    return PODCAST_CONFIG.creatorNpub;
+    return PODCAST_CONFIG.artistNpub;
   }
 }
 
 /**
- * Check if a pubkey is the podcast creator
+ * Check if a pubkey is the music artist
  */
-export function isPodcastCreator(pubkey: string): boolean {
-  const creatorHex = getCreatorPubkeyHex();
-  return pubkey === creatorHex;
+export function isArtist(pubkey: string): boolean {
+  const artistHex = getArtistPubkeyHex();
+  return pubkey === artistHex;
 }

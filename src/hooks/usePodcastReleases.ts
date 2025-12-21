@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
-import { getCreatorPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 
 /**
@@ -19,8 +19,8 @@ function validatePodcastRelease(event: NostrEvent): boolean {
   const audio = event.tags.find(([name]) => name === 'audio')?.[1];
   if (!audio) return false;
 
-  // Verify it's from the podcast creator
-  if (event.pubkey !== getCreatorPubkeyHex()) return false;
+  // Verify it's from the music artist
+  if (event.pubkey !== getArtistPubkeyHex()) return false;
 
   return true;
 }
@@ -114,7 +114,7 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
 }
 
 /**
- * Hook to fetch all podcast releases from the creator
+ * Hook to fetch all podcast releases from the artist
  */
 export function usePodcastReleases(options: ReleaseSearchOptions = {}) {
   const { nostr } = useNostr();
@@ -126,7 +126,7 @@ export function usePodcastReleases(options: ReleaseSearchOptions = {}) {
 
       const events = await nostr.query([{
         kinds: [PODCAST_KINDS.EPISODE],
-        authors: [getCreatorPubkeyHex()],
+        authors: [getArtistPubkeyHex()],
         limit: options.limit || 100
       }], { signal });
 

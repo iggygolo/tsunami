@@ -1,11 +1,11 @@
 # Tsunami
 
-A Nostr-powered podcast platform for single creator accounts that combines decentralized publishing with Podcasting 2.0 standards.
+A Nostr-powered podcast platform for single artist accounts that combines decentralized publishing with Podcasting 2.0 standards.
 
 ## ✨ Features
 
 ### 🎙️ **Podcast Publishing**
-- **Creator-only publishing** with hardcoded npub authentication
+- **Artist-only publishing** with hardcoded npub authentication
 - Upload audio files to Blossom servers or reference external URLs
 - Rich release metadata: title, description, cover art, transcripts, chapters
 - Podcasting 2.0 value tags for Lightning payments and funding
@@ -24,7 +24,7 @@ A Nostr-powered podcast platform for single creator accounts that combines decen
 - Mobile-optimized interface
 
 ### 💬 **Community Interaction**
-- Creator social feed for updates and announcements  
+- Artist social feed for updates and announcements  
 - Release comments system with full threading (NIP-22)
 - Fan engagement through Nostr protocol:
   - Threaded comments and replies on releases
@@ -59,7 +59,7 @@ npm install
 cp .env.example .env
 
 # Configure your podcast settings in .env
-# Set your creator npub and podcast metadata
+# Set your artist npub and podcast metadata
 ```
 
 ### Development
@@ -83,7 +83,7 @@ npx tsx scripts/build-rss.ts
 Edit `.env` to customize your podcast:
 
 ```env
-# Creator Configuration
+# Artist Configuration
 VITE_ARTIST_NPUB=npub1...
 
 # Podcast Metadata  
@@ -118,7 +118,7 @@ src/
 │   ├── podcast/        # Podcast-specific components (ReleaseCard, etc.)
 │   ├── social/         # Social interaction components (PostActions, NoteComposer)
 │   ├── comments/       # Threading comment system (CommentsSection)
-│   └── studio/         # Creator studio components (ReleaseManagement, etc.)
+│   └── studio/         # Artist studio components (ReleaseManagement, etc.)
 ├── hooks/              # Custom React hooks (useNostr, useZaps, etc.)
 ├── lib/                # Utility functions and configurations
 ├── pages/              # Route components (Index, Releases, Studio, etc.)
@@ -141,7 +141,7 @@ dist/
 - **Releases**: `kind 30054` (Addressable/editable podcast releases)
 - **Metadata**: `kind 30078` (Podcast configuration)
 - **Comments**: `kind 1111` (NIP-22 release comments) 
-- **Social**: `kind 1` (Creator updates and announcements)
+- **Social**: `kind 1` (Artist updates and announcements)
 
 ## 🔧 Deployment
 
@@ -186,4 +186,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Vibed with [MKStack](https://soapbox.pub/mkstack)** ⚡
 
-Built for creators who want to own their content, engage directly with their audience, and participate in the value-for-value economy through Bitcoin Lightning payments.
+Built for artists who want to own their content, engage directly with their audience, and participate in the value-for-value economy through Bitcoin Lightning payments.

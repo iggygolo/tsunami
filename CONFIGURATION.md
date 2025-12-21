@@ -31,7 +31,7 @@ Tsunami uses environment variables to configure your artist and music metadata a
 These are the minimum settings you should configure:
 
 - `VITE_ARTIST_NPUB` - Your Nostr public key (npub format)
-- `VITE_ARTIST_NAME` - Your name as the artist/creator
+- `VITE_ARTIST_NAME` - Your name as the artist
 - `VITE_MUSIC_DESCRIPTION` - Brief description of your music
 
 ### 🎨 Branding & Media
@@ -122,7 +122,7 @@ VITE_ARTIST_FUNDING=lightning:your@address.com,https://donate.example.com,bitcoi
 | Variable | Type | Description | Default |
 |----------|------|-------------|---------|
 | `VITE_ARTIST_NPUB` | string | Your Nostr public key | Example npub |
-| `VITE_ARTIST_NAME` | string | Artist/creator name | "Tsunami Artist" |
+| `VITE_ARTIST_NAME` | string | Artist name | "Tsunami Artist" |
 | `VITE_MUSIC_DESCRIPTION` | string | Music description | Example description |
 | `VITE_ARTIST_IMAGE` | string | Cover art URL | Example image URL |
 | `VITE_ARTIST_WEBSITE` | string | Artist website | "https://tsunami.example" |

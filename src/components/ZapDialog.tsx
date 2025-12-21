@@ -437,7 +437,7 @@ export function ZapDialog({ target, children, className, onZapSuccess }: ZapDial
               {invoice ? (
                 'Pay with Bitcoin Lightning Network'
               ) : (
-                'Zaps are small Bitcoin payments that support the creator of this item. If you enjoyed this, consider sending a zap!'
+                'Zaps are small Bitcoin payments that support the artist of this item. If you enjoyed this, consider sending a zap!'
               )}
             </DrawerDescription>
           </DrawerHeader>
@@ -466,7 +466,7 @@ export function ZapDialog({ target, children, className, onZapSuccess }: ZapDial
               'Pay with Bitcoin Lightning Network'
             ) : (
               <>
-                Zaps are small Bitcoin payments that support the creator of this item. If you enjoyed this, consider sending a zap!
+                Zaps are small Bitcoin payments that support the artist of this item. If you enjoyed this, consider sending a zap!
               </>
             )}
           </DialogDescription>

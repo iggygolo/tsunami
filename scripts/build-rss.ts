@@ -24,7 +24,7 @@ config();
  * This replicates the PODCAST_CONFIG structure but uses process.env instead of import.meta.env
  */
 function createNodejsConfig() {
-  const creatorNpub = process.env.VITE_ARTIST_NPUB;
+  const artistNpub = process.env.VITE_ARTIST_NPUB;
 
   // Parse recipients safely
   let recipients = [];
@@ -64,7 +64,7 @@ function createNodejsConfig() {
   }
 
   return {
-    creatorNpub,
+    artistNpub: artistNpub,
     podcast: {
       description: process.env.VITE_MUSIC_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
       artistName: process.env.VITE_ARTIST_NAME || "Tsunami Artist",
@@ -80,7 +80,7 @@ function createNodejsConfig() {
         recipients
       },
       // Podcasting 2.0 fields
-      guid: process.env.VITE_MUSIC_GUID || creatorNpub,
+      guid: process.env.VITE_MUSIC_GUID || artistNpub,
       medium: (process.env.VITE_MUSIC_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
       publisher: process.env.VITE_ARTIST_PUBLISHER || process.env.VITE_ARTIST_NAME || "Tsunami Artist",
       location: process.env.VITE_ARTIST_LOCATION_NAME ? {
@@ -103,19 +103,19 @@ function createNodejsConfig() {
 }
 
 /**
- * Node-specific function to get creator pubkey in hex format
+ * Node-specific function to get artist pubkey in hex format
  */
-function getCreatorPubkeyHex(creatorNpub: string): string {
+function getArtistPubkeyHex(artistNpub: string): string {
   try {
-    const decoded = nip19.decode(creatorNpub);
+    const decoded = nip19.decode(artistNpub);
     if (decoded.type === 'npub') {
       return decoded.data;
     }
     throw new Error('Invalid npub format');
   } catch (error) {
-    console.error('Failed to decode creator npub:', error);
+    console.error('Failed to decode artist npub:', error);
     // Fallback to the original value in case it's already hex
-    return creatorNpub;
+    return artistNpub;
   }
 }
 
@@ -151,7 +151,7 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
     <ttl>${podcastConfig.rss.ttl}</ttl>
 
     <!-- Podcasting 2.0 tags -->
-    <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.creatorNpub)}</podcast:guid>
+    <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.artistNpub)}</podcast:guid>
     <podcast:medium>${escapeXml(podcastConfig.podcast.medium || 'music')}</podcast:medium>
 
     ${podcastConfig.podcast.funding && podcastConfig.podcast.funding.length > 0 ?
@@ -197,7 +197,7 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
 /**
  * Validates if a Nostr event is a valid podcast release
  */
-function validatePodcastRelease(event: NostrEvent, creatorPubkeyHex: string): boolean {
+function validatePodcastRelease(event: NostrEvent, artistPubkeyHex: string): boolean {
   if (event.kind !== PODCAST_KINDS.EPISODE) return false;
 
   // Check for required title tag
@@ -208,8 +208,8 @@ function validatePodcastRelease(event: NostrEvent, creatorPubkeyHex: string): bo
   const audio = event.tags.find(([name]) => name === 'audio')?.[1];
   if (!audio) return false;
 
-  // Verify it's from the podcast creator
-  if (event.pubkey !== creatorPubkeyHex) return false;
+  // Verify it's from the music artist
+  if (event.pubkey !== artistPubkeyHex) return false;
 
   return true;
 }
@@ -291,7 +291,7 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
 /**
  * Validates if a Nostr event is a valid podcast trailer
  */
-function validatePodcastTrailer(event: NostrEvent, creatorPubkeyHex: string): boolean {
+function validatePodcastTrailer(event: NostrEvent, artistPubkeyHex: string): boolean {
   if (event.kind !== PODCAST_KINDS.TRAILER) return false;
 
   // Check for required title tag
@@ -306,8 +306,8 @@ function validatePodcastTrailer(event: NostrEvent, creatorPubkeyHex: string): bo
   const pubdate = event.tags.find(([name]) => name === 'pubdate')?.[1];
   if (!pubdate) return false;
 
-  // Verify it's from the podcast creator
-  if (event.pubkey !== creatorPubkeyHex) return false;
+  // Verify it's from the music artist
+  if (event.pubkey !== artistPubkeyHex) return false;
 
   return true;
 }
@@ -354,7 +354,7 @@ function eventToPodcastTrailer(event: NostrEvent): PodcastTrailer {
 /**
  * Fetch podcast metadata from multiple Nostr relays
  */
-async function fetchPodcastMetadataMultiRelay(relays: Array<{url: string, relay: NRelay1}>, creatorPubkeyHex: string) {
+async function fetchPodcastMetadataMultiRelay(relays: Array<{url: string, relay: NRelay1}>, artistPubkeyHex: string) {
   console.log('📡 Fetching podcast metadata from Nostr...');
 
   const relayPromises = relays.map(async ({url, relay}) => {
@@ -362,7 +362,7 @@ async function fetchPodcastMetadataMultiRelay(relays: Array<{url: string, relay:
       const events = await Promise.race([
         relay.query([{
           kinds: [PODCAST_KINDS.PODCAST_METADATA],
-          authors: [creatorPubkeyHex],
+          authors: [artistPubkeyHex],
           '#d': ['artist-metadata'],
           limit: 5
         }]),
@@ -414,7 +414,7 @@ async function fetchPodcastMetadataMultiRelay(relays: Array<{url: string, relay:
 /**
  * Fetch podcast releases from multiple Nostr relays
  */
-async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay: NRelay1}>, creatorPubkeyHex: string) {
+async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay: NRelay1}>, artistPubkeyHex: string) {
   console.log('📡 Fetching podcast releases from Nostr...');
 
   const relayPromises = relays.map(async ({url, relay}) => {
@@ -422,7 +422,7 @@ async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay:
       const events = await Promise.race([
         relay.query([{
           kinds: [PODCAST_KINDS.EPISODE],
-          authors: [creatorPubkeyHex],
+          authors: [artistPubkeyHex],
           limit: 100
         }]),
         new Promise((_, reject) =>
@@ -430,7 +430,7 @@ async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay:
         )
       ]) as NostrEvent[];
 
-      const validEvents = events.filter(event => validatePodcastRelease(event, creatorPubkeyHex));
+      const validEvents = events.filter(event => validatePodcastRelease(event, artistPubkeyHex));
 
       if (validEvents.length > 0) {
         console.log(`✅ Found ${validEvents.length} releases from ${url}`);
@@ -480,7 +480,7 @@ async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay:
 /**
  * Fetch podcast trailers from multiple Nostr relays
  */
-async function fetchPodcastTrailersMultiRelay(relays: Array<{url: string, relay: NRelay1}>, creatorPubkeyHex: string) {
+async function fetchPodcastTrailersMultiRelay(relays: Array<{url: string, relay: NRelay1}>, artistPubkeyHex: string) {
   console.log('📡 Fetching podcast trailers from Nostr...');
 
   const relayPromises = relays.map(async ({url, relay}) => {
@@ -488,7 +488,7 @@ async function fetchPodcastTrailersMultiRelay(relays: Array<{url: string, relay:
       const events = await Promise.race([
         relay.query([{
           kinds: [PODCAST_KINDS.TRAILER],
-          authors: [creatorPubkeyHex],
+          authors: [artistPubkeyHex],
           limit: 50
         }]),
         new Promise((_, reject) =>
@@ -496,7 +496,7 @@ async function fetchPodcastTrailersMultiRelay(relays: Array<{url: string, relay:
         )
       ]) as NostrEvent[];
 
-      const validEvents = events.filter(event => validatePodcastTrailer(event, creatorPubkeyHex));
+      const validEvents = events.filter(event => validatePodcastTrailer(event, artistPubkeyHex));
 
       if (validEvents.length > 0) {
         console.log(`✅ Found ${validEvents.length} trailers from ${url}`);
@@ -566,9 +566,9 @@ async function buildRSS() {
 
     // Get base config from environment variables
     const baseConfig = createNodejsConfig();
-    const creatorPubkeyHex = getCreatorPubkeyHex(baseConfig.creatorNpub || '');
+    const artistPubkeyHex = getArtistPubkeyHex(baseConfig.artistNpub || '');
 
-    console.log(`👤 Creator: ${baseConfig.creatorNpub}`);
+    console.log(`👤 Artist: ${baseConfig.artistNpub}`);
 
     // Connect to multiple Nostr relays for better coverage
     const relayUrls = [
@@ -589,7 +589,7 @@ async function buildRSS() {
 
     try {
       // Fetch podcast metadata from multiple relays
-      nostrMetadata = await fetchPodcastMetadataMultiRelay(relays, creatorPubkeyHex);
+      nostrMetadata = await fetchPodcastMetadataMultiRelay(relays, artistPubkeyHex);
 
       // Merge Nostr metadata with base config (Nostr data takes precedence)
       if (nostrMetadata) {
@@ -606,10 +606,10 @@ async function buildRSS() {
       }
 
       // Fetch releases from multiple relays
-      releases = await fetchPodcastReleasesMultiRelay(relays, creatorPubkeyHex);
+      releases = await fetchPodcastReleasesMultiRelay(relays, artistPubkeyHex);
 
       // Fetch trailers from multiple relays
-      trailers = await fetchPodcastTrailersMultiRelay(relays, creatorPubkeyHex);
+      trailers = await fetchPodcastTrailersMultiRelay(relays, artistPubkeyHex);
 
     } finally {
       // Close all relay connections
@@ -656,7 +656,7 @@ async function buildRSS() {
         trailers: trailers.length > 0 ? 'nostr' : 'none',
         relays: relayUrls
       },
-      creator: baseConfig.creatorNpub
+      artist: baseConfig.artistNpub
     };
     await fs.writeFile(healthPath, JSON.stringify(healthData, null, 2));
 

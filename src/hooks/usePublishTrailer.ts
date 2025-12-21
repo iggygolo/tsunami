@@ -3,10 +3,10 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import type { TrailerFormData } from '@/types/podcast';
-import { PODCAST_KINDS, isPodcastCreator } from '@/lib/podcastConfig';
+import { PODCAST_KINDS, isArtist } from '@/lib/podcastConfig';
 
 /**
- * Hook for publishing podcast trailers (creator only)
+ * Hook for publishing music trailers (artist only)
  * Based on podcast 2.0 trailer specification
  */
 export function usePublishTrailer() {
@@ -17,13 +17,13 @@ export function usePublishTrailer() {
 
   return useMutation({
     mutationFn: async (trailerData: TrailerFormData): Promise<string> => {
-      // Verify user is logged in and is the creator
+      // Verify user is logged in and is the artist
       if (!user) {
         throw new Error('You must be logged in to publish trailers');
       }
 
-      if (!isPodcastCreator(user.pubkey)) {
-        throw new Error('Only the podcast creator can publish trailers');
+      if (!isArtist(user.pubkey)) {
+        throw new Error('Only the music artist can publish trailers');
       }
 
       // Upload trailer file if provided
@@ -138,13 +138,13 @@ export function useUpdateTrailer() {
       trailerIdentifier: string;
       trailerData: TrailerFormData;
     }): Promise<string> => {
-      // Verify user is logged in and is the creator
+      // Verify user is logged in and is the artist
       if (!user) {
         throw new Error('You must be logged in to update trailers');
       }
 
-      if (!isPodcastCreator(user.pubkey)) {
-        throw new Error('Only the podcast creator can update trailers');
+      if (!isArtist(user.pubkey)) {
+        throw new Error('Only the music artist can update trailers');
       }
 
       // Upload new files if provided
@@ -251,8 +251,8 @@ export function useDeleteTrailer() {
         throw new Error('You must be logged in to delete trailers');
       }
 
-      if (!isPodcastCreator(user.pubkey)) {
-        throw new Error('Only the podcast creator can delete trailers');
+      if (!isArtist(user.pubkey)) {
+        throw new Error('Only the music artist can delete trailers');
       }
 
       // Create a deletion event (NIP-09)

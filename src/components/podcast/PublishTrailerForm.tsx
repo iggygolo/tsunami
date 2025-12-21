@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePublishTrailer } from '@/hooks/usePublishTrailer';
 import { useToast } from '@/hooks/useToast';
-import { isPodcastCreator } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/podcastConfig';
 import type { TrailerFormData } from '@/types/podcast';
 
 const trailerSchema = z.object({
@@ -50,13 +50,13 @@ export function PublishTrailerForm({
     },
   });
 
-  // Check if user is the creator
-  if (!user || !isPodcastCreator(user.pubkey)) {
+  // Check if user is the artist
+  if (!user || !isArtist(user.pubkey)) {
     return (
       <Card className={className}>
         <CardContent className="py-12 px-8 text-center">
           <p className="text-muted-foreground">
-            Only the podcast creator can publish trailers.
+            Only the music artist can publish trailers.
           </p>
         </CardContent>
       </Card>

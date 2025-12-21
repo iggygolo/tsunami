@@ -4,10 +4,10 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import type { ReleaseFormData } from '@/types/podcast';
-import { PODCAST_KINDS, isPodcastCreator } from '@/lib/podcastConfig';
+import { PODCAST_KINDS, isArtist } from '@/lib/podcastConfig';
 
 /**
- * Hook for publishing podcast releases (creator only)
+ * Hook for publishing podcast releases (artist only)
  */
 export function usePublishRelease() {
   const { user } = useCurrentUser();
@@ -17,13 +17,13 @@ export function usePublishRelease() {
 
   return useMutation({
     mutationFn: async (releaseData: ReleaseFormData): Promise<string> => {
-      // Verify user is logged in and is the creator
+      // Verify user is logged in and is the artist
       if (!user) {
         throw new Error('You must be logged in to publish releases');
       }
 
-      if (!isPodcastCreator(user.pubkey)) {
-        throw new Error('Only the podcast creator can publish releases');
+      if (!isArtist(user.pubkey)) {
+        throw new Error('Only the music artist can publish releases');
       }
 
       // Upload audio file if provided
@@ -200,13 +200,13 @@ export function useUpdateRelease() {
       releaseIdentifier: string;
       releaseData: ReleaseFormData;
     }): Promise<string> => {
-      // Verify user is logged in and is the creator
+      // Verify user is logged in and is the artist
       if (!user) {
         throw new Error('You must be logged in to update releases');
       }
 
-      if (!isPodcastCreator(user.pubkey)) {
-        throw new Error('Only the podcast creator can update releases');
+      if (!isArtist(user.pubkey)) {
+        throw new Error('Only the music artist can update releases');
       }
 
       // Upload new files if provided
@@ -401,8 +401,8 @@ export function useDeleteRelease() {
         throw new Error('You must be logged in to delete releases');
       }
 
-      if (!isPodcastCreator(user.pubkey)) {
-        throw new Error('Only the podcast creator can delete releases');
+      if (!isArtist(user.pubkey)) {
+        throw new Error('Only the music artist can delete releases');
       }
 
       // Create a deletion event (NIP-09)

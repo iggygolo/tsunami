@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePublishRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
-import { isPodcastCreator } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/podcastConfig';
 import { getAudioDuration, formatDurationHuman } from '@/lib/audioDuration';
 import type { ReleaseFormData } from '@/types/podcast';
 
@@ -67,13 +67,13 @@ export function PublishReleaseForm({
   const { watch, setValue } = form;
   const tags = watch('tags');
 
-  // Check if user is the creator
-  if (!user || !isPodcastCreator(user.pubkey)) {
+  // Check if user is the artist
+  if (!user || !isArtist(user.pubkey)) {
     return (
       <Card className={className}>
         <CardContent className="py-12 px-8 text-center">
           <p className="text-muted-foreground">
-            Only the podcast creator can publish releases.
+            Only the music artist can publish releases.
           </p>
         </CardContent>
       </Card>

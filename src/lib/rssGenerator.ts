@@ -97,7 +97,7 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
     <ttl>${podcastConfig.rss.ttl}</ttl>
 
     <!-- Podcasting 2.0 tags -->
-    <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.creatorNpub)}</podcast:guid>
+    <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.artistNpub)}</podcast:guid>
     ${podcastConfig.podcast.medium ? `<podcast:medium>${escapeXml(podcastConfig.podcast.medium)}</podcast:medium>` : ''}
     ${podcastConfig.podcast.publisher ? `<podcast:publisher>${escapeXml(podcastConfig.podcast.publisher)}</podcast:publisher>` : ''}
     ${podcastConfig.podcast.license ?

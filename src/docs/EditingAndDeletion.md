@@ -124,7 +124,7 @@ Our implementation includes client-side filtering:
 // Filter out deleted events in queries
 const events = await nostr.query([{
   kinds: [PODCAST_KINDS.EPISODE],
-  authors: [getCreatorPubkeyHex()]
+  authors: [getArtistPubkeyHex()]
 }]);
 
 // Client-side filtering (additional safety)

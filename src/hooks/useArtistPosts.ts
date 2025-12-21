@@ -1,22 +1,22 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { getCreatorPubkeyHex } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 /**
- * Hook to fetch the creator's social posts (kind 1 text notes) with infinite scroll
+ * Hook to fetch the artist's social posts (kind 1 text notes) with infinite scroll
  */
-export function useCreatorPosts(limit: number = 20) {
+export function useArtistPosts(limit: number = 20) {
   const { nostr } = useNostr();
 
   return useInfiniteQuery({
-    queryKey: ['creator-posts'],
+    queryKey: ['artist-posts'],
     queryFn: async ({ pageParam }) => {
       const signal = AbortSignal.any([AbortSignal.timeout(10000)]);
 
-      // Query for text notes (kind 1) from the creator
+      // Query for text notes (kind 1) from the artist
       const events = await nostr.query([{
         kinds: [1], // Text notes
-        authors: [getCreatorPubkeyHex()],
+        authors: [getArtistPubkeyHex()],
         limit: limit * 2, // Get more to filter out replies
         until: pageParam, // Use until for pagination
       }], { signal });
@@ -50,25 +50,25 @@ export function useCreatorPosts(limit: number = 20) {
 
       return oldestTimestamp;
     },
-    staleTime: 10000, // 10 seconds - more aggressive refresh for creator posts
+    staleTime: 10000, // 10 seconds - more aggressive refresh for artist posts
   });
 }
 
 /**
- * Hook to fetch the creator's reposts (kind 6 and 16)
+ * Hook to fetch the artist's reposts (kind 6 and 16)
  */
-export function useCreatorReposts(limit: number = 50) {
+export function useArtistReposts(limit: number = 50) {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['creator-reposts', limit],
+    queryKey: ['artist-reposts', limit],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
-      // Query for both legacy (kind 6) and generic (kind 16) reposts from the creator
+      // Query for both legacy (kind 6) and generic (kind 16) reposts from the artist
       const events = await nostr.query([{
         kinds: [6, 16], // Legacy reposts and generic reposts
-        authors: [getCreatorPubkeyHex()],
+        authors: [getArtistPubkeyHex()],
         limit: limit
       }], { signal });
 
@@ -79,20 +79,20 @@ export function useCreatorReposts(limit: number = 50) {
 }
 
 /**
- * Hook to fetch creator's social activity (posts + reposts combined)
+ * Hook to fetch artist's social activity (posts + reposts combined)
  */
-export function useCreatorActivity(limit: number = 50) {
+export function useArtistActivity(limit: number = 50) {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['creator-activity', limit],
+    queryKey: ['artist-activity', limit],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
-      // Query for multiple kinds from the creator
+      // Query for multiple kinds from the artist
       const events = await nostr.query([{
         kinds: [1, 6, 16, 7], // Text notes, legacy reposts, generic reposts, reactions
-        authors: [getCreatorPubkeyHex()],
+        authors: [getArtistPubkeyHex()],
         limit: limit * 2 // Get more to ensure we have enough after filtering
       }], { signal });
 
@@ -106,40 +106,40 @@ export function useCreatorActivity(limit: number = 50) {
 }
 
 /**
- * Hook to fetch replies to the creator's posts (excluding creator's own replies)
+ * Hook to fetch replies to the artist's posts (excluding artist's own replies)
  */
-export function useRepliesToCreator(limit: number = 50) {
+export function useRepliesToArtist(limit: number = 50) {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['replies-to-creator', limit],
+    queryKey: ['replies-to-artist', limit],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
-      // First get creator's posts to find their event IDs
-      const creatorPosts = await nostr.query([{
+      // First get artist's posts to find their event IDs
+      const artistPosts = await nostr.query([{
         kinds: [1], // Only text notes
-        authors: [getCreatorPubkeyHex()],
+        authors: [getArtistPubkeyHex()],
         limit: 100 // Get more posts to find replies to
       }], { signal });
 
-      if (creatorPosts.length === 0) {
+      if (artistPosts.length === 0) {
         return [];
       }
 
       // Get the event IDs to search for replies
-      const creatorEventIds = creatorPosts.map(event => event.id);
+      const artistEventIds = artistPosts.map(event => event.id);
 
-      // Query for replies that reference the creator's posts
+      // Query for replies that reference the artist's posts
       const replies = await nostr.query([{
         kinds: [1], // Text notes (replies)
-        '#e': creatorEventIds, // References to creator's events
+        '#e': artistEventIds, // References to artist's events
         limit: limit * 2
       }], { signal });
 
-      // Filter out the creator's own posts and sort by creation time
+      // Filter out the artist's own posts and sort by creation time
       return replies
-        .filter(reply => reply.pubkey !== getCreatorPubkeyHex())
+        .filter(reply => reply.pubkey !== getArtistPubkeyHex())
         .sort((a, b) => b.created_at - a.created_at)
         .slice(0, limit);
     },
@@ -148,26 +148,26 @@ export function useRepliesToCreator(limit: number = 50) {
 }
 
 /**
- * Hook to fetch creator's replies and the original notes they replied to with infinite scroll
+ * Hook to fetch artist's replies and the original notes they replied to with infinite scroll
  */
-export function useCreatorRepliesWithContext(limit: number = 20) {
+export function useArtistRepliesWithContext(limit: number = 20) {
   const { nostr } = useNostr();
 
   return useInfiniteQuery({
-    queryKey: ['creator-replies-with-context'],
+    queryKey: ['artist-replies-with-context'],
     queryFn: async ({ pageParam }) => {
       const signal = AbortSignal.any([AbortSignal.timeout(10000)]);
 
-      // Get creator's replies (posts that have 'e' tags - indicating they're replies)
-      const creatorReplies = await nostr.query([{
+      // Get artist's replies (posts that have 'e' tags - indicating they're replies)
+      const artistReplies = await nostr.query([{
         kinds: [1], // Text notes
-        authors: [getCreatorPubkeyHex()],
+        authors: [getArtistPubkeyHex()],
         limit: limit * 2,
         until: pageParam, // Use until for pagination
       }], { signal });
 
       // Filter to only get actual replies (posts with 'e' tags)
-      const actualReplies = creatorReplies.filter(reply =>
+      const actualReplies = artistReplies.filter(reply =>
         reply.tags.some(tag => tag[0] === 'e')
       );
 
@@ -175,12 +175,12 @@ export function useCreatorRepliesWithContext(limit: number = 20) {
         return [];
       }
 
-      // Get the event IDs that the creator replied to
+      // Get the event IDs that the artist replied to
       const repliedToEventIds = actualReplies
         .map(reply => reply.tags.find(tag => tag[0] === 'e')?.[1])
         .filter((id): id is string => Boolean(id));
 
-      // Fetch the original events that creator replied to
+      // Fetch the original events the artist replied to replied to
       const originalEvents = await nostr.query([{
         ids: repliedToEventIds
       }], { signal });
@@ -199,7 +199,7 @@ export function useCreatorRepliesWithContext(limit: number = 20) {
           return {
             reply,
             originalEvent,
-            // Use reply timestamp for sorting since that's when creator participated
+            // Use reply timestamp for sorting since that's when artist participated
             timestamp: reply.created_at
           };
         })
@@ -247,20 +247,20 @@ export function useCreatorRepliesWithContext(limit: number = 20) {
 }
 
 /**
- * Hook to fetch creator's notes only (no reposts)
+ * Hook to fetch artist's notes only (no reposts)
  */
-export function useCreatorNotes(limit: number = 50) {
+export function useArtistNotes(limit: number = 50) {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['creator-notes', limit],
+    queryKey: ['artist-notes', limit],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
-      // Query for text notes only from the creator
+      // Query for text notes only from the artist
       const events = await nostr.query([{
         kinds: [1], // Only text notes
-        authors: [getCreatorPubkeyHex()],
+        authors: [getArtistPubkeyHex()],
         limit: limit
       }], { signal });
 
@@ -271,9 +271,9 @@ export function useCreatorNotes(limit: number = 50) {
 }
 
 /**
- * Hook for Replies tab - shows only creator's replies with original context (Twitter style)
- * Each reply shows: Original note + Creator's reply
+ * Hook for Replies tab - shows only artist's replies with original context (Twitter style)
+ * Each reply shows: Original note + Artist's reply
  */
-export function useCreatorRepliesTab(limit: number = 50) {
-  return useCreatorRepliesWithContext(limit);
+export function useArtistRepliesTab(limit: number = 50) {
+  return useArtistRepliesWithContext(limit);
 }
