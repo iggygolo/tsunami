@@ -7,7 +7,6 @@ import {
   Save,
   X,
   Upload,
-  Mic,
   Users,
   Zap,
   Loader2,
@@ -17,6 +16,8 @@ import {
   Play,
   MessageSquare,
   Repeat2,
+  Volume2,
+  Music,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -530,7 +531,7 @@ const Studio = () => {
             <div>
               <h1 className="text-3xl font-bold">Studio</h1>
               <p className="text-muted-foreground">
-                Manage your profile and podcast settings
+                Manage your profile and artist settings
               </p>
             </div>
 
@@ -577,7 +578,7 @@ const Studio = () => {
                 <span>Settings</span>
               </TabsTrigger>
               <TabsTrigger value="releases" className="flex items-center space-x-2">
-                <Mic className="w-4 h-4" />
+                <Volume2 className="w-4 h-4" />
                 <span>Releases</span>
               </TabsTrigger>
               <TabsTrigger value="blossom" className="flex items-center space-x-2">
@@ -726,12 +727,12 @@ const Studio = () => {
                 </CardContent>
               </Card>
 
-              {/* Podcast Section */}
+              {/* Artist Section */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <Mic className="w-5 h-5" />
-                    <span>Podcast Settings</span>
+                    <Music className="w-5 h-5" />
+                    <span>Artist Settings</span>
                     {editingSection === 'podcast' && (
                       <Badge variant="secondary">Editing</Badge>
                     )}
@@ -1223,7 +1224,7 @@ const Studio = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
                   <CardContent className="p-6 text-center">
-                    <Mic className="w-12 h-12 mx-auto mb-4 text-primary" />
+                    <Volume2 className="w-12 h-12 mx-auto mb-4 text-primary" />
                     <div className="text-2xl font-bold">
                       {analyticsLoading ? '...' : analytics?.totalReleases || 0}
                     </div>
@@ -1309,7 +1310,7 @@ const Studio = () => {
                       </div>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
-                        <Mic className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <Volume2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
                         <p>No release engagement data yet.</p>
                         <p className="text-sm">Publish releases and engagement will appear here!</p>
                       </div>

@@ -58,8 +58,8 @@ npm install
 # Copy environment configuration
 cp .env.example .env
 
-# Configure your podcast settings in .env
-# Set your artist npub and podcast metadata
+# Configure your artist and music settings in .env
+# Set your artist npub and publishing metadata
 ```
 
 ### Development
