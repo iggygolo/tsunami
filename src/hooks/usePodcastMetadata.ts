@@ -61,9 +61,11 @@ export function usePodcastMetadata() {
             kinds: [PODCAST_KINDS.PODCAST_METADATA], // Addressable podcast metadata event
             authors: [getArtistPubkeyHex()],
             '#d': ['artist-metadata'],
-            limit: 1 // Only need the most recent event
+            limit: 10 // Only need the most recent event
           }
         ], { signal });
+
+        console.log('Fetched podcast metadata from Nostr:', events);
 
         if (events.length > 0) {
           // Get the most recent event

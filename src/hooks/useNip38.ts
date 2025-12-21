@@ -50,7 +50,7 @@ export function useUpdateNowPlaying() {
       const expiration = Math.floor(Date.now() / 1000) + durationSeconds;
 
       // Generate nevent URL for the release
-      const nevent = encodeEventIdAsNevent(release.eventId, release.authorPubkey);
+      const nevent = encodeEventIdAsNevent(release.eventId, release.artistPubkey);
       const releaseUrl = `${getCurrentSiteUrl()}/${nevent}`;
 
       createEvent({

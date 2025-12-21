@@ -58,7 +58,7 @@ function eventToPodcastTrailer(event: NostrEvent): PodcastTrailer {
     type,
     season: seasonStr ? parseInt(seasonStr, 10) : undefined,
     eventId: event.id,
-    authorPubkey: event.pubkey,
+    artistPubkey: event.pubkey,
     identifier,
     createdAt: new Date(event.created_at * 1000),
   };

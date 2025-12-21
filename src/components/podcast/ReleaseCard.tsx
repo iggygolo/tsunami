@@ -50,7 +50,7 @@ export function ReleaseCard({
   // Create a mock NostrEvent for the CommentsSection
   const releaseEvent: NostrEvent = {
     id: release.eventId,
-    pubkey: release.authorPubkey,
+    pubkey: release.artistPubkey,
     created_at: Math.floor(release.createdAt.getTime() / 1000),
     kind: 30054, // Addressable podcast releases
     tags: [
@@ -70,11 +70,11 @@ export function ReleaseCard({
   const commentCount = commentsData?.topLevelComments?.length || release.commentCount || 0;
 
   // Generate naddr for release link with relay hints (releases are addressable events)
-  const releaseNaddr = encodeReleaseAsNaddr(release.authorPubkey, release.identifier);
+  const releaseNaddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
 
   const handleShare = async () => {
     try {
-      const naddr = encodeReleaseAsNaddr(release.authorPubkey, release.identifier);
+      const naddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
       const url = `${window.location.origin}/${naddr}`;
 
       await navigator.clipboard.writeText(url);

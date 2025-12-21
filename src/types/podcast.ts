@@ -24,7 +24,7 @@ export interface PodcastRelease {
 
   // Nostr-specific fields
   eventId: string;
-  authorPubkey: string;
+  artistPubkey: string;
   identifier: string; // 'd' tag identifier for addressable events
   createdAt: Date;
   zapCount?: number;
@@ -197,7 +197,7 @@ export interface AudioPlayerState {
 export interface PodcastComment {
   id: string;
   content: string;
-  authorPubkey: string;
+  artistPubkey: string;
   authorName?: string;
   authorImage?: string;
   releaseId: string;
@@ -223,7 +223,7 @@ export interface PodcastTrailer {
   
   // Nostr-specific fields
   eventId: string;
-  authorPubkey: string;
+  artistPubkey: string;
   identifier: string; // 'd' tag identifier
   createdAt: Date;
 }

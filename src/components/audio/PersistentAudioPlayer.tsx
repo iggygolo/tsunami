@@ -45,7 +45,7 @@ export function PersistentAudioPlayer() {
   }
 
   const release = state.currentRelease;
-  const releaseNaddr = encodeReleaseAsNaddr(release.authorPubkey, release.identifier);
+  const releaseNaddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
 
   // Create NostrEvent for social features - must match the real release event structure
   // For addressable events (kind 30054), comments are identified by #a tag: kind:pubkey:identifier
@@ -54,7 +54,7 @@ export function PersistentAudioPlayer() {
   
   const releaseEvent: NostrEvent = {
     id: release.eventId, // Real event ID from the release
-    pubkey: release.authorPubkey,
+    pubkey: release.artistPubkey,
     created_at: Math.floor(release.createdAt.getTime() / 1000),
     kind: 30054, // Addressable podcast release
     tags: [

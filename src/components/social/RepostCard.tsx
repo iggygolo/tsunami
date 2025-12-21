@@ -129,11 +129,11 @@ function OriginalEventSkeleton() {
 }
 
 function OriginalEventPlaceholder({ repostData }: OriginalEventCardProps) {
-  const { data: originalAuthor } = useAuthor(repostData.originalAuthorPubkey || '');
+  const { data: originalAuthor } = useAuthor(repostData.originalArtistPubkey || '');
   const originalAuthorMetadata = originalAuthor?.metadata;
   const originalAuthorName = originalAuthorMetadata?.name || 
                             originalAuthorMetadata?.display_name || 
-                            (repostData.originalAuthorPubkey ? genUserName(repostData.originalAuthorPubkey) : 'Unknown');
+                            (repostData.originalArtistPubkey ? genUserName(repostData.originalArtistPubkey) : 'Unknown');
 
   return (
     <div className="border-l-2 border-l-muted pl-4">
@@ -147,7 +147,7 @@ function OriginalEventPlaceholder({ repostData }: OriginalEventCardProps) {
               </p>
             </div>
             
-            {repostData.originalAuthorPubkey && (
+            {repostData.originalArtistPubkey && (
               <p className="text-xs text-muted-foreground">
                 Originally posted by {originalAuthorName}
               </p>

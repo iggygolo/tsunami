@@ -54,7 +54,7 @@ interface ProfileFormData {
 }
 
 interface PodcastFormData {
-  author: string;
+  artistName: string;
   description: string;
   image: string;
   website: string;
@@ -124,8 +124,8 @@ const Studio = () => {
   });
 
   const [formData, setFormData] = useState<PodcastFormData>({
+    artistName: PODCAST_CONFIG.podcast.artistName,
     description: PODCAST_CONFIG.podcast.description,
-    author: PODCAST_CONFIG.podcast.artistName,
     image: PODCAST_CONFIG.podcast.image,
     website: PODCAST_CONFIG.podcast.website,
     copyright: PODCAST_CONFIG.podcast.copyright,
@@ -156,7 +156,7 @@ const Studio = () => {
   useEffect(() => {
     if (podcastMetadata && !isLoadingMetadata) {
       setFormData({
-        author: podcastMetadata.artistName,
+        artistName: podcastMetadata.artistName,
         description: podcastMetadata.description,
         image: podcastMetadata.image,
         website: podcastMetadata.website,
@@ -342,6 +342,9 @@ const Studio = () => {
         };
 
         await createEvent(profileEvent);
+
+        // Invalidate artist cache to force refetch with new profile data
+        queryClient.invalidateQueries({ queryKey: ['artist', getArtistPubkeyHex()] });
       }
 
       // Save podcast metadata if podcast section is being edited
@@ -366,7 +369,8 @@ const Studio = () => {
         const podcastMetadataEvent = {
           kind: PODCAST_KINDS.PODCAST_METADATA, // Addressable podcast metadata event
           content: JSON.stringify({
-            author: formData.author,
+            author: formData.artistName,
+            artist: formData.artistName,
             description: formData.description,
             image: formData.image,
             website: formData.website,
@@ -384,7 +388,7 @@ const Studio = () => {
           }),
           tags: [
             ['d', 'artist-metadata'], // Identifier for this type of event
-            ['title', formData.author]
+            ['artist', formData.artistName]
           ],
           created_at: Math.floor(Date.now() / 1000)
         };
@@ -449,7 +453,7 @@ const Studio = () => {
 
     if (editingSection === 'podcast' && podcastMetadata) {
       setFormData({
-        author: podcastMetadata.artistName,
+        artistName: podcastMetadata.artistName,
         description: podcastMetadata.description,
         image: podcastMetadata.image,
         website: podcastMetadata.website,
@@ -743,11 +747,11 @@ const Studio = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="author">Artist Name</Label>
+                        <Label htmlFor="artist">Artist Name</Label>
                         <Input
-                          id="author"
-                          value={formData.author}
-                          onChange={(e) => handleInputChange('author', e.target.value)}
+                          id="artist"
+                          value={formData.artistName}
+                          onChange={(e) => handleInputChange('artist', e.target.value)}
                           disabled={editingSection !== 'podcast'}
                           placeholder="Enter artist name"
                         />

@@ -321,7 +321,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                                 Edit release
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
-                                <Link to={`/${encodeReleaseAsNaddr(release.authorPubkey, release.identifier)}`}>
+                                <Link to={`/${encodeReleaseAsNaddr(release.artistPubkey, release.identifier)}`}>
                                   <Eye className="w-4 h-4 mr-2" />
                                   View Public Page
                                 </Link>

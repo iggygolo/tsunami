@@ -29,13 +29,13 @@ export function encodeNevent(event: NostrEvent, customRelays?: string[]): string
 /**
  * Encode an event ID as nevent with relay hints
  * @param eventId The event ID to encode
- * @param authorPubkey The author's pubkey
+ * @param artistPubkey The artist's pubkey
  * @param customRelays Optional custom relays to include
  * @returns nevent string
  */
 export function encodeEventIdAsNevent(
   eventId: string, 
-  authorPubkey: string, 
+  artistPubkey: string, 
   customRelays?: string[]
 ): string {
   const relays = customRelays || DEFAULT_RELAYS;
@@ -43,7 +43,7 @@ export function encodeEventIdAsNevent(
   return nip19.neventEncode({
     id: eventId,
     relays,
-    author: authorPubkey
+    author: artistPubkey
   });
 }
 

@@ -35,7 +35,7 @@ function createEventFromrelease(release: PodcastRelease): NostrEvent {
   return {
     id: release.eventId,
     kind: 30054, // Addressable podcast release
-    pubkey: release.authorPubkey,
+    pubkey: release.artistPubkey,
     created_at: Math.floor(release.createdAt.getTime() / 1000),
     tags: [
       ['d', release.identifier], // Addressable event identifier
@@ -151,7 +151,7 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
         content: '+',
         tags: [
           ['e', release.eventId],
-          ['p', release.authorPubkey],
+          ['p', release.artistPubkey],
           ['k', '30023'] // Kind of the event being liked
         ]
       });
@@ -187,7 +187,7 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
 
   const handleShare = async () => {
     try {
-      const naddr = encodeReleaseAsNaddr(release.authorPubkey, release.identifier);
+      const naddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
       const url = `${window.location.origin}/${naddr}`;
 
       await navigator.clipboard.writeText(url);

@@ -62,7 +62,7 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
     tags: topicTags,
     externalRefs: [],
     eventId: event.id,
-    authorPubkey: event.pubkey,
+    artistPubkey: event.pubkey,
     identifier,
     createdAt: new Date(event.created_at * 1000),
   };

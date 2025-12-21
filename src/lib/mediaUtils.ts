@@ -10,7 +10,7 @@ export interface MediaItem {
 
 export interface RepostData {
   originalEventId: string;
-  originalAuthorPubkey?: string;
+  originalArtistPubkey?: string;
   relayUrl?: string;
   kind?: number;
 }
@@ -105,7 +105,7 @@ export function extractRepostData(event: NostrEvent): RepostData | null {
   
   return {
     originalEventId: eTag[1],
-    originalAuthorPubkey: pTag?.[1],
+    originalArtistPubkey: pTag?.[1],
     relayUrl: eTag[2],
     kind: kTag ? parseInt(kTag[1]) : undefined,
   };

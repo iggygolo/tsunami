@@ -20,8 +20,8 @@ function releaseToRSSItem(release: PodcastRelease, config?: PodcastConfig): RSSI
   return {
     title: release.title,
     description: release.description || '',
-    link: `${getBaseUrl()}/${encodeReleaseAsNaddr(release.authorPubkey, release.identifier)}`, // Use naddr links for addressable releases
-    guid: `${release.authorPubkey}:${release.identifier}`, // Stable GUID that doesn't change on edits
+    link: `${getBaseUrl()}/${encodeReleaseAsNaddr(release.artistPubkey, release.identifier)}`, // Use naddr links for addressable releases
+    guid: `${release.artistPubkey}:${release.identifier}`, // Stable GUID that doesn't change on edits
     pubDate: release.publishDate.toUTCString(),
     author: podcastConfig.podcast.artistName,
     category: release.tags,

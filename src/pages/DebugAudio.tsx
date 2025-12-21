@@ -18,7 +18,7 @@ export default function DebugAudio() {
     publishDate: new Date(),
     tags: ['test'],
     eventId: 'test-event',
-    authorPubkey: 'test-pubkey',
+    artistPubkey: 'test-pubkey',
     identifier: 'test-release-identifier',
     createdAt: new Date(),
   });

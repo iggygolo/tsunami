@@ -138,7 +138,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
       title,
       description,
       content: releaseEvent.content,
-      authorPubkey: releaseEvent.pubkey,
+      artistPubkey: releaseEvent.pubkey,
       identifier,
       audioUrl,
       audioType,
@@ -464,7 +464,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                   <CommentsSection
                     root={{
                       id: release.eventId,
-                      pubkey: release.authorPubkey,
+                      pubkey: release.artistPubkey,
                       created_at: Math.floor(release.createdAt.getTime() / 1000),
                       kind: 30054,
                       tags: [

@@ -42,7 +42,7 @@ export function ReleaseDiscussions({ limit = 20, className }: ReleaseDiscussions
 
       // Query for all kind 1111 comments that reference our releases
       // Releases are addressable events (kind 30054), so we need to query by #a tags
-      const addressableTags = releases.map(ep => `30054:${ep.authorPubkey}:${ep.identifier}`);
+      const addressableTags = releases.map(ep => `30054:${ep.artistPubkey}:${ep.identifier}`);
       
       const commentEvents = await nostr.query([{
         kinds: [1111], // NIP-22 comments
@@ -51,7 +51,7 @@ export function ReleaseDiscussions({ limit = 20, className }: ReleaseDiscussions
       }], { signal });
 
       // Create release lookup map by addressable event tag
-      const releaseMap = new Map(releases.map(ep => [`30054:${ep.authorPubkey}:${ep.identifier}`, ep]));
+      const releaseMap = new Map(releases.map(ep => [`30054:${ep.artistPubkey}:${ep.identifier}`, ep]));
 
       // Process and enrich comments with release info
       const enrichedComments = commentEvents

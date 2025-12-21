@@ -29,7 +29,7 @@ export function ShareReleaseDialog({ release, open, onOpenChange }: ShareRelease
   
   // Generate the default share message
   const defaultMessage = release ? 
-    `Just published a new release: "${release.title}"\n\n${release.description || ''}\n\n${window.location.origin}/${encodeReleaseAsNaddr(release.authorPubkey, release.identifier)}\n\n#podcast #nostr` 
+    `Just published a new release: "${release.title}"\n\n${release.description || ''}\n\n${window.location.origin}/${encodeReleaseAsNaddr(release.artistPubkey, release.identifier)}\n\n#podcast #nostr` 
     : '';
     
   const [shareMessage, setShareMessage] = useState(defaultMessage);
@@ -37,7 +37,7 @@ export function ShareReleaseDialog({ release, open, onOpenChange }: ShareRelease
   // Update the message when the release changes
   useEffect(() => {
     if (release) {
-      const newMessage = `Just published a new release: "${release.title}"\n\n${release.description || ''}\n\n${window.location.origin}/${encodeReleaseAsNaddr(release.authorPubkey, release.identifier)}\n\n#podcast #nostr`;
+      const newMessage = `Just published a new release: "${release.title}"\n\n${release.description || ''}\n\n${window.location.origin}/${encodeReleaseAsNaddr(release.artistPubkey, release.identifier)}\n\n#podcast #nostr`;
       setShareMessage(newMessage);
     }
   }, [release]);
@@ -51,7 +51,7 @@ export function ShareReleaseDialog({ release, open, onOpenChange }: ShareRelease
         kind: 1,
         content: shareMessage,
         tags: [
-          ['a', `30054:${release.authorPubkey}:${release.identifier}`], // Reference the release as addressable event (non-reply)
+          ['a', `30054:${release.artistPubkey}:${release.identifier}`], // Reference the release as addressable event (non-reply)
           ['t', 'podcast'], // Topic tag
           ['t', 'nostr'], // Topic tag
         ]
