@@ -209,6 +209,10 @@
   .btn-secondary {
     @apply bg-gradient-to-r from-secondary to-primary hover:from-secondary/90 hover:to-primary/90 text-secondary-foreground font-medium px-6 py-3 rounded-lg transition-all duration-200 hover:shadow-lg hover:scale-105;
   }
+
+  .btn-studio {
+    @apply bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-medium px-6 py-3 rounded-lg !transition-all duration-200 hover:shadow-lg hover:translate-x-1;
+  }
 }
 
 /* Text truncation utilities */

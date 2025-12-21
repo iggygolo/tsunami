@@ -163,7 +163,7 @@ export function Navigation({ className }: NavigationProps) {
 
             {/* Artist studio button */}
             {isArtist_user && (
-              <Button size="sm" asChild className="btn-secondary focus-ring hidden sm:flex">
+              <Button size="sm" asChild className="btn-studio focus-ring hidden sm:flex">
                 <Link to="/studio">
                   <Settings className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Studio</span>
@@ -275,7 +275,7 @@ export function Navigation({ className }: NavigationProps) {
                   <Button
                     size="sm"
                     asChild
-                    className="w-full justify-start btn-secondary focus-ring"
+                    className="w-full justify-start btn-studio focus-ring"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Link to="/studio" className="flex items-center space-x-3">

@@ -174,13 +174,13 @@ export function MobileSidebar({ onNavigate }: MobileSidebarProps) {
             <Button
               size="sm"
               asChild
-              className="w-full justify-start h-auto py-3 px-3 btn-secondary focus-ring"
+              className="w-full justify-start h-auto py-3 px-3 btn-studio focus-ring"
             >
               <Link to="/studio" className="flex items-start space-x-3" onClick={onNavigate}>
                 <Settings className="w-5 h-5 mt-0.5 flex-shrink-0" />
                 <div className="text-left min-w-0">
                   <div className="font-medium">Studio</div>
-                  <div className="text-xs text-secondary-foreground/70 truncate">Artist tools</div>
+                  <div className="text-xs text-white/70 truncate">Artist tools</div>
                 </div>
               </Link>
             </Button>

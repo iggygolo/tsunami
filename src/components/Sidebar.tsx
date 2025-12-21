@@ -100,8 +100,8 @@ export function Sidebar({ className }: SidebarProps) {
                 size="sm"
                 asChild
                 className={cn(
-                  "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-teal-600 dark:hover:text-teal-400",
-                  active && "bg-teal-500/5 border border-teal-500/20 text-foreground shadow-sm hover:translate-x-0"
+                  "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-600 dark:hover:text-cyan-400",
+                  active && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0"
                 )}
               >
                 {item.external ? (
@@ -119,7 +119,7 @@ export function Sidebar({ className }: SidebarProps) {
                   </a>
                 ) : (
                   <Link to={item.path} className="flex items-start space-x-3">
-                    <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-teal-600 dark:text-teal-400")} />
+                    <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400")} />
                     <div className="text-left min-w-0">
                       <div className="font-medium">{item.label}</div>
                       <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
@@ -138,13 +138,13 @@ export function Sidebar({ className }: SidebarProps) {
             <Button
               size="sm"
               asChild
-              className="w-full justify-start h-auto py-3 px-3 btn-secondary focus-ring"
+              className="w-full justify-start h-auto py-3 px-3 btn-studio focus-ring"
             >
               <Link to="/studio" className="flex items-start space-x-3">
                 <Settings className="w-5 h-5 mt-0.5 flex-shrink-0" />
                 <div className="text-left min-w-0">
                   <div className="font-medium">Studio</div>
-                  <div className="text-xs text-secondary-foreground/70 truncate">Artist tools</div>
+                  <div className="text-xs text-white/70 truncate">Artist tools</div>
                 </div>
               </Link>
             </Button>
