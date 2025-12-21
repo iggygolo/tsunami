@@ -3,8 +3,74 @@ import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
-import type { ReleaseFormData } from '@/types/podcast';
+import type { ReleaseFormData, TrackFormData } from '@/types/podcast';
 import { PODCAST_KINDS, isArtist } from '@/lib/podcastConfig';
+
+// Helper function to infer audio type from URL
+function inferAudioType(urlString: string, fileType?: string): string {
+  if (fileType && fileType.startsWith('audio/')) {
+    return fileType;
+  }
+
+  try {
+    const url = new URL(urlString);
+    const pathname = url.pathname.toLowerCase();
+    if (pathname.endsWith('.mp3')) {
+      return 'audio/mpeg';
+    } else if (pathname.endsWith('.wav')) {
+      return 'audio/wav';
+    } else if (pathname.endsWith('.m4a')) {
+      return 'audio/mp4';
+    } else if (pathname.endsWith('.ogg')) {
+      return 'audio/ogg';
+    } else if (pathname.endsWith('.flac')) {
+      return 'audio/flac';
+    }
+  } catch {
+    // Invalid URL, continue with default
+  }
+  
+  return 'audio/mpeg'; // Default fallback
+}
+
+/**
+ * Process a single track, uploading audio if needed
+ */
+async function processTrack(
+  track: TrackFormData,
+  uploadFile: (file: File) => Promise<Array<string[]>>
+): Promise<{ audioUrl: string; audioType: string; duration?: number; explicit: boolean }> {
+  let audioUrl = track.audioUrl;
+  let audioType = track.audioType;
+
+  if (track.audioFile) {
+    try {
+      const audioTags = await uploadFile(track.audioFile);
+      // audioTags is an array of NIP-94 compatible tags
+      const audioTag = audioTags.find((tag: string[]) => tag[0] === 'url') || audioTags[0];
+      audioUrl = audioTag[1]; // Get the URL from the tag
+      audioType = track.audioFile.type;
+    } catch (error) {
+      throw new Error(`Failed to upload audio file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  if (!audioUrl) {
+    throw new Error('Audio URL or file is required for each track');
+  }
+
+  // Infer type from URL if not provided
+  if (audioUrl && !audioType) {
+    audioType = inferAudioType(audioUrl);
+  }
+
+  return {
+    audioUrl,
+    audioType: audioType || 'audio/mpeg',
+    duration: track.duration,
+    explicit: track.explicit || false,
+  };
+}
 
 /**
  * Hook for publishing podcast releases (artist only)
@@ -26,44 +92,15 @@ export function usePublishRelease() {
         throw new Error('Only the music artist can publish releases');
       }
 
-      // Upload audio file if provided
-      let audioUrl = releaseData.audioUrl;
-      let audioType = releaseData.audioType;
-
-      if (releaseData.audioFile) {
-        try {
-          const audioTags = await uploadFile(releaseData.audioFile);
-          audioUrl = audioTags[0][1]; // First tag contains the URL
-          audioType = releaseData.audioFile.type;
-        } catch (error) {
-          throw new Error(`Failed to upload audio file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+      // Validate that we have at least one track
+      if (!releaseData.tracks || releaseData.tracks.length === 0) {
+        throw new Error('At least one track is required');
       }
 
-      if (!audioUrl) {
-        throw new Error('Audio URL or file is required');
-      }
-
-      // If we have a URL but no type, try to infer from file extension
-      if (audioUrl && !audioType) {
-        try {
-          const url = new URL(audioUrl);
-          const pathname = url.pathname.toLowerCase();
-          if (pathname.endsWith('.mp3')) {
-            audioType = 'audio/mpeg';
-          } else if (pathname.endsWith('.wav')) {
-            audioType = 'audio/wav';
-          } else if (pathname.endsWith('.m4a')) {
-            audioType = 'audio/mp4';
-          } else if (pathname.endsWith('.ogg')) {
-            audioType = 'audio/ogg';
-          } else {
-            audioType = 'audio/mpeg'; // Default fallback
-          }
-        } catch {
-          audioType = 'audio/mpeg';
-        }
-      }
+      // Process all tracks (upload audio files if needed)
+      const processedTracks = await Promise.all(
+        releaseData.tracks.map(track => processTrack(track, uploadFile))
+      );
 
       // Upload image file if provided
       let imageUrl = releaseData.imageUrl;
@@ -76,64 +113,37 @@ export function usePublishRelease() {
         }
       }
 
-      // Upload video file if provided
-      let videoUrl = releaseData.videoUrl;
-      let videoType = releaseData.videoType;
-      if (releaseData.videoFile) {
-        try {
-          const videoTags = await uploadFile(releaseData.videoFile);
-          videoUrl = videoTags[0][1];
-          videoType = releaseData.videoFile.type;
-        } catch (error) {
-          throw new Error(`Failed to upload video file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
-
-      // Upload transcript file if provided
-      let transcriptUrl = releaseData.transcriptUrl;
-      if (releaseData.transcriptFile) {
-        try {
-          const transcriptTags = await uploadFile(releaseData.transcriptFile);
-          transcriptUrl = transcriptTags[0][1];
-        } catch (error) {
-          throw new Error(`Failed to upload transcript file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
-
       // Generate a unique identifier for this addressable release
       const releaseIdentifier = `release-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // Build tags for addressable podcast release (kind 30054)
       const tags: Array<[string, ...string[]]> = [
         ['d', releaseIdentifier], // Addressable event identifier
-        ['title', releaseData.title], // release title
-        ['audio', audioUrl, audioType || 'audio/mpeg'], // Audio URL with media type
+        ['title', releaseData.title], // Release title
         ['pubdate', new Date().toUTCString()], // RFC2822 format - set once when first published
-        ['alt', `Podcast release: ${releaseData.title}`] // NIP-31 alt tag
+        ['alt', `Music release: ${releaseData.title}`] // NIP-31 alt tag
       ];
 
-      // Add optional tags per NIP-54
+      // Add audio tracks
+      processedTracks.forEach((track) => {
+        tags.push(['audio', track.audioUrl, track.audioType]);
+        
+        if (track.duration && track.duration > 0) {
+          tags.push(['duration', track.duration.toString()]);
+        }
+        
+        if (track.explicit) {
+          tags.push(['explicit', 'true']);
+        }
+      });
+
+      // Add optional tags
       if (releaseData.description) {
         tags.push(['description', releaseData.description]);
       }
 
       if (imageUrl) {
         tags.push(['image', imageUrl]);
-      }
-
-      // Add video enclosure if provided
-      if (videoUrl) {
-        tags.push(['video', videoUrl, videoType || 'video/mp4']);
-      }
-
-      // Add duration if provided
-      if (releaseData.duration && releaseData.duration > 0) {
-        tags.push(['duration', releaseData.duration.toString()]);
-      }
-
-      // Add transcript URL if provided
-      if (transcriptUrl) {
-        tags.push(['transcript', transcriptUrl]);
       }
 
       // Add topic tags
@@ -146,7 +156,7 @@ export function usePublishRelease() {
       // Create and publish the event
       const event = await createEvent({
         kind: PODCAST_KINDS.EPISODE,
-        content: releaseData.content || '',
+        content: '',
         tags
       });
 
@@ -193,44 +203,15 @@ export function useUpdateRelease() {
         throw new Error('Only the music artist can update releases');
       }
 
-      // Upload new files if provided
-      let audioUrl = releaseData.audioUrl;
-      let audioType = releaseData.audioType;
-
-      if (releaseData.audioFile) {
-        try {
-          const audioTags = await uploadFile(releaseData.audioFile);
-          audioUrl = audioTags[0][1];
-          audioType = releaseData.audioFile.type;
-        } catch (error) {
-          throw new Error(`Failed to upload audio file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+      // Validate that we have at least one track
+      if (!releaseData.tracks || releaseData.tracks.length === 0) {
+        throw new Error('At least one track is required');
       }
 
-      if (!audioUrl) {
-        throw new Error('Audio URL or file is required');
-      }
-
-      // If we have a URL but no type, try to infer from file extension
-      if (audioUrl && !audioType) {
-        try {
-          const url = new URL(audioUrl);
-          const pathname = url.pathname.toLowerCase();
-          if (pathname.endsWith('.mp3')) {
-            audioType = 'audio/mpeg';
-          } else if (pathname.endsWith('.wav')) {
-            audioType = 'audio/wav';
-          } else if (pathname.endsWith('.m4a')) {
-            audioType = 'audio/mp4';
-          } else if (pathname.endsWith('.ogg')) {
-            audioType = 'audio/ogg';
-          } else {
-            audioType = 'audio/mpeg'; // Default fallback
-          }
-        } catch {
-          audioType = 'audio/mpeg';
-        }
-      }
+      // Process all tracks
+      const processedTracks = await Promise.all(
+        releaseData.tracks.map(track => processTrack(track, uploadFile))
+      );
 
       let imageUrl = releaseData.imageUrl;
       if (releaseData.imageFile) {
@@ -241,33 +222,6 @@ export function useUpdateRelease() {
           throw new Error(`Failed to upload image file: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
-
-      // Upload video file if provided
-      let videoUrl = releaseData.videoUrl;
-      let videoType = releaseData.videoType;
-      if (releaseData.videoFile) {
-        try {
-          const videoTags = await uploadFile(releaseData.videoFile);
-          videoUrl = videoTags[0][1];
-          videoType = releaseData.videoFile.type;
-        } catch (error) {
-          throw new Error(`Failed to upload video file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
-
-      // Upload transcript file if provided
-      let transcriptUrl = releaseData.transcriptUrl;
-      if (releaseData.transcriptFile) {
-        try {
-          const transcriptTags = await uploadFile(releaseData.transcriptFile);
-          transcriptUrl = transcriptTags[0][1];
-        } catch (error) {
-          throw new Error(`Failed to upload transcript file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
-
-      // Use the provided release identifier to preserve the same addressable event
-      // This ensures comments and other references remain linked to the same release
 
       // Fetch the original release to preserve its publication date
       let originalPubdate: string | undefined;
@@ -284,41 +238,38 @@ export function useUpdateRelease() {
         console.warn('Could not fetch original release for pubdate preservation:', error);
       }
 
-      // Fallback to current time if no original pubdate found (for releases created before this feature)
+      // Fallback to current time if no original pubdate found
       const pubdate = originalPubdate || new Date().toUTCString();
 
       // Build tags for updated addressable podcast release (kind 30054)
       const tags: Array<[string, ...string[]]> = [
         ['d', releaseIdentifier], // Preserve the original addressable event identifier
-        ['title', releaseData.title], // release title
-        ['audio', audioUrl, audioType || 'audio/mpeg'], // Audio URL with media type
+        ['title', releaseData.title], // Release title
         ['pubdate', pubdate], // Preserve original publication date
         ['alt', `Updated podcast release: ${releaseData.title}`], // NIP-31 alt tag
         ['edit', releaseId] // Reference to the original event being edited
       ];
 
-      // Add optional tags per NIP-54
+      // Add audio tracks
+      processedTracks.forEach((track) => {
+        tags.push(['audio', track.audioUrl, track.audioType]);
+        
+        if (track.duration && track.duration > 0) {
+          tags.push(['duration', track.duration.toString()]);
+        }
+        
+        if (track.explicit) {
+          tags.push(['explicit', 'true']);
+        }
+      });
+
+      // Add optional tags
       if (releaseData.description) {
         tags.push(['description', releaseData.description]);
       }
 
       if (imageUrl) {
         tags.push(['image', imageUrl]);
-      }
-
-      // Add video enclosure if provided
-      if (videoUrl) {
-        tags.push(['video', videoUrl, videoType || 'video/mp4']);
-      }
-
-      // Add duration if provided
-      if (releaseData.duration && releaseData.duration > 0) {
-        tags.push(['duration', releaseData.duration.toString()]);
-      }
-
-      // Add transcript URL if provided
-      if (transcriptUrl) {
-        tags.push(['transcript', transcriptUrl]);
       }
 
       // Add topic tags
@@ -331,11 +282,11 @@ export function useUpdateRelease() {
       // Create the updated event
       const event = await createEvent({
         kind: PODCAST_KINDS.EPISODE,
-        content: releaseData.content || '',
+        content: '',
         tags
       });
 
-      // Invalidate queries (don't await - let them happen in background)
+      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['podcast-releases'] });
       queryClient.invalidateQueries({ queryKey: ['podcast-release', releaseId] });
       queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });

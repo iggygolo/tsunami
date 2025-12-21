@@ -70,22 +70,22 @@ export interface ExternalReference {
 export interface ReleaseFormData {
   title: string;
   description: string;
-  content?: string;
+  tags: string[];
+  imageFile?: File;
+  imageUrl?: string;
+  tracks: TrackFormData[];
+}
+
+/**
+ * Track information
+ */
+export interface TrackFormData {
+  title: string;
   audioFile?: File;
   audioUrl?: string;
   audioType?: string;
-  videoFile?: File;
-  videoUrl?: string;
-  videoType?: string;
-  imageFile?: File;
-  imageUrl?: string;
-  transcriptFile?: File;
-  transcriptUrl?: string;
-  transcriptType?: string;
   duration?: number;
   explicit?: boolean;
-  tags: string[];
-  externalRefs?: ExternalReference[];
 }
 
 /**

@@ -274,17 +274,17 @@ export function ReleaseEditDialog({
       const releaseData: ReleaseFormData = {
         ...data,
         description: data.description || '',
-        audioFile: audioFile || undefined,
-        videoFile: videoFile || undefined,
         imageFile: imageFile || undefined,
-        transcriptFile: transcriptFile || undefined,
-        // Clean up empty URL strings
-        audioUrl: data.audioUrl || undefined,
-        videoUrl: data.videoUrl || undefined,
         imageUrl: data.imageUrl || undefined,
-        transcriptUrl: data.transcriptUrl || undefined,
-        // Keep existing external references
-        externalRefs: release.externalRefs,
+        tags: data.tags || [],
+        tracks: [
+          {
+            title: data.title,
+            audioUrl: data.audioUrl || undefined,
+            duration: data.duration,
+            explicit: data.explicit || false,
+          }
+        ]
       };
 
       console.log('Calling updateRelease with:', { releaseId: release.eventId, releaseIdentifier: release.identifier, releaseData });

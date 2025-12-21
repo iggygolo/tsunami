@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Upload, X, Plus } from 'lucide-react';
+import { Upload, X, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,15 +18,19 @@ import { isArtist } from '@/lib/podcastConfig';
 import { getAudioDuration, formatDurationHuman } from '@/lib/audioDuration';
 import type { ReleaseFormData } from '@/types/podcast';
 
+const trackSchema = z.object({
+  title: z.string().min(1, 'Track title is required').max(200, 'Track title too long'),
+  audioUrl: z.string().url().optional().or(z.literal('')),
+  duration: z.number().optional(),
+  explicit: z.boolean().default(false),
+});
+
 const releaseSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+  imageUrl: z.string().url().or(z.literal('')),
   description: z.string().max(1000, 'Description too long'),
-  content: z.string().optional(),
-  audioUrl: z.string().url().optional().or(z.literal('')),
-  imageUrl: z.string().url().optional().or(z.literal('')),
-  duration: z.number().positive().optional(),
-  explicit: z.boolean().default(false),
   tags: z.array(z.string()).default([]),
+  tracks: z.array(trackSchema).min(1, 'At least one track is required'),
 });
 
 type ReleaseFormValues = z.infer<typeof releaseSchema>;
@@ -43,29 +47,38 @@ export function PublishReleaseForm({
   className 
 }: PublishReleaseFormProps) {
   const { user } = useCurrentUser();
-  const { mutateAsync: publishrelease, isPending } = usePublishRelease();
+  const { mutateAsync: publishRelease, isPending } = usePublishRelease();
   const { toast } = useToast();
   
-  const [audioFile, setAudioFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [currentTag, setCurrentTag] = useState('');
-  const [isDetectingDuration, setIsDetectingDuration] = useState(false);
+  const [trackAudioFiles, setTrackAudioFiles] = useState<Record<number, File>>({});
+  const [detectingDurations, setDetectingDurations] = useState<Record<number, boolean>>({});
 
   const form = useForm<ReleaseFormValues>({
     resolver: zodResolver(releaseSchema),
     defaultValues: {
       title: '',
       description: '',
-      content: '',
-      audioUrl: '',
-      imageUrl: '',
-      explicit: false,
       tags: [],
+      imageUrl: '',
+      tracks: [
+        {
+          title: '',
+          audioUrl: '',
+          duration: undefined,
+          explicit: false,
+        }
+      ],
     },
   });
 
-  const { watch, setValue } = form;
+  const { watch, setValue, control } = form;
   const tags = watch('tags');
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'tracks',
+  });
 
   // Check if user is the artist
   if (!user || !isArtist(user.pubkey)) {
@@ -80,7 +93,7 @@ export function PublishReleaseForm({
     );
   }
 
-  const handleAudioFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTrackAudioFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type
@@ -103,14 +116,14 @@ export function PublishReleaseForm({
         return;
       }
 
-      setAudioFile(file);
-      setValue('audioUrl', '');
+      setTrackAudioFiles(prev => ({ ...prev, [index]: file }));
+      setValue(`tracks.${index}.audioUrl`, '');
 
       // Detect audio duration
-      setIsDetectingDuration(true);
+      setDetectingDurations(prev => ({ ...prev, [index]: true }));
       try {
         const duration = await getAudioDuration(file);
-        setValue('duration', duration);
+        setValue(`tracks.${index}.duration`, duration);
 
         toast({
           title: 'Audio file selected',
@@ -123,7 +136,7 @@ export function PublishReleaseForm({
           variant: 'default',
         });
       } finally {
-        setIsDetectingDuration(false);
+        setDetectingDurations(prev => ({ ...prev, [index]: false }));
       }
     }
   };
@@ -182,30 +195,34 @@ export function PublishReleaseForm({
   const onSubmit = async (data: ReleaseFormValues) => {
     try {
       console.log('Form submission data:', data);
-      console.log('Audio file:', audioFile);
+      console.log('Track audio files:', trackAudioFiles);
       console.log('Image file:', imageFile);
       
-      // Validate that we have either audio file or URL
-      if (!audioFile && !data.audioUrl) {
-        toast({
-          title: 'Audio required',
-          description: 'Please provide either an audio file or audio URL.',
-          variant: 'destructive',
-        });
-        return;
+      // Validate that each track has either audio file or URL
+      for (let i = 0; i < data.tracks.length; i++) {
+        if (!trackAudioFiles[i] && !data.tracks[i].audioUrl) {
+          toast({
+            title: 'Audio required',
+            description: `Track ${i + 1}: Please provide either an audio file or audio URL.`,
+            variant: 'destructive',
+          });
+          return;
+        }
       }
       
       const releaseData: ReleaseFormData = {
         ...data,
-        audioFile: audioFile || undefined,
         imageFile: imageFile || undefined,
-        // Clean up empty URL strings
-        audioUrl: data.audioUrl || undefined,
         imageUrl: data.imageUrl || undefined,
+        tracks: data.tracks.map((track, index) => ({
+          ...track,
+          audioFile: trackAudioFiles[index] || undefined,
+          audioUrl: track.audioUrl || undefined,
+        })),
       };
 
       console.log('Publishing release data:', releaseData);
-      const releaseId = await publishrelease(releaseData);
+      const releaseId = await publishRelease(releaseData);
       
       toast({
         title: 'release published!',
@@ -215,9 +232,22 @@ export function PublishReleaseForm({
       onSuccess?.(releaseId);
       
       // Reset form
-      form.reset();
-      setAudioFile(null);
+      form.reset({
+        title: '',
+        description: '',
+        tags: [],
+        imageUrl: '',
+        tracks: [
+          {
+            title: '',
+            audioUrl: '',
+            duration: undefined,
+            explicit: false,
+          }
+        ],
+      });
       setImageFile(null);
+      setTrackAudioFiles({});
       setCurrentTag('');
       
     } catch (error) {
@@ -249,84 +279,11 @@ export function PublishReleaseForm({
               )}
             />
 
-            {/* Description */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Brief description of the release..."
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            {/* Audio Upload/URL */}
-            <div className="space-y-4">
-              <Label>Audio File *</Label>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm text-muted-foreground">Upload Audio File</Label>
-                  <div className="mt-1">
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={handleAudioFileChange}
-                      className="hidden"
-                      id="audio-upload"
-                    />
-                    <label htmlFor="audio-upload">
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400">
-                        <Upload className="w-6 h-6 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm text-gray-500">
-                          {audioFile ? (
-                            <span className="text-green-600 font-medium">
-                              ✓ {audioFile.name}
-                            </span>
-                          ) : (
-                            'Click to upload audio file'
-                          )}
-                        </p>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="audioUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm text-muted-foreground">
-                          Or Enter Audio URL
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="https://example.com/audio.mp3"
-                            disabled={!!audioFile}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
 
             {/* Image Upload/URL */}
             <div className="space-y-4">
-              <Label>Release Artwork (Optional)</Label>
+              <Label>Release Artwork</Label>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -380,36 +337,24 @@ export function PublishReleaseForm({
               </div>
             </div>
 
-            {/* release Details */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duration (seconds)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="3600"
-                        disabled={isDetectingDuration}
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                      />
-                    </FormControl>
-                    {isDetectingDuration && (
-                      <p className="text-sm text-muted-foreground">Detecting duration...</p>
-                    )}
-                    {field.value && (
-                      <p className="text-sm text-muted-foreground">
-                        Duration: {formatDurationHuman(field.value)}
-                      </p>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Description */}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Brief description of the release..."
+                      rows={3}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Tags */}
             <div className="space-y-3">
@@ -445,27 +390,171 @@ export function PublishReleaseForm({
               )}
             </div>
 
-            {/* Explicit Content */}
-            <FormField
-              control={form.control}
-              name="explicit"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Explicit Content</FormLabel>
-                    <div className="text-sm text-muted-foreground">
-                      Mark if this release contains explicit content
+            {/* Audio Tracks */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Audio Tracks *</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({
+                    title: '',
+                    audioUrl: '',
+                    duration: undefined,
+                    explicit: false,
+                  })}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Track
+                </Button>
+              </div>
+
+              {fields.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                  No tracks added yet. Click "Add Track" to get started.
+                </div>
+              )}
+
+              {fields.map((field, index) => (
+                <Card key={field.id} className="p-4">
+                  <div className="space-y-4">
+                    {/* Track Title */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <FormField
+                          control={form.control}
+                          name={`tracks.${index}.title`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Track Title {index + 1} *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter track title..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive mt-8"
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Audio Upload/URL */}
+                    <div className="space-y-3">
+                      <Label className="text-sm">Audio File *</Label>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm text-muted-foreground">Upload Audio File</Label>
+                          <div className="mt-1">
+                            <input
+                              type="file"
+                              accept="audio/*"
+                              onChange={(e) => handleTrackAudioFileChange(index, e)}
+                              className="hidden"
+                              id={`audio-upload-${index}`}
+                            />
+                            <label htmlFor={`audio-upload-${index}`}>
+                              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400">
+                                <Upload className="w-6 h-6 mx-auto mb-2 text-gray-400" />
+                                <p className="text-sm text-gray-500">
+                                  {trackAudioFiles[index] ? (
+                                    <span className="text-green-600 font-medium">
+                                      ✓ {trackAudioFiles[index].name}
+                                    </span>
+                                  ) : (
+                                    'Click to upload audio file'
+                                  )}
+                                </p>
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div>
+                          <FormField
+                            control={form.control}
+                            name={`tracks.${index}.audioUrl`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm text-muted-foreground">
+                                  Or Enter Audio URL
+                                </FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="https://example.com/audio.mp3"
+                                    disabled={!!trackAudioFiles[index]}
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Duration and Explicit */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`tracks.${index}.duration`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Duration (seconds)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="3600"
+                                disabled={detectingDurations[index]}
+                                {...field}
+                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              />
+                            </FormControl>
+                            {detectingDurations[index] && (
+                              <p className="text-sm text-muted-foreground">Detecting duration...</p>
+                            )}
+                            {field.value && (
+                              <p className="text-sm text-muted-foreground">
+                                Duration: {formatDurationHuman(field.value)}
+                              </p>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name={`tracks.${index}.explicit`}
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 mt-8">
+                            <FormLabel className="text-sm">Explicit</FormLabel>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
                     </div>
                   </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+                </Card>
+              ))}
+            </div>
 
             {/* Form Actions */}
             <div className="flex justify-end space-x-3">
