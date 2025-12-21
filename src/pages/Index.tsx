@@ -17,6 +17,7 @@ import { useLatestRelease, useReleases } from '@/hooks/usePodcastReleases';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import Footer from '@/components/Footer';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useArtistPosts, useArtistPostCount } from '@/hooks/useArtistPosts';
 import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
@@ -356,10 +357,8 @@ const Index = () => {
           </section>
 
           {/* Footer */}
-          <div className="text-center pt-4">
-            <p className="text-sm text-muted-foreground">
-              {podcastConfig.podcast.copyright}
-            </p>
+          <div className="pt-4">
+            <Footer />
           </div>
         </div>
       </div>
