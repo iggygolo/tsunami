@@ -113,7 +113,9 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         error: null
       }));
 
-      audio.src = release.audioUrl;
+      console.log('Loading new release:', release);
+
+      audio.src = release.tracks[0].audioUrl;
       audio.load();
     }
 

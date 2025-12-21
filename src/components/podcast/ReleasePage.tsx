@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useSeoMeta } from '@unhead/react';
-import { Clock, Calendar, ArrowLeft, Headphones, BookOpen, ExternalLink, ChevronDown, ChevronUp, Video } from 'lucide-react';
+import { Clock, Calendar, ArrowLeft, Headphones, BookOpen, ExternalLink, ChevronDown, ChevronUp, Play } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useNostr } from '@nostrify/react';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
+import { eventToPodcastRelease } from '@/hooks/usePodcastReleases';
 import type { PodcastRelease } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -37,7 +38,6 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   const podcastConfig = usePodcastConfig();
   const [showComments, setShowComments] = useState(true);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
 
   // Query for the release event
   const { data: releaseEvent, isLoading } = useQuery<NostrEvent | null>({
@@ -87,74 +87,10 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
     enabled: !!(eventId || addressableEvent)
   });
 
-  // Convert NostrEvent to PodcastRelease format (NIP-54) - memoized to prevent unnecessary re-renders
+  // Convert NostrEvent to PodcastRelease format with tracks - memoized to prevent unnecessary re-renders
   const release: PodcastRelease | null = useMemo(() => {
     if (!releaseEvent) return null;
-
-    const tags = new Map(releaseEvent.tags.map(([key, ...values]) => [key, values]));
-
-    const title = tags.get('title')?.[0] || 'Untitled release';
-    const description = tags.get('description')?.[0] || '';
-    const imageUrl = tags.get('image')?.[0] || '';
-
-    // Extract audio URL and type from audio tag (NIP-54 format)
-    const audioTag = tags.get('audio');
-    const audioUrl = audioTag?.[0] || '';
-    const audioType = audioTag?.[1] || 'audio/mpeg';
-
-    // Extract video URL and type from video tag
-    const videoTag = tags.get('video');
-    const videoUrl = videoTag?.[0];
-    const videoType = videoTag?.[1];
-
-    // Extract all 't' tags for topics
-    const topicTags = releaseEvent.tags
-      .filter(([name]) => name === 't')
-      .map(([, value]) => value);
-
-    // Extract identifier from 'd' tag (for addressable events)
-    // CRITICAL: This must match the logic used everywhere else in the app
-    const identifier = tags.get('d')?.[0] || releaseEvent.id;
-
-    // Extract duration from tag
-    const durationStr = tags.get('duration')?.[0];
-    const duration = durationStr ? parseInt(durationStr, 10) : undefined;
-
-    // Extract publication date from pubdate tag with fallback to created_at
-    const pubdateStr = tags.get('pubdate')?.[0];
-    let publishDate: Date;
-    try {
-      publishDate = pubdateStr ? new Date(pubdateStr) : new Date(releaseEvent.created_at * 1000);
-    } catch {
-      publishDate = new Date(releaseEvent.created_at * 1000);
-    }
-
-    // Extract transcript URL from tag
-    const transcriptUrl = tags.get('transcript')?.[0];
-
-    return {
-      id: releaseEvent.id,
-      eventId: releaseEvent.id,
-      title,
-      description,
-      content: releaseEvent.content,
-      artistPubkey: releaseEvent.pubkey,
-      identifier,
-      audioUrl,
-      audioType,
-      videoUrl,
-      videoType,
-      imageUrl,
-      publishDate,
-      createdAt: new Date(releaseEvent.created_at * 1000),
-      duration,
-      explicit: false, // Can be extended later if needed
-      tags: topicTags,
-      transcriptUrl,
-      zapCount: 0,
-      commentCount: 0,
-      repostCount: 0
-    };
+    return eventToPodcastRelease(releaseEvent);
   }, [releaseEvent]);
 
   // Fetch transcript content if URL is available
@@ -286,12 +222,6 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                 )}
 
                 <div className="flex-1 min-w-0 space-y-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {release.explicit && (
-                      <Badge variant="destructive">Explicit</Badge>
-                    )}
-                  </div>
-
                   <CardTitle className="text-2xl lg:text-3xl">
                     {release.title}
                   </CardTitle>
@@ -301,13 +231,6 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                       <Calendar className="w-4 h-4" />
                       <span>{formatDistanceToNow(release.publishDate, { addSuffix: true })}</span>
                     </div>
-
-                    {release.duration && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{formatDuration(release.duration)}</span>
-                      </div>
-                    )}
                   </div>
 
                   {release.tags.length > 0 && (
@@ -348,31 +271,20 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                 <div className="flex items-center gap-3">
                   <Button
                     onClick={() => {
-                      if (release.audioUrl) {
+                      if (release.tracks && release.tracks.length > 0) {
                         playRelease(release);
                       }
                     }}
-                    disabled={!release.audioUrl}
+                    disabled={!release.tracks || release.tracks.length === 0}
                     className="flex items-center gap-2"
                   >
                     <Headphones className="w-4 h-4" />
                     Listen Now
                   </Button>
 
-                  {release.videoUrl && (
-                    <Button
-                      onClick={() => setShowVideo(!showVideo)}
-                      variant="secondary"
-                      className="flex items-center gap-2"
-                    >
-                      <Video className="w-4 h-4" />
-                      {showVideo ? 'Hide Video' : 'Watch Video'}
-                    </Button>
-                  )}
-
-                  {!release.audioUrl && !release.videoUrl && (
+                  {!release.tracks || release.tracks.length === 0 && (
                     <p className="text-sm text-muted-foreground">
-                      No media available
+                      No tracks available
                     </p>
                   )}
                 </div>
@@ -387,17 +299,53 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
             </CardContent>
           </Card>
 
-          {/* Video Player Section */}
-          {showVideo && release.videoUrl && (
+          {/* Tracklist Section */}
+          {release.tracks && release.tracks.length > 0 && (
             <Card>
-              <CardContent className="p-0">
-                <video
-                  controls
-                  className="w-full aspect-video"
-                >
-                  <source src={release.videoUrl} type={release.videoType || 'video/mp4'} />
-                  Your browser does not support the video tag.
-                </video>
+              <CardHeader>
+                <CardTitle>Tracklist ({release.tracks.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {release.tracks.map((track, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group cursor-pointer">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-muted group-hover:bg-primary/10">
+                          <span className="text-sm font-medium text-muted-foreground group-hover:text-primary">
+                            {index + 1}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {track.title || `Track ${index + 1}`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {track.duration && (
+                          <span className="text-xs text-muted-foreground">
+                            {formatDuration(track.duration)}
+                          </span>
+                        )}
+                        {track.explicit && (
+                          <Badge variant="outline" className="text-xs">
+                            Explicit
+                          </Badge>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Play className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -460,24 +408,9 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
           {showComments && (
             <Card>
               <CardContent className="pt-6">
-                {release ? (
+                {release && releaseEvent ? (
                   <CommentsSection
-                    root={{
-                      id: release.eventId,
-                      pubkey: release.artistPubkey,
-                      created_at: Math.floor(release.createdAt.getTime() / 1000),
-                      kind: 30054,
-                      tags: [
-                        ['d', release.identifier], // Use the extracted identifier, not the raw event's d tag
-                        ['title', release.title],
-                        ['audio', release.audioUrl, release.audioType || 'audio/mpeg'],
-                        ...(release.description ? [['description', release.description]] : []),
-                        ...(release.imageUrl ? [['image', release.imageUrl]] : []),
-                        ...release.tags.map(tag => ['t', tag])
-                      ],
-                      content: release.content || '',
-                      sig: ''
-                    }}
+                    root={releaseEvent}
                     title="Release Discussion"
                     emptyStateMessage="No comments yet"
                     emptyStateSubtitle="Be the first to share your thoughts about this release!"

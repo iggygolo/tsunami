@@ -6,16 +6,11 @@ import type { NostrEvent } from '@nostrify/nostrify';
 export interface PodcastRelease {
   id: string;
   title: string;
+  imageUrl?: string;
   description?: string;
   content?: string;
-  audioUrl: string;
-  audioType?: string;
-  videoUrl?: string;
-  videoType?: string;
-  imageUrl?: string;
-  duration?: number; // in seconds
+  tracks: ReleaseTrack[];
   publishDate: Date;
-  explicit?: boolean;
   tags: string[];
   // Transcript as URL references
   transcriptUrl?: string;
@@ -31,6 +26,14 @@ export interface PodcastRelease {
   totalSats?: number;
   commentCount?: number;
   repostCount?: number;
+}
+
+export interface ReleaseTrack {
+  title: string;
+  audioUrl: string;
+  audioType?: string;
+  duration?: number;
+  explicit?: boolean;
 }
 
 /**

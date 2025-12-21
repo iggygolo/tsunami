@@ -11,7 +11,7 @@ import { encodeReleaseAsNaddr } from '../src/lib/nip19Utils.js';
 
 // Copied from podcastConfig.ts to avoid import.meta.env issues
 const PODCAST_KINDS = {
-  EPISODE: 30054, // Addressable Podcast releases (editable, replaceable)
+  RELEASE: 30054, // Addressable Podcast releases (editable, replaceable)
   TRAILER: 30055, // Addressable Podcast trailers (editable, replaceable)
   ARTIST_METADATA: 30078, // Artist metadata (addressable event)
 } as const;
@@ -197,7 +197,7 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
  * Validates if a Nostr event is a valid podcast release
  */
 function validatePodcastRelease(event: NostrEvent, artistPubkeyHex: string): boolean {
-  if (event.kind !== PODCAST_KINDS.EPISODE) return false;
+  if (event.kind !== PODCAST_KINDS.RELEASE) return false;
 
   // Check for required title tag
   const title = event.tags.find(([name]) => name === 'title')?.[1];
@@ -413,7 +413,7 @@ async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay:
     try {
       const events = await Promise.race([
         relay.query([{
-          kinds: [PODCAST_KINDS.EPISODE],
+          kinds: [PODCAST_KINDS.RELEASE],
           authors: [artistPubkeyHex],
           limit: 100
         }]),

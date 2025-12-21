@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { PODCAST_KINDS, getArtistPubkeyHex } from '@/lib/podcastConfig';
-import { usePodcastReleases } from '@/hooks/usePodcastReleases';
+import { useReleases } from '@/hooks/usePodcastReleases';
 import { usePodcastTrailers } from '@/hooks/usePodcastTrailers';
 import type { PodcastRelease } from '@/types/podcast';
 
@@ -40,7 +40,7 @@ interface PodcastAnalytics {
 export function usePodcastAnalytics() {
   const { nostr } = useNostr();
   const artistPubkeyHex = getArtistPubkeyHex();
-  const { data: releases } = usePodcastReleases();
+  const { data: releases } = useReleases();
   const { data: trailers } = usePodcastTrailers();
 
   return useQuery<PodcastAnalytics>({

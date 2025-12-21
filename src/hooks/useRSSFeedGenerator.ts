@@ -9,7 +9,7 @@ import type { NostrEvent } from '@nostrify/nostrify';
  * Validates if a Nostr event is a valid podcast release (NIP-54)
  */
 function validatePodcastRelease(event: NostrEvent): boolean {
-  if (event.kind !== PODCAST_KINDS.EPISODE) return false;
+  if (event.kind !== PODCAST_KINDS.RELEASE) return false;
 
   // Check for required title tag (NIP-54)
   const title = event.tags.find(([name]) => name === 'title')?.[1];
@@ -95,7 +95,7 @@ export function useRSSFeedGenerator() {
         // Fetch podcast releases (kind 54 for NIP-54 podcast releases)
         const events = await nostr.query([
           {
-            kinds: [PODCAST_KINDS.EPISODE],
+            kinds: [PODCAST_KINDS.RELEASE],
             authors: [getArtistPubkeyHex()],
             limit: 100,
           }

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ReleaseCard } from './ReleaseCard';
-import { usePodcastReleases } from '@/hooks/usePodcastReleases';
+import { useReleases } from '@/hooks/usePodcastReleases';
 import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
 
 interface ReleaseListProps {
@@ -33,7 +33,7 @@ export function ReleaseList({
   });
   const _currentRelease = useState<PodcastRelease | null>(null);
 
-  const { data: releases, isLoading, error } = usePodcastReleases(searchOptions);
+  const { data: releases, isLoading, error } = useReleases(searchOptions);
 
   const handleSearch = (query: string) => {
     setSearchOptions(prev => ({ ...prev, query: query || undefined }));

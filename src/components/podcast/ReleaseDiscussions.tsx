@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { NoteContent } from '@/components/NoteContent';
 import { useAuthor } from '@/hooks/useAuthor';
-import { usePodcastReleases } from '@/hooks/usePodcastReleases';
+import { useReleases } from '@/hooks/usePodcastReleases';
 import { encodeEventIdAsNevent } from '@/lib/nip19Utils';
 import { genUserName } from '@/lib/genUserName';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -28,7 +28,7 @@ interface ReleaseDiscussionsProps {
 
 export function ReleaseDiscussions({ limit = 20, className }: ReleaseDiscussionsProps) {
   const { nostr } = useNostr();
-  const { data: releases } = usePodcastReleases();
+  const { data: releases } = useReleases();
 
   // Fetch all comments for podcast releases
   const { data: commentsData, isLoading, error } = useQuery({

@@ -71,7 +71,7 @@ The `useRSSFeedGenerator` hook:
 ```typescript
 // Fetch NIP-54 podcast releases
 const events = await nostr.query([{
-  kinds: [PODCAST_KINDS.EPISODE], // kind:30054
+  kinds: [PODCAST_KINDS.RELEASE], // kind:30054
   authors: [getArtistPubkeyHex()],
   limit: 100
 }]);

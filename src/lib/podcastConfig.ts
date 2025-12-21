@@ -170,7 +170,7 @@ export const PODCAST_CONFIG: PodcastConfig = {
  */
 export const PODCAST_KINDS = {
   /** Addressable Podcast releases (editable, replaceable) */
-  EPISODE: 30054,
+  RELEASE: 30054,
   /** Addressable Podcast trailers (editable, replaceable) */
   TRAILER: 30055,
   /** NIP-22: Comments on podcast releases */

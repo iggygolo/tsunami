@@ -299,7 +299,7 @@ export function ReleaseEditDialog({
 
       // Invalidate release queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['release'] });
-      queryClient.invalidateQueries({ queryKey: ['podcast-releases'] });
+      queryClient.invalidateQueries({ queryKey: ['releases'] });
       queryClient.invalidateQueries({ queryKey: ['podcast-release'] });
 
       toast({

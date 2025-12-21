@@ -1,23 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { NostrEvent } from '@nostrify/nostrify';
-import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
+import type { PodcastRelease, ReleaseSearchOptions, ReleaseTrack } from '@/types/podcast';
 import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 
 /**
  * Validates if a Nostr event is a valid podcast release (NIP-54)
  */
-function validatePodcastRelease(event: NostrEvent): boolean {
-  if (event.kind !== PODCAST_KINDS.EPISODE) return false;
+function validateRelease(event: NostrEvent): boolean {
+  if (event.kind !== PODCAST_KINDS.RELEASE) return false;
 
   // Check for required title tag (NIP-54)
   const title = event.tags.find(([name]) => name === 'title')?.[1];
   if (!title) return false;
-
-  // Check for required audio tag (NIP-54)
-  const audio = event.tags.find(([name]) => name === 'audio')?.[1];
-  if (!audio) return false;
 
   // Verify it's from the music artist
   if (event.pubkey !== getArtistPubkeyHex()) return false;
@@ -42,22 +38,34 @@ function getOriginalEventId(event: NostrEvent): string | undefined {
 /**
  * Converts a validated Nostr event to a PodcastRelease object
  */
-function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
+export function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
   const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
 
   const title = tags.get('title')?.[0] || 'Untitled Release';
   const description = tags.get('description')?.[0];
   const imageUrl = tags.get('image')?.[0];
 
-  // Extract audio URL and type from audio tag (NIP-54 format)
-  const audioTag = tags.get('audio');
-  const audioUrl = audioTag?.[0] || '';
-  const audioType = audioTag?.[1] || 'audio/mpeg';
+  // Parse tracklist from event content (JSON array of tracks)
+  let tracks: ReleaseTrack[] = [];
 
-  // Extract video URL and type from video tag
-  const videoTag = tags.get('video');
-  const videoUrl = videoTag?.[0];
-  const videoType = videoTag?.[1];
+  try {
+    if (event.content) {
+      const parsed = JSON.parse(event.content);
+      if (Array.isArray(parsed)) {
+        tracks = parsed.map((track): ReleaseTrack => ({
+          title: track.title || '',
+          audioUrl: track.audioUrl || '',
+          audioType: track.audioType || 'audio/mpeg',
+          duration: track.duration,
+          explicit: track.explicit || false,
+        }));
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to parse tracklist from event content:', error);
+  }
+
+  console.log('Parsed tracks:', tracks);
 
   // Extract all 't' tags for topics
   const topicTags = event.tags
@@ -66,10 +74,6 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
 
   // Extract identifier from 'd' tag (for addressable events)
   const identifier = tags.get('d')?.[0] || event.id; // Fallback to event ID for backward compatibility
-
-  // Extract duration from tag
-  const durationStr = tags.get('duration')?.[0];
-  const duration = durationStr ? parseInt(durationStr, 10) : undefined;
 
   // Extract publication date from pubdate tag with fallback to created_at
   const pubdateStr = tags.get('pubdate')?.[0];
@@ -88,14 +92,8 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
     title,
     description,
     content: undefined,
-    audioUrl,
-    audioType,
-    videoUrl,
-    videoType,
     imageUrl,
-    duration,
     publishDate,
-    explicit: false, // Can be extended later if needed
     tags: topicTags,
     transcriptUrl,
     externalRefs: [],
@@ -103,28 +101,31 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
     artistPubkey: event.pubkey,
     identifier,
     createdAt: new Date(event.created_at * 1000),
+    tracks: tracks,
   };
 }
 
 /**
  * Hook to fetch all podcast releases from the artist
  */
-export function usePodcastReleases(options: ReleaseSearchOptions = {}) {
+export function useReleases(options: ReleaseSearchOptions = {}) {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['podcast-releases', options],
+    queryKey: ['releases', options],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
       const events = await nostr.query([{
-        kinds: [PODCAST_KINDS.EPISODE],
+        kinds: [PODCAST_KINDS.RELEASE],
         authors: [getArtistPubkeyHex()],
         limit: options.limit || 100
       }], { signal });
 
       // Filter and validate events
-      const validEvents = events.filter(validatePodcastRelease);
+      const validEvents = events.filter(validateRelease);
+
+      console.log('Fetched releases:', validEvents);
 
       // Deduplicate releases by title - keep only the latest version of each title
       const releasesByTitle = new Map<string, NostrEvent>();
@@ -279,7 +280,7 @@ export function usePodcastRelease(releaseEventsId: string) {
       }], { signal });
 
       const event = events[0];
-      if (!event || !validatePodcastRelease(event)) {
+      if (!event || !validateRelease(event)) {
         return null;
       }
 
@@ -295,7 +296,7 @@ export function usePodcastRelease(releaseEventsId: string) {
  * Uses the same query as the Recent Releases section to ensure cache consistency
  */
 export function useLatestRelease() {
-  const { data: releaseEventss, ...rest } = usePodcastReleases({
+  const { data: releaseEventss, ...rest } = useReleases({
     limit: 50, // Use a reasonable default that covers most use cases
     sortBy: 'date',
     sortOrder: 'desc'
@@ -311,7 +312,7 @@ export function useLatestRelease() {
  * Hook to get podcast statistics
  */
 export function usePodcastStats() {
-  const { data: releaseEventss } = usePodcastReleases();
+  const { data: releaseEventss } = useReleases();
 
   return useQuery({
     queryKey: ['podcast-stats', releaseEventss?.length],

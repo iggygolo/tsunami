@@ -39,7 +39,7 @@ function inferAudioType(urlString: string, fileType?: string): string {
 async function processTrack(
   track: TrackFormData,
   uploadFile: (file: File) => Promise<Array<string[]>>
-): Promise<{ audioUrl: string; audioType: string; duration?: number; explicit: boolean }> {
+): Promise<TrackFormData> {
   let audioUrl = track.audioUrl;
   let audioType = track.audioType;
 
@@ -65,6 +65,7 @@ async function processTrack(
   }
 
   return {
+    title: track.title,
     audioUrl,
     audioType: audioType || 'audio/mpeg',
     duration: track.duration,
@@ -124,19 +125,6 @@ export function usePublishRelease() {
         ['alt', `Music release: ${releaseData.title}`] // NIP-31 alt tag
       ];
 
-      // Add audio tracks
-      processedTracks.forEach((track) => {
-        tags.push(['audio', track.audioUrl, track.audioType]);
-        
-        if (track.duration && track.duration > 0) {
-          tags.push(['duration', track.duration.toString()]);
-        }
-        
-        if (track.explicit) {
-          tags.push(['explicit', 'true']);
-        }
-      });
-
       // Add optional tags
       if (releaseData.description) {
         tags.push(['description', releaseData.description]);
@@ -155,13 +143,13 @@ export function usePublishRelease() {
 
       // Create and publish the event
       const event = await createEvent({
-        kind: PODCAST_KINDS.EPISODE,
-        content: '',
+        kind: PODCAST_KINDS.RELEASE,
+        content: JSON.stringify(processedTracks), // Tracklist as JSON string
         tags
       });
 
       // Invalidate related queries to refresh the UI
-      await queryClient.invalidateQueries({ queryKey: ['podcast-releases'] });
+      await queryClient.invalidateQueries({ queryKey: ['releases'] });
       await queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
       await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 
@@ -250,19 +238,6 @@ export function useUpdateRelease() {
         ['edit', releaseId] // Reference to the original event being edited
       ];
 
-      // Add audio tracks
-      processedTracks.forEach((track) => {
-        tags.push(['audio', track.audioUrl, track.audioType]);
-        
-        if (track.duration && track.duration > 0) {
-          tags.push(['duration', track.duration.toString()]);
-        }
-        
-        if (track.explicit) {
-          tags.push(['explicit', 'true']);
-        }
-      });
-
       // Add optional tags
       if (releaseData.description) {
         tags.push(['description', releaseData.description]);
@@ -281,13 +256,13 @@ export function useUpdateRelease() {
 
       // Create the updated event
       const event = await createEvent({
-        kind: PODCAST_KINDS.EPISODE,
-        content: '',
+        kind: PODCAST_KINDS.RELEASE,
+        content: JSON.stringify(processedTracks),
         tags
       });
 
       // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['podcast-releases'] });
+      queryClient.invalidateQueries({ queryKey: ['releases'] });
       queryClient.invalidateQueries({ queryKey: ['podcast-release', releaseId] });
       queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
       queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
@@ -327,14 +302,14 @@ export function useDeleteRelease() {
       // Create a deletion event (NIP-09)
       const event = await createEvent({
         kind: 5, // Deletion event
-        content: 'Deleted podcast release',
+        content: 'Deleted release',
         tags: [
           ['e', releaseId]
         ]
       });
 
       // Invalidate queries
-      await queryClient.invalidateQueries({ queryKey: ['podcast-releases'] });
+      await queryClient.invalidateQueries({ queryKey: ['releases'] });
       await queryClient.invalidateQueries({ queryKey: ['podcast-release', releaseId] });
       await queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
       await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });

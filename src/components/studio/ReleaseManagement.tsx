@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { usePodcastReleases } from '@/hooks/usePodcastReleases';
+import { useReleases } from '@/hooks/usePodcastReleases';
 import { useDeleteRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { AudioPlayer } from '@/components/podcast/AudioPlayer';
@@ -70,7 +70,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
   const [releaseToShare, setReleaseToShare] = useState<PodcastRelease | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
 
-  const { data: releases, isLoading, error } = usePodcastReleases(searchOptions);
+  const { data: releases, isLoading, error } = useReleases(searchOptions);
 
   const handleSearch = (query: string) => {
     setSearchOptions(prev => ({ ...prev, query: query || undefined }));
