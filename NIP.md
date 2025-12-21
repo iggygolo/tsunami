@@ -10,7 +10,7 @@ This specification introduces two new addressable event kinds for podcast publis
 - `30054`: Podcast Episodes
 - `30055`: Podcast Trailers
 
-It also describes the use of existing `30078` events for podcast metadata configuration.
+It also describes the use of existing `30078` events for artist metadata configuration.
 
 ## Event Kinds
 
@@ -110,16 +110,15 @@ The content field SHOULD contain the trailer title.
 }
 ```
 
-## Podcast Metadata (Kind 30078)
+## Artist Metadata (Kind 30078)
 
 Podcast publishers SHOULD use `kind 30078` addressable events to store podcast-level metadata and configuration. While this kind is defined in other NIPs, this specification describes its usage in the podcasting context.
 
 #### Recommended Tags for Podcast Metadata
 
 - `d` - Should be set to `"artist-metadata"` for podcast configuration
-- `title` - Podcast title
-- `image` - Podcast artwork URL
-- `description` - Podcast description
+- `artist` - Artist name
+- `description` - Artist desciption
 
 #### Content Field
 
@@ -127,9 +126,8 @@ The content field SHOULD contain a JSON object with podcast metadata including:
 
 ```json
 {
-  "title": "My Podcast",
+  "artist": "John Doe",
   "description": "A podcast about interesting topics",
-  "author": "John Doe",
   "image": "https://example.com/artwork.jpg",
   "website": "https://example.com",
   "copyright": "© 2023 John Doe",

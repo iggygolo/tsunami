@@ -139,7 +139,7 @@ dist/
 ## 🎯 Core Event Types
 
 - **Releases**: `kind 30054` (Addressable/editable podcast releases)
-- **Metadata**: `kind 30078` (Podcast configuration)
+- **Metadata**: `kind 30078` (Artist configuration)
 - **Comments**: `kind 1111` (NIP-22 release comments) 
 - **Social**: `kind 1` (Artist updates and announcements)
 

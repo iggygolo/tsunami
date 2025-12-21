@@ -121,7 +121,7 @@ export function useNip38() {
       
       // Only publish if this is a new release or we weren't playing before
       if (lastPublishedreleaseRef.current !== releaseId || !wasPlaying) {
-        const podcastName = podcastMetadata?.artistName || 'Unknown Podcast';
+        const podcastName = podcastMetadata?.artist || 'Unknown Podcast';
         
         updateNowPlaying({
           release: currentRelease,
@@ -146,7 +146,7 @@ export function useNip38() {
         console.error('Failed to clear now playing status:', error);
       });
     }
-  }, [isPlaying, currentRelease?.eventId, currentRelease, user, podcastMetadata?.artistName, updateNowPlaying, clearNowPlaying]);
+  }, [isPlaying, currentRelease?.eventId, currentRelease, user, podcastMetadata?.artist, updateNowPlaying, clearNowPlaying]);
 
   // Clear status when component unmounts 
   useEffect(() => {

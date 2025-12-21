@@ -156,7 +156,7 @@ const Studio = () => {
   useEffect(() => {
     if (podcastMetadata && !isLoadingMetadata) {
       setFormData({
-        artistName: podcastMetadata.artistName,
+        artistName: podcastMetadata.artist,
         description: podcastMetadata.description,
         image: podcastMetadata.image,
         website: podcastMetadata.website,
@@ -170,11 +170,11 @@ const Studio = () => {
         // Podcasting 2.0 fields
         guid: podcastMetadata.guid || PODCAST_CONFIG.artistNpub,
         medium: podcastMetadata.medium || 'music',
-        publisher: podcastMetadata.publisher || podcastMetadata.artistName,
+        publisher: podcastMetadata.publisher || podcastMetadata.artist,
         location: podcastMetadata.location,
         person: podcastMetadata.person || [
           {
-            name: podcastMetadata.artistName,
+            name: podcastMetadata.artist,
             role: 'artist',
             group: 'cast'
           }
@@ -342,9 +342,6 @@ const Studio = () => {
         };
 
         await createEvent(profileEvent);
-
-        // Invalidate artist cache to force refetch with new profile data
-        queryClient.invalidateQueries({ queryKey: ['artist', getArtistPubkeyHex()] });
       }
 
       // Save podcast metadata if podcast section is being edited
@@ -367,9 +364,8 @@ const Studio = () => {
         });
 
         const podcastMetadataEvent = {
-          kind: PODCAST_KINDS.PODCAST_METADATA, // Addressable podcast metadata event
+          kind: PODCAST_KINDS.ARTIST_METADATA, // Addressable podcast metadata event
           content: JSON.stringify({
-            author: formData.artistName,
             artist: formData.artistName,
             description: formData.description,
             image: formData.image,
@@ -388,9 +384,11 @@ const Studio = () => {
           }),
           tags: [
             ['d', 'artist-metadata'], // Identifier for this type of event
-            ['artist', formData.artistName]
+            ['artist', formData.artistName],
+            ['description', formData.description],
           ],
-          created_at: Math.floor(Date.now() / 1000)
+          // Use current time in seconds, always increment to ensure different event IDs
+          created_at: Math.ceil(Date.now() / 1000)
         };
 
         await createEvent(podcastMetadataEvent);
@@ -453,7 +451,7 @@ const Studio = () => {
 
     if (editingSection === 'podcast' && podcastMetadata) {
       setFormData({
-        artistName: podcastMetadata.artistName,
+        artistName: podcastMetadata.artist,
         description: podcastMetadata.description,
         image: podcastMetadata.image,
         website: podcastMetadata.website,
@@ -467,11 +465,11 @@ const Studio = () => {
         // Podcasting 2.0 fields
         guid: podcastMetadata.guid || PODCAST_CONFIG.artistNpub,
         medium: podcastMetadata.medium || 'music',
-        publisher: podcastMetadata.publisher || podcastMetadata.artistName,
+        publisher: podcastMetadata.publisher || podcastMetadata.artist,
         location: podcastMetadata.location,
         person: podcastMetadata.person || [
           {
-            name: podcastMetadata.artistName,
+            name: podcastMetadata.artist,
             role: 'artist',
             group: 'cast'
           }
@@ -747,41 +745,17 @@ const Studio = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="artist">Artist Name</Label>
+                        <Label htmlFor="artistName">Artist Name</Label>
                         <Input
-                          id="artist"
+                          id="artistName"
                           value={formData.artistName}
-                          onChange={(e) => handleInputChange('artist', e.target.value)}
+                          onChange={(e) => handleInputChange('artistName', e.target.value)}
                           disabled={editingSection !== 'podcast'}
                           placeholder="Enter artist name"
                         />
                       </div>
-                    </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="website">Website</Label>
-                        <Input
-                          id="website"
-                          value={formData.website}
-                          onChange={(e) => handleInputChange('website', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
-                          placeholder="https://example.com"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="copyright">Copyright</Label>
-                        <Input
-                          id="copyright"
-                          value={formData.copyright}
-                          onChange={(e) => handleInputChange('copyright', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
-                          placeholder="© 2025 Podcast Name"
-                        />
-                      </div>
-
-                      <div>
+                                            <div>
                         <Label htmlFor="image">Artist Image</Label>
                         <div className="space-y-2">
                           <Input
@@ -826,6 +800,30 @@ const Studio = () => {
                             )}
                           </div>
                         </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="website">Website</Label>
+                        <Input
+                          id="website"
+                          value={formData.website}
+                          onChange={(e) => handleInputChange('website', e.target.value)}
+                          disabled={editingSection !== 'podcast'}
+                          placeholder="https://example.com"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="copyright">Copyright</Label>
+                        <Input
+                          id="copyright"
+                          value={formData.copyright}
+                          onChange={(e) => handleInputChange('copyright', e.target.value)}
+                          disabled={editingSection !== 'podcast'}
+                          placeholder="© 2025 Podcast Name"
+                        />
                       </div>
                     </div>
                   </div>

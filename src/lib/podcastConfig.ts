@@ -179,8 +179,8 @@ export const PODCAST_KINDS = {
   NOTE: 1,
   /** Profile metadata */
   PROFILE: 0,
-  /** Podcast metadata - using addressable event for podcast-specific config */
-  PODCAST_METADATA: 30078
+  /** Artist metadata - using addressable event for artist-specific config */
+  ARTIST_METADATA: 30078
 } as const;
 
 /**

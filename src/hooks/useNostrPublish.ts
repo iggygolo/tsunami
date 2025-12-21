@@ -29,11 +29,23 @@ export function useNostrPublish(): UseMutationResult<NostrEvent> {
         // Use longer timeout for publishing (15 seconds) to allow relays to respond
         // Even if some relays fail, as long as one succeeds, the event is published
         try {
-          await nostr.event(event, { signal: AbortSignal.timeout(15000) });
+          console.log('Publishing event to relay:', {
+            kind: event.kind,
+            created_at: event.created_at,
+            content_preview: event.content.substring(0, 100),
+            tags: event.tags
+          });
+          
+          const result = await nostr.event(event, { signal: AbortSignal.timeout(15000) });
+          console.log('Relay accepted event:', result);
         } catch (error) {
           // Log error but don't fail - if any relay accepted it, we're good
-          console.warn("Some relays failed to accept the event, but it may have been published:", error);
-          // The event was signed and attempted to publish, so we can still return it
+          console.warn("Relay rejected or failed to accept the event:", {
+            error: error instanceof Error ? error.message : String(error),
+            eventKind: event.kind,
+            eventCreatedAt: event.created_at
+          });
+          throw error;
         }
 
         return event;
@@ -45,7 +57,12 @@ export function useNostrPublish(): UseMutationResult<NostrEvent> {
       console.error("Failed to publish event:", error);
     },
     onSuccess: (data) => {
-      console.log("Event published successfully:", data);
+      console.log("Event published successfully:", {
+        eventId: data.id,
+        kind: data.kind,
+        created_at: data.created_at,
+        timestamp: new Date(data.created_at * 1000).toISOString()
+      });
     },
   });
 }

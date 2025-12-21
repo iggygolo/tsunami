@@ -3,7 +3,7 @@ import { useNostr } from '@nostrify/react';
 import { PODCAST_CONFIG, PODCAST_KINDS, getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 interface PodcastMetadata {
-  artistName: string;
+  artist: string;
   description: string;
   image: string;
   website: string;
@@ -58,14 +58,12 @@ export function usePodcastMetadata() {
 
         const events = await nostr.query([
           {
-            kinds: [PODCAST_KINDS.PODCAST_METADATA], // Addressable podcast metadata event
+            kinds: [PODCAST_KINDS.ARTIST_METADATA], // Addressable podcast metadata event
             authors: [getArtistPubkeyHex()],
             '#d': ['artist-metadata'],
             limit: 10 // Only need the most recent event
           }
         ], { signal });
-
-        console.log('Fetched podcast metadata from Nostr:', events);
 
         if (events.length > 0) {
           // Get the most recent event
@@ -75,10 +73,9 @@ export function usePodcastMetadata() {
 
           const metadata = JSON.parse(latestEvent.content);
 
-          console.log('Fetched podcast metadata from Nostr:', metadata);
-
           return {
             ...metadata,
+            artist: metadata.artist || PODCAST_CONFIG.podcast.artistName,
             updated_at: latestEvent.created_at
           };
         }
@@ -89,7 +86,7 @@ export function usePodcastMetadata() {
       // Fallback to config (includes environment variables)
       return {
         description: PODCAST_CONFIG.podcast.description,
-        artistName: PODCAST_CONFIG.podcast.artistName,
+        artist: PODCAST_CONFIG.podcast.artistName,
         image: PODCAST_CONFIG.podcast.image,
         website: PODCAST_CONFIG.podcast.website,
         copyright: PODCAST_CONFIG.podcast.copyright,
