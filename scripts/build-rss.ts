@@ -13,7 +13,7 @@ import { encodeReleaseAsNaddr } from '../src/lib/nip19Utils.js';
 const PODCAST_KINDS = {
   EPISODE: 30054, // Addressable Podcast releases (editable, replaceable)
   TRAILER: 30055, // Addressable Podcast trailers (editable, replaceable)
-  PODCAST_METADATA: 30078, // Podcast metadata (addressable event)
+  ARTIST_METADATA: 30078, // Artist metadata (addressable event)
 } as const;
 
 // Load environment variables
@@ -92,8 +92,8 @@ function createNodejsConfig() {
         JSON.parse(process.env.VITE_MUSIC_PERSON) :
         [{ name: process.env.VITE_ARTIST_NAME || "Tsunami Artist", role: "artist", group: "cast" }],
       license: {
-        identifier: process.env.VITE_MUSIC_LICENSE_IDENTIFIER || "CC BY 4.0",
-        url: process.env.VITE_MUSIC_LICENSE_URL || "https://creativecommons.org/licenses/by/4.0/"
+        identifier: process.env.VITE_MUSIC_LICENSE_IDENTIFIER || "All Right Reserved",
+        url: process.env.VITE_MUSIC_LICENSE_URL || ""
       }
     },
     rss: {
@@ -353,7 +353,7 @@ async function fetchPodcastMetadataMultiRelay(relays: Array<{url: string, relay:
     try {
       const events = await Promise.race([
         relay.query([{
-          kinds: [PODCAST_KINDS.PODCAST_METADATA],
+          kinds: [PODCAST_KINDS.ARTIST_METADATA],
           authors: [artistPubkeyHex],
           '#d': ['artist-metadata'],
           limit: 5

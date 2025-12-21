@@ -151,8 +151,8 @@ export const PODCAST_CONFIG: PodcastConfig = {
       }
     ]),
     license: {
-      identifier: import.meta.env.VITE_MUSIC_LICENSE_IDENTIFIER || "CC BY 4.0",
-      url: import.meta.env.VITE_MUSIC_LICENSE_URL || "https://creativecommons.org/licenses/by/4.0/"
+      identifier: import.meta.env.VITE_MUSIC_LICENSE_IDENTIFIER || "All Right Reserved",
+      url: import.meta.env.VITE_MUSIC_LICENSE_URL || ""
     },
     txt: parseJsonEnv(import.meta.env.VITE_MUSIC_TXT, undefined),
     remoteItem: parseJsonEnv(import.meta.env.VITE_MUSIC_REMOTE_ITEM, undefined),

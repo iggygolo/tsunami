@@ -124,8 +124,8 @@ const Studio = () => {
       }
     ],
     license: PODCAST_CONFIG.podcast.license || {
-      identifier: 'CC BY 4.0',
-      url: 'https://creativecommons.org/licenses/by/4.0/'
+      identifier: 'All Right Reserved',
+      url: ''
     },
   });
 
@@ -157,8 +157,8 @@ const Studio = () => {
           }
         ],
         license: podcastMetadata.license || {
-          identifier: 'CC BY 4.0',
-          url: 'https://creativecommons.org/licenses/by/4.0/'
+          identifier: 'All Right Reserved',
+          url: ''
         },
       });
     }
