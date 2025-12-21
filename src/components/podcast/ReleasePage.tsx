@@ -34,7 +34,7 @@ interface ReleasePageProps {
 export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   const { nostr } = useNostr();
   const navigate = useNavigate();
-  const { playRelease } = useAudioPlayer();
+  const { playRelease, playTrack, state: playerState } = useAudioPlayer();
   const podcastConfig = usePodcastConfig();
   const [showComments, setShowComments] = useState(true);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
@@ -307,44 +307,58 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {release.tracks.map((track, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group cursor-pointer">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-muted group-hover:bg-primary/10">
-                          <span className="text-sm font-medium text-muted-foreground group-hover:text-primary">
-                            {index + 1}
-                          </span>
+                  {release.tracks.map((track, index) => {
+                    const isCurrentTrack = playerState.currentRelease?.eventId === release.eventId && playerState.currentTrackIndex === index;
+                    const isPlaying = isCurrentTrack && playerState.isPlaying;
+
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => playTrack(release, index)}
+                        className={`flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group cursor-pointer ${isCurrentTrack ? 'bg-primary/5 border-primary/20' : ''}`}
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${isCurrentTrack ? 'bg-primary/10' : 'bg-muted group-hover:bg-primary/10'}`}>
+                            {isPlaying ? (
+                              <span className="text-primary animate-pulse">▶</span>
+                            ) : (
+                              <span className={`text-sm font-medium ${isCurrentTrack ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'}`}>
+                                {index + 1}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-medium truncate ${isCurrentTrack ? 'text-primary' : ''}`}>
+                              {track.title || `Track ${index + 1}`}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {track.title || `Track ${index + 1}`}
-                          </p>
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          {track.duration && (
+                            <span className="text-xs text-muted-foreground">
+                              {formatDuration(track.duration)}
+                            </span>
+                          )}
+                          {track.explicit && (
+                            <Badge variant="outline" className="text-xs">
+                              Explicit
+                            </Badge>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              playTrack(release, index);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Play className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        {track.duration && (
-                          <span className="text-xs text-muted-foreground">
-                            {formatDuration(track.duration)}
-                          </span>
-                        )}
-                        {track.explicit && (
-                          <Badge variant="outline" className="text-xs">
-                            Explicit
-                          </Badge>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Play className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

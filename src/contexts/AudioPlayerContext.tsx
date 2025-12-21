@@ -11,6 +11,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const [state, setState] = useState<AudioPlayerState>({
     currentRelease: null,
+    currentTrackIndex: 0,
     isPlaying: false,
     currentTime: 0,
     duration: 0,
@@ -100,22 +101,25 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   }, []);
 
   // Actions
-  const playRelease = (release: PodcastRelease) => {
+  const playRelease = (release: PodcastRelease, trackIndex: number = 0) => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // If it's a different release, load it
-    if (state.currentRelease?.eventId !== release.eventId) {
+    const validTrackIndex = Math.max(0, Math.min(trackIndex, release.tracks.length - 1));
+
+    // If it's a different release or different track, load it
+    if (state.currentRelease?.eventId !== release.eventId || state.currentTrackIndex !== validTrackIndex) {
       setState(prev => ({
         ...prev,
         currentRelease: release,
+        currentTrackIndex: validTrackIndex,
         currentTime: 0,
         error: null
       }));
 
-      console.log('Loading new release:', release);
+      console.log('Loading track:', validTrackIndex, 'from release:', release.title);
 
-      audio.src = release.tracks[0].audioUrl;
+      audio.src = release.tracks[validTrackIndex].audioUrl;
       audio.load();
     }
 
@@ -128,6 +132,10 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         isLoading: false
       }));
     });
+  };
+
+  const playTrack = (release: PodcastRelease, trackIndex: number) => {
+    playRelease(release, trackIndex);
   };
 
   const play = () => {
@@ -186,15 +194,34 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     audio.playbackRate = clampedRate;
   };
 
+  const nextTrack = () => {
+    if (!state.currentRelease) return;
+    const nextIndex = state.currentTrackIndex + 1;
+    if (nextIndex < state.currentRelease.tracks.length) {
+      playTrack(state.currentRelease, nextIndex);
+    }
+  };
+
+  const previousTrack = () => {
+    if (!state.currentRelease) return;
+    const prevIndex = state.currentTrackIndex - 1;
+    if (prevIndex >= 0) {
+      playTrack(state.currentRelease, prevIndex);
+    }
+  };
+
   const contextValue: AudioPlayerContextType = {
     state,
     playRelease,
+    playTrack,
     play,
     pause,
     stop,
     seekTo,
     setVolume,
     setPlaybackRate,
+    nextTrack,
+    previousTrack,
     audioRef,
   };
 

@@ -60,12 +60,11 @@ export function PersistentAudioPlayer() {
     tags: [
       ['d', releaseIdentifier], // CRITICAL: Must match identifier logic used in ReleasePage
       ['title', release.title],
-      ['audio', release.audioUrl, release.audioType || 'audio/mpeg'],
       ...(release.description ? [['description', release.description]] : []),
       ...(release.imageUrl ? [['image', release.imageUrl]] : []),
       ...release.tags.map(tag => ['t', tag])
     ],
-    content: release.content || '',
+    content: JSON.stringify(release.tracks),
     sig: ''
   };
 
@@ -189,7 +188,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handleSkipBack}
-              disabled={!release.audioUrl}
+              disabled={!release.tracks || release.tracks.length === 0}
               className="h-10 w-10 sm:h-11 sm:w-11 p-0"
             >
               <SkipBack className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -199,7 +198,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handlePlayPause}
-              disabled={!release.audioUrl || state.isLoading}
+              disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
               className="h-12 w-12 sm:h-14 sm:w-14 p-0 bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {state.isPlaying ? (
@@ -213,7 +212,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handleSkipForward}
-              disabled={!release.audioUrl}
+              disabled={!release.tracks || release.tracks.length === 0}
               className="h-10 w-10 sm:h-11 sm:w-11 p-0"
             >
               <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -274,7 +273,7 @@ export function PersistentAudioPlayer() {
                 step={1}
                 onValueChange={handleSeek}
                 className="cursor-pointer"
-                disabled={!release.audioUrl || state.isLoading}
+                disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
               />
             </div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground min-w-0 flex-shrink-0">
