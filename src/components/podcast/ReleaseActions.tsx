@@ -212,8 +212,8 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
         variant="ghost"
         size="sm"
         className={cn(
-          "text-muted-foreground hover:text-blue-500 h-10 px-3 sm:h-8 sm:px-2",
-          showComments && "text-blue-500"
+          "text-muted-foreground hover:text-purple-500 h-10 px-3 sm:h-8 sm:px-2",
+          showComments && "text-purple-500"
         )}
         onClick={onToggleComments}
       >
@@ -268,7 +268,7 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
       <Button
         variant="ghost"
         size="sm"
-        className="text-muted-foreground hover:text-blue-500 h-10 px-3 sm:h-8 sm:px-2"
+        className="text-muted-foreground hover:text-purple-500 h-10 px-3 sm:h-8 sm:px-2"
         onClick={handleShare}
       >
         <Share className="w-5 h-5 sm:w-4 sm:h-4" />

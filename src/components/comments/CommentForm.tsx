@@ -45,11 +45,11 @@ export function CommentForm({
 
   if (!user) {
     return (
-      <Card className={compact ? "border-dashed" : ""}>
+      <Card className={compact ? "border-dashed border-purple-500/20" : "border-purple-500/20"}>
         <CardContent className={compact ? "p-4" : "p-6"}>
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center space-x-2 text-muted-foreground">
-              <MessageSquare className="h-5 w-5" />
+              <MessageSquare className="h-5 w-5 text-purple-500" />
               <span>Sign in to {reply ? 'reply' : 'comment'}</span>
             </div>
             <LoginArea />
@@ -60,14 +60,14 @@ export function CommentForm({
   }
 
   return (
-    <Card className={compact ? "border-dashed" : ""}>
+    <Card className={compact ? "border-dashed border-purple-500/20" : "border-purple-500/20"}>
       <CardContent className={compact ? "p-4" : "p-6"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={placeholder}
-            className={compact ? "min-h-[80px]" : "min-h-[100px]"}
+            className={`${compact ? "min-h-[80px]" : "min-h-[100px]"} focus-visible:ring-purple-500/50`}
             disabled={isPending}
           />
           <div className="flex justify-between items-center">
@@ -78,6 +78,7 @@ export function CommentForm({
               type="submit" 
               disabled={!content.trim() || isPending}
               size={compact ? "sm" : "default"}
+              className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600"
             >
               <Send className="h-4 w-4 mr-2" />
               {isPending ? 'Posting...' : (reply ? 'Reply' : 'Comment')}

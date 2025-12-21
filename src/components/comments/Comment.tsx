@@ -42,17 +42,17 @@ export function Comment({ root, comment, depth = 0, maxDepth = 3, limit }: Comme
   const hasReplies = replies.length > 0;
 
   return (
-    <div className={`space-y-3 ${depth > 0 ? 'ml-6 border-l-2 border-muted pl-4' : ''}`}>
-      <Card className={`bg-card/50 ${isOptimistic ? 'opacity-70 border-dashed border-primary/30' : ''}`}>
+    <div className={`space-y-3 ${depth > 0 ? 'ml-6 border-l-2 border-purple-500/30 pl-4' : ''}`}>
+      <Card className={`bg-card/50 ${isOptimistic ? 'opacity-70 border-dashed border-purple-500/30' : 'border-purple-500/10 hover:border-purple-500/30 transition-colors'}`}>
         <CardContent className="p-4">
           <div className="space-y-3">
             {/* Comment Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-3">
                 <Link to={`/${nip19.npubEncode(comment.pubkey)}`}>
-                  <Avatar className="h-8 w-8 hover:ring-2 hover:ring-primary/30 transition-all cursor-pointer">
+                  <Avatar className="h-8 w-8 hover:ring-2 hover:ring-purple-500/30 transition-all cursor-pointer">
                     <AvatarImage src={metadata?.picture} />
-                    <AvatarFallback className="text-xs">
+                    <AvatarFallback className="text-xs bg-purple-500/10">
                       {displayName.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
@@ -60,7 +60,7 @@ export function Comment({ root, comment, depth = 0, maxDepth = 3, limit }: Comme
                 <div>
                   <Link 
                     to={`/${nip19.npubEncode(comment.pubkey)}`}
-                    className="font-medium text-sm hover:text-primary transition-colors"
+                    className="font-medium text-sm hover:text-purple-500 transition-colors"
                   >
                     {displayName}
                   </Link>
@@ -83,7 +83,7 @@ export function Comment({ root, comment, depth = 0, maxDepth = 3, limit }: Comme
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowReplyForm(!showReplyForm)}
-                  className="h-8 px-2 text-xs"
+                  className="h-8 px-2 text-xs text-muted-foreground hover:text-purple-500"
                 >
                   <MessageSquare className="h-3 w-3 mr-1" />
                   Reply

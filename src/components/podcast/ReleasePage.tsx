@@ -198,18 +198,21 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
           </Button>
 
           {/* Hero Section */}
-          <div className="flex flex-col md:flex-row gap-8 mb-8">
+          <div className="flex flex-col md:flex-row gap-8 mb-10">
             {release.imageUrl && (
-              <img
-                src={release.imageUrl}
-                alt={release.title}
-                className="w-full md:w-64 h-64 rounded-xl object-cover shadow-2xl flex-shrink-0"
-              />
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary via-purple-500 to-pink-500 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity" />
+                <img
+                  src={release.imageUrl}
+                  alt={release.title}
+                  className="relative w-full md:w-64 h-64 rounded-xl object-cover shadow-2xl flex-shrink-0"
+                />
+              </div>
             )}
 
             <div className="flex-1 space-y-4">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-foreground via-primary to-purple-600 bg-clip-text text-transparent">
                   {release.title}
                 </h1>
                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -226,10 +229,19 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
               {release.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {release.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      #{tag}
-                    </Badge>
+                  {release.tags.map((tag, index) => (
+                    <span
+                      key={tag}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-all cursor-default ${
+                        index % 3 === 0 
+                          ? 'bg-primary/10 text-primary hover:bg-primary/20' 
+                          : index % 3 === 1 
+                            ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20'
+                            : 'bg-pink-500/10 text-pink-600 dark:text-pink-400 hover:bg-pink-500/20'
+                      }`}
+                    >
+                      {tag}
+                    </span>
                   ))}
                 </div>
               )}
@@ -244,7 +256,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                     }
                   }}
                   disabled={!release.tracks || release.tracks.length === 0}
-                  className="gap-2"
+                  className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg shadow-primary/25"
                 >
                   <Headphones className="w-5 h-5" />
                   Listen Now
@@ -261,12 +273,12 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
           {/* Tracklist Section */}
           {release.tracks && release.tracks.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">
-                Tracklist
-                <span className="text-muted-foreground font-normal ml-2">({release.tracks.length})</span>
+            <div className="mb-10">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Tracklist</span>
+                <span className="text-muted-foreground font-normal text-base">({release.tracks.length})</span>
               </h2>
-              <div className="space-y-1 rounded-xl border bg-card overflow-hidden">
+              <div className="space-y-1 rounded-xl border bg-gradient-to-br from-card to-purple-500/5 overflow-hidden shadow-sm">
                 {release.tracks.map((track, index) => {
                   const isCurrentTrack = playerState.currentRelease?.eventId === release.eventId && playerState.currentTrackIndex === index;
                   const isPlaying = isCurrentTrack && playerState.isPlaying;
@@ -275,17 +287,17 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                     <div
                       key={index}
                       onClick={() => playTrack(release, index)}
-                      className={`flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer group ${isCurrentTrack ? 'bg-primary/5' : ''} ${index !== 0 ? 'border-t border-border/50' : ''}`}
+                      className={`flex items-center justify-between px-4 py-3 hover:bg-gradient-to-r hover:from-primary/5 hover:to-purple-500/5 transition-all cursor-pointer group ${isCurrentTrack ? 'bg-gradient-to-r from-primary/10 to-purple-500/10' : ''} ${index !== 0 ? 'border-t border-border/50' : ''}`}
                     >
                       <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-colors ${isCurrentTrack ? 'bg-primary text-primary-foreground' : 'bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary'}`}>
+                        <div className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-all ${isCurrentTrack ? 'bg-gradient-to-r from-primary to-purple-600 text-primary-foreground shadow-lg shadow-primary/30' : 'bg-muted group-hover:bg-gradient-to-r group-hover:from-primary/20 group-hover:to-purple-500/20 text-muted-foreground group-hover:text-primary'}`}>
                           {isPlaying ? (
                             <span className="animate-pulse">▶</span>
                           ) : (
                             index + 1
                           )}
                         </div>
-                        <span className={`font-medium truncate ${isCurrentTrack ? 'text-primary' : ''}`}>
+                        <span className={`font-medium truncate ${isCurrentTrack ? 'bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent' : ''}`}>
                           {track.title || `Track ${index + 1}`}
                         </span>
                       </div>
@@ -306,13 +318,13 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
           {/* Transcript Section */}
           {release.transcriptUrl && (
-            <div className="mb-8">
+            <div className="mb-10">
               <Collapsible open={isTranscriptOpen} onOpenChange={setIsTranscriptOpen}>
                 <CollapsibleTrigger asChild>
-                  <button className="flex items-center justify-between w-full py-3 text-left hover:opacity-80 transition-opacity border-b">
+                  <button className="flex items-center justify-between w-full py-3 text-left hover:opacity-80 transition-opacity border-b border-gradient-to-r from-primary/20 to-purple-500/20">
                     <h2 className="text-xl font-semibold flex items-center gap-2">
-                      <BookOpen className="w-5 h-5" />
-                      Transcript
+                      <BookOpen className="w-5 h-5 text-purple-500" />
+                      <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Transcript</span>
                     </h2>
                     {isTranscriptOpen ? (
                       <ChevronUp className="w-5 h-5 text-muted-foreground" />

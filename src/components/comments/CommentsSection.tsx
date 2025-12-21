@@ -29,10 +29,10 @@ export function CommentsSection({
 
   if (error) {
     return (
-      <Card className="rounded-none sm:rounded-lg mx-0 sm:mx-0">
+      <Card className="rounded-none sm:rounded-lg mx-0 sm:mx-0 border-purple-500/20">
         <CardContent className="px-2 py-6 sm:p-6">
           <div className="text-center text-muted-foreground">
-            <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <MessageSquare className="h-8 w-8 mx-auto mb-2 text-purple-500/50" />
             <p>Failed to load comments</p>
           </div>
         </CardContent>
@@ -41,11 +41,11 @@ export function CommentsSection({
   }
 
   return (
-    <Card className={cn("rounded-none sm:rounded-lg mx-0 sm:mx-0", className)}>
+    <Card className={cn("rounded-none sm:rounded-lg mx-0 sm:mx-0 border-purple-500/20", className)}>
       <CardHeader className="px-2 pt-6 pb-4 sm:p-6">
         <CardTitle className="flex items-center space-x-2">
-          <MessageSquare className="h-5 w-5" />
-          <span>{title}</span>
+          <MessageSquare className="h-5 w-5 text-purple-500" />
+          <span className="bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">{title}</span>
           {!isLoading && (
             <span className="text-sm font-normal text-muted-foreground">
               ({comments.length})
@@ -79,7 +79,7 @@ export function CommentsSection({
           </div>
         ) : comments.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-30" />
+            <MessageSquare className="h-12 w-12 mx-auto mb-4 text-purple-500/30" />
             <p className="text-lg font-medium mb-2">{emptyStateMessage}</p>
             <p className="text-sm">{emptyStateSubtitle}</p>
           </div>
