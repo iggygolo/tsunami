@@ -139,7 +139,7 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
 
   const channels = releases.map(release => (`
 <channel>
-  <itunes:author>${escapeXml(podcastConfig.podcast.artistName)}</itunes:author>
+  <podcast:publisher>${escapeXml(podcastConfig.podcast.artistName)}</podcast:publisher>
   <title>${escapeXml(release.title)}</title>
   <description>${escapeXml(release.description || '')}</description>
   <link>${escapeXml(podcastConfig.podcast.website || baseUrl)}</link>
@@ -190,8 +190,8 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
-     xmlns:content="http://purl.org/rss/1.0/modules/content/"
-     xmlns:podcast="https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md">
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:podcast="https://podcastindex.org/namespace/1.0">
     ${channels.join('\n    ')}
 </rss>`;
 }
