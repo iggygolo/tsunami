@@ -157,7 +157,7 @@ const Studio = () => {
   useEffect(() => {
     if (podcastMetadata && !isLoadingMetadata) {
       setFormData({
-        author: podcastMetadata.author,
+        author: podcastMetadata.artistName,
         description: podcastMetadata.description,
         email: podcastMetadata.email,
         image: podcastMetadata.image,
@@ -172,11 +172,11 @@ const Studio = () => {
         // Podcasting 2.0 fields
         guid: podcastMetadata.guid || PODCAST_CONFIG.creatorNpub,
         medium: podcastMetadata.medium || 'music',
-        publisher: podcastMetadata.publisher || podcastMetadata.author,
+        publisher: podcastMetadata.publisher || podcastMetadata.artistName,
         location: podcastMetadata.location,
         person: podcastMetadata.person || [
           {
-            name: podcastMetadata.author,
+            name: podcastMetadata.artistName,
             role: 'artist',
             group: 'cast'
           }
@@ -452,7 +452,7 @@ const Studio = () => {
 
     if (editingSection === 'podcast' && podcastMetadata) {
       setFormData({
-        author: podcastMetadata.author,
+        author: podcastMetadata.artistName,
         description: podcastMetadata.description,
         email: podcastMetadata.email,
         image: podcastMetadata.image,
@@ -467,11 +467,11 @@ const Studio = () => {
         // Podcasting 2.0 fields
         guid: podcastMetadata.guid || PODCAST_CONFIG.creatorNpub,
         medium: podcastMetadata.medium || 'music',
-        publisher: podcastMetadata.publisher || podcastMetadata.author,
+        publisher: podcastMetadata.publisher || podcastMetadata.artistName,
         location: podcastMetadata.location,
         person: podcastMetadata.person || [
           {
-            name: podcastMetadata.author,
+            name: podcastMetadata.artistName,
             role: 'artist',
             group: 'cast'
           }
