@@ -100,19 +100,19 @@ export function Sidebar({ className }: SidebarProps) {
             return (
               <Button
                 key={item.path}
-                variant={active ? "secondary" : "ghost"}
+                variant="ghost"
                 size="sm"
                 asChild
                 className={cn(
-                  "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200",
-                  active && "bg-secondary text-secondary-foreground shadow-sm"
+                  "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-teal-600 dark:hover:text-teal-400",
+                  active && "bg-teal-500/5 border border-teal-500/20 text-foreground shadow-sm hover:translate-x-0"
                 )}
               >
                 <Link to={item.path} className="flex items-start space-x-3">
-                  <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-teal-600 dark:text-teal-400")} />
                   <div className="text-left min-w-0">
                     <div className="font-medium">{item.label}</div>
-                    <div className="text-xs text-muted-foreground truncate">{item.description}</div>
+                    <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
                   </div>
                 </Link>
               </Button>
@@ -130,12 +130,12 @@ export function Sidebar({ className }: SidebarProps) {
             return (
               <Button
                 key={item.path}
-                variant={active ? "secondary" : "ghost"}
+                variant="ghost"
                 size="sm"
                 asChild
                 className={cn(
-                  "w-full justify-start h-auto py-3 px-3 focus-ring",
-                  active && "bg-secondary text-secondary-foreground shadow-sm"
+                  "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-teal-600 dark:hover:text-teal-400",
+                  active && "bg-teal-500/5 border border-teal-500/20 text-foreground shadow-sm hover:translate-x-0"
                 )}
               >
                 {item.external ? (
@@ -153,10 +153,10 @@ export function Sidebar({ className }: SidebarProps) {
                   </a>
                 ) : (
                   <Link to={item.path} className="flex items-start space-x-3">
-                    <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                    <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0", active && "text-teal-600 dark:text-teal-400")} />
                     <div className="text-left min-w-0">
                       <div className="font-medium">{item.label}</div>
-                      <div className="text-xs text-muted-foreground truncate">{item.description}</div>
+                      <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
                     </div>
                   </Link>
                 )}
