@@ -1,7 +1,6 @@
 import { useSeoMeta } from '@unhead/react';
 import { Layout } from '@/components/Layout';
 import { ReleaseList } from '@/components/podcast/ReleaseList';
-import Footer from '@/components/Footer';
 import { PODCAST_CONFIG } from '@/lib/podcastConfig';
 
 const Releases = () => {
@@ -24,7 +23,6 @@ const Releases = () => {
           <ReleaseList showSearch _showPlayer _autoPlay />
         </div>
       </div>
-      <Footer />
     </Layout>
   );
 };

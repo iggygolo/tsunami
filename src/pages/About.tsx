@@ -11,7 +11,6 @@ import { usePodcastStats } from '@/hooks/usePodcastReleases';
 import { usePodcastTrailers } from '@/hooks/usePodcastTrailers';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { getArtistPubkeyHex } from '@/lib/podcastConfig';
-import Footer from '@/components/Footer';
 
 const About = () => {
   const { data: stats } = usePodcastStats();
@@ -260,7 +259,6 @@ const About = () => {
           </div>
         </div>
       </div>
-      <Footer />
     </Layout>
   );
 };

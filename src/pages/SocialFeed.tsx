@@ -13,7 +13,6 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useQueryClient } from '@tanstack/react-query';
 import { getArtistPubkeyHex, isArtist, PODCAST_CONFIG } from '@/lib/podcastConfig';
-import Footer from '@/components/Footer';
 import { genUserName } from '@/lib/genUserName';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -262,7 +261,6 @@ const SocialFeed = () => {
           </Tabs>
         </div>
       </div>
-      <Footer />
     </Layout>
   );
 };

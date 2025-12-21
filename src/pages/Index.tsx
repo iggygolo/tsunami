@@ -17,7 +17,6 @@ import { useLatestRelease, useReleases } from '@/hooks/usePodcastReleases';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import Footer from '@/components/Footer';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useArtistPosts, useArtistPostCount } from '@/hooks/useArtistPosts';
 import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
@@ -357,7 +356,6 @@ const Index = () => {
           </section>
         </div>
       </div>
-      <Footer />
     </Layout>
   );
 };

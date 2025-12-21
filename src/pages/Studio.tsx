@@ -40,6 +40,7 @@ import { genRSSFeed } from '@/lib/rssGenerator';
 import { ReleaseManagement } from '@/components/studio/ReleaseManagement';
 import { TrailerManagement } from '@/components/studio/TrailerManagement';
 import { BlossomServerManager } from '@/components/studio/BlossomServerManager';
+// Footer is provided by Layout
 
 interface PodcastFormData {
   artistName: string;
