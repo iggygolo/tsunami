@@ -28,34 +28,31 @@ export function Sidebar({ className }: SidebarProps) {
       path: '/',
       icon: Headphones,
       label: 'Home',
-      description: 'Overview & latest release'
+      description: 'Latest drops & highlights'
     },
     {
       path: '/releases',
       icon: List,
       label: 'Releases',
-      description: 'Browse all releases'
+      description: 'All tracks & albums'
     },
     {
       path: '/social',
       icon: MessageSquare,
       label: 'Social',
-      description: 'Artist updates'
+      description: 'Posts & updates'
     },
     {
       path: '/community',
       icon: Users,
       label: 'Community',
-      description: 'Engage with listeners'
-    }
-  ];
-
-  const secondaryItems = [
+      description: 'Fans & supporters'
+    },
     {
       path: '/about',
       icon: User,
       label: 'About',
-      description: 'Podcast info'
+      description: 'Artist bio & info'
     },
     {
       path: '/rss.xml',
@@ -89,41 +86,10 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-6">
+      <nav className="flex-1 p-4 space-y-4">
         {/* Main Navigation */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Navigation</h3>
+        <div className="space-y-1">
           {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
-
-            return (
-              <Button
-                key={item.path}
-                variant="ghost"
-                size="sm"
-                asChild
-                className={cn(
-                  "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-teal-600 dark:hover:text-teal-400",
-                  active && "bg-teal-500/5 border border-teal-500/20 text-foreground shadow-sm hover:translate-x-0"
-                )}
-              >
-                <Link to={item.path} className="flex items-start space-x-3">
-                  <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-teal-600 dark:text-teal-400")} />
-                  <div className="text-left min-w-0">
-                    <div className="font-medium">{item.label}</div>
-                    <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
-                  </div>
-                </Link>
-              </Button>
-            );
-          })}
-        </div>
-
-        {/* Secondary Navigation */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">More</h3>
-          {secondaryItems.map((item) => {
             const Icon = item.icon;
             const active = !item.external && isActive(item.path);
 
@@ -153,7 +119,7 @@ export function Sidebar({ className }: SidebarProps) {
                   </a>
                 ) : (
                   <Link to={item.path} className="flex items-start space-x-3">
-                    <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0", active && "text-teal-600 dark:text-teal-400")} />
+                    <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-teal-600 dark:text-teal-400")} />
                     <div className="text-left min-w-0">
                       <div className="font-medium">{item.label}</div>
                       <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>

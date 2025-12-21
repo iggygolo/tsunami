@@ -204,7 +204,6 @@ export function Navigation({ className }: NavigationProps) {
             <div className="mt-6 space-y-4">
               {/* Main Navigation Items */}
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground px-3">Main Navigation</h3>
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.path);
@@ -232,7 +231,6 @@ export function Navigation({ className }: NavigationProps) {
 
               {/* Secondary Navigation Items */}
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground px-3">More</h3>
                 {secondaryItems.map((item) => {
                   const Icon = item.icon;
                   const active = !item.external && isActive(item.path);
