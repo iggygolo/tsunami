@@ -3,14 +3,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  Settings,
   Save,
-  X,
   Upload,
   Users,
   Zap,
   Loader2,
-  User,
   DollarSign,
   Server,
   Play,
@@ -18,6 +15,8 @@ import {
   Repeat2,
   Volume2,
   Music,
+  X,
+  Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,16 +41,6 @@ import { genRSSFeed } from '@/lib/rssGenerator';
 import { ReleaseManagement } from '@/components/studio/ReleaseManagement';
 import { TrailerManagement } from '@/components/studio/TrailerManagement';
 import { BlossomServerManager } from '@/components/studio/BlossomServerManager';
-
-interface ProfileFormData {
-  name: string;
-  displayName: string;
-  about: string;
-  picture: string;
-  website: string;
-  lud16: string;
-  nip05: string;
-}
 
 interface PodcastFormData {
   artistName: string;
@@ -104,24 +93,12 @@ const Studio = () => {
   const { data: podcastMetadata, isLoading: isLoadingMetadata } = usePodcastMetadata();
   const podcastConfig = usePodcastConfig();
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
-  const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
   const { data: analytics, isLoading: analyticsLoading } = usePodcastAnalytics();
   const isArtist_user = user && isArtist(user.pubkey);
 
   const [activeTab, setActiveTab] = useState('settings');
   const [isSaving, setIsSaving] = useState(false);
-  const [editingSection, setEditingSection] = useState<'profile' | 'podcast' | null>(null);
-
-  const [profileData, setProfileData] = useState<ProfileFormData>({
-    name: '',
-    displayName: '',
-    about: '',
-    picture: '',
-    website: '',
-    lud16: '',
-    nip05: '',
-  });
 
   const [formData, setFormData] = useState<PodcastFormData>({
     artistName: PODCAST_CONFIG.podcast.artistName,
@@ -187,32 +164,10 @@ const Studio = () => {
     }
   }, [podcastMetadata, isLoadingMetadata]);
 
-  // Update profile data when artist data loads
-  useEffect(() => {
-    if (artist?.metadata) {
-      setProfileData({
-        name: artist.metadata.name || '',
-        displayName: artist.metadata.display_name || '',
-        about: artist.metadata.about || '',
-        picture: artist.metadata.picture || '',
-        website: artist.metadata.website || '',
-        lud16: artist.metadata.lud16 || '',
-        nip05: artist.metadata.nip05 || '',
-      });
-    }
-  }, [artist]);
-
   useSeoMeta({
     title: 'Studio',
     description: 'Manage your artist profile and publish new releases',
   });
-
-  const handleProfileInputChange = (field: keyof ProfileFormData, value: string) => {
-    setProfileData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
 
   const handleInputChange = (field: keyof PodcastFormData, value: PodcastFormData[keyof PodcastFormData]) => {
     setFormData(prev => ({
@@ -283,25 +238,6 @@ const Studio = () => {
     });
   };
 
-  // Handle file uploads for profile picture
-  const uploadProfilePicture = async (file: File) => {
-    try {
-      const [[_, url]] = await uploadFile(file);
-      handleProfileInputChange('picture', url);
-      toast({
-        title: 'Success',
-        description: 'Profile picture uploaded successfully',
-      });
-    } catch (error) {
-      console.error('Failed to upload profile picture:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to upload profile picture. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
-
   // Handle file uploads for podcast image
   const uploadPodcastImage = async (file: File) => {
     try {
@@ -324,106 +260,81 @@ const Studio = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Save profile metadata if profile section is being edited
-      if (editingSection === 'profile') {
-        const profileEvent = {
-          kind: 0, // Profile metadata
-          content: JSON.stringify({
-            name: profileData.name,
-            display_name: profileData.displayName,
-            about: profileData.about,
-            picture: profileData.picture,
-            website: profileData.website,
-            lud16: profileData.lud16,
-            nip05: profileData.nip05,
-          }),
-          tags: [],
-          created_at: Math.floor(Date.now() / 1000)
-        };
+      // Convert relative funding URLs to absolute URLs for external consumption
+      const getBaseUrl = () => {
+        if (typeof window !== 'undefined') {
+          return window.location.origin;
+        }
+        return process.env.BASE_URL || 'https://tsunami.example';
+      };
+      
+      const baseUrl = getBaseUrl();
+      const absoluteFundingUrls = formData.funding.map(funding => {
+        // Convert relative URLs to absolute URLs
+        if (funding.startsWith('/') || funding.startsWith('./') || funding.startsWith('../')) {
+          return `${baseUrl}${funding.startsWith('/') ? funding : '/' + funding.replace(/^\.\//, '')}`;
+        }
+        return funding;
+      });
 
-        await createEvent(profileEvent);
+      const podcastMetadataEvent = {
+        kind: PODCAST_KINDS.ARTIST_METADATA, // Addressable podcast metadata event
+        content: JSON.stringify({
+          artist: formData.artistName,
+          description: formData.description,
+          image: formData.image,
+          website: formData.website,
+          copyright: formData.copyright,
+          funding: absoluteFundingUrls,
+          value: formData.value,
+          // Podcasting 2.0 fields
+          guid: formData.guid,
+          medium: formData.medium,
+          publisher: formData.publisher,
+          location: formData.location,
+          person: formData.person,
+          license: formData.license,
+          updated_at: Math.floor(Date.now() / 1000)
+        }),
+        tags: [
+          ['d', 'artist-metadata'], // Identifier for this type of event
+          ['artist', formData.artistName],
+          ['description', formData.description],
+        ],
+        // Use current time in seconds, always increment to ensure different event IDs
+        created_at: Math.ceil(Date.now() / 1000)
+      };
+
+      await createEvent(podcastMetadataEvent);
+
+      // Invalidate artist metadata cache to force refetch with new data
+      queryClient.invalidateQueries({ queryKey: ['artist-metadata'] });
+
+      // Update RSS feed with the new configuration (non-blocking)
+      try {
+        await Promise.race([
+          genRSSFeed(undefined, podcastConfig),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('RSS generation timeout')), 5000))
+        ]);
+        console.log('RSS feed updated successfully');
+      } catch (error) {
+        console.warn('RSS feed update failed or timed out, but settings were saved:', error);
       }
 
-      // Save podcast metadata if podcast section is being edited
-      if (editingSection === 'podcast') {
-        // Convert relative funding URLs to absolute URLs for external consumption
-        const getBaseUrl = () => {
-          if (typeof window !== 'undefined') {
-            return window.location.origin;
-          }
-          return process.env.BASE_URL || 'https://tsunami.example';
-        };
-        
-        const baseUrl = getBaseUrl();
-        const absoluteFundingUrls = formData.funding.map(funding => {
-          // Convert relative URLs to absolute URLs
-          if (funding.startsWith('/') || funding.startsWith('./') || funding.startsWith('../')) {
-            return `${baseUrl}${funding.startsWith('/') ? funding : '/' + funding.replace(/^\.\//, '')}`;
-          }
-          return funding;
-        });
-
-        const podcastMetadataEvent = {
-          kind: PODCAST_KINDS.ARTIST_METADATA, // Addressable podcast metadata event
-          content: JSON.stringify({
-            artist: formData.artistName,
-            description: formData.description,
-            image: formData.image,
-            website: formData.website,
-            copyright: formData.copyright,
-            funding: absoluteFundingUrls,
-            value: formData.value,
-            // Podcasting 2.0 fields
-            guid: formData.guid,
-            medium: formData.medium,
-            publisher: formData.publisher,
-            location: formData.location,
-            person: formData.person,
-            license: formData.license,
-            updated_at: Math.floor(Date.now() / 1000)
-          }),
-          tags: [
-            ['d', 'artist-metadata'], // Identifier for this type of event
-            ['artist', formData.artistName],
-            ['description', formData.description],
-          ],
-          // Use current time in seconds, always increment to ensure different event IDs
-          created_at: Math.ceil(Date.now() / 1000)
-        };
-
-        await createEvent(podcastMetadataEvent);
-
-        // Invalidate artist metadata cache to force refetch with new data
-        queryClient.invalidateQueries({ queryKey: ['artist-metadata'] });
-
-        // Update RSS feed with the new configuration (non-blocking)
-        try {
-          await Promise.race([
-            genRSSFeed(undefined, podcastConfig),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('RSS generation timeout')), 5000))
-          ]);
-          console.log('RSS feed updated successfully');
-        } catch (error) {
-          console.warn('RSS feed update failed or timed out, but settings were saved:', error);
-        }
-
-        // Refetch RSS feed generator (non-blocking)
-        try {
-          await Promise.race([
-            refetchRSSFeed(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('RSS refetch timeout')), 3000))
-          ]);
-        } catch (error) {
-          console.warn('RSS refetch failed or timed out, but settings were saved:', error);
-        }
+      // Refetch RSS feed generator (non-blocking)
+      try {
+        await Promise.race([
+          refetchRSSFeed(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('RSS refetch timeout')), 3000))
+        ]);
+      } catch (error) {
+        console.warn('RSS refetch failed or timed out, but settings were saved:', error);
       }
 
       toast({
         title: "Settings saved!",
-        description: `${editingSection === 'profile' ? 'Profile' : 'Podcast'} settings have been updated.`,
+        description: `Artist settings have been updated.`,
       });
-
-      setEditingSection(null);
     } catch (error) {
       console.error('Failed to save settings:', error);
       toast({
@@ -434,54 +345,6 @@ const Studio = () => {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleCancel = () => {
-    if (editingSection === "profile" && artist?.metadata) {
-      setProfileData({
-        name: artist.metadata.name || '',
-        displayName: artist.metadata.display_name || '',
-        about: artist.metadata.about || '',
-        picture: artist.metadata.picture || '',
-        website: artist.metadata.website || '',
-        lud16: artist.metadata.lud16 || '',
-        nip05: artist.metadata.nip05 || '',
-      });
-    }
-
-    if (editingSection === 'podcast' && podcastMetadata) {
-      setFormData({
-        artistName: podcastMetadata.artist,
-        description: podcastMetadata.description,
-        image: podcastMetadata.image,
-        website: podcastMetadata.website,
-        copyright: podcastMetadata.copyright,
-        funding: podcastMetadata.funding || PODCAST_CONFIG.podcast.funding || [],
-        value: podcastMetadata.value || {
-          amount: PODCAST_CONFIG.podcast.value.amount,
-          currency: PODCAST_CONFIG.podcast.value.currency,
-          recipients: PODCAST_CONFIG.podcast.value.recipients || []
-        },
-        // Podcasting 2.0 fields
-        guid: podcastMetadata.guid || PODCAST_CONFIG.artistNpub,
-        medium: podcastMetadata.medium || 'music',
-        publisher: podcastMetadata.publisher || podcastMetadata.artist,
-        location: podcastMetadata.location,
-        person: podcastMetadata.person || [
-          {
-            name: podcastMetadata.artist,
-            role: 'artist',
-            group: 'cast'
-          }
-        ],
-        license: podcastMetadata.license || {
-          identifier: 'CC BY 4.0',
-          url: 'https://creativecommons.org/licenses/by/4.0/'
-        },
-      });
-    }
-
-    setEditingSection(null);
   };
 
   if (!user) {
@@ -537,47 +400,13 @@ const Studio = () => {
               </p>
             </div>
 
-            {editingSection ? (
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} disabled={isSaving || isUploading}>
-                  {(isSaving || isUploading) ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4 mr-2" />
-                  )}
-                  Save {editingSection === 'profile' ? 'Profile' : 'Podcast'}
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setEditingSection('profile')}
-                  disabled={editingSection === 'podcast'}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
-                <Button
-                  onClick={() => setEditingSection('podcast')}
-                  disabled={editingSection === 'profile'}
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Edit Podcast
-                </Button>
-              </div>
-            )}
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="settings" className="flex items-center space-x-2">
                 <Settings className="w-4 h-4" />
-                <span>Settings</span>
+                <span>Artist Settings</span>
               </TabsTrigger>
               <TabsTrigger value="releases" className="flex items-center space-x-2">
                 <Volume2 className="w-4 h-4" />
@@ -595,139 +424,6 @@ const Studio = () => {
 
             {/* Settings Tab */}
             <TabsContent value="settings" className="space-y-6">
-              {/* Profile Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <User className="w-5 h-5" />
-                    <span>Profile Settings</span>
-                    {editingSection === 'profile' && (
-                      <Badge variant="secondary">Editing</Badge>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="profile-name">Name</Label>
-                        <Input
-                          id="profile-name"
-                          value={profileData.name}
-                          onChange={(e) => handleProfileInputChange('name', e.target.value)}
-                          disabled={editingSection !== 'profile'}
-                          placeholder="Your full name"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="profile-display-name">Display Name</Label>
-                        <Input
-                          id="profile-display-name"
-                          value={profileData.displayName}
-                          onChange={(e) => handleProfileInputChange('displayName', e.target.value)}
-                          disabled={editingSection !== 'profile'}
-                          placeholder="How you want to be known"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="profile-website">Website</Label>
-                        <Input
-                          id="profile-website"
-                          value={profileData.website}
-                          onChange={(e) => handleProfileInputChange('website', e.target.value)}
-                          disabled={editingSection !== 'profile'}
-                          placeholder="https://yourwebsite.com"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="profile-picture">Profile Picture</Label>
-                        <div className="space-y-2">
-                          <Input
-                            id="profile-picture"
-                            value={profileData.picture}
-                            onChange={(e) => handleProfileInputChange('picture', e.target.value)}
-                            disabled={editingSection !== 'profile'}
-                            placeholder="https://example.com/avatar.jpg"
-                          />
-                          <div className="flex items-center space-x-2">
-                            <input 
-                              type="file" 
-                              id="profile-picture-upload"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  uploadProfilePicture(file);
-                                }
-                              }}
-                              disabled={editingSection !== 'profile'}
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => document.getElementById('profile-picture-upload')?.click()}
-                              disabled={editingSection !== 'profile' || isUploading}
-                            >
-                              <Upload className="h-4 w-4 mr-2" />
-                              {isUploading ? 'Uploading...' : 'Upload Image'}
-                            </Button>
-                            {profileData.picture && (
-                              <div className="h-10 w-10 rounded-full overflow-hidden">
-                                <img 
-                                  src={profileData.picture} 
-                                  alt="Profile preview" 
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="profile-lud16">Lightning Address (lud16)</Label>
-                        <Input
-                          id="profile-lud16"
-                          value={profileData.lud16}
-                          onChange={(e) => handleProfileInputChange('lud16', e.target.value)}
-                          disabled={editingSection !== 'profile'}
-                          placeholder="name@domain.com"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="profile-nip05">Nostr Address (nip05)</Label>
-                        <Input
-                          id="profile-nip05"
-                          value={profileData.nip05}
-                          onChange={(e) => handleProfileInputChange('nip05', e.target.value)}
-                          disabled={editingSection !== 'profile'}
-                          placeholder="name@domain.com"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="profile-about">About</Label>
-                    <Textarea
-                      id="profile-about"
-                      value={profileData.about}
-                      onChange={(e) => handleProfileInputChange('about', e.target.value)}
-                      disabled={editingSection !== 'profile'}
-                      placeholder="Tell us about yourself"
-                      rows={4}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
 
               {/* Artist Section */}
               <Card>
@@ -735,9 +431,6 @@ const Studio = () => {
                   <CardTitle className="flex items-center space-x-2">
                     <Music className="w-5 h-5" />
                     <span>Artist Settings</span>
-                    {editingSection === 'podcast' && (
-                      <Badge variant="secondary">Editing</Badge>
-                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -750,7 +443,7 @@ const Studio = () => {
                           id="artistName"
                           value={formData.artistName}
                           onChange={(e) => handleInputChange('artistName', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
+                          disabled={false}
                           placeholder="Enter artist name"
                         />
                       </div>
@@ -762,7 +455,7 @@ const Studio = () => {
                             id="image"
                             value={formData.image}
                             onChange={(e) => handleInputChange('image', e.target.value)}
-                            disabled={editingSection !== 'podcast'}
+                            disabled={false}
                             placeholder="Select or upload artist image"
                           />
                           <div className="flex items-center space-x-2">
@@ -777,14 +470,14 @@ const Studio = () => {
                                   uploadPodcastImage(file);
                                 }
                               }}
-                              disabled={editingSection !== 'podcast'}
+                              disabled={false}
                             />
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
                               onClick={() => document.getElementById('podcast-image-upload')?.click()}
-                              disabled={editingSection !== 'podcast' || isUploading}
+                              disabled={isUploading}
                             >
                               <Upload className="h-4 w-4 mr-2" />
                               {isUploading ? 'Uploading...' : 'Upload Image'}
@@ -810,7 +503,7 @@ const Studio = () => {
                           id="website"
                           value={formData.website}
                           onChange={(e) => handleInputChange('website', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
+                          disabled={false}
                           placeholder="https://example.com"
                         />
                       </div>
@@ -821,7 +514,7 @@ const Studio = () => {
                           id="copyright"
                           value={formData.copyright}
                           onChange={(e) => handleInputChange('copyright', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
+                          disabled={false}
                           placeholder="© 2025 Podcast Name"
                         />
                       </div>
@@ -835,7 +528,7 @@ const Studio = () => {
                       id="description"
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
-                      disabled={editingSection !== 'podcast'}
+                      disabled={false}
                       placeholder="Enter podcast description"
                       rows={4}
                     />
@@ -850,7 +543,7 @@ const Studio = () => {
                           id="medium"
                           value={formData.medium}
                           onChange={(e) => handleInputChange('medium', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
+                          disabled={false}
                           className="w-full p-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-ring disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <option value="podcast">Podcast</option>
@@ -866,13 +559,13 @@ const Studio = () => {
 
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="guid">GUID (Podcast Identifier)</Label>
+                        <Label htmlFor="guid">GUID (Artist Identifier)</Label>
                         <Input
                           id="guid"
                           value={formData.guid}
                           onChange={(e) => handleInputChange('guid', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
-                          placeholder="Unique podcast identifier"
+                          disabled={false}
+                          placeholder="Unique artist identifier"
                         />
                       </div>
 
@@ -882,7 +575,7 @@ const Studio = () => {
                           id="publisher"
                           value={formData.publisher}
                           onChange={(e) => handleInputChange('publisher', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
+                          disabled={false}
                           placeholder="Publisher name"
                         />
                       </div>
@@ -898,7 +591,7 @@ const Studio = () => {
                               ...formData.value,
                               amount: parseFloat(e.target.value) || 0
                             })}
-                            disabled={editingSection !== 'podcast'}
+                            disabled={false}
                             placeholder="0"
                             className="flex-1"
                           />
@@ -908,7 +601,7 @@ const Studio = () => {
                               ...formData.value,
                               currency: e.target.value
                             })}
-                            disabled={editingSection !== 'podcast'}
+                            disabled={false}
                             className="p-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-ring disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <option value="USD">USD</option>
@@ -930,7 +623,7 @@ const Studio = () => {
                             ...formData.license,
                             identifier: e.target.value
                           })}
-                          disabled={editingSection !== 'podcast'}
+                          disabled={false}
                           placeholder="e.g., CC BY 4.0"
                         />
                       </div>
@@ -944,7 +637,7 @@ const Studio = () => {
                             ...formData.license,
                             url: e.target.value
                           })}
-                          disabled={editingSection !== 'podcast'}
+                          disabled={false}
                           placeholder="https://creativecommons.org/licenses/..."
                         />
                       </div>
@@ -958,7 +651,7 @@ const Studio = () => {
                             ...formData.location,
                             name: e.target.value
                           })}
-                          disabled={editingSection !== 'podcast'}
+                          disabled={false}
                           placeholder="Recording location"
                         />
                       </div>
@@ -973,43 +666,39 @@ const Studio = () => {
                         <Badge key={index} variant="outline" className="flex items-center space-x-1">
                           <DollarSign className="w-3 h-3" />
                           <span className="truncate max-w-xs">{funding}</span>
-                          {editingSection === 'podcast' && (
-                            <button
-                              onClick={() => handleFundingRemove(funding)}
-                              className="ml-1 hover:text-destructive"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleFundingRemove(funding)}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
                         </Badge>
                       ))}
                     </div>
 
-                    {editingSection === 'podcast' && (
-                      <div className="flex space-x-2 mt-2">
-                        <Input
-                          placeholder="Add funding link (e.g., /about or https://patreon.com/yourpodcast)"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              handleFundingAdd((e.target as HTMLInputElement).value);
-                              (e.target as HTMLInputElement).value = '';
-                            }
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            const input = document.querySelector('input[placeholder^="Add funding link"]') as HTMLInputElement;
-                            if (input?.value) {
-                              handleFundingAdd(input.value);
-                              input.value = '';
-                            }
-                          }}
-                        >
-                          Add
-                        </Button>
-                      </div>
-                    )}
+                    <div className="flex space-x-2 mt-2">
+                      <Input
+                        placeholder="Add funding link (e.g., /about or https://patreon.com/yourpodcast)"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleFundingAdd((e.target as HTMLInputElement).value);
+                            (e.target as HTMLInputElement).value = '';
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          const input = document.querySelector('input[placeholder^="Add funding link"]') as HTMLInputElement;
+                          if (input?.value) {
+                            handleFundingAdd(input.value);
+                            input.value = '';
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </div>
 
                     <p className="text-sm text-muted-foreground mt-2">
                       Add funding links for listeners to support your podcast. Use "/about" to link to your built-in zap page, or add external URLs to platforms like Patreon, Ko-fi, PayPal, etc.
@@ -1029,16 +718,14 @@ const Studio = () => {
                         <div key={index} className="p-4 border rounded-lg space-y-3">
                           <div className="flex items-center justify-between">
                             <h4 className="font-medium">Recipient {index + 1}</h4>
-                            {editingSection === 'podcast' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRecipientRemove(index)}
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRecipientRemove(index)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1047,7 +734,7 @@ const Studio = () => {
                               <Input
                                 value={recipient.name}
                                 onChange={(e) => handleRecipientUpdate(index, 'name', e.target.value)}
-                                disabled={editingSection !== 'podcast'}
+                                disabled={false}
                                 placeholder="Recipient name"
                               />
                             </div>
@@ -1057,7 +744,7 @@ const Studio = () => {
                               <select
                                 value={recipient.type}
                                 onChange={(e) => handleRecipientUpdate(index, 'type', e.target.value)}
-                                disabled={editingSection !== 'podcast'}
+                                disabled={false}
                                 className="w-full p-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-ring disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 <option value="node">Lightning Node</option>
@@ -1070,7 +757,7 @@ const Studio = () => {
                               <Input
                                 value={recipient.address}
                                 onChange={(e) => handleRecipientUpdate(index, 'address', e.target.value)}
-                                disabled={editingSection !== 'podcast'}
+                                disabled={false}
                                 placeholder="Lightning node pubkey or lightning address"
                               />
                             </div>
@@ -1083,7 +770,7 @@ const Studio = () => {
                                 max="100"
                                 value={recipient.split}
                                 onChange={(e) => handleRecipientUpdate(index, 'split', parseInt(e.target.value) || 0)}
-                                disabled={editingSection !== 'podcast'}
+                                disabled={false}
                                 placeholder="0-100"
                               />
                             </div>
@@ -1093,7 +780,7 @@ const Studio = () => {
                               <Input
                                 value={recipient.customKey || ''}
                                 onChange={(e) => handleRecipientUpdate(index, 'customKey', e.target.value)}
-                                disabled={editingSection !== 'podcast'}
+                                disabled={false}
                                 placeholder="Custom TLV key for Lightning payments"
                               />
                             </div>
@@ -1103,7 +790,7 @@ const Studio = () => {
                               <Input
                                 value={recipient.customValue || ''}
                                 onChange={(e) => handleRecipientUpdate(index, 'customValue', e.target.value)}
-                                disabled={editingSection !== 'podcast'}
+                                disabled={false}
                                 placeholder="Custom TLV value for Lightning payments"
                               />
                             </div>
@@ -1112,7 +799,7 @@ const Studio = () => {
                               <Switch
                                 checked={recipient.fee || false}
                                 onCheckedChange={(checked) => handleRecipientUpdate(index, 'fee', checked)}
-                                disabled={editingSection !== 'podcast'}
+                                disabled={false}
                               />
                               <Label>Fee Recipient</Label>
                             </div>
@@ -1128,9 +815,8 @@ const Studio = () => {
                     </div>
 
                     {/* Add New Recipient */}
-                    {editingSection === 'podcast' && (
-                      <div className="p-4 border-2 border-dashed rounded-lg">
-                        <h4 className="font-medium mb-3">Add New Recipient</h4>
+                    <div className="p-4 border-2 border-dashed rounded-lg">
+                      <h4 className="font-medium mb-3">Add New Recipient</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                           <Input
                             id="new-recipient-name"
@@ -1182,7 +868,6 @@ const Studio = () => {
                           Add Recipient
                         </Button>
                       </div>
-                    )}
 
                     <div className="mt-4">
                       <div className="text-sm text-muted-foreground space-y-1">
@@ -1190,6 +875,17 @@ const Studio = () => {
                         <p className="text-xs">Note: Total split percentage should equal 100% for proper value distribution.</p>
                       </div>
                     </div>
+                  </div>
+
+                  <div>  
+                    <Button onClick={handleSave} disabled={isSaving || isUploading}>
+                      {(isSaving || isUploading) ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
+                      Save Settings
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
