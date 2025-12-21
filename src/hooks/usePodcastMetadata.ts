@@ -85,7 +85,7 @@ export function usePodcastMetadata() {
       // Fallback to config (includes environment variables)
       return {
         description: PODCAST_CONFIG.podcast.description,
-        author: PODCAST_CONFIG.podcast.author,
+        author: PODCAST_CONFIG.podcast.artistName,
         email: PODCAST_CONFIG.podcast.email,
         image: PODCAST_CONFIG.podcast.image,
         website: PODCAST_CONFIG.podcast.website,

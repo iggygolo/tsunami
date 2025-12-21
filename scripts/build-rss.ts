@@ -67,7 +67,7 @@ function createNodejsConfig() {
     creatorNpub,
     podcast: {
       description: process.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered podcast exploring decentralized conversations",
-      author: process.env.VITE_PODCAST_AUTHOR || "PODSTR Creator",
+      artistName: process.env.VITE_ARTIST_NAME || "PODSTR Creator",
       email: process.env.VITE_PODCAST_EMAIL || "creator@podstr.example",
       image: process.env.VITE_PODCAST_IMAGE || "https://image.nostr.build/59bb1cffa12d11cb7cb6905283ecc75b259733e9ecf44a6053b3805d1f01bb7a.jpg",
       website: process.env.VITE_PODCAST_WEBSITE || "https://podstr.example",
@@ -83,7 +83,7 @@ function createNodejsConfig() {
       // Podcasting 2.0 fields
       guid: process.env.VITE_PODCAST_GUID || creatorNpub,
       medium: (process.env.VITE_PODCAST_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
-      publisher: process.env.VITE_PODCAST_PUBLISHER || process.env.VITE_PODCAST_AUTHOR || "PODSTR Creator",
+      publisher: process.env.VITE_PODCAST_PUBLISHER || process.env.VITE_ARTIST_NAME || "PODSTR Creator",
       location: process.env.VITE_PODCAST_LOCATION_NAME ? {
         name: process.env.VITE_PODCAST_LOCATION_NAME,
         geo: process.env.VITE_PODCAST_LOCATION_GEO || undefined,
@@ -91,7 +91,7 @@ function createNodejsConfig() {
       } : undefined,
       person: process.env.VITE_PODCAST_PERSON ?
         JSON.parse(process.env.VITE_PODCAST_PERSON) :
-        [{ name: process.env.VITE_PODCAST_AUTHOR || "PODSTR Creator", role: "host", group: "cast" }],
+        [{ name: process.env.VITE_ARTIST_NAME || "PODSTR Creator", role: "artist", group: "cast" }],
       license: {
         identifier: process.env.VITE_PODCAST_LICENSE_IDENTIFIER || "CC BY 4.0",
         url: process.env.VITE_PODCAST_LICENSE_URL || "https://creativecommons.org/licenses/by/4.0/"

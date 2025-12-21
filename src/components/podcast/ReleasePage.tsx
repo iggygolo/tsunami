@@ -214,8 +214,8 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   // Update document title when release loads
   useSeoMeta({
     title: release 
-      ? `${release.title} | ${podcastConfig.podcast.author}`
-      : `release | ${podcastConfig.podcast.author}`,
+      ? `${release.title} | ${podcastConfig.podcast.artistName}`
+      : `release | ${podcastConfig.podcast.artistName}`,
   });
 
   const formatDuration = (seconds?: number): string => {

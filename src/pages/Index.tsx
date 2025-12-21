@@ -33,7 +33,7 @@ const Index = () => {
   };
 
   useSeoMeta({
-    title: podcastConfig.podcast.author,
+    title: podcastConfig.podcast.artistName,
     description: podcastConfig.podcast.description,
   });
 
@@ -189,7 +189,7 @@ const Index = () => {
                   <div className="relative group">
                     <img
                       src={podcastConfig.podcast.image}
-                      alt={podcastConfig.podcast.author}
+                      alt={podcastConfig.podcast.artistName}
                       className="w-full rounded-xl object-cover shadow-lg group-hover:shadow-xl transition-shadow duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

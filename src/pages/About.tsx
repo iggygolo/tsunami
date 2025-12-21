@@ -23,7 +23,7 @@ const About = () => {
   const featuredTrailer = trailers?.[0]; // Already sorted by date (newest first)
 
   useSeoMeta({
-    title: `About - ${podcastConfig.podcast.author}`,
+    title: `About - ${podcastConfig.podcast.artistName}`,
     description: podcastConfig.podcast.description,
   });
 
@@ -32,7 +32,7 @@ const About = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">About {podcastConfig.podcast.author}</h1>
+            <h1 className="text-3xl font-bold mb-2">About {podcastConfig.podcast.artistName}</h1>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -50,7 +50,7 @@ const About = () => {
                   {podcastConfig.podcast.image && (
                     <img
                       src={podcastConfig.podcast.image}
-                      alt={podcastConfig.podcast.author}
+                      alt={podcastConfig.podcast.artistName}
                       className="w-full max-w-sm rounded-lg object-cover"
                     />
                   )}

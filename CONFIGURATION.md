@@ -15,7 +15,7 @@ PODSTR uses environment variables to configure your podcast metadata and setting
    VITE_CREATOR_NPUB=npub1your_public_key_here
    
    # Basic podcast info
-   VITE_PODCAST_AUTHOR=Your Name
+   VITE_ARTIST_NAME=Your Name
    VITE_PODCAST_DESCRIPTION=A podcast about amazing things
    VITE_PODCAST_EMAIL=you@example.com
    ```
@@ -32,7 +32,7 @@ PODSTR uses environment variables to configure your podcast metadata and setting
 These are the minimum settings you should configure:
 
 - `VITE_CREATOR_NPUB` - Your Nostr public key (npub format)
-- `VITE_PODCAST_AUTHOR` - Your name as the host/creator
+- `VITE_ARTIST_NAME` - Your name as the artist/creator
 - `VITE_PODCAST_DESCRIPTION` - Brief description of your podcast
 - `VITE_PODCAST_EMAIL` - Contact email for your podcast
 
@@ -124,7 +124,7 @@ VITE_PODCAST_FUNDING=lightning:your@address.com,https://donate.example.com,bitco
 | Variable | Type | Description | Default |
 |----------|------|-------------|---------|
 | `VITE_CREATOR_NPUB` | string | Your Nostr public key | Example npub |
-| `VITE_PODCAST_AUTHOR` | string | Host/creator name | "PODSTR Creator" |
+| `VITE_ARTIST_NAME` | string | Artist/creator name | "PODSTR Creator" |
 | `VITE_PODCAST_DESCRIPTION` | string | Podcast description | Example description |
 | `VITE_PODCAST_EMAIL` | string | Contact email | "creator@podstr.example" |
 | `VITE_PODCAST_IMAGE` | string | Cover art URL | Example image URL |

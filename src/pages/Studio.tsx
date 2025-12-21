@@ -125,7 +125,7 @@ const Studio = () => {
 
   const [formData, setFormData] = useState<PodcastFormData>({
     description: PODCAST_CONFIG.podcast.description,
-    author: PODCAST_CONFIG.podcast.author,
+    author: PODCAST_CONFIG.podcast.artistName,
     email: PODCAST_CONFIG.podcast.email,
     image: PODCAST_CONFIG.podcast.image,
     website: PODCAST_CONFIG.podcast.website,
@@ -139,10 +139,10 @@ const Studio = () => {
     // New Podcasting 2.0 defaults
     guid: PODCAST_CONFIG.podcast.guid || PODCAST_CONFIG.creatorNpub,
     medium: PODCAST_CONFIG.podcast.medium || 'music',
-    publisher: PODCAST_CONFIG.podcast.publisher || PODCAST_CONFIG.podcast.author,
+    publisher: PODCAST_CONFIG.podcast.publisher || PODCAST_CONFIG.podcast.artistName,
     person: PODCAST_CONFIG.podcast.person || [
       {
-        name: PODCAST_CONFIG.podcast.author,
+        name: PODCAST_CONFIG.podcast.artistName,
         role: 'artist',
         group: 'cast'
       }

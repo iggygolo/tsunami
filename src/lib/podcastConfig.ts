@@ -33,7 +33,7 @@ export interface PodcastConfig {
 
   /** Podcast metadata */
   podcast: {
-    author: string;
+    artistName: string;
     description: string;
     email: string;
     image: string;
@@ -101,7 +101,7 @@ export const PODCAST_CONFIG: PodcastConfig = {
   creatorNpub: import.meta.env.VITE_CREATOR_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
 
   podcast: {
-    author: import.meta.env.VITE_PODCAST_AUTHOR || "PODSTR Creator",
+    artistName: import.meta.env.VITE_ARTIST_NAME || "PODSTR Creator",
     description: import.meta.env.VITE_PODCAST_DESCRIPTION || "A Nostr-powered podcast exploring decentralized conversations",
     email: import.meta.env.VITE_PODCAST_EMAIL || "creator@podstr.example",
     image: import.meta.env.VITE_PODCAST_IMAGE || "https://example.com/podcast-artwork.jpg",
@@ -113,7 +113,7 @@ export const PODCAST_CONFIG: PodcastConfig = {
       currency: import.meta.env.VITE_PODCAST_VALUE_CURRENCY || "sats",
       recipients: parseJsonEnv(import.meta.env.VITE_PODCAST_VALUE_RECIPIENTS, [
         {
-          name: "Podcast Host",
+          name: "Artist",
           type: "node" as const,
           address: "030a58b8653d32b99200a2334cfe913e51dc7d155aa0116c176657a4f1722677a3",
           split: 80,
@@ -139,7 +139,7 @@ export const PODCAST_CONFIG: PodcastConfig = {
     // Podcasting 2.0 fields from environment
     guid: import.meta.env.VITE_PODCAST_GUID || import.meta.env.VITE_CREATOR_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
     medium: (import.meta.env.VITE_PODCAST_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
-    publisher: import.meta.env.VITE_PODCAST_PUBLISHER || import.meta.env.VITE_PODCAST_AUTHOR || "PODSTR Creator",
+    publisher: import.meta.env.VITE_PODCAST_PUBLISHER || import.meta.env.VITE_ARTIST_NAME || "PODSTR Creator",
     location: import.meta.env.VITE_PODCAST_LOCATION_NAME ? {
       name: import.meta.env.VITE_PODCAST_LOCATION_NAME,
       geo: import.meta.env.VITE_PODCAST_LOCATION_GEO || undefined,
@@ -147,8 +147,8 @@ export const PODCAST_CONFIG: PodcastConfig = {
     } : undefined,
     person: parseJsonEnv(import.meta.env.VITE_PODCAST_PERSON, [
       {
-        name: import.meta.env.VITE_PODCAST_AUTHOR || "PODSTR Creator",
-        role: "host",
+        name: import.meta.env.VITE_ARTIST_NAME || "PODSTR Creator",
+        role: "artist",
         group: "cast"
       }
     ]),

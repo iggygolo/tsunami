@@ -88,7 +88,7 @@ Edit `.env` to customize your podcast:
 VITE_CREATOR_NPUB=npub1...
 
 # Podcast Metadata  
-VITE_PODCAST_AUTHOR=Your Name
+VITE_ARTIST_NAME=Your Name
 VITE_PODCAST_DESCRIPTION=Your podcast description
 VITE_PODCAST_EMAIL=your@email.com
 VITE_PODCAST_IMAGE=https://your-image-url.jpg
