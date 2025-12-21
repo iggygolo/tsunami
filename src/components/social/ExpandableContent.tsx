@@ -85,10 +85,8 @@ export function ExpandableContent({
         </div>
       )}
 
-      {/* Post Actions (only show in expanded view or if not truncated) */}
-      {(isExpanded || !shouldTruncate) && (
-        <PostActions event={event} />
-      )}
+      {/* Post Actions - always visible */}
+      <PostActions event={event} />
     </div>
   );
 }

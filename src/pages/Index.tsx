@@ -1,14 +1,16 @@
 import { useSeoMeta } from '@unhead/react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Headphones, Rss, Zap, Users, MessageSquare } from 'lucide-react';
+import { Headphones, Rss, Zap, Users, MessageSquare, Play, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Layout } from '@/components/Layout';
 import { ReleaseList } from '@/components/podcast/ReleaseList';
 import { ZapLeaderboard } from '@/components/podcast/ZapLeaderboard';
 import { RecentActivity } from '@/components/podcast/RecentActivity';
+import { PostCard } from '@/components/social/PostCard';
 import { ZapDialog } from '@/components/ZapDialog';
 import type { PodcastRelease } from '@/types/podcast';
 import { useLatestRelease } from '@/hooks/usePodcastReleases';
@@ -16,6 +18,7 @@ import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useArtistPosts } from '@/hooks/useArtistPosts';
 import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 const Index = () => {
@@ -25,6 +28,10 @@ const Index = () => {
   const { user } = useCurrentUser();
   const { playRelease } = useAudioPlayer();
   const _currentRelease = useState<PodcastRelease | null>(null);
+  const { data: postsData, isLoading: postsLoading } = useArtistPosts(3);
+  
+  // Flatten the first page of posts for preview
+  const recentPosts = postsData?.pages.flat().slice(0, 3) || [];
 
   const handlePlayLatestRelease = () => {
     if (latestRelease) {
@@ -39,248 +46,294 @@ const Index = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* Latest Release Highlight */}
-            {latestRelease && (
-              <section className="animate-fade-in">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-3xl font-bold gradient-text">Latest Release</h2>
-                  <Badge variant="secondary" className="animate-pulse-slow">New</Badge>
-                </div>
-
-                <Card className="card-hover bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/5 border-primary/20 overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row items-start space-y-6 lg:space-y-0 lg:space-x-6">
-                      {latestRelease.imageUrl && (
-                        <div className="relative group">
-                          <img
-                            src={latestRelease.imageUrl}
-                            alt={latestRelease.title}
-                            className="w-32 h-32 lg:w-40 lg:h-40 rounded-xl object-cover flex-shrink-0 shadow-lg group-hover:shadow-xl transition-shadow duration-300"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        </div>
-                      )}
-
-                      <div className="flex-1 min-w-0 space-y-4">
-                        <h3 className="text-2xl lg:text-3xl font-bold line-clamp-2 leading-tight">
-                          {latestRelease.title}
-                        </h3>
-
-                        {latestRelease.description && (
-                          <p className="text-muted-foreground mb-4 line-clamp-3 leading-relaxed">
-                            {latestRelease.description}
-                          </p>
-                        )}
-
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                          <Button onClick={handlePlayLatestRelease} className="btn-primary focus-ring">
-                            <Headphones className="w-4 h-4 mr-2" />
-                            Listen Now
-                          </Button>
-
-                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                            {user && latestRelease.totalSats && latestRelease.totalSats > 0 && (
-                              <div className="flex items-center space-x-1 bg-primary/10 px-2 py-1 rounded-full">
-                                <Zap className="w-3 h-3 text-primary" />
-                                <span className="font-medium">
-                                  {latestRelease.totalSats.toLocaleString()} sats
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </section>
-            )}
-
-            {/* Quick Navigation */}
-            <section className="animate-fade-in-up">
-              <h2 className="text-3xl font-bold mb-6 gradient-text">Explore</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Link to="/releases" className="group">
-                  <Card className="card-hover border-primary/20 hover:border-primary/40 bg-gradient-to-br from-primary/5 to-transparent h-full">
-                    <CardContent className="p-6 text-center space-y-4">
-                      <div className="relative">
-                        <Headphones className="w-12 h-12 mx-auto text-primary group-hover:scale-110 transition-transform duration-300" />
-                        <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">All Releases</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Browse and listen to all podcast releases
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-
-                <Link to="/community" className="group">
-                  <Card className="card-hover border-secondary/20 hover:border-secondary/40 bg-gradient-to-br from-secondary/5 to-transparent h-full">
-                    <CardContent className="p-6 text-center space-y-4">
-                      <div className="relative">
-                        <Users className="w-12 h-12 mx-auto text-secondary group-hover:scale-110 transition-transform duration-300" />
-                        <div className="absolute inset-0 bg-secondary/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2 group-hover:text-secondary transition-colors">Community</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Engage with listeners and top supporters
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-
-                <Link to="/social" className="group">
-                  <Card className="card-hover border-primary/20 hover:border-primary/40 bg-gradient-to-br from-primary/5 to-transparent h-full">
-                    <CardContent className="p-6 text-center space-y-4">
-                      <div className="relative">
-                        <MessageSquare className="w-12 h-12 mx-auto text-primary group-hover:scale-110 transition-transform duration-300" />
-                        <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">Social Feed</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Follow the artist's latest updates
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </div>
-            </section>
-
-
-            {/* Recent Releases Preview */}
-            <section className="animate-fade-in-up">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-bold gradient-text">Recent Releases</h2>
-                <Button variant="outline" asChild className="focus-ring">
-                  <Link to="/releases" className="group">
-                    View All Releases
-                    <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </Button>
-              </div>
-
-              <ReleaseList
-                showSearch={false}
-                _showPlayer={false}
-                limit={3}
-                onPlayRelease={(release) => {
-                  playRelease(release);
-                }}
-              />
-            </section>
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Podcast Info */}
-            <Card className="card-hover border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-              <CardHeader>
-                <CardTitle className="gradient-text">About This Artist</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {podcastConfig.podcast.image && (
-                  <div className="relative group">
+      {/* Hero Section with Latest Release */}
+      {latestRelease && (
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+          <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+          <div className="container mx-auto px-4 py-12 relative">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex flex-col lg:flex-row items-center gap-8">
+                {/* Album Art */}
+                {latestRelease.imageUrl && (
+                  <div className="relative group flex-shrink-0">
+                    <div className="absolute -inset-2 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500" />
                     <img
-                      src={podcastConfig.podcast.image}
-                      alt={podcastConfig.podcast.artistName}
-                      className="w-full rounded-xl object-cover shadow-lg group-hover:shadow-xl transition-shadow duration-300"
+                      src={latestRelease.imageUrl}
+                      alt={latestRelease.title}
+                      className="relative w-64 h-64 lg:w-72 lg:h-72 rounded-2xl object-cover shadow-2xl"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <button
+                      onClick={handlePlayLatestRelease}
+                      className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    >
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
+                        <Play className="w-8 h-8 text-primary ml-1" fill="currentColor" />
+                      </div>
+                    </button>
                   </div>
                 )}
 
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {podcastConfig.podcast.description}
-                </p>
+                {/* Release Info */}
+                <div className="flex-1 text-center lg:text-left space-y-4">
+                  <div className="space-y-2">
+                    <Badge variant="secondary" className="mb-2">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Latest Release
+                    </Badge>
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+                      {latestRelease.title}
+                    </h1>
+                    <Link to="/about" className="inline-flex items-center gap-2 text-lg text-muted-foreground hover:text-foreground transition-colors">
+                      {podcastConfig.podcast.image && (
+                        <img
+                          src={podcastConfig.podcast.image}
+                          alt={podcastConfig.podcast.artistName}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      )}
+                      {podcastConfig.podcast.artistName}
+                    </Link>
+                  </div>
 
-                <Button variant="outline" className="w-full focus-ring" asChild>
-                  <Link to="/about" className="group">
-                    Learn More
-                    <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+                  {latestRelease.description && (
+                    <p className="text-muted-foreground leading-relaxed max-w-xl line-clamp-2">
+                      {latestRelease.description}
+                    </p>
+                  )}
 
-            {/* Subscribe Links */}
-            <Card className="card-hover border-secondary/20 bg-gradient-to-br from-secondary/5 to-transparent">
-              <CardHeader>
-                <CardTitle className="gradient-text">Subscribe</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start focus-ring" asChild>
-                  <a href="/rss.xml" target="_blank" rel="noopener noreferrer" className="group">
-                    <Rss className="w-4 h-4 mr-2 group-hover:animate-pulse" />
-                    RSS Feed
-                    <svg className="w-4 h-4 ml-auto group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                </Button>
-
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Copy the RSS feed URL to subscribe in your favorite podcast app.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Zap Leaderboard */}
-            <ZapLeaderboard limit={5} />
-
-            {/* Recent Activity */}
-            <RecentActivity limit={10} />
-
-            {/* Support */}
-            <Card className="card-hover border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-              <CardHeader>
-                <CardTitle className="gradient-text">Support</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                   Support us by zapping albums, sharing with friends, and engaging with the community.
-                </p>
-
-                {artist?.event && user && (artist.metadata?.lud16 || artist.metadata?.lud06) ? (
-                  <ZapDialog target={artist.event}>
-                    <Button variant="outline" className="w-full btn-primary focus-ring">
-                      <Zap className="w-4 h-4 mr-2 animate-pulse" />
-                      Zap the Show
+                  <div className="flex flex-wrap gap-3 justify-center lg:justify-start pt-2">
+                    <Button onClick={handlePlayLatestRelease} size="lg" className="bg-primary hover:bg-primary/90">
+                      <Headphones className="w-5 h-5 mr-2" />
+                      Listen Now
                     </Button>
-                  </ZapDialog>
-                ) : (
-                  <Button variant="outline" className="w-full" disabled>
-                    <Zap className="w-4 h-4 mr-2" />
-                    {!user ? "Login to Zap" : "Artist has no Lightning address"}
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
 
-            {/* Vibed with MKStack */}
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <p className="text-xs text-muted-foreground">
-                  Vibed with{' '}
-                  <a
-                    href="https://soapbox.pub/mkstack"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    MKStack
-                  </a>
-                </p>
-              </CardContent>
-            </Card>
+                    <Button variant="outline" size="lg" asChild>
+                      <Link to="/about">
+                        About Artist
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Link>
+                    </Button>
+
+                    {user && latestRelease.totalSats && latestRelease.totalSats > 0 && (
+                      <Badge variant="outline" className="h-11 px-4 text-sm bg-yellow-500/10 border-yellow-500/30 text-yellow-600 dark:text-yellow-400">
+                        <Zap className="w-4 h-4 mr-1" />
+                        {latestRelease.totalSats.toLocaleString()} sats
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-6xl mx-auto space-y-12">
+          {/* Recent Releases */}
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Recent Releases</h2>
+              <Button variant="ghost" asChild>
+                <Link to="/releases" className="group text-muted-foreground hover:text-foreground">
+                  View All
+                  <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
+
+            <ReleaseList
+              showSearch={false}
+              _showPlayer={false}
+              limit={6}
+              onPlayRelease={(release) => {
+                playRelease(release);
+              }}
+            />
+          </section>
+
+          {/* Quick Navigation Cards */}
+          <section>
+            <h2 className="text-2xl font-bold mb-6">Explore</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Link to="/releases" className="group">
+                <Card className="h-full hover:border-cyan-500/50 transition-colors">
+                  <CardContent className="p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                      <Headphones className="w-6 h-6 text-cyan-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold group-hover:text-cyan-500 transition-colors">All Releases</h3>
+                      <p className="text-sm text-muted-foreground">Browse catalog</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link to="/community" className="group">
+                <Card className="h-full hover:border-yellow-500/50 transition-colors">
+                  <CardContent className="p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center group-hover:bg-yellow-500/20 transition-colors">
+                      <Users className="w-6 h-6 text-yellow-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold group-hover:text-yellow-500 transition-colors">Community</h3>
+                      <p className="text-sm text-muted-foreground">Join discussions</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link to="/social" className="group">
+                <Card className="h-full hover:border-purple-500/50 transition-colors">
+                  <CardContent className="p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                      <MessageSquare className="w-6 h-6 text-purple-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold group-hover:text-purple-500 transition-colors">Social Feed</h3>
+                      <p className="text-sm text-muted-foreground">Latest updates</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <a href="/rss.xml" target="_blank" rel="noopener noreferrer" className="group">
+                <Card className="h-full hover:border-orange-500/50 transition-colors">
+                  <CardContent className="p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
+                      <Rss className="w-6 h-6 text-orange-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold group-hover:text-orange-500 transition-colors">RSS Feed</h3>
+                      <p className="text-sm text-muted-foreground">Subscribe</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </a>
+            </div>
+          </section>
+
+          {/* Social Feed Preview */}
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Social Feed</h2>
+              <Button variant="ghost" asChild>
+                <Link to="/social" className="group text-muted-foreground hover:text-foreground">
+                  View All
+                  <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
+
+            {postsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start space-x-3">
+                        <Skeleton className="w-9 h-9 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-3/4" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : recentPosts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {recentPosts.map((post) => (
+                  <PostCard key={post.id} event={post} previewMode className="h-44" />
+                ))}
+              </div>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="py-8 text-center">
+                  <MessageSquare className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">No posts yet</p>
+                </CardContent>
+              </Card>
+            )}
+          </section>
+
+          {/* Community Section */}
+          <section>
+            <h2 className="text-2xl font-bold mb-6">Community</h2>
+            <div className="space-y-6">
+              {/* Support CTA Banner */}
+              <Card className="relative overflow-hidden bg-gradient-to-r from-yellow-500/10 via-yellow-500/5 to-transparent border-yellow-500/20">
+                <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                      <Zap className="w-6 h-6 text-yellow-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">Support the Artist</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Zap releases, share with friends, and engage with the community
+                      </p>
+                    </div>
+                  </div>
+                  {artist?.event && user && (artist.metadata?.lud16 || artist.metadata?.lud06) ? (
+                    <ZapDialog target={artist.event}>
+                      <Button className="bg-yellow-500 hover:bg-yellow-600 text-yellow-950 shrink-0">
+                        <Zap className="w-4 h-4 mr-2" />
+                        Zap the Show
+                      </Button>
+                    </ZapDialog>
+                  ) : (
+                    <Button variant="outline" className="shrink-0" disabled>
+                      <Zap className="w-4 h-4 mr-2" />
+                      {!user ? "Login to Zap" : "Artist has no Lightning address"}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Top Supporters */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-yellow-500" />
+                        Top Supporters
+                      </h3>
+                      <Link to="/community" className="text-sm text-muted-foreground hover:text-foreground">
+                        See all
+                      </Link>
+                    </div>
+                    <ZapLeaderboard limit={5} showTitle={false} />
+                  </CardContent>
+                </Card>
+
+                {/* Recent Activity */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold">Recent Activity</h3>
+                      <Link to="/community" className="text-sm text-muted-foreground hover:text-foreground">
+                        See all
+                      </Link>
+                    </div>
+                    <RecentActivity limit={5} showTitle={false} />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </section>
+
+          {/* Footer */}
+          <div className="text-center pt-4">
+            <p className="text-sm text-muted-foreground">
+              {podcastConfig.podcast.copyright}
+            </p>
           </div>
         </div>
       </div>
