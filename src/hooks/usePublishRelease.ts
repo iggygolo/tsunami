@@ -5,7 +5,6 @@ import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import type { ReleaseFormData } from '@/types/podcast';
 import { PODCAST_KINDS, isPodcastCreator } from '@/lib/podcastConfig';
-import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 
 /**
  * Hook for publishing podcast releases (creator only)
@@ -15,7 +14,6 @@ export function usePublishRelease() {
   const { mutateAsync: createEvent } = useNostrPublish();
   const { mutateAsync: uploadFile } = useUploadFile();
   const queryClient = useQueryClient();
-  const podcastConfig = usePodcastConfig();
 
   return useMutation({
     mutationFn: async (releaseData: ReleaseFormData): Promise<string> => {
@@ -191,7 +189,6 @@ export function useUpdateRelease() {
   const { mutateAsync: uploadFile } = useUploadFile();
   const { nostr } = useNostr();
   const queryClient = useQueryClient();
-  const podcastConfig = usePodcastConfig();
 
   return useMutation({
     mutationFn: async ({

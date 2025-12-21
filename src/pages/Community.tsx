@@ -10,8 +10,8 @@ import { PODCAST_CONFIG } from '@/lib/podcastConfig';
 
 const Community = () => {
   useSeoMeta({
-    title: `Community - ${PODCAST_CONFIG.podcast.title}`,
-    description: `Join the community discussion for ${PODCAST_CONFIG.podcast.title}`,
+    title: `Community - ${PODCAST_CONFIG.podcast.author}`,
+    description: `Join the community discussion for ${PODCAST_CONFIG.podcast.author}`,
   });
 
   return (
@@ -21,7 +21,7 @@ const Community = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Community</h1>
             <p className="text-muted-foreground">
-              Engage with the {PODCAST_CONFIG.podcast.title} community
+              Engage with the {PODCAST_CONFIG.podcast.author} community
             </p>
           </div>
 

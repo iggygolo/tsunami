@@ -17,7 +17,6 @@ import {
   Play,
   MessageSquare,
   Repeat2,
-  Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +26,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Layout } from '@/components/Layout';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
@@ -97,50 +95,6 @@ interface PodcastFormData {
   };
 }
 
-interface ExtendedPodcastMetadata {
-  title: string;
-  description: string;
-  author: string;
-  email: string;
-  image: string;
-  website: string;
-  copyright: string;
-  funding?: string[];
-  value?: {
-    amount: number;
-    currency: string;
-    recipients?: Array<{
-      name: string;
-      type: 'node' | 'lnaddress';
-      address: string;
-      split: number;
-      customKey?: string;
-      customValue?: string;
-      fee?: boolean;
-    }>;
-  };
-  // Podcasting 2.0 fields
-  guid?: string;
-  medium?: 'podcast' | 'music' | 'video' | 'film' | 'audiobook' | 'newsletter' | 'blog';
-  publisher?: string;
-  location?: {
-    name: string;
-    geo?: string;
-    osm?: string;
-  };
-  person?: Array<{
-    name: string;
-    role: string;
-    group?: string;
-    img?: string;
-    href?: string;
-  }>;
-  license?: {
-    identifier: string;
-    url?: string;
-  };
-}
-
 const Studio = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -189,7 +143,7 @@ const Studio = () => {
     person: PODCAST_CONFIG.podcast.person || [
       {
         name: PODCAST_CONFIG.podcast.author,
-        role: 'host',
+        role: 'artist',
         group: 'cast'
       }
     ],
@@ -216,18 +170,18 @@ const Studio = () => {
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
         // Podcasting 2.0 fields
-        guid: (podcastMetadata as ExtendedPodcastMetadata).guid || PODCAST_CONFIG.creatorNpub,
-        medium: (podcastMetadata as ExtendedPodcastMetadata).medium || 'music',
-        publisher: (podcastMetadata as ExtendedPodcastMetadata).publisher || podcastMetadata.author,
-        location: (podcastMetadata as ExtendedPodcastMetadata).location,
-        person: (podcastMetadata as ExtendedPodcastMetadata).person || [
+        guid: podcastMetadata.guid || PODCAST_CONFIG.creatorNpub,
+        medium: podcastMetadata.medium || 'music',
+        publisher: podcastMetadata.publisher || podcastMetadata.author,
+        location: podcastMetadata.location,
+        person: podcastMetadata.person || [
           {
             name: podcastMetadata.author,
-            role: 'host',
+            role: 'artist',
             group: 'cast'
           }
         ],
-        license: (podcastMetadata as ExtendedPodcastMetadata).license || {
+        license: podcastMetadata.license || {
           identifier: 'CC BY 4.0',
           url: 'https://creativecommons.org/licenses/by/4.0/'
         },
@@ -511,18 +465,18 @@ const Studio = () => {
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
         // Podcasting 2.0 fields
-        guid: (podcastMetadata as ExtendedPodcastMetadata).guid || PODCAST_CONFIG.creatorNpub,
-        medium: (podcastMetadata as ExtendedPodcastMetadata).medium || 'music',
-        publisher: (podcastMetadata as ExtendedPodcastMetadata).publisher || podcastMetadata.author,
-        location: (podcastMetadata as ExtendedPodcastMetadata).location,
-        person: (podcastMetadata as ExtendedPodcastMetadata).person || [
+        guid: podcastMetadata.guid || PODCAST_CONFIG.creatorNpub,
+        medium: podcastMetadata.medium || 'music',
+        publisher: podcastMetadata.publisher || podcastMetadata.author,
+        location: podcastMetadata.location,
+        person: podcastMetadata.person || [
           {
             name: podcastMetadata.author,
-            role: 'host',
+            role: 'artist',
             group: 'cast'
           }
         ],
-        license: (podcastMetadata as ExtendedPodcastMetadata).license || {
+        license: podcastMetadata.license || {
           identifier: 'CC BY 4.0',
           url: 'https://creativecommons.org/licenses/by/4.0/'
         },
@@ -793,13 +747,13 @@ const Studio = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="author">Author/Host</Label>
+                        <Label htmlFor="author">Artist Name</Label>
                         <Input
                           id="author"
                           value={formData.author}
                           onChange={(e) => handleInputChange('author', e.target.value)}
                           disabled={editingSection !== 'podcast'}
-                          placeholder="Enter author name"
+                          placeholder="Enter artist name"
                         />
                       </div>
 
@@ -812,17 +766,6 @@ const Studio = () => {
                           onChange={(e) => handleInputChange('email', e.target.value)}
                           disabled={editingSection !== 'podcast'}
                           placeholder="Enter contact email"
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="language">Language</Label>
-                        <Input
-                          id="language"
-                          value={formData.language}
-                          onChange={(e) => handleInputChange('language', e.target.value)}
-                          disabled={editingSection !== 'podcast'}
-                          placeholder="e.g., en-us"
                         />
                       </div>
                     </div>

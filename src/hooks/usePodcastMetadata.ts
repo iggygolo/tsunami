@@ -23,6 +23,26 @@ interface PodcastMetadata {
       fee?: boolean;
     }>;
   };
+  // Podcasting 2.0 fields
+  guid?: string;
+  medium?: 'podcast' | 'music' | 'video' | 'film' | 'audiobook' | 'newsletter' | 'blog';
+  publisher?: string;
+  location?: {
+    name: string;
+    geo?: string;
+    osm?: string;
+  };
+  person?: Array<{
+    name: string;
+    role: string;
+    group?: string;
+    img?: string;
+    href?: string;
+  }>;
+  license?: {
+    identifier: string;
+    url?: string;
+  };
   updated_at: number;
 }
 
@@ -76,6 +96,12 @@ export function usePodcastMetadata() {
           currency: PODCAST_CONFIG.podcast.value.currency,
           recipients: PODCAST_CONFIG.podcast.value.recipients || []
         },
+        guid: PODCAST_CONFIG.podcast.guid,
+        medium: PODCAST_CONFIG.podcast.medium,
+        publisher: PODCAST_CONFIG.podcast.publisher,
+        location: PODCAST_CONFIG.podcast.location,
+        person: PODCAST_CONFIG.podcast.person,
+        license: PODCAST_CONFIG.podcast.license,
         updated_at: 0
       };
     },

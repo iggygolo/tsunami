@@ -91,7 +91,7 @@ export function Navigation({ className }: NavigationProps) {
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full animate-pulse-slow"></div>
             </div>
             <div>
-              <h1 className="text-xl font-bold gradient-text">{podcastConfig.podcast.title}</h1>
+              <h1 className="text-xl font-bold gradient-text">{podcastConfig.podcast.author}</h1>
               <p className="text-xs text-muted-foreground">
                 Powered by Nostr
               </p>
@@ -194,7 +194,7 @@ export function Navigation({ className }: NavigationProps) {
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2">
                 <Headphones className="w-5 h-5" />
-                {podcastConfig.podcast.title}
+                {podcastConfig.podcast.author}
               </SheetTitle>
               <SheetDescription>
                 Navigate through the podcast
