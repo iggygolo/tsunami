@@ -6,6 +6,7 @@ import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { isArtist } from '@/lib/podcastConfig';
 import { LoginArea } from '@/components/auth/LoginArea';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface MobileSidebarProps {
   onNavigate?: () => void;
@@ -67,6 +68,8 @@ export function MobileSidebar({ onNavigate }: MobileSidebarProps) {
     }
   ];
 
+  const isMobile = useIsMobile();
+
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
@@ -94,52 +97,22 @@ export function MobileSidebar({ onNavigate }: MobileSidebarProps) {
         {/* Main Navigation */}
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Navigation</h3>
-          {navItems.map((item) => {
+          {(isMobile ? [...navItems, ...secondaryItems] : navItems).map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
 
             return (
               <Button
                 key={item.path}
-                variant={active ? "secondary" : "ghost"}
+                variant="ghost"
                 size="sm"
                 asChild
                 className={cn(
-                  "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200",
-                  active && "bg-secondary text-secondary-foreground shadow-sm"
+                  "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-600 dark:hover:text-cyan-400",
+                  active && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0"
                 )}
               >
-                <Link to={item.path} className="flex items-start space-x-3" onClick={onNavigate}>
-                  <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                  <div className="text-left min-w-0">
-                    <div className="font-medium">{item.label}</div>
-                    <div className="text-xs text-muted-foreground truncate">{item.description}</div>
-                  </div>
-                </Link>
-              </Button>
-            );
-          })}
-        </div>
-
-        {/* Secondary Navigation */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">More</h3>
-          {secondaryItems.map((item) => {
-            const Icon = item.icon;
-            const active = !item.external && isActive(item.path);
-
-            return (
-              <Button
-                key={item.path}
-                variant={active ? "secondary" : "ghost"}
-                size="sm"
-                asChild
-                className={cn(
-                  "w-full justify-start h-auto py-3 px-3 focus-ring",
-                  active && "bg-secondary text-secondary-foreground shadow-sm"
-                )}
-              >
-                {item.external ? (
+                {'external' in item && item.external ? (
                   <a
                     href={item.path}
                     target="_blank"
@@ -147,18 +120,18 @@ export function MobileSidebar({ onNavigate }: MobileSidebarProps) {
                     className="flex items-start space-x-3"
                     onClick={onNavigate}
                   >
-                    <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                    <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400")} />
                     <div className="text-left min-w-0">
                       <div className="font-medium">{item.label}</div>
-                      <div className="text-xs text-muted-foreground truncate">{item.description}</div>
+                      <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
                     </div>
                   </a>
                 ) : (
                   <Link to={item.path} className="flex items-start space-x-3" onClick={onNavigate}>
-                    <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                    <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400")} />
                     <div className="text-left min-w-0">
                       <div className="font-medium">{item.label}</div>
-                      <div className="text-xs text-muted-foreground truncate">{item.description}</div>
+                      <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
                     </div>
                   </Link>
                 )}
@@ -166,6 +139,7 @@ export function MobileSidebar({ onNavigate }: MobileSidebarProps) {
             );
           })}
         </div>
+        {/* Secondary Navigation is inlined on mobile to ensure visibility */}
 
         {/* Artist Studio */}
         {isArtist_user && (
