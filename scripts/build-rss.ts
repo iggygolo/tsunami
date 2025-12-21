@@ -159,22 +159,22 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
      xmlns:content="http://purl.org/rss/1.0/modules/content/"
      xmlns:podcast="https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md">
   <channel>
-    <title>${escapeXml(podcastConfig.podcast.author)}</title>
+    <title>${escapeXml(podcastConfig.podcast.artistName)}</title>
     <description>${escapeXml(podcastConfig.podcast.description)}</description>
     <link>${escapeXml(podcastConfig.podcast.website || baseUrl)}</link>
     <copyright>${escapeXml(podcastConfig.podcast.copyright)}</copyright>
-    <managingEditor>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.author)})</managingEditor>
-    <webMaster>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.author)})</webMaster>
+    <managingEditor>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.artistName)})</managingEditor>
+    <webMaster>${escapeXml(podcastConfig.podcast.email)} (${escapeXml(podcastConfig.podcast.artistName)})</webMaster>
     <pubDate>${new Date().toUTCString()}</pubDate>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <ttl>${podcastConfig.rss.ttl}</ttl>
 
     <!-- iTunes/Apple Podcasts tags -->
-    <itunes:title>${escapeXml(podcastConfig.podcast.author)}</itunes:title>
+    <itunes:title>${escapeXml(podcastConfig.podcast.artistName)}</itunes:title>
     <itunes:summary>${escapeXml(podcastConfig.podcast.description)}</itunes:summary>
-    <itunes:author>${escapeXml(podcastConfig.podcast.author)}</itunes:author>
+    <itunes:author>${escapeXml(podcastConfig.podcast.artistName)}</itunes:author>
     <itunes:owner>
-      <itunes:name>${escapeXml(podcastConfig.podcast.author)}</itunes:name>
+      <itunes:name>${escapeXml(podcastConfig.podcast.artistName)}</itunes:name>
       <itunes:email>${escapeXml(podcastConfig.podcast.email)}</itunes:email>
     </itunes:owner>
     <itunes:image href="${escapeXml(podcastConfig.podcast.image)}" />
@@ -195,7 +195,7 @@ function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[],
           podcastConfig.podcast.value.recipients.map(recipient =>
             `<podcast:valueRecipient name="${escapeXml(recipient.name)}" type="${escapeXml(recipient.type)}" address="${escapeXml(recipient.address)}" split="${recipient.split}"${recipient.customKey ? ` customKey="${escapeXml(recipient.customKey)}"` : ''}${recipient.customValue ? ` customValue="${escapeXml(recipient.customValue)}"` : ''}${recipient.fee ? ` fee="true"` : ''} />`
           ).join('\n        ') :
-          `<podcast:valueRecipient name="${escapeXml(podcastConfig.podcast.author)}" type="lnaddress" address="${escapeXml(podcastConfig.podcast.funding?.[0] || '')}" split="100" />`
+          `<podcast:valueRecipient name="${escapeXml(podcastConfig.podcast.artistName)}" type="lnaddress" address="${escapeXml(podcastConfig.podcast.funding?.[0] || '')}" split="100" />`
         }
       </podcast:value>` : ''
     }
