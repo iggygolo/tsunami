@@ -1,14 +1,12 @@
 import { useState, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useSeoMeta } from '@unhead/react';
-import { Clock, Calendar, ArrowLeft, Headphones, BookOpen, ExternalLink, ChevronDown, ChevronUp, Play } from 'lucide-react';
+import { Calendar, ArrowLeft, Headphones, BookOpen, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { NoteContent } from '@/components/NoteContent';
 import { ReleaseActions } from './ReleaseActions';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { Layout } from '@/components/Layout';
@@ -142,31 +140,23 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
               Back
             </Button>
 
-            <Card>
-              <CardHeader>
-                <div className="flex items-start space-x-4">
-                  <Skeleton className="w-32 h-32 rounded-lg" />
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Skeleton className="h-6 w-24" />
-                      <Skeleton className="h-6 w-16" />
-                    </div>
-                    <Skeleton className="h-8 w-3/4" />
-                    <div className="flex items-center space-x-4">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-4 w-20" />
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+            {/* Loading skeleton matching new layout */}
+            <div className="flex flex-col md:flex-row gap-8 mb-8">
+              <Skeleton className="w-full md:w-64 h-64 rounded-xl" />
+              <div className="flex-1 space-y-4">
+                <Skeleton className="h-10 w-3/4" />
+                <Skeleton className="h-4 w-32" />
+                <div className="space-y-2">
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-4/5" />
-                  <Skeleton className="h-4 w-3/5" />
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-10 w-32" />
+              </div>
+            </div>
           </div>
         </div>
       </Layout>
@@ -183,17 +173,15 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
               Back
             </Button>
 
-            <Card>
-              <CardContent className="py-12 text-center">
-                <h2 className="text-xl font-semibold mb-2">Release Not Found</h2>
-                <p className="text-muted-foreground mb-4">
-                  This release doesn't exist or hasn't been published yet.
-                </p>
-                <Button asChild>
-                  <Link to="/releases">Browse All Releases</Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="text-center py-16">
+              <h2 className="text-2xl font-semibold mb-2">Release Not Found</h2>
+              <p className="text-muted-foreground mb-6">
+                This release doesn't exist or hasn't been published yet.
+              </p>
+              <Button asChild>
+                <Link to="/releases">Browse All Releases</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </Layout>
@@ -203,188 +191,138 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
+        <div className="max-w-4xl mx-auto">
+          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Releases
           </Button>
 
-          {/* release Header */}
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-                {release.imageUrl && (
-                  <img
-                    src={release.imageUrl}
-                    alt={release.title}
-                    className="w-32 h-32 lg:w-48 lg:h-48 rounded-lg object-cover flex-shrink-0 shadow-lg"
-                  />
-                )}
+          {/* Hero Section */}
+          <div className="flex flex-col md:flex-row gap-8 mb-8">
+            {release.imageUrl && (
+              <img
+                src={release.imageUrl}
+                alt={release.title}
+                className="w-full md:w-64 h-64 rounded-xl object-cover shadow-2xl flex-shrink-0"
+              />
+            )}
 
-                <div className="flex-1 min-w-0 space-y-4">
-                  <CardTitle className="text-2xl lg:text-3xl">
-                    {release.title}
-                  </CardTitle>
-
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{formatDistanceToNow(release.publishDate, { addSuffix: true })}</span>
-                    </div>
-                  </div>
-
-                  {release.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {release.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          #{tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+            <div className="flex-1 space-y-4">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
+                  {release.title}
+                </h1>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="w-4 h-4" />
+                  <span>{formatDistanceToNow(release.publishDate, { addSuffix: true })}</span>
                 </div>
               </div>
-            </CardHeader>
 
-            <CardContent className="space-y-6">
-              {/* release Description */}
               {release.description && (
-                <div>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {release.description}
-                  </p>
-                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  {release.description}
+                </p>
               )}
 
-              {/* release Content */}
-              {release.content && (
-                <div className="prose prose-sm max-w-none">
-                  <NoteContent
-                    event={releaseEvent!}
-                    className="text-sm"
-                  />
+              {release.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {release.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      #{tag}
+                    </Badge>
+                  ))}
                 </div>
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-4 border-t">
-                <div className="flex items-center gap-3">
-                  <Button
-                    onClick={() => {
-                      if (release.tracks && release.tracks.length > 0) {
-                        playRelease(release);
-                      }
-                    }}
-                    disabled={!release.tracks || release.tracks.length === 0}
-                    className="flex items-center gap-2"
-                  >
-                    <Headphones className="w-4 h-4" />
-                    Listen Now
-                  </Button>
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    if (release.tracks && release.tracks.length > 0) {
+                      playRelease(release);
+                    }
+                  }}
+                  disabled={!release.tracks || release.tracks.length === 0}
+                  className="gap-2"
+                >
+                  <Headphones className="w-5 h-5" />
+                  Listen Now
+                </Button>
 
-                  {!release.tracks || release.tracks.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      No tracks available
-                    </p>
-                  )}
-                </div>
-
-                {/* Social Actions */}
                 <ReleaseActions
                   release={release}
                   showComments={showComments}
                   onToggleComments={() => setShowComments(!showComments)}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Tracklist Section */}
           {release.tracks && release.tracks.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Tracklist ({release.tracks.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {release.tracks.map((track, index) => {
-                    const isCurrentTrack = playerState.currentRelease?.eventId === release.eventId && playerState.currentTrackIndex === index;
-                    const isPlaying = isCurrentTrack && playerState.isPlaying;
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-4">
+                Tracklist
+                <span className="text-muted-foreground font-normal ml-2">({release.tracks.length})</span>
+              </h2>
+              <div className="space-y-1 rounded-xl border bg-card overflow-hidden">
+                {release.tracks.map((track, index) => {
+                  const isCurrentTrack = playerState.currentRelease?.eventId === release.eventId && playerState.currentTrackIndex === index;
+                  const isPlaying = isCurrentTrack && playerState.isPlaying;
 
-                    return (
-                      <div
-                        key={index}
-                        onClick={() => playTrack(release, index)}
-                        className={`flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group cursor-pointer ${isCurrentTrack ? 'bg-primary/5 border-primary/20' : ''}`}
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${isCurrentTrack ? 'bg-primary/10' : 'bg-muted group-hover:bg-primary/10'}`}>
-                            {isPlaying ? (
-                              <span className="text-primary animate-pulse">▶</span>
-                            ) : (
-                              <span className={`text-sm font-medium ${isCurrentTrack ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'}`}>
-                                {index + 1}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium truncate ${isCurrentTrack ? 'text-primary' : ''}`}>
-                              {track.title || `Track ${index + 1}`}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          {track.duration && (
-                            <span className="text-xs text-muted-foreground">
-                              {formatDuration(track.duration)}
-                            </span>
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => playTrack(release, index)}
+                      className={`flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer group ${isCurrentTrack ? 'bg-primary/5' : ''} ${index !== 0 ? 'border-t border-border/50' : ''}`}
+                    >
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-colors ${isCurrentTrack ? 'bg-primary text-primary-foreground' : 'bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary'}`}>
+                          {isPlaying ? (
+                            <span className="animate-pulse">▶</span>
+                          ) : (
+                            index + 1
                           )}
-                          {track.explicit && (
-                            <Badge variant="outline" className="text-xs">
-                              Explicit
-                            </Badge>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              playTrack(release, index);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Play className="w-4 h-4" />
-                          </Button>
                         </div>
+                        <span className={`font-medium truncate ${isCurrentTrack ? 'text-primary' : ''}`}>
+                          {track.title || `Track ${index + 1}`}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                      <div className="flex items-center gap-4 flex-shrink-0">
+                        {track.explicit && (
+                          <Badge variant="outline" className="text-xs">E</Badge>
+                        )}
+                        <span className="text-sm text-muted-foreground tabular-nums">
+                          {formatDuration(track.duration)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {/* Transcript Section */}
           {release.transcriptUrl && (
-            <Card>
+            <div className="mb-8">
               <Collapsible open={isTranscriptOpen} onOpenChange={setIsTranscriptOpen}>
-                <CardHeader className="pb-3">
-                  <CollapsibleTrigger asChild>
-                    <button className="flex items-center justify-between w-full text-left hover:opacity-80 transition-opacity">
-                      <CardTitle className="flex items-center gap-2">
-                        <BookOpen className="w-5 h-5" />
-                        Transcript
-                      </CardTitle>
-                      {isTranscriptOpen ? (
-                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </button>
-                  </CollapsibleTrigger>
-                </CardHeader>
+                <CollapsibleTrigger asChild>
+                  <button className="flex items-center justify-between w-full py-3 text-left hover:opacity-80 transition-opacity border-b">
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                      <BookOpen className="w-5 h-5" />
+                      Transcript
+                    </h2>
+                    {isTranscriptOpen ? (
+                      <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </button>
+                </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <CardContent>
+                  <div className="pt-4">
                     {isLoadingTranscript ? (
                       <div className="space-y-2">
                         <Skeleton className="h-4 w-full" />
@@ -392,11 +330,9 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                         <Skeleton className="h-4 w-3/4" />
                       </div>
                     ) : transcriptContent ? (
-                      <div className="prose prose-sm max-w-none">
-                        <pre className="whitespace-pre-wrap text-sm bg-muted p-4 rounded-lg overflow-x-auto max-h-[600px] overflow-y-auto">
-                          {transcriptContent}
-                        </pre>
-                      </div>
+                      <pre className="whitespace-pre-wrap text-sm bg-muted p-4 rounded-lg overflow-x-auto max-h-[600px] overflow-y-auto">
+                        {transcriptContent}
+                      </pre>
                     ) : (
                       <div className="text-center py-8">
                         <p className="text-muted-foreground mb-4">Failed to load transcript</p>
@@ -411,32 +347,23 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                         </a>
                       </div>
                     )}
-                  </CardContent>
+                  </div>
                 </CollapsibleContent>
               </Collapsible>
-            </Card>
+            </div>
           )}
 
-
           {/* Comments Section */}
-          {showComments && (
-            <Card>
-              <CardContent className="pt-6">
-                {release && releaseEvent ? (
-                  <CommentsSection
-                    root={releaseEvent}
-                    title="Release Discussion"
-                    emptyStateMessage="No comments yet"
-                    emptyStateSubtitle="Be the first to share your thoughts about this release!"
-                    limit={100}
-                  />
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>Unable to load comments for this release.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {showComments && release && releaseEvent && (
+            <div>
+              <CommentsSection
+                root={releaseEvent}
+                title="Discussion"
+                emptyStateMessage="No comments yet"
+                emptyStateSubtitle="Be the first to share your thoughts about this release!"
+                limit={100}
+              />
+            </div>
           )}
         </div>
       </div>

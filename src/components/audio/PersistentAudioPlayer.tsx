@@ -339,135 +339,121 @@ export function PersistentAudioPlayer() {
 
         {/* Expanded Controls */}
         <CollapsibleContent>
-          <div className="px-4 sm:px-6 pb-6 pt-4 border-t border-border/50 max-h-[70vh] sm:max-h-none overflow-y-auto bg-gradient-to-b from-muted/20 to-transparent">
-            <Card className="mt-4">
-              <CardContent className="p-4">
-                <div className="space-y-4">
-                  {/* release Details */}
-                  <div>
-                    <h4 className="font-semibold mb-2">Now Playing</h4>
-                    <div className="flex items-start space-x-3">
-                      {release.imageUrl && (
-                        <img
-                          src={release.imageUrl}
-                          alt={release.title}
-                          className="w-16 h-16 rounded object-cover flex-shrink-0"
-                        />
+          <div className="px-4 sm:px-6 pb-6 pt-4 border-t border-border/50 max-h-[70vh] sm:max-h-none overflow-y-auto">
+            <div className="space-y-6">
+              {/* Now Playing Details */}
+              <div className="flex items-start space-x-4">
+                {release.imageUrl && (
+                  <img
+                    src={release.imageUrl}
+                    alt={release.title}
+                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0 shadow-md"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-lg">
+                    {release.tracks[state.currentTrackIndex]?.title || `Track ${state.currentTrackIndex + 1}`}
+                  </p>
+                  <Link
+                    to={`/${releaseNaddr}`}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {release.title}
+                  </Link>
+                  {release.description && (
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                      {release.description}
+                    </p>
+                  )}
+                  {release.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {release.tags.slice(0, 4).map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-xs">
+                          #{tag}
+                        </Badge>
+                      ))}
+                      {release.tags.length > 4 && (
+                        <span className="text-xs text-muted-foreground">
+                          +{release.tags.length - 4} more
+                        </span>
                       )}
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium">
-                          {release.tracks[state.currentTrackIndex]?.title || `Track ${state.currentTrackIndex + 1}`}
-                        </p>
-                        <Link
-                          to={`/${releaseNaddr}`}
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors block"
-                        >
-                          {release.title}
-                        </Link>
-                        {release.description && (
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {release.description}
-                          </p>
-                        )}
-                        {release.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {release.tags.slice(0, 3).map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-xs">
-                                #{tag}
-                              </Badge>
-                            ))}
-                            {release.tags.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{release.tags.length - 3} more
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Volume & Playback Speed */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Volume Controls - Visible on mobile in expanded view */}
-                    <div className="sm:hidden">
-                      <h4 className="font-semibold mb-2">Volume</h4>
-                      <div className="flex items-center space-x-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleMuteToggle}
-                          className="h-8 w-8 p-0"
-                        >
-                          {isMuted || state.volume === 0 ? (
-                            <VolumeX className="h-4 w-4" />
-                          ) : (
-                            <Volume2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <div className="flex-1">
-                          <Slider
-                            value={[isMuted ? 0 : state.volume]}
-                            max={1}
-                            step={0.1}
-                            onValueChange={handleVolumeChange}
-                            className="cursor-pointer"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Playback Speed */}
-                    <div>
-                      <h4 className="font-semibold mb-2">Playback Speed</h4>
-                      <div className="flex items-center space-x-2 flex-wrap">
-                        {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
-                          <Button
-                            key={rate}
-                            variant={state.playbackRate === rate ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handlePlaybackRateChange(rate)}
-                            className="text-xs"
-                          >
-                            {rate}×
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-
-                  {/* Comments Section */}
-                  {showComments && (
-                    <div>
-                      <h4 className="font-semibold mb-2">Release Discussion</h4>
-                      <div className="max-h-60 sm:max-h-96 overflow-y-auto">
-                        <CommentsSection
-                          root={releaseEvent}
-                          title=""
-                          emptyStateMessage="No comments yet"
-                          emptyStateSubtitle="Be the first to share your thoughts about this release!"
-                          limit={50}
-                        />
-                      </div>
                     </div>
                   )}
+                </div>
+              </div>
 
-                  {/* Additional release Actions */}
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <div className="text-sm text-muted-foreground">
-                      Playing from {window.location.hostname}
-                    </div>
-                    <Link
-                      to={`/${releaseNaddr}`}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      View release Page
-                    </Link>
+              {/* Settings Row */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 py-3 border-y border-border/50">
+                {/* Volume Controls - Visible on mobile */}
+                <div className="sm:hidden flex items-center space-x-3">
+                  <span className="text-sm font-medium text-muted-foreground w-16">Volume</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleMuteToggle}
+                    className="h-8 w-8 p-0"
+                  >
+                    {isMuted || state.volume === 0 ? (
+                      <VolumeX className="h-4 w-4" />
+                    ) : (
+                      <Volume2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <div className="flex-1">
+                    <Slider
+                      value={[isMuted ? 0 : state.volume]}
+                      max={1}
+                      step={0.1}
+                      onValueChange={handleVolumeChange}
+                      className="cursor-pointer"
+                    />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+
+                {/* Playback Speed */}
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm font-medium text-muted-foreground">Speed</span>
+                  <div className="flex items-center space-x-1">
+                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
+                      <Button
+                        key={rate}
+                        variant={state.playbackRate === rate ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => handlePlaybackRateChange(rate)}
+                        className="text-xs h-7 px-2"
+                      >
+                        {rate}×
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="sm:ml-auto">
+                  <Link
+                    to={`/${releaseNaddr}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    View full release →
+                  </Link>
+                </div>
+              </div>
+
+              {/* Comments Section */}
+              {showComments && (
+                <div className="space-y-3">
+                  <h4 className="font-semibold">Discussion</h4>
+                  <div className="max-h-60 sm:max-h-80 overflow-y-auto rounded-lg bg-muted/30 p-3">
+                    <CommentsSection
+                      root={releaseEvent}
+                      title=""
+                      emptyStateMessage="No comments yet"
+                      emptyStateSubtitle="Be the first to share your thoughts!"
+                      limit={50}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </CollapsibleContent>
       </Collapsible>
