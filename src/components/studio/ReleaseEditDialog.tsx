@@ -368,25 +368,6 @@ export function ReleaseEditDialog({
                 )}
               />
 
-              {/* Content/Show Notes */}
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Show Notes</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Detailed show notes, timestamps, links..."
-                        rows={5}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               {/* Audio Upload/URL */}
               <div className="space-y-4">
                 <Label>Audio File</Label>

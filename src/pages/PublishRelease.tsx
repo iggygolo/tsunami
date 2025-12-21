@@ -78,7 +78,8 @@ const PublishRelease = () => {
             </p>
           </div>
 
-          <PublishReleaseForm 
+          <PublishReleaseForm
+            className="pt-8"
             onSuccess={handleSuccess}
             onCancel={handleCancel}
           />

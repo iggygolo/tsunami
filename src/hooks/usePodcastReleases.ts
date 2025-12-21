@@ -83,14 +83,11 @@ function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
   // Extract transcript URL from tag
   const transcriptUrl = tags.get('transcript')?.[0];
 
-  // Content is just the show notes (plain text)
-  const content = event.content || undefined;
-
   return {
     id: event.id,
     title,
     description,
-    content,
+    content: undefined,
     audioUrl,
     audioType,
     videoUrl,

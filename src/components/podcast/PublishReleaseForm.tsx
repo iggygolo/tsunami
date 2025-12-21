@@ -231,9 +231,6 @@ export function PublishReleaseForm({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle>Publish New Release</CardTitle>
-      </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -263,25 +260,6 @@ export function PublishReleaseForm({
                     <Textarea 
                       placeholder="Brief description of the release..."
                       rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Content/Show Notes */}
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Show Notes</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Detailed show notes, timestamps, links..."
-                      rows={5}
                       {...field}
                     />
                   </FormControl>
