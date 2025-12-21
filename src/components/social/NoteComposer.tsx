@@ -157,19 +157,19 @@ export function NoteComposer({
 
   return (
     <Card className={className}>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center space-x-2">
-          <PenTool className="h-5 w-5" />
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-base flex items-center space-x-2">
+          <PenTool className="h-4 w-4 text-purple-500" />
           <span>Create a Note</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <CardContent className="px-4 pb-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={placeholder}
-            className="min-h-[120px] resize-none"
+            className="min-h-[80px] resize-none focus-visible:ring-purple-500/50"
             disabled={isPending || isUploading}
           />
 
@@ -213,7 +213,7 @@ export function NoteComposer({
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isPending || isUploading}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-purple-500 hover:bg-purple-500/10"
               >
                 <Image className="h-4 w-4" />
               </Button>
@@ -222,6 +222,7 @@ export function NoteComposer({
             <Button 
               type="submit" 
               disabled={(!content.trim() && !selectedImage) || isPending || isUploading}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               <Send className="h-4 w-4 mr-2" />
               {isPending ? 'Publishing...' : isUploading ? 'Uploading...' : 'Publish Note'}

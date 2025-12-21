@@ -359,7 +359,7 @@ export function PostActions({ event, className }: PostActionsProps) {
       <Button
         variant="ghost"
         size="sm"
-        className="text-muted-foreground hover:text-blue-500"
+        className="text-muted-foreground hover:text-purple-500 hover:bg-purple-500/10"
         onClick={() => setReplyDialogOpen(true)}
       >
         <MessageCircle className="w-4 h-4 mr-1" />
@@ -373,8 +373,8 @@ export function PostActions({ event, className }: PostActionsProps) {
         variant="ghost"
         size="sm"
         className={cn(
-          "text-muted-foreground hover:text-green-500",
-          userInteractions?.hasReposted && "text-green-500"
+          "text-muted-foreground hover:text-violet-500 hover:bg-violet-500/10",
+          userInteractions?.hasReposted && "text-violet-500"
         )}
         onClick={handleRepost}
       >
@@ -389,8 +389,8 @@ export function PostActions({ event, className }: PostActionsProps) {
         variant="ghost"
         size="sm"
         className={cn(
-          "text-muted-foreground hover:text-red-500",
-          userInteractions?.hasLiked && "text-red-500"
+          "text-muted-foreground hover:text-pink-500 hover:bg-pink-500/10",
+          userInteractions?.hasLiked && "text-pink-500"
         )}
         onClick={handleLike}
       >
@@ -425,7 +425,7 @@ export function PostActions({ event, className }: PostActionsProps) {
       <Button
         variant="ghost"
         size="sm"
-        className="text-muted-foreground hover:text-blue-500"
+        className="text-muted-foreground hover:text-purple-500 hover:bg-purple-500/10"
         onClick={handleShare}
       >
         <Share className="w-4 h-4" />

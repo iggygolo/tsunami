@@ -67,15 +67,15 @@ export function PostCard({ event, isCompact = false, className }: PostCardProps)
         return { icon: null, label: null, bgColor: '' };
       case 6:
         return {
-          icon: <Repeat className="w-4 h-4" />,
+          icon: <Repeat className="w-4 h-4 text-violet-500" />,
           label: 'reposted',
-          bgColor: 'bg-green-50 dark:bg-green-950'
+          bgColor: 'bg-violet-50 dark:bg-violet-950/30'
         };
       case 7:
         return {
-          icon: <Heart className="w-4 h-4" />,
+          icon: <Heart className="w-4 h-4 text-pink-500" />,
           label: 'liked',
-          bgColor: 'bg-red-50 dark:bg-red-950'
+          bgColor: 'bg-pink-50 dark:bg-pink-950/30'
         };
       default:
         return { icon: null, label: null, bgColor: '' };
@@ -86,11 +86,11 @@ export function PostCard({ event, isCompact = false, className }: PostCardProps)
 
   return (
     <Card className={cn(className, bgColor)}>
-      <CardContent className="p-6">
+      <CardContent className="p-4">
         <div className="flex items-start space-x-3">
-          <Avatar className="w-10 h-10">
+          <Avatar className="w-9 h-9 ring-2 ring-purple-500/20">
             <AvatarImage src={metadata?.picture} alt={displayName} />
-            <AvatarFallback>
+            <AvatarFallback className="bg-purple-500/10 text-purple-600 text-sm">
               {displayName.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>

@@ -56,20 +56,20 @@ const SocialFeed = () => {
 
   const PostSkeleton = () => (
     <Card>
-      <CardContent className="p-6">
+      <CardContent className="p-4">
         <div className="flex items-start space-x-3">
-          <Skeleton className="w-10 h-10 rounded-full" />
-          <div className="flex-1 space-y-3">
+          <Skeleton className="w-9 h-9 rounded-full" />
+          <div className="flex-1 space-y-2">
             <div className="flex items-center space-x-2">
               <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-3 w-16" />
             </div>
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
-            <div className="flex items-center space-x-4 pt-2">
-              <Skeleton className="h-6 w-16" />
-              <Skeleton className="h-6 w-16" />
-              <Skeleton className="h-6 w-16" />
+            <div className="flex items-center space-x-4 pt-1">
+              <Skeleton className="h-5 w-14" />
+              <Skeleton className="h-5 w-14" />
+              <Skeleton className="h-5 w-14" />
             </div>
           </div>
         </div>
@@ -109,18 +109,18 @@ const SocialFeed = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">{artistName}'s Social Feed</h1>
-            <p className="text-muted-foreground">
+      <div className="container mx-auto px-4 py-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">{artistName}'s Social Feed</h1>
+            <p className="text-sm text-muted-foreground">
               Follow the latest updates and thoughts from the music artist
             </p>
           </div>
 
           {/* Note Composer - Only show for the artist */}
           {isArtist_user && (
-            <div className="mb-8">
+            <div className="mb-6">
               <NoteComposer 
                 placeholder="Share your thoughts with your audience..."
                 onSuccess={(newEvent) => {
@@ -166,13 +166,13 @@ const SocialFeed = () => {
             </div>
           )}
 
-          <Tabs defaultValue="notes" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="notes" className="flex items-center space-x-2">
+          <Tabs defaultValue="notes" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2 bg-purple-500/5 h-9">
+              <TabsTrigger value="notes" className="flex items-center space-x-2 text-sm data-[state=active]:bg-purple-500/10 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400">
                 <MessageSquare className="w-4 h-4" />
                 <span>Notes</span>
               </TabsTrigger>
-              <TabsTrigger value="replies" className="flex items-center space-x-2">
+              <TabsTrigger value="replies" className="flex items-center space-x-2 text-sm data-[state=active]:bg-purple-500/10 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400">
                 <TrendingUp className="w-4 h-4" />
                 <span>Replies</span>
               </TabsTrigger>
