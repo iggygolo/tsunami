@@ -33,7 +33,7 @@ const About = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-        <div className="container mx-auto px-4 py-16 relative">
+        <div className="container mx-auto px-4 py-12 relative">
           <div className="max-w-4xl mx-auto">
             <div className="flex flex-col md:flex-row items-center gap-8">
               {/* Artist Image */}
@@ -102,7 +102,7 @@ const About = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-4">
         <div className="max-w-4xl mx-auto space-y-12">
           {/* Stats Section */}
           {stats && (
@@ -258,10 +258,9 @@ const About = () => {
               </CardContent>
             </Card>
           </div>
-
-          <Footer />
         </div>
       </div>
+      <Footer />
     </Layout>
   );
 };

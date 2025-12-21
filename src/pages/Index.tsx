@@ -149,7 +149,7 @@ const Index = () => {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-4">
         <div className="max-w-6xl mx-auto space-y-12">
           {/* Recent Releases */}
           <section>
@@ -355,11 +355,9 @@ const Index = () => {
               </a>
             </div>
           </section>
-
-          {/* Footer */}
-          <Footer />
         </div>
       </div>
+      <Footer />
     </Layout>
   );
 };
