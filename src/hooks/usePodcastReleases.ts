@@ -44,6 +44,7 @@ export function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
   const title = tags.get('title')?.[0] || 'Untitled Release';
   const description = tags.get('description')?.[0];
   const imageUrl = tags.get('image')?.[0];
+  const genre = tags.get('genre')?.[0] || null;
 
   // Parse tracklist from event content (JSON array of tracks)
   let tracks: ReleaseTrack[] = [];
@@ -58,6 +59,7 @@ export function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
           audioType: track.audioType || 'audio/mpeg',
           duration: track.duration,
           explicit: track.explicit || false,
+          language: track.language || null,
         }));
       }
     }
@@ -96,6 +98,7 @@ export function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
     publishDate,
     tags: topicTags,
     transcriptUrl,
+    genre,
     externalRefs: [],
     eventId: event.id,
     artistPubkey: event.pubkey,

@@ -70,6 +70,7 @@ async function processTrack(
     audioType: audioType || 'audio/mpeg',
     duration: track.duration,
     explicit: track.explicit || false,
+    language: track.language || null,
   };
 }
 
@@ -132,6 +133,11 @@ export function usePublishRelease() {
 
       if (imageUrl) {
         tags.push(['image', imageUrl]);
+      }
+
+      // Add genre tag
+      if (releaseData.genre) {
+        tags.push(['genre', releaseData.genre]);
       }
 
       // Add topic tags
@@ -245,6 +251,11 @@ export function useUpdateRelease() {
 
       if (imageUrl) {
         tags.push(['image', imageUrl]);
+      }
+
+      // Add genre tag
+      if (releaseData.genre) {
+        tags.push(['genre', releaseData.genre]);
       }
 
       // Add topic tags
