@@ -19,11 +19,6 @@ This document lists all demu.xml elements that we do NOT have corresponding data
 - ❌ `<link>` at item level - No individual track URLs in ReleaseTrack
 - ❌ `<author>` at item level - No per-track author in ReleaseTrack
 
-## Namespace Declarations (Missing)
-
-### iTunes Namespace
-- ❌ `xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"` - Not currently declared in our RSS
-
 ## Complex Elements We Could Add But Don't Have Data For
 
 ### RSS Image Sub-elements

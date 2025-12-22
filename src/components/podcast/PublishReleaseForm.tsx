@@ -11,11 +11,14 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { LanguageSelector } from '@/components/ui/language-selector';
+import { GenreSelector } from '@/components/ui/genre-selector';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePublishRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { isArtist } from '@/lib/podcastConfig';
 import { getAudioDuration, formatDurationHuman } from '@/lib/audioDuration';
+import { validateLanguageCode, validateGenre } from '@/lib/musicMetadata';
 import type { ReleaseFormData } from '@/types/podcast';
 
 const trackSchema = z.object({
@@ -23,6 +26,9 @@ const trackSchema = z.object({
   audioUrl: z.string().url().optional().or(z.literal('')),
   duration: z.number().optional(),
   explicit: z.boolean().default(false),
+  language: z.string().nullable().optional().refine(validateLanguageCode, {
+    message: 'Invalid language code',
+  }),
 });
 
 const releaseSchema = z.object({
@@ -31,6 +37,9 @@ const releaseSchema = z.object({
   description: z.string().max(1000, 'Description too long'),
   tags: z.array(z.string()).default([]),
   tracks: z.array(trackSchema).min(1, 'At least one track is required'),
+  genre: z.string().nullable().optional().refine(validateGenre, {
+    message: 'Invalid genre',
+  }),
 });
 
 type ReleaseFormValues = z.infer<typeof releaseSchema>;
@@ -62,12 +71,14 @@ export function PublishReleaseForm({
       description: '',
       tags: [],
       imageUrl: '',
+      genre: null,
       tracks: [
         {
           title: '',
           audioUrl: '',
           duration: undefined,
           explicit: false,
+          language: null,
         }
       ],
     },
@@ -237,12 +248,14 @@ export function PublishReleaseForm({
         description: '',
         tags: [],
         imageUrl: '',
+        genre: null,
         tracks: [
           {
             title: '',
             audioUrl: '',
             duration: undefined,
             explicit: false,
+            language: null,
           }
         ],
       });
@@ -356,6 +369,24 @@ export function PublishReleaseForm({
               )}
             />
 
+            {/* Genre */}
+            <FormField
+              control={form.control}
+              name="genre"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Genre</FormLabel>
+                  <FormControl>
+                    <GenreSelector
+                      selectedGenre={field.value}
+                      onGenreChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Tags */}
             <div className="space-y-3">
               <Label>Tags</Label>
@@ -403,6 +434,7 @@ export function PublishReleaseForm({
                     audioUrl: '',
                     duration: undefined,
                     explicit: false,
+                    language: null,
                   })}
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -551,6 +583,24 @@ export function PublishReleaseForm({
                         )}
                       />
                     </div>
+
+                    {/* Language */}
+                    <FormField
+                      control={form.control}
+                      name={`tracks.${index}.language`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Language</FormLabel>
+                          <FormControl>
+                            <LanguageSelector
+                              selectedLanguage={field.value}
+                              onLanguageChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </Card>
               ))}

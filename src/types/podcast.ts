@@ -16,6 +16,7 @@ export interface PodcastRelease {
   transcriptUrl?: string;
   guests?: PodcastGuest[];
   externalRefs?: ExternalReference[];
+  genre?: string | null; // Custom genre string (e.g., "punk", "alternative", "EDM")
 
   // Nostr-specific fields
   eventId: string;
@@ -34,6 +35,7 @@ export interface ReleaseTrack {
   audioType?: string;
   duration?: number;
   explicit?: boolean;
+  language?: string | null; // ISO 639-1 two-letter code (e.g., "en", "es") or null for instrumental
 }
 
 /**
@@ -77,6 +79,7 @@ export interface ReleaseFormData {
   imageFile?: File;
   imageUrl?: string;
   tracks: TrackFormData[];
+  genre?: string | null; // Custom genre string
 }
 
 /**
@@ -89,6 +92,7 @@ export interface TrackFormData {
   audioType?: string;
   duration?: number;
   explicit?: boolean;
+  language?: string | null; // ISO 639-1 two-letter code or null for instrumental
 }
 
 /**
@@ -158,6 +162,8 @@ export interface RSSItem {
     url: string;
     message: string;
   }>;
+  // Language metadata for tracks
+  language?: string | null; // ISO 639-1 code or null for instrumental
 }
 
 /**
@@ -241,4 +247,89 @@ export interface TrailerFormData {
   audioType?: string;
   length?: number;
   season?: number;
+}
+
+/**
+ * Language support types for track metadata
+ */
+export interface LanguageOption {
+  code: string | null; // ISO 639-1 code or null for instrumental
+  name: string; // Display name in English
+  isInstrumental?: boolean; // Special option for instrumental tracks
+}
+
+export interface LanguageSupport {
+  getAvailableLanguages(): LanguageOption[];
+  validateLanguageCode(code: string | null): boolean;
+  getLanguageName(code: string): string;
+}
+
+/**
+ * Genre management types for release metadata
+ */
+export interface GenreManager {
+  getCommonGenres(): string[];
+  getCustomGenres(): string[];
+  addCustomGenre(genre: string): void;
+  getAllGenres(): string[];
+  validateGenre(genre: string | null): boolean;
+}
+
+export interface GenreStorage {
+  saveCustomGenre(genre: string): Promise<void>;
+  loadCustomGenres(): Promise<string[]>;
+  removeCustomGenre(genre: string): Promise<void>;
+}
+
+/**
+ * Language and genre configuration types
+ */
+export interface LanguageConfiguration {
+  commonLanguages: LanguageOption[];
+  allLanguages: LanguageOption[];
+  instrumentalOption: LanguageOption;
+}
+
+export interface GenreConfiguration {
+  popularGenres: string[];
+  allGenres: string[];
+  customGenres: string[];
+}
+
+/**
+ * RSS enhancement data structures
+ */
+export interface RSSLanguageElement {
+  trackIndex: number;
+  languageCode: string;
+  xmlElement: string;
+}
+
+export interface RSSGenreElement {
+  genre: string;
+  xmlElement: string;
+}
+
+export interface EnhancedRSSMetadata {
+  languages: RSSLanguageElement[];
+  genres: RSSGenreElement[];
+  hasLanguageMetadata: boolean;
+  hasGenreMetadata: boolean;
+}
+
+/**
+ * Validation utility types
+ */
+export type LanguageCode = string | null;
+export type GenreString = string | null;
+
+/**
+ * Type guards for validation
+ */
+export function isValidLanguageCode(code: unknown): code is LanguageCode {
+  return code === null || code === undefined || (typeof code === 'string' && /^[a-z]{2}$/.test(code));
+}
+
+export function isValidGenre(genre: unknown): genre is GenreString {
+  return genre === null || genre === undefined || (typeof genre === 'string' && genre.trim().length > 0);
 }

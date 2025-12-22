@@ -26,9 +26,12 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { LanguageSelector } from '@/components/ui/language-selector';
+import { GenreSelector } from '@/components/ui/genre-selector';
 import { useUpdateRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { getAudioDuration, formatDurationHuman } from '@/lib/audioDuration';
+import { validateLanguageCode, validateGenre } from '@/lib/musicMetadata';
 import type { PodcastRelease, ReleaseFormData } from '@/types/podcast';
 
 // Schema for release editing (similar to publish but allows empty audio URLs for existing releases)
@@ -43,6 +46,12 @@ const releaseEditSchema = z.object({
   duration: z.number().positive().optional(),
   explicit: z.boolean().default(false),
   tags: z.array(z.string()).default([]),
+  genre: z.string().nullable().optional().refine(validateGenre, {
+    message: 'Invalid genre',
+  }),
+  language: z.string().nullable().optional().refine(validateLanguageCode, {
+    message: 'Invalid language code',
+  }),
 });
 
 type ReleaseEditFormValues = z.infer<typeof releaseEditSchema>;
@@ -87,6 +96,8 @@ export function ReleaseEditDialog({
       duration: firstTrack?.duration,
       explicit: firstTrack?.explicit || false,
       tags: release.tags || [],
+      genre: release.genre || null,
+      language: firstTrack?.language || null,
     },
   });
 
@@ -107,6 +118,8 @@ export function ReleaseEditDialog({
       duration: track?.duration,
       explicit: track?.explicit || false,
       tags: release.tags || [],
+      genre: release.genre || null,
+      language: track?.language || null,
     });
     setAudioFile(null);
     setVideoFile(null);
@@ -281,12 +294,14 @@ export function ReleaseEditDialog({
         imageFile: imageFile || undefined,
         imageUrl: data.imageUrl || undefined,
         tags: data.tags || [],
+        genre: data.genre || undefined,
         tracks: [
           {
             title: data.title,
             audioUrl: data.audioUrl || undefined,
             duration: data.duration,
             explicit: data.explicit || false,
+            language: data.language || undefined,
           }
         ]
       };
@@ -365,6 +380,24 @@ export function ReleaseEditDialog({
                         placeholder="Brief description of the release..."
                         rows={3}
                         {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Genre */}
+              <FormField
+                control={form.control}
+                name="genre"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Genre</FormLabel>
+                    <FormControl>
+                      <GenreSelector
+                        selectedGenre={field.value}
+                        onGenreChange={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />
@@ -655,6 +688,24 @@ export function ReleaseEditDialog({
                   )}
                 />
               </div>
+
+              {/* Language */}
+              <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Language</FormLabel>
+                    <FormControl>
+                      <LanguageSelector
+                        selectedLanguage={field.value}
+                        onLanguageChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Tags */}
               <div className="space-y-3">

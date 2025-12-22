@@ -150,6 +150,7 @@ export function releaseToRSSItem(release: PodcastRelease, config: RSSConfig, nad
     explicit: firstTrack?.explicit,
     image: release.imageUrl,
     transcriptUrl: release.transcriptUrl,
+    language: firstTrack?.language, // Include language metadata from first track
   };
 }
 
@@ -168,6 +169,13 @@ export function generateRSSFeed(
     .sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime())
     .map(release => releaseToRSSItem(release, config, naddrEncoder));
 
+  // Collect unique genres from all releases
+  const uniqueGenres = Array.from(new Set(
+    releases
+      .map(release => release.genre)
+      .filter((genre): genre is string => Boolean(genre && typeof genre === 'string' && genre.trim().length > 0))
+  ));
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
      xmlns:podcast="https://podcastindex.org/namespace/1.0"
@@ -184,6 +192,12 @@ export function generateRSSFeed(
 
     <!-- iTunes tags -->
     <itunes:author>${escapeXml(config.podcast.artistName)}</itunes:author>
+    ${uniqueGenres.length > 0 ? 
+      `<itunes:category text="Music">
+        ${uniqueGenres.map(genre => `<itunes:category text="${escapeXml(genre)}" />`).join('\n        ')}
+      </itunes:category>` : 
+      '<itunes:category text="Music" />'
+    }
 
     <!-- Podcasting 2.0 tags -->
     <podcast:guid>${escapeXml(config.podcast.guid || config.artistNpub)}</podcast:guid>
@@ -252,6 +266,7 @@ export function generateRSSFeed(
       <pubDate>${item.pubDate}</pubDate>
       <author>${escapeXml(item.author || config.podcast.artistName)}</author>
       ${item.category?.map(cat => `<category>${escapeXml(cat)}</category>`).join('\n      ') || ''}
+      ${item.language ? `<language>${escapeXml(item.language)}</language>` : ''}
 
       <!-- Enclosure (required for podcasts) -->
       <enclosure url="${escapeXml(item.enclosure.url)}"
