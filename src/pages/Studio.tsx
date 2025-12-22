@@ -313,7 +313,7 @@ const Studio = () => {
       // Update RSS feed with the new configuration (non-blocking)
       try {
         await Promise.race([
-          genRSSFeed(undefined, podcastConfig),
+          genRSSFeed(undefined, [], podcastConfig),
           new Promise((_, reject) => setTimeout(() => reject(new Error('RSS generation timeout')), 5000))
         ]);
         console.log('RSS feed updated successfully');

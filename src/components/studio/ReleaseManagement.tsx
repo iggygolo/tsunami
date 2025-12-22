@@ -96,7 +96,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
 
       // Regenerate RSS feed after deletion
       const updatedReleases = releases?.filter(e => e.id !== release.id) || [];
-      await genRSSFeed(updatedReleases, podcastConfig);
+      await genRSSFeed(updatedReleases, [], podcastConfig);
 
       toast({
         title: 'Release deleted',
@@ -119,7 +119,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
       // Regenerate RSS feed after update
       if (releases) {
         console.log('Regenerating RSS feed...');
-        await genRSSFeed(releases, podcastConfig);
+        await genRSSFeed(releases, [], podcastConfig);
         console.log('RSS feed regenerated successfully');
       }
       setReleaseToEdit(null);

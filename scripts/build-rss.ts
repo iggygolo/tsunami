@@ -3,8 +3,8 @@ import path from 'path';
 import { config } from 'dotenv';
 import { nip19 } from 'nostr-tools';
 import { NRelay1, NostrEvent } from '@nostrify/nostrify';
-// import { generateRSSFeed } from '../src/lib/rssGenerator.js'; // Can't import due to import.meta.env issues
 import type { PodcastRelease, PodcastTrailer } from '../src/types/podcast.js';
+import { generateRSSFeed as generateRSSFeedCore, type RSSConfig } from '../src/lib/rssCore.js';
 
 // Import naddr encoding function
 import { encodeReleaseAsNaddr } from '../src/lib/nip19Utils.js';
@@ -72,7 +72,7 @@ function createNodejsConfig() {
   }
 
   return {
-    artistNpub: artistNpub,
+    artistNpub: artistNpub || "",
     podcast: {
       description: process.env.VITE_MUSIC_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
       artistName: process.env.VITE_ARTIST_NAME || "Tsunami Artist",
@@ -127,159 +127,12 @@ function getArtistPubkeyHex(artistNpub: string): string {
   }
 }
 
-/**
- * Escape XML special characters
- */
-function escapeXml(unsafe: string): string {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 /**
- * Formats duration from seconds to HH:MM:SS format for iTunes
+ * Node-compatible RSS feed generation using consolidated core
  */
-function formatDurationFromSeconds(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-
-  if (hours > 0) {
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-  return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-/**
- * Node-compatible RSS feed generation (simplified version)
- */
-function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[], podcastConfig: Record<string, unknown>): string {
-  const config = podcastConfig as {
-    podcast?: {
-      website?: string;
-      artistName?: string;
-      copyright?: string;
-      guid?: string;
-      medium?: string;
-      publisher?: string;
-      funding?: string[];
-      value?: {
-        amount: number;
-        recipients?: Array<{
-          name: string;
-          type: string;
-          address: string;
-          split: number;
-          customKey?: string;
-          customValue?: string;
-          fee?: boolean;
-        }>;
-      };
-      person?: Array<{
-        name: string;
-        role: string;
-        group?: string;
-        img?: string;
-        href?: string;
-      }>;
-      location?: {
-        name: string;
-        geo?: string;
-        osm?: string;
-      };
-    };
-    rss?: {
-      ttl?: number;
-    };
-    artistNpub?: string;
-  };
-
-  const baseUrl = config.podcast?.website || 'https://tsunami.example';
-
-  const channels = releases.map(release => (`
-<channel>
-  <title>${escapeXml(release.title)}</title>
-  <description>${escapeXml(release.description || '')}</description>
-  <link>${escapeXml(config.podcast?.website || baseUrl)}</link>
-  <copyright>${escapeXml(config.podcast?.copyright || '© 2025 Tsunami')}</copyright>
-  <pubDate>${new Date().toUTCString()}</pubDate>
-  <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-  <ttl>${config.rss?.ttl || 60}</ttl>
-
-  <!-- iTunes tags -->
-  <itunes:author>${escapeXml(config.podcast?.artistName || 'Tsunami Artist')}</itunes:author>
-
-  <!-- Podcasting 2.0 tags -->
-  <podcast:guid>${escapeXml(config.podcast?.guid || config.artistNpub || '')}</podcast:guid>
-  <podcast:medium>${escapeXml(config.podcast?.medium || 'music')}</podcast:medium>
-  ${config.podcast?.publisher ? `<podcast:publisher>${escapeXml(config.podcast.publisher)}</podcast:publisher>` : ''}
-
-  ${config.podcast?.funding && config.podcast.funding.length > 0 ?
-    config.podcast.funding.map((url: string) =>
-      `<podcast:funding url="${escapeXml(url)}">Support the artist</podcast:funding>`
-    ).join('\n    ') : ''
-  }
-
-  ${config.podcast?.value && config.podcast.value.amount > 0 ?
-    `<podcast:value type="lightning" method="keysend" suggested="${config.podcast.value.amount}">
-      ${config.podcast.value.recipients && config.podcast.value.recipients.length > 0 ?
-        config.podcast.value.recipients.map((recipient) =>
-          `<podcast:valueRecipient name="${escapeXml(recipient.name)}" type="${escapeXml(recipient.type)}" address="${escapeXml(recipient.address)}" split="${recipient.split}"${recipient.customKey ? ` customKey="${escapeXml(recipient.customKey)}"` : ''}${recipient.customValue ? ` customValue="${escapeXml(recipient.customValue)}"` : ''}${recipient.fee ? ` fee="true"` : ''} />`
-        ).join('\n        ') :
-        `<podcast:valueRecipient name="${escapeXml(config.podcast?.artistName || 'Artist')}" type="node" address="${escapeXml(config.podcast?.funding?.[0] || '')}" split="100" />`
-      }
-    </podcast:value>` : ''
-  }
-
-  ${config.podcast?.person && config.podcast.person.length > 0 ?
-    config.podcast.person.map((person) =>
-      `<podcast:person role="${escapeXml(person.role)}" ${person.group ? `group="${escapeXml(person.group)}"` : ''} ${person.img ? `img="${escapeXml(person.img)}"` : ''} ${person.href ? `href="${escapeXml(person.href)}"` : ''}>${escapeXml(person.name)}</podcast:person>`
-    ).join('\n    ') : ''
-  }
-
-  ${config.podcast?.location ?
-    `<podcast:location ${config.podcast.location.geo ? `geo="${escapeXml(config.podcast.location.geo)}"` : ''} ${config.podcast.location.osm ? `osm="${escapeXml(config.podcast.location.osm)}"` : ''}>${escapeXml(config.podcast.location.name)}</podcast:location>` : ''
-  }
-
-  ${trailers.map(trailer => 
-    `<podcast:trailer pubdate="${trailer.pubDate.toUTCString()}" url="${escapeXml(trailer.url)}"${trailer.length ? ` length="${trailer.length}"` : ''}${trailer.type ? ` type="${escapeXml(trailer.type)}"` : ''}${trailer.season ? ` season="${trailer.season}"` : ''}>${escapeXml(trailer.title)}</podcast:trailer>`
-  ).join('\n    ')}
-
-  <!-- Generator -->
-  <generator>Tsunami - Nostr Podcast Platform v${process.env.npm_package_version || '1.0.0'}</generator>
-
-  ${release.tracks.map((track, trackIndex) => {
-    return `
-  <item>
-    <title>${escapeXml(release.title)}</title>
-    <description>${escapeXml(release.description || '')}</description>
-    <link>${escapeXml(baseUrl)}/${encodeReleaseAsNaddr(release.artistPubkey, release.identifier)}</link>
-    <pubDate>${release.publishDate.toUTCString()}</pubDate>
-    <guid isPermaLink="false">${release.artistPubkey}:${release.identifier}</guid>
-    <enclosure url="${escapeXml(track.audioUrl)}" type="${escapeXml(track.audioType || 'audio/mpeg')}" length="${track.duration ? String(track.duration) : '0'}" />
-    
-    <!-- iTunes tags -->
-    ${track.duration ? `<itunes:duration>${formatDurationFromSeconds(track.duration)}</itunes:duration>` : ''}
-    ${release.imageUrl ? `<itunes:image href="${escapeXml(release.imageUrl)}" />` : ''}
-    
-    <!-- Podcasting 2.0 tags -->
-    <podcast:episode>${trackIndex + 1}</podcast:episode>
-    ${release.transcriptUrl ? `<podcast:transcript url="${escapeXml(release.transcriptUrl)}" type="text/plain" />` : ''}
-    ${release.content ? `<content:encoded><![CDATA[${release.content}]]></content:encoded>` : ''}
-  </item>`;
-  }).join('')}
-</channel>`));
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"
-  xmlns:content="http://purl.org/rss/1.0/modules/content/"
-  xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
-  xmlns:podcast="https://podcastindex.org/namespace/1.0">
-    ${channels.join('\n    ')}
-</rss>`;
+function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[], podcastConfig: RSSConfig): string {
+  return generateRSSFeedCore(releases, trailers, podcastConfig, encodeReleaseAsNaddr);
 }
 
 /**
