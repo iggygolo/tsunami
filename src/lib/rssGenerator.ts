@@ -36,6 +36,7 @@ function releaseToRSSItem(release: PodcastRelease, config?: PodcastConfig): RSSI
     duration: firstTrack?.duration ? formatDuration(firstTrack.duration) : undefined,
     explicit: firstTrack?.explicit,
     image: release.imageUrl,
+    transcriptUrl: release.transcriptUrl, // Add transcript URL support
   };
 }
 
@@ -89,6 +90,7 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
      xmlns:podcast="https://podcastindex.org/namespace/1.0"
+     xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
      xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>${escapeXml(podcastConfig.podcast.artistName)}</title>
@@ -98,6 +100,9 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
     <pubDate>${new Date().toUTCString()}</pubDate>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <ttl>${podcastConfig.rss.ttl}</ttl>
+
+    <!-- iTunes tags -->
+    <itunes:author>${escapeXml(podcastConfig.podcast.artistName)}</itunes:author>
 
     <!-- Podcasting 2.0 tags -->
     <podcast:guid>${escapeXml(podcastConfig.podcast.guid || podcastConfig.artistNpub)}</podcast:guid>
@@ -139,7 +144,7 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
       `<podcast:funding url="${escapeXml(podcastUrl)}">Support this podcast via Lightning</podcast:funding>`
     }
     ${podcastConfig.podcast.value && podcastConfig.podcast.value.amount > 0 ?
-      `<podcast:value type="${podcastConfig.podcast.value.currency}" method="lightning">
+      `<podcast:value type="lightning" method="keysend" suggested="${podcastConfig.podcast.value.amount}">
         ${podcastConfig.podcast.value.recipients && podcastConfig.podcast.value.recipients.length > 0 ?
           podcastConfig.podcast.value.recipients.map(recipient =>
             `<podcast:valueRecipient name="${escapeXml(recipient.name)}" type="${escapeXml(recipient.type)}" address="${escapeXml(recipient.address)}" split="${recipient.split}"${recipient.customKey ? ` customKey="${escapeXml(recipient.customKey)}"` : ''}${recipient.customValue ? ` customValue="${escapeXml(recipient.customValue)}"` : ''}${recipient.fee ? ` fee="true"` : ''} />`
@@ -150,9 +155,9 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
     }
 
     <!-- Generator -->
-    <generator>Tsunami - Nostr Podcast Platform</generator>
+    <generator>Tsunami - Nostr Podcast Platform v${process.env.npm_package_version || '1.0.0'}</generator>
 
-    ${rssItems.map(item => `
+    ${rssItems.map((item, index) => `
     <item>
       <title>${escapeXml(item.title)}</title>
       <description>${escapeXml(item.description)}</description>
@@ -167,8 +172,14 @@ export function generateRSSFeed(releases: PodcastRelease[], config?: PodcastConf
                  length="${item.enclosure.length}"
                  type="${escapeXml(item.enclosure.type)}" />
 
+      <!-- iTunes tags -->
+      ${item.duration ? `<itunes:duration>${item.duration}</itunes:duration>` : ''}
+      ${item.image ? `<itunes:image href="${escapeXml(item.image)}" />` : ''}
+
       <!-- Podcasting 2.0 tags -->
       <podcast:guid>${escapeXml(item.guid)}</podcast:guid>
+      <podcast:episode>${index + 1}</podcast:episode>
+      ${item.transcriptUrl ? `<podcast:transcript url="${escapeXml(item.transcriptUrl)}" type="text/plain" />` : ''}
     </item>`).join('')}
   </channel>
 </rss>`;
