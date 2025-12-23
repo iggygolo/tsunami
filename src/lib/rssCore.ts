@@ -325,6 +325,7 @@ export function generateRSSFeed(
       ${item.duration ? `<itunes:duration>${item.duration}</itunes:duration>` : ''}
       ${item.image ? `<itunes:image href="${escapeXml(item.image)}" />` : ''}
       <itunes:explicit>${formatExplicitValue(item.explicit)}</itunes:explicit>
+      <itunes:episode>${index + 1}</itunes:episode>
 
       <pubDate>${release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString()}</pubDate>
 
