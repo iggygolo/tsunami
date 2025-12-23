@@ -38,7 +38,9 @@ import { useUploadFile } from '@/hooks/useUploadFile';
 import { isArtist, PODCAST_CONFIG, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
 import { ReleaseManagement } from '@/components/studio/ReleaseManagement';
-import { BlossomServerManager } from '@/components/studio/BlossomServerManager';
+import { UploadProviderManager } from '@/components/studio/UploadProviderManager';
+import { FileUploadWithProvider } from '@/components/ui/FileUploadWithProvider';
+import { useUploadFileWithOptions } from '@/hooks/useUploadFileWithOptions';
 // Footer is provided by Layout
 
 interface PodcastFormData {
@@ -92,11 +94,14 @@ const Studio = () => {
   const podcastConfig = usePodcastConfig();
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
   const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
+  const { mutateAsync: uploadFileWithOptions } = useUploadFileWithOptions();
   const { data: analytics, isLoading: analyticsLoading } = usePodcastAnalytics();
   const isArtist_user = user && isArtist(user.pubkey);
 
   const [activeTab, setActiveTab] = useState('settings');
   const [isSaving, setIsSaving] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUploadProvider, setImageUploadProvider] = useState<'blossom' | 'vercel'>('blossom');
 
   const [formData, setFormData] = useState<PodcastFormData>({
     artistName: PODCAST_CONFIG.podcast.artistName,
@@ -204,13 +209,16 @@ const Studio = () => {
   };
 
   // Handle file uploads for podcast image
-  const uploadPodcastImage = async (file: File) => {
+  const uploadPodcastImage = async (file: File, provider?: 'blossom' | 'vercel') => {
     try {
-      const [[_, url]] = await uploadFile(file);
+      const [[_, url]] = await uploadFileWithOptions({ 
+        file, 
+        options: { provider: provider || imageUploadProvider } 
+      });
       handleInputChange('image', url);
       toast({
         title: 'Success',
-        description: 'Podcast cover image uploaded successfully',
+        description: `Podcast cover image uploaded successfully via ${provider || imageUploadProvider}`,
       });
     } catch (error) {
       console.error('Failed to upload podcast image:', error);
@@ -361,7 +369,7 @@ const Studio = () => {
               </TabsTrigger>
               <TabsTrigger value="blossom" className="flex items-center space-x-2">
                 <Server className="w-4 h-4" />
-                <span>Media Servers</span>
+                <span>Upload Providers</span>
               </TabsTrigger>
               <TabsTrigger value="analytics" className="flex items-center space-x-2">
                 <Zap className="w-4 h-4" />
@@ -396,50 +404,29 @@ const Studio = () => {
                       </div>
 
                                             <div>
-                        <Label htmlFor="image">Artist Image</Label>
-                        <div className="space-y-2">
-                          <Input
-                            id="image"
-                            value={formData.image}
-                            onChange={(e) => handleInputChange('image', e.target.value)}
-                            disabled={false}
-                            placeholder="Select or upload artist image"
-                          />
-                          <div className="flex items-center space-x-2">
-                            <input 
-                              type="file" 
-                              id="podcast-image-upload"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  uploadPodcastImage(file);
-                                }
-                              }}
-                              disabled={false}
+                        <FileUploadWithProvider
+                          accept="image/*"
+                          label="Artist Image"
+                          placeholder="Click to select an artist image"
+                          file={imageFile}
+                          onFileSelect={(file) => {
+                            setImageFile(file);
+                            if (file) {
+                              uploadPodcastImage(file, imageUploadProvider);
+                            }
+                          }}
+                          onProviderChange={setImageUploadProvider}
+                          disabled={isUploading}
+                        />
+                        {formData.image && (
+                          <div className="mt-2">
+                            <img 
+                              src={formData.image} 
+                              alt="Artist image preview" 
+                              className="h-20 w-20 rounded object-cover"
                             />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => document.getElementById('podcast-image-upload')?.click()}
-                              disabled={isUploading}
-                            >
-                              <Upload className="h-4 w-4 mr-2" />
-                              {isUploading ? 'Uploading...' : 'Upload Image'}
-                            </Button>
-                            {formData.image && (
-                              <div className="h-10 w-16 rounded overflow-hidden">
-                                <img 
-                                  src={formData.image} 
-                                  alt="Artist image preview" 
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                            )}
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
 
@@ -794,9 +781,9 @@ const Studio = () => {
               <ReleaseManagement />
             </TabsContent>
 
-            {/* Blossom Media Servers Tab */}
+            {/* Upload Provider Configuration Tab */}
             <TabsContent value="blossom" className="space-y-6">
-              <BlossomServerManager />
+              <UploadProviderManager />
             </TabsContent>
 
             {/* Analytics Tab */}

@@ -3,6 +3,31 @@ import { BlossomUploader } from '@nostrify/nostrify/uploaders';
 
 import { useCurrentUser } from "./useCurrentUser";
 import { useBlossomServers } from "./useBlossomServers";
+import { useUploadConfig } from "./useUploadConfig";
+import { UploadProviderFactory, UploadProviderError } from '@/lib/uploadProviders';
+import type { UploadProvider } from '@/lib/uploadProviders';
+
+/**
+ * Upload file options
+ */
+export interface UploadFileOptions {
+  /** Override the default provider for this upload */
+  provider?: 'blossom' | 'vercel';
+  /** Enable fallback to alternative provider on failure */
+  enableFallback?: boolean;
+}
+
+/**
+ * Upload file result
+ */
+export interface UploadFileResult {
+  /** File URL */
+  url: string;
+  /** Provider used for upload */
+  provider: 'blossom' | 'vercel';
+  /** NIP-94 tags (for Blossom uploads) */
+  tags?: string[][];
+}
 
 /** Map of file extensions to MIME types for common audio/video formats */
 const MIME_TYPE_MAP: Record<string, string> = {
@@ -66,6 +91,7 @@ function ensureCorrectMimeType(file: File): File {
 export function useUploadFile() {
   const { user } = useCurrentUser();
   const { allServers } = useBlossomServers();
+  const { config } = useUploadConfig();
 
   return useMutation({
     mutationFn: async (file: File) => {
@@ -77,22 +103,60 @@ export function useUploadFile() {
       const correctedFile = ensureCorrectMimeType(file);
 
       console.log('Starting file upload:', correctedFile.name, correctedFile.size, correctedFile.type);
+      console.log('Using upload provider:', config.defaultProvider);
 
-      console.log('Using Blossom servers:', allServers);
-
-      const uploader = new BlossomUploader({
-        servers: allServers,
-        signer: user.signer,
-      });
-
-      try {
-        const tags = await uploader.upload(correctedFile);
-        console.log('Upload successful, tags:', tags);
-        return tags;
-      } catch (error) {
-        console.error('Upload failed:', error);
-        throw new Error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Use configured provider
+      if (config.defaultProvider === 'vercel' && config.vercelEnabled) {
+        return await uploadWithVercel(correctedFile, user);
+      } else {
+        return await uploadWithBlossom(correctedFile, user, allServers);
       }
     },
   });
 }
+
+/**
+ * Upload with Blossom (original behavior)
+ */
+async function uploadWithBlossom(file: File, user: any, allServers: string[]): Promise<string[][]> {
+  console.log('Using Blossom servers:', allServers);
+
+  const uploader = new BlossomUploader({
+    servers: allServers,
+    signer: user.signer,
+  });
+
+  try {
+    const tags = await uploader.upload(file);
+    console.log('Upload successful, tags:', tags);
+    return tags;
+  } catch (error) {
+    console.error('Upload failed:', error);
+    throw new Error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Upload with Vercel and return tags format for compatibility
+ */
+async function uploadWithVercel(file: File, user: any): Promise<string[][]> {
+  try {
+    const provider = UploadProviderFactory.createProvider('vercel', user.pubkey, user.signer);
+    const url = await provider.uploadFile(file);
+    
+    // Return in tags format for backward compatibility
+    const tags = [
+      ['url', url],
+      ['m', file.type],
+      ['size', file.size.toString()],
+      ['x', ''], // Hash would go here if available
+    ];
+    
+    console.log('Vercel upload successful, tags:', tags);
+    return tags;
+  } catch (error) {
+    console.error('Vercel upload failed:', error);
+    throw new Error(`Vercel upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
