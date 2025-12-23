@@ -55,6 +55,10 @@ export interface PodcastConfig {
     guid?: string; // Unique podcast identifier
     medium?: 'podcast' | 'music' | 'video' | 'film' | 'audiobook' | 'newsletter' | 'blog';
     publisher?: string; // Publisher name
+    locked?: {
+      owner: string;
+      locked: boolean;
+    };
     location?: {
       name: string;
       geo?: string; // latitude,longitude
@@ -113,6 +117,10 @@ export const PODCAST_CONFIG: PodcastConfig = {
     guid: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_GUID) || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NPUB) || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
     medium: ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_MEDIUM) as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
     publisher: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_PUBLISHER) || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NAME) || "Tsunami Artist",
+    locked: {
+      owner: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_LOCKED_OWNER) || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NAME) || "Tsunami Artist",
+      locked: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_LOCKED) !== 'false'
+    },
     location: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_LOCATION_NAME) ? {
       name: import.meta.env.VITE_ARTIST_LOCATION_NAME,
       geo: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_LOCATION_GEO) || undefined,

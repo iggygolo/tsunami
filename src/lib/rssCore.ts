@@ -36,6 +36,10 @@ export interface RSSConfig {
     guid?: string;
     medium?: string;
     publisher?: string;
+    locked?: {
+      owner: string;
+      locked: boolean;
+    };
     location?: {
       name: string;
       geo?: string;
@@ -237,6 +241,7 @@ export function generateRSSFeed(
     <itunes:keywords>music</itunes:keywords>
 
     <!-- Podcasting 2.0 tags -->
+    <podcast:locked owner="${escapeXml(config.podcast.locked?.owner || config.podcast.artistName)}">${config.podcast.locked?.locked !== false ? 'yes' : 'no'}</podcast:locked>
     ${config.podcast.publisher ? `<podcast:publisher>${escapeXml(config.podcast.publisher)}</podcast:publisher>` : ''}
     <podcast:guid>${escapeXml(release.authorPubkey ? `${release.authorPubkey}:${release.identifier}` : release.identifier)}</podcast:guid>
     ${config.podcast.medium ? `<podcast:medium>${escapeXml(config.podcast.medium)}</podcast:medium>` : ''}
@@ -322,6 +327,7 @@ export function podcastConfigToRSSConfig(config: PodcastConfig): RSSConfig {
       guid: config.podcast.guid,
       medium: config.podcast.medium,
       publisher: config.podcast.publisher,
+      locked: config.podcast.locked,
       location: config.podcast.location,
       person: config.podcast.person,
       license: config.podcast.license,
