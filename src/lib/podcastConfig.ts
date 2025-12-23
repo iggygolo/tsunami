@@ -173,6 +173,10 @@ export const PODCAST_KINDS = {
   RELEASE: 30054,
   /** Addressable Podcast trailers (editable, replaceable) */
   TRAILER: 30055,
+  /** Music Track Event (addressable, individual tracks) */
+  MUSIC_TRACK: 36787,
+  /** Music Playlist Event (addressable, ordered track collections) */
+  MUSIC_PLAYLIST: 34139,
   /** NIP-22: Comments on podcast releases */
   COMMENT: 1111,
   /** Standard text notes that may reference releases */

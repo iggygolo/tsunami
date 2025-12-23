@@ -1,5 +1,6 @@
 import { nip19 } from 'nostr-tools';
 import type { NostrEvent } from '@nostrify/nostrify';
+import { PODCAST_KINDS } from '@/lib/podcastConfig';
 
 /**
  * Default relays to include in nevent encodings for better discoverability
@@ -109,7 +110,51 @@ export function encodeReleaseAsNaddr(
   return nip19.naddrEncode({
     identifier,
     pubkey,
-    kind: 30054, // PODCAST_KINDS.RELEASE
+    kind: PODCAST_KINDS.RELEASE,
+    relays
+  });
+}
+
+/**
+ * Encode a music track as naddr (for addressable music track events)
+ * @param pubkey The track author's pubkey
+ * @param identifier The track 'd' tag identifier
+ * @param customRelays Optional custom relays to include
+ * @returns naddr string for the music track
+ */
+export function encodeMusicTrackAsNaddr(
+  pubkey: string,
+  identifier: string,
+  customRelays?: string[]
+): string {
+  const relays = customRelays || DEFAULT_RELAYS;
+  
+  return nip19.naddrEncode({
+    identifier,
+    pubkey,
+    kind: PODCAST_KINDS.MUSIC_TRACK,
+    relays
+  });
+}
+
+/**
+ * Encode a music playlist as naddr (for addressable music playlist events)
+ * @param pubkey The playlist author's pubkey
+ * @param identifier The playlist 'd' tag identifier
+ * @param customRelays Optional custom relays to include
+ * @returns naddr string for the music playlist
+ */
+export function encodeMusicPlaylistAsNaddr(
+  pubkey: string,
+  identifier: string,
+  customRelays?: string[]
+): string {
+  const relays = customRelays || DEFAULT_RELAYS;
+  
+  return nip19.naddrEncode({
+    identifier,
+    pubkey,
+    kind: PODCAST_KINDS.MUSIC_PLAYLIST,
     relays
   });
 }

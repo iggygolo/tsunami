@@ -39,6 +39,125 @@ export interface ReleaseTrack {
 }
 
 /**
+ * Music Track Event data structure (Kind 36787)
+ * Individual addressable music track with comprehensive metadata
+ */
+export interface MusicTrackData {
+  // Required fields
+  identifier: string;           // 'd' tag - unique identifier
+  title: string;               // Track title
+  artist: string;              // Artist name
+  audioUrl: string;            // Direct URL to audio file
+  
+  // Optional metadata
+  album?: string;              // Album name
+  trackNumber?: number;        // Position in album
+  releaseDate?: string;        // ISO 8601 date (YYYY-MM-DD)
+  duration?: number;           // Track length in seconds
+  format?: string;             // Audio format (mp3, flac, m4a, ogg)
+  bitrate?: string;            // Audio bitrate (e.g., "320kbps")
+  sampleRate?: string;         // Sample rate in Hz
+  
+  // Media files
+  imageUrl?: string;           // Album artwork URL
+  videoUrl?: string;           // Music video URL
+  
+  // Content and metadata
+  lyrics?: string;             // Track lyrics
+  credits?: string;            // Production credits
+  language?: string;           // ISO 639-1 language code
+  explicit?: boolean;          // Explicit content flag
+  genres?: string[];           // Genre/category tags
+  
+  // Lightning Network
+  zapSplits?: ZapSplit[];      // Payment distribution
+  
+  // Nostr-specific fields
+  eventId?: string;            // Event ID (set after publishing)
+  artistPubkey?: string;       // Artist's pubkey
+  createdAt?: Date;            // Creation timestamp
+  zapCount?: number;           // Number of zaps received
+  totalSats?: number;          // Total sats received
+  commentCount?: number;       // Number of comments
+  repostCount?: number;        // Number of reposts
+}
+
+/**
+ * Lightning Network payment split configuration
+ */
+export interface ZapSplit {
+  address: string;             // Lightning address or node ID
+  percentage: number;          // Split percentage (0-100)
+  name?: string;               // Recipient name
+  type: 'lnaddress' | 'node';  // Address type
+}
+
+/**
+ * Music Track reference for playlists
+ */
+export interface TrackReference {
+  kind: 36787;                 // Music Track event kind
+  pubkey: string;              // Track author's pubkey (hex)
+  identifier: string;          // Track's 'd' tag identifier
+  title?: string;              // Cached track title (for display)
+  artist?: string;             // Cached artist name (for display)
+}
+
+/**
+ * Music Playlist data structure (Kind 34139)
+ * Addressable event containing ordered list of music tracks
+ */
+export interface MusicPlaylistData {
+  // Required fields
+  identifier: string;          // 'd' tag - unique identifier
+  title: string;               // Playlist title
+  
+  // Track references (ordered)
+  tracks: TrackReference[];    // Ordered list of track references
+  
+  // Optional metadata
+  description?: string;        // Short description
+  imageUrl?: string;           // Playlist artwork URL
+  categories?: string[];       // Category tags for discovery
+  
+  // Playlist settings
+  isPublic?: boolean;          // Public playlist (default true)
+  isPrivate?: boolean;         // Private playlist
+  isCollaborative?: boolean;   // Allow others to add tracks
+  
+  // Nostr-specific fields
+  eventId?: string;            // Event ID (set after publishing)
+  authorPubkey?: string;       // Playlist creator's pubkey
+  createdAt?: Date;            // Creation timestamp
+  zapCount?: number;           // Number of zaps received
+  totalSats?: number;          // Total sats received
+  commentCount?: number;       // Number of comments
+  repostCount?: number;        // Number of reposts
+}
+
+/**
+ * Music Playlist form data for UI
+ */
+export interface MusicPlaylistFormData {
+  // Required fields
+  title: string;
+  
+  // Track selection
+  trackReferences: TrackReference[];
+  
+  // Optional metadata
+  description?: string;
+  imageFile?: File;            // Playlist artwork file
+  imageUrl?: string;           // Playlist artwork URL
+  categories?: string[];       // Category tags
+  
+  // Playlist settings
+  isPublic?: boolean;
+  isPrivate?: boolean;
+  isCollaborative?: boolean;
+}
+
+/**
  * Podcast chapter information (Podcasting 2.0)
  */
 export interface PodcastChapter {
@@ -93,6 +212,45 @@ export interface TrackFormData {
   duration?: number;
   explicit?: boolean;
   language?: string | null; // ISO 639-1 two-letter code or null for instrumental
+}
+
+/**
+ * Music Track form data for publishing individual tracks
+ */
+export interface MusicTrackFormData {
+  // Required fields
+  title: string;
+  artist: string;
+  
+  // Audio file (required - either file or URL)
+  audioFile?: File;
+  audioUrl?: string;
+  audioType?: string;
+  
+  // Optional metadata
+  album?: string;
+  trackNumber?: number;
+  releaseDate?: string;        // ISO 8601 date (YYYY-MM-DD)
+  duration?: number;
+  format?: string;             // Audio format (mp3, flac, m4a, ogg)
+  bitrate?: string;            // Audio bitrate (e.g., "320kbps")
+  sampleRate?: string;         // Sample rate in Hz
+  
+  // Media files
+  imageFile?: File;            // Album artwork file
+  imageUrl?: string;           // Album artwork URL
+  videoFile?: File;            // Music video file
+  videoUrl?: string;           // Music video URL
+  
+  // Content and metadata
+  lyrics?: string;
+  credits?: string;
+  language?: string;           // ISO 639-1 language code
+  explicit?: boolean;
+  genres?: string[];           // Genre/category tags
+  
+  // Lightning Network
+  zapSplits?: ZapSplit[];
 }
 
 /**
