@@ -232,7 +232,7 @@ export function generateRSSFeed(
     ));
 
     return `<channel>
-    <title>${escapeXml(config.podcast.artistName)} - ${escapeXml(release.title)}</title>
+    <title>${escapeXml(release.title)}</title>
     <description>${escapeXml(release.description || `Music release: ${release.title}`)}</description>
     <link>${escapeXml(releaseLink)}</link>
     <copyright>${escapeXml(config.podcast.copyright)}</copyright>
