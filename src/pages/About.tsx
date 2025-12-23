@@ -8,19 +8,14 @@ import { ZapDialog } from '@/components/ZapDialog';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePodcastStats } from '@/hooks/usePodcastReleases';
-import { usePodcastTrailers } from '@/hooks/usePodcastTrailers';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 const About = () => {
   const { data: stats } = usePodcastStats();
   const { data: artist } = useAuthor(getArtistPubkeyHex());
-  const { data: trailers } = usePodcastTrailers();
   const { user } = useCurrentUser();
   const podcastConfig = usePodcastConfig();
-
-  // Get the most recent trailer for showcase
-  const featuredTrailer = trailers?.[0]; // Already sorted by date (newest first)
 
   useSeoMeta({
     title: `About - ${podcastConfig.podcast.artistName}`,
@@ -135,76 +130,6 @@ const About = () => {
                   <Share2 className="w-8 h-8 mx-auto text-green-500" />
                   <div className="text-3xl font-bold">{stats.totalReposts}</div>
                   <div className="text-sm text-muted-foreground">Reposts</div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Trailer Section */}
-          {featuredTrailer && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Play className="w-5 h-5 text-primary" />
-                <h2 className="text-2xl font-bold">Featured Trailer</h2>
-              </div>
-
-              <Card className="overflow-hidden">
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="font-semibold text-lg">{featuredTrailer.title}</h3>
-                      {featuredTrailer.season && (
-                        <Badge variant="outline" className="mt-1">
-                          Season {featuredTrailer.season}
-                        </Badge>
-                      )}
-                    </div>
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">
-                      {featuredTrailer.pubDate.toLocaleDateString()}
-                    </span>
-                  </div>
-
-                  {/* Media Player */}
-                  <div className="rounded-lg overflow-hidden bg-muted/50">
-                    {featuredTrailer.type?.startsWith('video/') ? (
-                      <video 
-                        controls 
-                        className="w-full h-auto"
-                        preload="metadata"
-                      >
-                        <source src={featuredTrailer.url} type={featuredTrailer.type} />
-                        <p className="text-white p-4">
-                          Your browser doesn't support HTML5 video. 
-                          <a href={featuredTrailer.url} className="text-blue-300 underline">
-                            Download the video
-                          </a> instead.
-                        </p>
-                      </video>
-                    ) : (
-                      <div className="p-4">
-                        <audio 
-                          controls 
-                          className="w-full"
-                          preload="metadata"
-                        >
-                          <source src={featuredTrailer.url} type={featuredTrailer.type || 'audio/mpeg'} />
-                          <p className="text-muted-foreground">
-                            Your browser doesn't support HTML5 audio. 
-                            <a href={featuredTrailer.url} className="text-blue-600 underline">
-                              Download the audio
-                            </a> instead.
-                          </p>
-                        </audio>
-                      </div>
-                    )}
-                  </div>
-
-                  {trailers && trailers.length > 1 && (
-                    <p className="text-sm text-muted-foreground">
-                      <span className="font-medium">{trailers.length} trailers</span> available. 
-                      Check out our releases to discover more content!
-                    </p>
-                  )}
                 </CardContent>
               </Card>
             </div>

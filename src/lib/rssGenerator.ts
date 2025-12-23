@@ -1,23 +1,23 @@
-import type { PodcastRelease, PodcastTrailer } from '@/types/podcast';
+import type { MusicTrackData, MusicPlaylistData } from '@/types/podcast';
 import { PODCAST_CONFIG, type PodcastConfig } from './podcastConfig';
-import { encodeReleaseAsNaddr } from './nip19Utils';
+import { encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr } from './nip19Utils';
 import { generateRSSFeed as generateRSSFeedCore, podcastConfigToRSSConfig } from './rssCore';
 
 /**
  * Browser-compatible RSS feed generation using the consolidated core
  */
-export function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[] = [], config?: PodcastConfig): string {
+export function generateRSSFeed(tracks: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: PodcastConfig): string {
   const podcastConfig = config || PODCAST_CONFIG;
   const rssConfig = podcastConfigToRSSConfig(podcastConfig);
   
-  return generateRSSFeedCore(releases, trailers, rssConfig, encodeReleaseAsNaddr);
+  return generateRSSFeedCore(tracks, releases, rssConfig, encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr);
 }
 
 /**
  * Downloads RSS feed as a file
  */
-export function downloadRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[] = []): void {
-  const xml = generateRSSFeed(releases, trailers);
+export function downloadRSSFeed(tracks: MusicTrackData[], releases: MusicPlaylistData[] = []): void {
+  const xml = generateRSSFeed(tracks, releases);
   const blob = new Blob([xml], { type: 'application/rss+xml' });
   const url = URL.createObjectURL(blob);
 
@@ -33,26 +33,26 @@ export function downloadRSSFeed(releases: PodcastRelease[], trailers: PodcastTra
 /**
  * Hook to generate RSS feed content
  */
-export function useRSSFeed(releases: PodcastRelease[] | undefined, trailers: PodcastTrailer[] = []): string | null {
-  if (!releases) return null;
-  return generateRSSFeed(releases, trailers);
+export function useRSSFeed(tracks: MusicTrackData[] | undefined, releases: MusicPlaylistData[] = []): string | null {
+  if (!tracks) return null;
+  return generateRSSFeed(tracks, releases);
 }
 
 /**
  * Generate RSS feed and make it available at /rss.xml
- * This function should be called when podcast metadata or releases are updated
+ * This function should be called when podcast metadata or tracks are updated
  */
-export async function genRSSFeed(releases?: PodcastRelease[], trailers: PodcastTrailer[] = [], config?: PodcastConfig): Promise<void> {
+export async function genRSSFeed(tracks?: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: PodcastConfig): Promise<void> {
   try {
-    // Fetch releases if not provided
-    if (!releases) {
-      // This is a placeholder - in a real implementation, you'd fetch releases from your data source
-      console.warn('genRSSFeed called without releases - using placeholder data');
-      releases = [];
+    // Fetch tracks if not provided
+    if (!tracks) {
+      // This is a placeholder - in a real implementation, you'd fetch tracks from your data source
+      console.warn('genRSSFeed called without tracks - using placeholder data');
+      tracks = [];
     }
 
     // Generate RSS XML with provided configuration or fallback to hardcoded config
-    const rssContent = generateRSSFeed(releases, trailers, config);
+    const rssContent = generateRSSFeed(tracks, releases, config);
 
     // Create a blob and object URL
     const blob = new Blob([rssContent], { type: 'application/rss+xml' });

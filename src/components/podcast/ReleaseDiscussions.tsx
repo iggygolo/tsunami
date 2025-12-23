@@ -13,6 +13,7 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useReleases } from '@/hooks/usePodcastReleases';
 import { encodeEventIdAsNevent } from '@/lib/nip19Utils';
 import { genUserName } from '@/lib/genUserName';
+import { createPlaylistRef } from '@/lib/eventConversions';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface _releaseComment {
@@ -41,8 +42,8 @@ export function ReleaseDiscussions({ limit = 20, className }: ReleaseDiscussions
       const signal = AbortSignal.any([c.signal, AbortSignal.timeout(10000)]);
 
       // Query for all kind 1111 comments that reference our releases
-      // Releases are addressable events (kind 30054), so we need to query by #a tags
-      const addressableTags = releases.map(ep => `30054:${ep.artistPubkey}:${ep.identifier}`);
+      // Releases are now playlists (kind 34139), so we need to query by #a tags
+      const addressableTags = releases.map(ep => createPlaylistRef(ep.artistPubkey, ep.identifier));
       
       const commentEvents = await nostr.query([{
         kinds: [1111], // NIP-22 comments
@@ -51,7 +52,7 @@ export function ReleaseDiscussions({ limit = 20, className }: ReleaseDiscussions
       }], { signal });
 
       // Create release lookup map by addressable event tag
-      const releaseMap = new Map(releases.map(ep => [`30054:${ep.artistPubkey}:${ep.identifier}`, ep]));
+      const releaseMap = new Map(releases.map(ep => [createPlaylistRef(ep.artistPubkey, ep.identifier), ep]));
 
       // Process and enrich comments with release info
       const enrichedComments = commentEvents

@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
+import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import { ReleaseActions } from '@/components/podcast/ReleaseActions';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 
@@ -52,7 +53,7 @@ export function PersistentAudioPlayer() {
   const releaseNaddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
 
   // Create NostrEvent for social features - must match the real release event structure
-  // For addressable events (kind 30054), comments are identified by #a tag: kind:pubkey:identifier
+  // For addressable events (kind 34139), comments are identified by #a tag: kind:pubkey:identifier
   // CRITICAL: Use the same identifier logic as everywhere else in the app
   const releaseIdentifier = release.identifier || release.eventId;
   
@@ -60,7 +61,7 @@ export function PersistentAudioPlayer() {
     id: release.eventId, // Real event ID from the release
     pubkey: release.artistPubkey,
     created_at: Math.floor(release.createdAt.getTime() / 1000),
-    kind: 30054, // Addressable podcast release
+    kind: PODCAST_KINDS.MUSIC_PLAYLIST, // Music playlist events (releases)
     tags: [
       ['d', releaseIdentifier], // CRITICAL: Must match identifier logic used in ReleasePage
       ['title', release.title],

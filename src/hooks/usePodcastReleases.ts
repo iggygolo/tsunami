@@ -1,115 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { NostrEvent } from '@nostrify/nostrify';
-import type { PodcastRelease, ReleaseSearchOptions, ReleaseTrack } from '@/types/podcast';
+import type { PodcastRelease, ReleaseSearchOptions, MusicTrackData, MusicPlaylistData } from '@/types/podcast';
 import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
-
-/**
- * Validates if a Nostr event is a valid podcast release (NIP-54)
- */
-function validateRelease(event: NostrEvent): boolean {
-  if (event.kind !== PODCAST_KINDS.RELEASE) return false;
-
-  // Check for required title tag (NIP-54)
-  const title = event.tags.find(([name]) => name === 'title')?.[1];
-  if (!title) return false;
-
-  // Verify it's from the music artist
-  if (event.pubkey !== getArtistPubkeyHex()) return false;
-
-  return true;
-}
-
-/**
- * Checks if an event is an edit of another event
- */
-function isEditEvent(event: NostrEvent): boolean {
-  return event.tags.some(([name]) => name === 'edit');
-}
-
-/**
- * Gets the original event ID from an edit event
- */
-function getOriginalEventId(event: NostrEvent): string | undefined {
-  return event.tags.find(([name]) => name === 'edit')?.[1];
-}
-
-/**
- * Converts a validated Nostr event to a PodcastRelease object
- */
-export function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
-  const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
-
-  const title = tags.get('title')?.[0] || 'Untitled Release';
-  const description = tags.get('description')?.[0];
-  const imageUrl = tags.get('image')?.[0];
-  const genre = tags.get('genre')?.[0] || null;
-
-  // Parse tracklist from event content (JSON array of tracks)
-  let tracks: ReleaseTrack[] = [];
-
-  try {
-    if (event.content) {
-      const parsed = JSON.parse(event.content);
-      if (Array.isArray(parsed)) {
-        tracks = parsed.map((track): ReleaseTrack => ({
-          title: track.title || '',
-          audioUrl: track.audioUrl || '',
-          audioType: track.audioType || 'audio/mpeg',
-          duration: track.duration,
-          explicit: track.explicit || false,
-          language: track.language || null,
-        }));
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to parse tracklist from event content:', error);
-  }
-
-  console.log('Parsed tracks:', tracks);
-
-  // Extract all 't' tags for topics
-  const topicTags = event.tags
-    .filter(([name]) => name === 't')
-    .map(([, value]) => value);
-
-  // Extract identifier from 'd' tag (for addressable events)
-  const identifier = tags.get('d')?.[0] || event.id; // Fallback to event ID for backward compatibility
-
-  // Extract publication date from pubdate tag with fallback to created_at
-  const pubdateStr = tags.get('pubdate')?.[0];
-  let publishDate: Date;
-  try {
-    publishDate = pubdateStr ? new Date(pubdateStr) : new Date(event.created_at * 1000);
-  } catch {
-    publishDate = new Date(event.created_at * 1000);
-  }
-
-  // Extract transcript URL from tag
-  const transcriptUrl = tags.get('transcript')?.[0];
-
-  return {
-    id: event.id,
-    title,
-    description,
-    content: undefined,
-    imageUrl,
-    publishDate,
-    tags: topicTags,
-    transcriptUrl,
-    genre,
-    externalRefs: [],
-    eventId: event.id,
-    artistPubkey: event.pubkey,
-    identifier,
-    createdAt: new Date(event.created_at * 1000),
-    tracks: tracks,
-  };
-}
+import {
+  validateMusicTrack,
+  validateMusicPlaylist,
+  eventToMusicTrack,
+  eventToMusicPlaylist,
+  playlistToRelease,
+  eventToPodcastRelease,
+  deduplicateEventsByIdentifier,
+  getEventIdentifier,
+  createPlaylistRef
+} from '@/lib/eventConversions';
 
 /**
  * Hook to fetch all podcast releases from the artist
+ * Now queries both music tracks (36787) and playlists (34139) and combines them into releases
  */
 export function useReleases(options: ReleaseSearchOptions = {}) {
   const { nostr } = useNostr();
@@ -118,72 +27,75 @@ export function useReleases(options: ReleaseSearchOptions = {}) {
     queryKey: ['releases', options],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
+      const artistPubkey = getArtistPubkeyHex();
 
-      const events = await nostr.query([{
-        kinds: [PODCAST_KINDS.RELEASE],
-        authors: [getArtistPubkeyHex()],
+      // Step 1: Fetch all playlists (releases) from the artist
+      const playlistEvents = await nostr.query([{
+        kinds: [PODCAST_KINDS.MUSIC_PLAYLIST],
+        authors: [artistPubkey],
         limit: options.limit || 100
       }], { signal });
 
-      // Filter and validate events
-      const validEvents = events.filter(validateRelease);
+      const validPlaylists = playlistEvents.filter(validateMusicPlaylist);
+      console.log('Fetched playlists:', validPlaylists);
 
-      console.log('Fetched releases:', validEvents);
+      if (validPlaylists.length === 0) {
+        return [];
+      }
 
-      // Deduplicate releases by title - keep only the latest version of each title
-      const releasesByTitle = new Map<string, NostrEvent>();
-      const originalEvents = new Set<string>(); // Track original events that have been edited
-
-      // First pass: identify edited events and their originals
-      validEvents.forEach(event => {
-        if (isEditEvent(event)) {
-          const originalId = getOriginalEventId(event);
-          if (originalId) {
-            originalEvents.add(originalId);
-          }
-        }
+      // Step 2: Extract all track references from playlists
+      const trackReferences = new Set<string>();
+      validPlaylists.forEach(playlist => {
+        playlist.tags
+          .filter(([key]) => key === 'a')
+          .forEach(([, ref]) => {
+            const parts = ref.split(':');
+            if (parts.length === 3 && parts[0] === PODCAST_KINDS.MUSIC_TRACK.toString()) {
+              trackReferences.add(`${parts[1]}:${parts[2]}`); // pubkey:identifier
+            }
+          });
       });
 
-      // Second pass: select the best version for each title
-      validEvents.forEach(event => {
-        const title = event.tags.find(([name]) => name === 'title')?.[1] || '';
-        if (!title) return;
+      // Step 3: Fetch all referenced tracks
+      const trackEvents = await nostr.query([{
+        kinds: [PODCAST_KINDS.MUSIC_TRACK],
+        authors: [artistPubkey],
+        limit: 1000 // High limit to get all tracks
+      }], { signal });
 
-        // Skip if this is an original event that has been edited
-        if (originalEvents.has(event.id)) return;
+      const validTracks = trackEvents.filter(validateMusicTrack);
+      console.log('Fetched tracks:', validTracks);
 
-        const existing = releasesByTitle.get(title);
-        if (!existing) {
-          releasesByTitle.set(title, event);
-        } else {
-          // Keep the event with the latest created_at (most recent edit)
-          // This ensures we get the latest content while preserving pubdate for sorting
-          if (event.created_at > existing.created_at) {
-            releasesByTitle.set(title, event);
-          }
-        }
+      // Step 4: Deduplicate events using centralized utility
+      const deduplicatedTracks = deduplicateEventsByIdentifier(validTracks, getEventIdentifier);
+      const deduplicatedPlaylists = deduplicateEventsByIdentifier(validPlaylists, getEventIdentifier);
+
+      // Step 5: Create track lookup map using centralized conversions
+      const tracksMap = new Map<string, MusicTrackData>();
+      deduplicatedTracks.forEach(trackEvent => {
+        const track = eventToMusicTrack(trackEvent);
+        tracksMap.set(`${track.artistPubkey}:${track.identifier}`, track);
       });
 
-      // Convert to podcast releases
-      const validReleases = Array.from(releasesByTitle.values()).map(eventToPodcastRelease);
+      // Step 6: Convert playlists to releases with resolved tracks using centralized conversions
+      const playlistsData = deduplicatedPlaylists.map(eventToMusicPlaylist);
+      const releases = playlistsData.map(playlist => playlistToRelease(playlist, tracksMap));
 
-      // Fetch zap data for all releases in a single query
-      const releaseIds = validReleases.map(ep => ep.eventId);
+      console.log('Converted releases:', releases);
 
+      // Step 7: Fetch zap data for all releases
+      const releaseIds = releases.map(release => release.eventId);
       const zapData: Map<string, { count: number; totalSats: number }> = new Map();
 
       if (releaseIds.length > 0) {
         try {
-          // Query for all zaps to these releaseEventss
           const zapEvents = await nostr.query([{
             kinds: [9735], // Zap receipts
-            '#e': releaseIds, // Releases being zapped
-            limit: 2000 // High limit to get all zaps
+            '#e': releaseIds,
+            limit: 2000
           }], { signal });
 
-          // Process zap events and group by releaseEvents
           const validZaps = zapEvents.filter(validateZapEvent);
-
           validZaps.forEach(zapEvent => {
             const releaseId = zapEvent.tags.find(([name]) => name === 'e')?.[1];
             if (!releaseId) return;
@@ -198,12 +110,11 @@ export function useReleases(options: ReleaseSearchOptions = {}) {
           });
         } catch (error) {
           console.warn('Failed to fetch zap data for releases:', error);
-          // Continue without zap data rather than failing completely
         }
       }
 
-      // Add zap counts to releases
-      const releasesWithZaps = validReleases.map(release => {
+      // Step 8: Add zap counts to releases
+      const releasesWithZaps = releases.map(release => {
         const zaps = zapData.get(release.eventId);
         return {
           ...release,
@@ -212,8 +123,7 @@ export function useReleases(options: ReleaseSearchOptions = {}) {
         };
       });
 
-
-      // Apply search filtering
+      // Step 9: Apply search filtering
       let filteredReleases = releasesWithZaps;
 
       if (options.query) {
@@ -231,7 +141,7 @@ export function useReleases(options: ReleaseSearchOptions = {}) {
         );
       }
 
-      // Apply sorting
+      // Step 10: Apply sorting
       const sortBy = options.sortBy || 'date';
       const sortOrder = options.sortOrder || 'desc';
 
@@ -256,7 +166,7 @@ export function useReleases(options: ReleaseSearchOptions = {}) {
         return sortOrder === 'desc' ? -comparison : comparison;
       });
 
-      // Apply offset
+      // Step 11: Apply offset
       if (options.offset) {
         filteredReleases = filteredReleases.slice(options.offset);
       }
@@ -268,28 +178,54 @@ export function useReleases(options: ReleaseSearchOptions = {}) {
 }
 
 /**
- * Hook to fetch a single podcast release by ID
+ * Hook to fetch a single podcast release by playlist ID
  */
-export function usePodcastRelease(releaseEventsId: string) {
+export function usePodcastRelease(playlistId: string) {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['podcast-releaseEvents', releaseEventsId],
+    queryKey: ['podcast-release', playlistId],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
 
-      const events = await nostr.query([{
-        ids: [releaseEventsId]
+      // First try to fetch as a playlist event
+      const playlistEvents = await nostr.query([{
+        ids: [playlistId]
       }], { signal });
 
-      const event = events[0];
-      if (!event || !validateRelease(event)) {
-        return null;
+      const playlistEvent = playlistEvents[0];
+      if (!playlistEvent) return null;
+
+      // If it's a playlist, resolve its tracks
+      if (playlistEvent.kind === PODCAST_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(playlistEvent)) {
+        const playlist = eventToMusicPlaylist(playlistEvent);
+        
+        // Fetch all referenced tracks
+        const trackEvents = await nostr.query([{
+          kinds: [PODCAST_KINDS.MUSIC_TRACK],
+          authors: [playlistEvent.pubkey],
+          limit: 100
+        }], { signal });
+
+        const validTracks = trackEvents.filter(validateMusicTrack);
+        const tracksMap = new Map<string, MusicTrackData>();
+        
+        validTracks.forEach(trackEvent => {
+          const track = eventToMusicTrack(trackEvent);
+          tracksMap.set(`${track.artistPubkey}:${track.identifier}`, track);
+        });
+
+        return playlistToRelease(playlist, tracksMap);
       }
 
-      return eventToPodcastRelease(event);
+      // If it's a single track, convert to release format
+      if (playlistEvent.kind === PODCAST_KINDS.MUSIC_TRACK && validateMusicTrack(playlistEvent)) {
+        return eventToPodcastRelease(playlistEvent);
+      }
+
+      return null;
     },
-    enabled: !!releaseEventsId,
+    enabled: !!playlistId,
     staleTime: 300000, // 5 minutes
   });
 }
@@ -349,3 +285,5 @@ export function usePodcastStats() {
     staleTime: 300000, // 5 minutes
   });
 }
+// Re-export centralized conversion functions for backward compatibility
+export { playlistToRelease, eventToPodcastRelease } from '@/lib/eventConversions';

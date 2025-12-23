@@ -38,7 +38,6 @@ import { useUploadFile } from '@/hooks/useUploadFile';
 import { isArtist, PODCAST_CONFIG, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
 import { ReleaseManagement } from '@/components/studio/ReleaseManagement';
-import { TrailerManagement } from '@/components/studio/TrailerManagement';
 import { BlossomServerManager } from '@/components/studio/BlossomServerManager';
 // Footer is provided by Layout
 
@@ -894,11 +893,6 @@ const Studio = () => {
               <ReleaseManagement />
             </TabsContent>
 
-            {/* Trailers Tab */}
-            <TabsContent value="trailers" className="space-y-6">
-              <TrailerManagement />
-            </TabsContent>
-
             {/* Blossom Media Servers Tab */}
             <TabsContent value="blossom" className="space-y-6">
               <BlossomServerManager />
@@ -1077,35 +1071,6 @@ const Studio = () => {
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Trailers Analytics */}
-              {analytics && analytics.totalTrailers > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Play className="w-5 h-5" />
-                      <span>Trailer Performance</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-blue-900">
-                            {analytics.totalTrailers} trailer{analytics.totalTrailers !== 1 ? 's' : ''} published
-                          </p>
-                          <p className="text-xs text-blue-700 mt-1">
-                            Trailers help new listeners discover your podcast content
-                          </p>
-                        </div>
-                        <div className="text-2xl font-bold text-blue-600">
-                          {analytics.totalTrailers}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </TabsContent>
           </Tabs>
         </div>

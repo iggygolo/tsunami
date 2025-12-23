@@ -14,6 +14,7 @@ import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
+import { createPlaylistRef } from '@/lib/eventConversions';
 import type { PodcastRelease } from '@/types/podcast';
 
 interface ShareReleaseDialogProps {
@@ -51,7 +52,7 @@ export function ShareReleaseDialog({ release, open, onOpenChange }: ShareRelease
         kind: 1,
         content: shareMessage,
         tags: [
-          ['a', `30054:${release.artistPubkey}:${release.identifier}`], // Reference the release as addressable event (non-reply)
+          ['a', createPlaylistRef(release.artistPubkey, release.identifier)], // Reference the release as addressable playlist event (non-reply)
           ['t', 'podcast'], // Topic tag
           ['t', 'nostr'], // Topic tag
         ]

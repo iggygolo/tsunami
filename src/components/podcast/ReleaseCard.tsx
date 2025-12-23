@@ -8,6 +8,7 @@ import { ZapButton } from '@/components/ZapButton';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { Link } from 'react-router-dom';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
+import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import { useComments } from '@/hooks/useComments';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useToast } from '@/hooks/useToast';
@@ -57,7 +58,7 @@ export function ReleaseCard({
     id: release.eventId,
     pubkey: release.artistPubkey,
     created_at: Math.floor(release.createdAt.getTime() / 1000),
-    kind: 30054, // Addressable podcast releases
+    kind: PODCAST_KINDS.MUSIC_PLAYLIST, // Music playlist events (releases)
     tags: [
       ['d', release.identifier], // Addressable event identifier
       ['title', release.title],

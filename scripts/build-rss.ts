@@ -3,16 +3,16 @@ import path from 'path';
 import { config } from 'dotenv';
 import { nip19 } from 'nostr-tools';
 import { NRelay1, NostrEvent } from '@nostrify/nostrify';
-import type { PodcastRelease, PodcastTrailer } from '../src/types/podcast.js';
+import type { MusicTrackData, MusicPlaylistData } from '../src/types/podcast.js';
 import { generateRSSFeed as generateRSSFeedCore, type RSSConfig } from '../src/lib/rssCore.js';
 
-// Import naddr encoding function
-import { encodeReleaseAsNaddr } from '../src/lib/nip19Utils.js';
+// Import naddr encoding functions
+import { encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr } from '../src/lib/nip19Utils.js';
 
-// Copied from podcastConfig.ts to avoid import.meta.env issues
-const PODCAST_KINDS = {
-  RELEASE: 30054, // Addressable Podcast releases (editable, replaceable)
-  TRAILER: 30055, // Addressable Podcast trailers (editable, replaceable)
+// Updated constants for new event types (but keeping internal naming)
+const MUSIC_KINDS = {
+  MUSIC_TRACK: 36787,     // Individual music tracks
+  RELEASE: 34139,         // Music releases (internally called releases, externally playlists)
   ARTIST_METADATA: 30078, // Artist metadata (addressable event)
 } as const;
 
@@ -131,39 +131,27 @@ function getArtistPubkeyHex(artistNpub: string): string {
 /**
  * Node-compatible RSS feed generation using consolidated core
  */
-function generateRSSFeed(releases: PodcastRelease[], trailers: PodcastTrailer[], podcastConfig: RSSConfig): string {
-  return generateRSSFeedCore(releases, trailers, podcastConfig, encodeReleaseAsNaddr);
+function generateRSSFeed(tracks: MusicTrackData[], releases: MusicPlaylistData[], podcastConfig: RSSConfig): string {
+  return generateRSSFeedCore(tracks, releases, podcastConfig, encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr);
 }
 
 /**
- * Validates if a Nostr event is a valid podcast release
+ * Validates if a Nostr event is a valid music track
  */
-function validatePodcastRelease(event: NostrEvent, artistPubkeyHex: string): boolean {
-  if (event.kind !== PODCAST_KINDS.RELEASE) return false;
+function validateMusicTrack(event: NostrEvent, artistPubkeyHex: string): boolean {
+  if (event.kind !== MUSIC_KINDS.MUSIC_TRACK) return false;
 
   // Check for required title tag
   const title = event.tags.find(([name]) => name === 'title')?.[1];
   if (!title) return false;
 
-  // Check for required audio tag or a JSON tracklist in content
-  const audio = event.tags.find(([name]) => name === 'audio')?.[1];
-  if (!audio) {
-    // Try parsing content as a JSON tracklist
-    try {
-      if (event.content) {
-        const parsed = JSON.parse(event.content);
-        if (Array.isArray(parsed) && parsed.length > 0 && (parsed[0].audioUrl || parsed[0].url)) {
-          // valid tracklist
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } catch {
-      return false;
-    }
-  }
+  // Check for required artist tag
+  const artist = event.tags.find(([name]) => name === 'artist')?.[1];
+  if (!artist) return false;
+
+  // Check for required url tag (audio file)
+  const url = event.tags.find(([name]) => name === 'url')?.[1];
+  if (!url) return false;
 
   // Verify it's from the music artist
   if (event.pubkey !== artistPubkeyHex) return false;
@@ -172,98 +160,78 @@ function validatePodcastRelease(event: NostrEvent, artistPubkeyHex: string): boo
 }
 
 /**
- * Converts a validated Nostr event to a PodcastRelease object
+ * Converts a validated Nostr event to a MusicTrackData object
  */
-function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
+function eventToMusicTrack(event: NostrEvent): MusicTrackData {
   const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
 
-  const title = tags.get('title')?.[0] || 'Untitled release';
-  const description = tags.get('description')?.[0];
+  const title = tags.get('title')?.[0] || 'Untitled Track';
+  const artist = tags.get('artist')?.[0] || 'Unknown Artist';
+  const audioUrl = tags.get('url')?.[0] || '';
+  const album = tags.get('album')?.[0];
+  const trackNumber = tags.get('track_number')?.[0] ? parseInt(tags.get('track_number')![0], 10) : undefined;
+  const releaseDate = tags.get('released')?.[0];
+  const duration = tags.get('duration')?.[0] ? parseInt(tags.get('duration')![0], 10) : undefined;
+  const format = tags.get('format')?.[0];
+  const bitrate = tags.get('bitrate')?.[0];
+  const sampleRate = tags.get('sample_rate')?.[0];
   const imageUrl = tags.get('image')?.[0];
+  const videoUrl = tags.get('video')?.[0];
+  const language = tags.get('language')?.[0];
+  const explicit = tags.get('explicit')?.[0] === 'true';
 
-  // Build tracks - prefer a JSON tracklist in the event content, fallback to single 'audio' tag
-  let tracks: PodcastRelease['tracks'] = [];
-  try {
-    if (event.content) {
-      const parsed = JSON.parse(event.content);
-      if (Array.isArray(parsed)) {
-        tracks = parsed.map((t: unknown) => {
-          const tt = t as Record<string, unknown>;
-          return {
-            title: typeof tt.title === 'string' ? tt.title : (tt.title ? String(tt.title) : ''),
-            audioUrl: typeof tt.audioUrl === 'string' ? tt.audioUrl : (typeof tt.url === 'string' ? tt.url : ''),
-            audioType: typeof tt.audioType === 'string' ? tt.audioType : (typeof tt.type === 'string' ? tt.type : 'audio/mpeg'),
-            duration: typeof tt.duration === 'number' ? tt.duration : (typeof tt.duration === 'string' ? parseInt(tt.duration, 10) : undefined),
-            explicit: typeof tt.explicit === 'boolean' ? tt.explicit : false,
-          };
-        });
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to parse tracklist from event content:', error);
-  }
-
-  // Fallback to single audio tag if no tracks parsed
-  const audioTag = tags.get('audio');
-  if (tracks.length === 0 && audioTag) {
-    tracks = [{ title: '', audioUrl: audioTag[0] || '', audioType: audioTag[1] || 'audio/mpeg' }];
-  }
-
-  // Extract all 't' tags for topics
-  const topicTags = event.tags
-    .filter(([name]) => name === 't')
+  // Extract all 't' tags for genres (excluding 'music' tag)
+  const genres = event.tags
+    .filter(([name, value]) => name === 't' && value !== 'music')
     .map(([, value]) => value);
 
   // Extract identifier from 'd' tag (for addressable events)
-  const identifier = tags.get('d')?.[0] || event.id; // Fallback to event ID for backward compatibility
+  const identifier = tags.get('d')?.[0] || event.id;
 
-  // Extract publication date from pubdate tag with fallback to created_at
-  const pubdateStr = tags.get('pubdate')?.[0];
-  let publishDate: Date;
-  try {
-    publishDate = pubdateStr ? new Date(pubdateStr) : new Date(event.created_at * 1000);
-  } catch {
-    publishDate = new Date(event.created_at * 1000);
-  }
-
-  // Extract transcript URL from tag
-  const transcriptUrl = tags.get('transcript')?.[0];
+  // Parse zap splits from 'zap' tags
+  const zapSplits = event.tags
+    .filter(([name]) => name === 'zap')
+    .map(([, address, percentage, name]) => ({
+      address,
+      percentage: parseInt(percentage, 10),
+      name,
+      type: address.includes('@') ? 'lnaddress' as const : 'node' as const
+    }));
 
   return {
-    id: event.id,
+    identifier,
     title,
-    description,
-    content: undefined,
-    tracks,
+    artist,
+    audioUrl,
+    album,
+    trackNumber,
+    releaseDate,
+    duration,
+    format,
+    bitrate,
+    sampleRate,
     imageUrl,
-    transcriptUrl,
-    publishDate,
-    tags: topicTags,
-    externalRefs: [],
+    videoUrl,
+    lyrics: event.content || undefined,
+    language,
+    explicit,
+    genres: genres.length > 0 ? genres : undefined,
+    zapSplits: zapSplits.length > 0 ? zapSplits : undefined,
     eventId: event.id,
     artistPubkey: event.pubkey,
-    identifier,
     createdAt: new Date(event.created_at * 1000),
   };
 }
 
 /**
- * Validates if a Nostr event is a valid podcast trailer
+ * Validates if a Nostr event is a valid music release
  */
-function validatePodcastTrailer(event: NostrEvent, artistPubkeyHex: string): boolean {
-  if (event.kind !== PODCAST_KINDS.TRAILER) return false;
+function validateMusicRelease(event: NostrEvent, artistPubkeyHex: string): boolean {
+  if (event.kind !== MUSIC_KINDS.RELEASE) return false;
 
   // Check for required title tag
   const title = event.tags.find(([name]) => name === 'title')?.[1];
   if (!title) return false;
-
-  // Check for required URL tag
-  const url = event.tags.find(([name]) => name === 'url')?.[1];
-  if (!url) return false;
-
-  // Check for required pubdate tag
-  const pubdate = event.tags.find(([name]) => name === 'pubdate')?.[1];
-  if (!pubdate) return false;
 
   // Verify it's from the music artist
   if (event.pubkey !== artistPubkeyHex) return false;
@@ -272,40 +240,45 @@ function validatePodcastTrailer(event: NostrEvent, artistPubkeyHex: string): boo
 }
 
 /**
- * Converts a validated Nostr event to a PodcastTrailer object
+ * Converts a validated Nostr event to a MusicPlaylistData object (internally called release)
  */
-function eventToPodcastTrailer(event: NostrEvent): PodcastTrailer {
+function eventToMusicRelease(event: NostrEvent): MusicPlaylistData {
   const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
 
-  const title = tags.get('title')?.[0] || 'Untitled Trailer';
-  const url = tags.get('url')?.[0] || '';
-  const pubdateStr = tags.get('pubdate')?.[0];
-  const lengthStr = tags.get('length')?.[0];
-  const type = tags.get('type')?.[0];
-  const seasonStr = tags.get('season')?.[0];
-  
-  // Parse pubdate (RFC2822 format)
-  let pubDate: Date;
-  try {
-    pubDate = pubdateStr ? new Date(pubdateStr) : new Date(event.created_at * 1000);
-  } catch {
-    pubDate = new Date(event.created_at * 1000);
-  }
+  const title = tags.get('title')?.[0] || 'Untitled Release';
+  const description = event.content || undefined;
+  const imageUrl = tags.get('image')?.[0];
+
+  // Extract track references from 'a' tags (addressable event references)
+  const tracks = event.tags
+    .filter(([name]) => name === 'a')
+    .map(([, reference]) => {
+      const [kind, pubkey, identifier] = reference.split(':');
+      return {
+        kind: parseInt(kind, 10) as 36787,
+        pubkey,
+        identifier,
+      };
+    })
+    .filter(track => track.kind === 36787); // Only include music track references
+
+  // Extract categories from 't' tags
+  const categories = event.tags
+    .filter(([name]) => name === 't')
+    .map(([, value]) => value);
 
   // Extract identifier from 'd' tag (for addressable events)
   const identifier = tags.get('d')?.[0] || event.id;
 
   return {
-    id: event.id,
-    title,
-    url,
-    pubDate,
-    length: lengthStr ? parseInt(lengthStr, 10) : undefined,
-    type,
-    season: seasonStr ? parseInt(seasonStr, 10) : undefined,
-    eventId: event.id,
-    artistPubkey: event.pubkey,
     identifier,
+    title,
+    tracks,
+    description,
+    imageUrl,
+    categories: categories.length > 0 ? categories : undefined,
+    eventId: event.id,
+    authorPubkey: event.pubkey,
     createdAt: new Date(event.created_at * 1000),
   };
 }
@@ -371,16 +344,16 @@ async function fetchPodcastMetadataMultiRelay(relays: Array<{url: string, relay:
 }
 
 /**
- * Fetch podcast releases from multiple Nostr relays
+ * Fetch music releases from multiple Nostr relays
  */
-async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay: NRelay1}>, artistPubkeyHex: string) {
-  console.log('📡 Fetching podcast releases from Nostr...');
+async function fetchMusicReleasesMultiRelay(relays: Array<{url: string, relay: NRelay1}>, artistPubkeyHex: string) {
+  console.log('📡 Fetching music releases from Nostr...');
 
   const relayPromises = relays.map(async ({url, relay}) => {
     try {
       const events = await Promise.race([
         relay.query([{
-          kinds: [PODCAST_KINDS.RELEASE],
+          kinds: [MUSIC_KINDS.RELEASE],
           authors: [artistPubkeyHex],
           limit: 100
         }]),
@@ -389,7 +362,7 @@ async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay:
         )
       ]) as NostrEvent[];
 
-      const validEvents = events.filter(event => validatePodcastRelease(event, artistPubkeyHex));
+      const validEvents = events.filter(event => validateMusicRelease(event, artistPubkeyHex));
 
       if (validEvents.length > 0) {
         console.log(`✅ Found ${validEvents.length} releases from ${url}`);
@@ -430,40 +403,40 @@ async function fetchPodcastReleasesMultiRelay(relays: Array<{url: string, relay:
   const uniqueEvents = Array.from(releasesByIdentifier.values());
   console.log(`✅ Found ${uniqueEvents.length} unique releases from ${allResults.length} relays`);
 
-  // Convert to PodcastRelease format and sort by publishDate (newest first)
-  const releases = uniqueEvents.map(event => eventToPodcastRelease(event));
+  // Convert to MusicPlaylistData format and sort by createdAt (newest first)
+  const releases = uniqueEvents.map(event => eventToMusicRelease(event));
 
-  return releases.sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
+  return releases.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
 }
 
 /**
- * Fetch podcast trailers from multiple Nostr relays
+ * Fetch music tracks from multiple Nostr relays
  */
-async function fetchPodcastTrailersMultiRelay(relays: Array<{url: string, relay: NRelay1}>, artistPubkeyHex: string) {
-  console.log('📡 Fetching podcast trailers from Nostr...');
+async function fetchMusicTracksMultiRelay(relays: Array<{url: string, relay: NRelay1}>, artistPubkeyHex: string) {
+  console.log('📡 Fetching music tracks from Nostr...');
 
   const relayPromises = relays.map(async ({url, relay}) => {
     try {
       const events = await Promise.race([
         relay.query([{
-          kinds: [PODCAST_KINDS.TRAILER],
+          kinds: [MUSIC_KINDS.MUSIC_TRACK],
           authors: [artistPubkeyHex],
-          limit: 50
+          limit: 200
         }]),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Trailers query timeout for ${url}`)), 5000)
+          setTimeout(() => reject(new Error(`Tracks query timeout for ${url}`)), 5000)
         )
       ]) as NostrEvent[];
 
-      const validEvents = events.filter(event => validatePodcastTrailer(event, artistPubkeyHex));
+      const validEvents = events.filter(event => validateMusicTrack(event, artistPubkeyHex));
 
       if (validEvents.length > 0) {
-        console.log(`✅ Found ${validEvents.length} trailers from ${url}`);
+        console.log(`✅ Found ${validEvents.length} tracks from ${url}`);
         return validEvents;
       }
       return [];
     } catch (error) {
-      console.log(`⚠️ Failed to fetch trailers from ${url}:`, (error as Error).message);
+      console.log(`⚠️ Failed to fetch tracks from ${url}:`, (error as Error).message);
       return [];
     }
   });
@@ -479,44 +452,27 @@ async function fetchPodcastTrailersMultiRelay(relays: Array<{url: string, relay:
   });
 
   // Deduplicate addressable events by 'd' tag identifier (keep only latest version)
-  const trailersByIdentifier = new Map<string, NostrEvent>();
+  const tracksByIdentifier = new Map<string, NostrEvent>();
   
   allEvents.forEach(event => {
     // Get the 'd' tag identifier for addressable events
     const identifier = event.tags.find(([name]) => name === 'd')?.[1];
     if (!identifier) return; // Skip events without 'd' tag
     
-    const existing = trailersByIdentifier.get(identifier);
+    const existing = tracksByIdentifier.get(identifier);
     // Keep the latest version (highest created_at timestamp)
     if (!existing || event.created_at > existing.created_at) {
-      trailersByIdentifier.set(identifier, event);
+      tracksByIdentifier.set(identifier, event);
     }
   });
 
-  const uniqueEvents = Array.from(trailersByIdentifier.values());
-  console.log(`✅ Found ${uniqueEvents.length} unique trailers from ${allResults.length} relays`);
+  const uniqueEvents = Array.from(tracksByIdentifier.values());
+  console.log(`✅ Found ${uniqueEvents.length} unique tracks from ${allResults.length} relays`);
 
-  // Convert to PodcastTrailer format
-  const trailers = uniqueEvents.map(event => eventToPodcastTrailer(event));
-  
-  // Additional deduplication by URL + title combination (in case same content was published with different identifiers)
-  const trailersByContent = new Map<string, PodcastTrailer>();
-  
-  trailers.forEach(trailer => {
-    const contentKey = `${trailer.url}-${trailer.title}`;
-    const existing = trailersByContent.get(contentKey);
-    
-    // Keep the latest version by publication date
-    if (!existing || trailer.pubDate.getTime() > existing.pubDate.getTime()) {
-      trailersByContent.set(contentKey, trailer);
-    }
-  });
-  
-  const finalTrailers = Array.from(trailersByContent.values());
-  console.log(`🔄 Deduplicated to ${finalTrailers.length} unique trailers (removed ${trailers.length - finalTrailers.length} duplicates)`);
-  
-  // Sort by pubDate (newest first)
-  return finalTrailers.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
+  // Convert to MusicTrackData format and sort by createdAt (newest first)
+  const tracks = uniqueEvents.map(event => eventToMusicTrack(event));
+
+  return tracks.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
 }
 
 async function buildRSS() {
@@ -542,8 +498,8 @@ async function buildRSS() {
     const relays = relayUrls.map(url => ({ url, relay: new NRelay1(url) }));
 
     let finalConfig = baseConfig;
-    let releases: PodcastRelease[] = [];
-    let trailers: PodcastTrailer[] = [];
+    let tracks: MusicTrackData[] = [];
+    let releases: MusicPlaylistData[] = [];
     let nostrMetadata: Record<string, unknown> | null = null;
 
     try {
@@ -564,11 +520,11 @@ async function buildRSS() {
         console.log('📄 Using podcast metadata from .env file');
       }
 
-      // Fetch releases from multiple relays
-      releases = await fetchPodcastReleasesMultiRelay(relays, artistPubkeyHex);
+      // Fetch tracks from multiple relays
+      tracks = await fetchMusicTracksMultiRelay(relays, artistPubkeyHex);
 
-      // Fetch trailers from multiple relays
-      trailers = await fetchPodcastTrailersMultiRelay(relays, artistPubkeyHex);
+      // Fetch releases from multiple relays
+      releases = await fetchMusicReleasesMultiRelay(relays, artistPubkeyHex);
 
     } finally {
       // Close all relay connections
@@ -582,10 +538,10 @@ async function buildRSS() {
       console.log('🔌 Relay queries completed');
     }
 
-    console.log(`📊 Generating RSS with ${releases.length} releases and ${trailers.length} trailers`);
+    console.log(`📊 Generating RSS with ${tracks.length} tracks and ${releases.length} releases`);
 
     // Generate RSS feed with fetched data
-    const rssContent = generateRSSFeed(releases, trailers, finalConfig);
+    const rssContent = generateRSSFeed(tracks, releases, finalConfig);
 
     // Ensure dist directory exists
     const distDir = path.resolve('dist');
@@ -604,15 +560,15 @@ async function buildRSS() {
       status: 'ok',
       endpoint: '/rss.xml',
       generatedAt: new Date().toISOString(),
+      trackCount: tracks.length,
       releaseCount: releases.length,
-      trailerCount: trailers.length,
       feedSize: rssContent.length,
       environment: 'production',
       accessible: true,
       dataSource: {
         metadata: nostrMetadata ? 'nostr' : 'env',
+        tracks: tracks.length > 0 ? 'nostr' : 'none',
         releases: releases.length > 0 ? 'nostr' : 'none',
-        trailers: trailers.length > 0 ? 'nostr' : 'none',
         relays: relayUrls
       },
       artist: baseConfig.artistNpub

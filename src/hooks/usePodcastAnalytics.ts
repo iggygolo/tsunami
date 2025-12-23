@@ -2,12 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { PODCAST_KINDS, getArtistPubkeyHex } from '@/lib/podcastConfig';
 import { useReleases } from '@/hooks/usePodcastReleases';
-import { usePodcastTrailers } from '@/hooks/usePodcastTrailers';
 import type { PodcastRelease } from '@/types/podcast';
 
 interface PodcastAnalytics {
   totalReleases: number;
-  totalTrailers: number;
   totalZaps: number;
   totalComments: number;
   totalReposts: number;
@@ -41,7 +39,6 @@ export function usePodcastAnalytics() {
   const { nostr } = useNostr();
   const artistPubkeyHex = getArtistPubkeyHex();
   const { data: releases } = useReleases();
-  const { data: trailers } = usePodcastTrailers();
 
   return useQuery<PodcastAnalytics>({
     queryKey: ['podcast-analytics', artistPubkeyHex],
@@ -52,7 +49,6 @@ export function usePodcastAnalytics() {
         // Return empty analytics if no releases
         return {
           totalReleases: 0,
-          totalTrailers: trailers?.length || 0,
           totalZaps: 0,
           totalComments: 0,
           totalReposts: 0,
@@ -188,7 +184,6 @@ export function usePodcastAnalytics() {
 
       return {
         totalReleases: releases.length,
-        totalTrailers: trailers?.length || 0,
         totalZaps,
         totalComments,
         totalReposts,

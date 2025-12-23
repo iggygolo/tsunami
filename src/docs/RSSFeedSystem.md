@@ -56,7 +56,7 @@ await publishRelease(releaseData);
 await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 
 // 3. RSS generator refetches and regenerates feed
-const events = await nostr.query([{ kinds: [54], authors: [pubkey] }]);
+const events = await nostr.query([{ kinds: [PODCAST_KINDS.MUSIC_TRACK, PODCAST_KINDS.MUSIC_PLAYLIST], authors: [pubkey] }]);
 
 // 4. Feed is stored and served at /rss.xml
 await genRSSFeed(releases);
@@ -69,9 +69,9 @@ await genRSSFeed(releases);
 The `useRSSFeedGenerator` hook:
 
 ```typescript
-// Fetch NIP-54 podcast releases
+// Fetch music tracks and playlists (kinds 36787 and 34139)
 const events = await nostr.query([{
-  kinds: [PODCAST_KINDS.RELEASE], // kind:30054
+  kinds: [PODCAST_KINDS.MUSIC_TRACK, PODCAST_KINDS.MUSIC_PLAYLIST], // kinds: 36787, 34139
   authors: [getArtistPubkeyHex()],
   limit: 100
 }]);

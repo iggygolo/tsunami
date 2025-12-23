@@ -94,28 +94,6 @@ export function encodeAddressableEvent(
 }
 
 /**
- * Encode a podcast release as naddr (for addressable release events)
- * @param pubkey The release author's pubkey
- * @param identifier The release 'd' tag identifier
- * @param customRelays Optional custom relays to include
- * @returns naddr string for the release
- */
-export function encodeReleaseAsNaddr(
-  pubkey: string,
-  identifier: string,
-  customRelays?: string[]
-): string {
-  const relays = customRelays || DEFAULT_RELAYS;
-  
-  return nip19.naddrEncode({
-    identifier,
-    pubkey,
-    kind: PODCAST_KINDS.RELEASE,
-    relays
-  });
-}
-
-/**
  * Encode a music track as naddr (for addressable music track events)
  * @param pubkey The track author's pubkey
  * @param identifier The track 'd' tag identifier
@@ -157,6 +135,23 @@ export function encodeMusicPlaylistAsNaddr(
     kind: PODCAST_KINDS.MUSIC_PLAYLIST,
     relays
   });
+}
+
+/**
+ * Legacy function for backward compatibility - encodes a release as naddr
+ * Now uses the music playlist event kind (34139)
+ * @param pubkey The release author's pubkey
+ * @param identifier The release 'd' tag identifier
+ * @param customRelays Optional custom relays to include
+ * @returns naddr string for the release
+ */
+export function encodeReleaseAsNaddr(
+  pubkey: string,
+  identifier: string,
+  customRelays?: string[]
+): string {
+  // Releases are now playlists, so use the playlist encoding
+  return encodeMusicPlaylistAsNaddr(pubkey, identifier, customRelays);
 }
 
 /**

@@ -35,7 +35,7 @@ A Nostr-powered podcast platform for single artist accounts that combines decent
 
 ### 🔐 **Nostr Integration**
 - Standard Nostr authentication (NIP-07, NIP-46)
-- Addressable podcast episodes (kind 30054)
+- Individual music track events (kind 36787)
 - Comments system using NIP-22
 - Value-for-value Lightning integration
 
@@ -138,9 +138,10 @@ dist/
 
 ## 🎯 Core Event Types
 
-- **Releases**: `kind 30054` (Addressable/editable podcast releases)
+- **Music Tracks**: `kind 36787` (Individual music tracks with metadata)
+- **Music Playlists**: `kind 34139` (Collections of tracks, replaces releases)
 - **Metadata**: `kind 30078` (Artist configuration)
-- **Comments**: `kind 1111` (NIP-22 release comments) 
+- **Comments**: `kind 1111` (NIP-22 playlist/track comments) 
 - **Social**: `kind 1` (Artist updates and announcements)
 
 ## 🔧 Deployment

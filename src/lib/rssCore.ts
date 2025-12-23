@@ -1,4 +1,4 @@
-import type { PodcastRelease, PodcastTrailer, RSSItem } from '@/types/podcast';
+import type { MusicTrackData, MusicPlaylistData, RSSItem } from '@/types/podcast';
 import type { PodcastConfig } from './podcastConfig';
 
 /**
@@ -121,37 +121,85 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
- * Converts a PodcastRelease to an RSS item
+ * Converts a MusicTrackData to an RSS item
  */
-export function releaseToRSSItem(release: PodcastRelease, config: RSSConfig, naddrEncoder?: (pubkey: string, identifier: string) => string): RSSItem {
-  // Get first track for RSS item
-  const firstTrack = release.tracks?.[0];
+export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEncoder?: (pubkey: string, identifier: string) => string): RSSItem {
   const baseUrl = getBaseUrl();
   
   // Generate link - use naddr encoder if provided, otherwise fallback to simple format
-  const link = naddrEncoder 
-    ? `${baseUrl}/${naddrEncoder(release.artistPubkey, release.identifier)}`
-    : `${baseUrl}/release/${release.identifier}`;
+  const link = naddrEncoder && track.artistPubkey
+    ? `${baseUrl}/${naddrEncoder(track.artistPubkey, track.identifier)}`
+    : `${baseUrl}/track/${track.identifier}`;
 
   return {
-    title: release.title,
-    description: release.description || '',
+    title: track.title,
+    description: track.lyrics || track.credits || `${track.title} by ${track.artist}`,
     link,
-    guid: `${release.artistPubkey}:${release.identifier}`,
-    pubDate: release.publishDate.toUTCString(),
-    author: config.podcast.artistName,
-    category: release.tags,
+    guid: track.artistPubkey ? `${track.artistPubkey}:${track.identifier}` : track.identifier,
+    pubDate: track.createdAt ? track.createdAt.toUTCString() : new Date().toUTCString(),
+    author: track.artist,
+    category: track.genres || [],
     enclosure: {
-      url: firstTrack?.audioUrl || '',
-      length: firstTrack?.duration || 0,
-      type: firstTrack?.audioType || 'audio/mpeg'
+      url: track.audioUrl,
+      length: track.duration || 0,
+      type: track.format === 'mp3' ? 'audio/mpeg' : 
+            track.format === 'flac' ? 'audio/flac' :
+            track.format === 'm4a' ? 'audio/mp4' :
+            track.format === 'ogg' ? 'audio/ogg' : 'audio/mpeg'
     },
-    duration: firstTrack?.duration ? formatDuration(firstTrack.duration) : undefined,
-    explicit: firstTrack?.explicit,
-    image: release.imageUrl,
-    transcriptUrl: release.transcriptUrl,
-    language: firstTrack?.language, // Include language metadata from first track
+    duration: track.duration ? formatDuration(track.duration) : undefined,
+    explicit: track.explicit,
+    image: track.imageUrl,
+    language: track.language,
   };
+}
+
+/**
+ * Converts a MusicPlaylistData to multiple RSS items (one for each track)
+ */
+export function releaseToRSSItems(
+  release: MusicPlaylistData, 
+  tracks: MusicTrackData[], 
+  config: RSSConfig, 
+  trackNaddrEncoder?: (pubkey: string, identifier: string) => string,
+  releaseNaddrEncoder?: (pubkey: string, identifier: string) => string
+): RSSItem[] {
+  const baseUrl = getBaseUrl();
+  
+  // Create RSS items for each track in the release
+  return release.tracks.map((trackRef, index) => {
+    // Find the actual track data
+    const trackData = tracks.find(t => 
+      t.identifier === trackRef.identifier && 
+      t.artistPubkey === trackRef.pubkey
+    );
+    
+    if (!trackData) {
+      // Create a placeholder item if track data is not found
+      return {
+        title: trackRef.title || `Track ${index + 1}`,
+        description: `Track from release: ${release.title}`,
+        link: `${baseUrl}/release/${release.identifier}`,
+        guid: `${release.identifier}:track:${index}`,
+        pubDate: release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString(),
+        author: trackRef.artist || config.podcast.artistName,
+        category: release.categories || [],
+        enclosure: {
+          url: '',
+          length: 0,
+          type: 'audio/mpeg'
+        }
+      };
+    }
+    
+    // Convert track to RSS item
+    const rssItem = trackToRSSItem(trackData, config, trackNaddrEncoder);
+    
+    // Add release context to the description
+    rssItem.description = `From release "${release.title}": ${rssItem.description}`;
+    
+    return rssItem;
+  });
 }
 
 /**
@@ -159,20 +207,39 @@ export function releaseToRSSItem(release: PodcastRelease, config: RSSConfig, nad
  * Works in both browser and Node.js environments
  */
 export function generateRSSFeed(
-  releases: PodcastRelease[], 
-  trailers: PodcastTrailer[], 
+  tracks: MusicTrackData[], 
+  releases: MusicPlaylistData[], 
   config: RSSConfig,
-  naddrEncoder?: (pubkey: string, identifier: string) => string
+  trackNaddrEncoder?: (pubkey: string, identifier: string) => string,
+  releaseNaddrEncoder?: (pubkey: string, identifier: string) => string
 ): string {
   const baseUrl = getBaseUrl();
-  const rssItems = releases
-    .sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime())
-    .map(release => releaseToRSSItem(release, config, naddrEncoder));
+  
+  // Generate RSS items from releases (each release becomes multiple RSS items, one per track)
+  const releaseItems = releases
+    .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
+    .flatMap(release => releaseToRSSItems(release, tracks, config, trackNaddrEncoder, releaseNaddrEncoder));
+  
+  // Generate RSS items from standalone tracks (tracks not in any release)
+  const releaseTrackIds = new Set(
+    releases.flatMap(release => 
+      release.tracks.map(trackRef => `${trackRef.pubkey}:${trackRef.identifier}`)
+    )
+  );
+  
+  const standaloneTrackItems = tracks
+    .filter(track => !releaseTrackIds.has(`${track.artistPubkey}:${track.identifier}`))
+    .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
+    .map(track => trackToRSSItem(track, config, trackNaddrEncoder));
+  
+  // Combine all RSS items and sort by date
+  const allItems = [...releaseItems, ...standaloneTrackItems]
+    .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
-  // Collect unique genres from all releases
+  // Collect unique genres from all tracks
   const uniqueGenres = Array.from(new Set(
-    releases
-      .map(release => release.genre)
+    tracks
+      .flatMap(track => track.genres || [])
       .filter((genre): genre is string => Boolean(genre && typeof genre === 'string' && genre.trim().length > 0))
   ));
 
@@ -249,15 +316,10 @@ export function generateRSSFeed(
       </podcast:value>` : ''
     }
 
-    <!-- Trailers -->
-    ${trailers.map(trailer => 
-      `<podcast:trailer pubdate="${trailer.pubDate.toUTCString()}" url="${escapeXml(trailer.url)}"${trailer.length ? ` length="${trailer.length}"` : ''}${trailer.type ? ` type="${escapeXml(trailer.type)}"` : ''}${trailer.season ? ` season="${trailer.season}"` : ''}>${escapeXml(trailer.title)}</podcast:trailer>`
-    ).join('\n    ')}
-
     <!-- Generator -->
-    <generator>Tsunami - Nostr Podcast Platform v${getPackageVersion()}</generator>
+    <generator>Tsunami - Nostr Music Platform v${getPackageVersion()}</generator>
 
-    ${rssItems.map((item, index) => `
+    ${allItems.map((item, index) => `
     <item>
       <title>${escapeXml(item.title)}</title>
       <description>${escapeXml(item.description)}</description>
@@ -276,11 +338,11 @@ export function generateRSSFeed(
       <!-- iTunes tags -->
       ${item.duration ? `<itunes:duration>${item.duration}</itunes:duration>` : ''}
       ${item.image ? `<itunes:image href="${escapeXml(item.image)}" />` : ''}
+      ${item.explicit ? `<itunes:explicit>true</itunes:explicit>` : ''}
 
       <!-- Podcasting 2.0 tags -->
       <podcast:guid>${escapeXml(item.guid)}</podcast:guid>
       <podcast:episode>${index + 1}</podcast:episode>
-      ${item.transcriptUrl ? `<podcast:transcript url="${escapeXml(item.transcriptUrl)}" type="text/plain" />` : ''}
     </item>`).join('')}
   </channel>
 </rss>`;

@@ -6,17 +6,17 @@ This NIP defines event kinds for podcast episodes and trailers on Nostr, enablin
 
 ## Summary
 
-This specification introduces two new addressable event kinds for podcast publishing:
-- `30054`: Podcast Episodes
-- `30055`: Podcast Trailers
+This specification describes the use of Nostr event kinds for music publishing:
+- `36787`: Music Track Events (individual tracks)
+- `34139`: Music Playlist Events (collections of tracks)
 
 It also describes the use of existing `30078` events for artist metadata configuration.
 
 ## Event Kinds
 
-### Kind 30054: Podcast Episode
+### Kind 36787: Music Track
 
-A `kind 30054` event represents a podcast episode. These are addressable events that can be edited and replaced.
+A `kind 36787` event represents an individual music track. These are addressable events that can be edited and replaced.
 
 #### Required Tags
 

@@ -169,10 +169,6 @@ export const PODCAST_CONFIG: PodcastConfig = {
  * Nostr event kinds used by Tsunami
  */
 export const PODCAST_KINDS = {
-  /** Addressable Podcast releases (editable, replaceable) */
-  RELEASE: 30054,
-  /** Addressable Podcast trailers (editable, replaceable) */
-  TRAILER: 30055,
   /** Music Track Event (addressable, individual tracks) */
   MUSIC_TRACK: 36787,
   /** Music Playlist Event (addressable, ordered track collections) */

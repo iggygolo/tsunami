@@ -8,6 +8,7 @@ import { useNostr } from '@nostrify/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useComments } from '@/hooks/useComments';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
+import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { PodcastRelease } from '@/types/podcast';
 import { cn } from '@/lib/utils';
@@ -34,13 +35,13 @@ interface ReleaseActionsProps {
 function createEventFromrelease(release: PodcastRelease): NostrEvent {
   return {
     id: release.eventId,
-    kind: 30054, // Addressable podcast release
+    kind: PODCAST_KINDS.MUSIC_PLAYLIST, // Music playlist events (releases)
     pubkey: release.artistPubkey,
     created_at: Math.floor(release.createdAt.getTime() / 1000),
     tags: [
       ['d', release.identifier], // Addressable event identifier
       ['title', release.title],
-      ['t', 'podcast'],
+      ['t', 'playlist'],
     ],
     content: release.content || release.description || '',
     sig: '' // Not needed for actions
