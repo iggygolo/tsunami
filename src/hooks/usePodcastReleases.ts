@@ -231,18 +231,18 @@ export function usePodcastRelease(playlistId: string) {
 }
 
 /**
- * Hook to get the latest releaseEvents
+ * Hook to get the latest release
  * Uses the same query as the Recent Releases section to ensure cache consistency
  */
 export function useLatestRelease() {
-  const { data: releaseEventss, ...rest } = useReleases({
+  const { data: releases, ...rest } = useReleases({
     limit: 50, // Use a reasonable default that covers most use cases
     sortBy: 'date',
     sortOrder: 'desc'
   });
 
   return {
-    data: releaseEventss?.[0] || null,
+    data: releases?.[0] || null,
     ...rest
   };
 }
@@ -251,24 +251,24 @@ export function useLatestRelease() {
  * Hook to get podcast statistics
  */
 export function usePodcastStats() {
-  const { data: releaseEventss } = useReleases();
+  const { data: releases } = useReleases();
 
   return useQuery({
-    queryKey: ['podcast-stats', releaseEventss?.length],
+    queryKey: ['podcast-stats', releases?.length],
     queryFn: async () => {
-      if (!releaseEventss) return null;
+      if (!releases) return null;
 
-      const totalReleases = releaseEventss.length;
-      const totalZaps = releaseEventss.reduce((sum, ep) => sum + (ep.zapCount || 0), 0);
-      const totalComments = releaseEventss.reduce((sum, ep) => sum + (ep.commentCount || 0), 0);
-      const totalReposts = releaseEventss.reduce((sum, ep) => sum + (ep.repostCount || 0), 0);
+      const totalReleases = releases.length;
+      const totalZaps = releases.reduce((sum, ep) => sum + (ep.zapCount || 0), 0);
+      const totalComments = releases.reduce((sum, ep) => sum + (ep.commentCount || 0), 0);
+      const totalReposts = releases.reduce((sum, ep) => sum + (ep.repostCount || 0), 0);
 
-      const mostZappedreleaseEvents = releaseEventss.reduce((max, ep) =>
-        (ep.zapCount || 0) > (max?.zapCount || 0) ? ep : max, releaseEventss[0]
+      const mostZappedRelease = releases.reduce((max, ep) =>
+        (ep.zapCount || 0) > (max?.zapCount || 0) ? ep : max, releases[0]
       );
 
-      const mostCommentedreleaseEvents = releaseEventss.reduce((max, ep) =>
-        (ep.commentCount || 0) > (max?.commentCount || 0) ? ep : max, releaseEventss[0]
+      const mostCommentedRelease = releases.reduce((max, ep) =>
+        (ep.commentCount || 0) > (max?.commentCount || 0) ? ep : max, releases[0]
       );
 
       return {
@@ -276,12 +276,12 @@ export function usePodcastStats() {
         totalZaps,
         totalComments,
         totalReposts,
-        mostZappedRelease: mostZappedreleaseEvents?.zapCount ? mostZappedreleaseEvents : undefined,
-        mostCommentedreleaseEvents: mostCommentedreleaseEvents?.commentCount ? mostCommentedreleaseEvents : undefined,
+        mostZappedRelease: mostZappedRelease?.zapCount ? mostZappedRelease : undefined,
+        mostCommentedRelease: mostCommentedRelease?.commentCount ? mostCommentedRelease : undefined,
         recentEngagement: [] // TODO: Implement recent engagement tracking
       };
     },
-    enabled: !!releaseEventss,
+    enabled: !!releases,
     staleTime: 300000, // 5 minutes
   });
 }

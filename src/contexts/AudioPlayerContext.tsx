@@ -147,7 +147,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
       console.error('Failed to play audio:', error);
       setState(prev => ({
         ...prev,
-        error: 'Failed to play audio',
+        error: 'Failed to play audio: ' + error.message,
         isLoading: false
       }));
     });

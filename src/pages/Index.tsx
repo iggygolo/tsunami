@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/useToast';
 import { Layout } from '@/components/Layout';
 import { ReleaseList } from '@/components/music/ReleaseList';
 import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
@@ -31,6 +32,7 @@ const Index = () => {
   const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { user } = useCurrentUser();
   const { playRelease } = useAudioPlayer();
+  const { toast } = useToast();
   const _currentRelease = useState<PodcastRelease | null>(null);
   const { data: postsData, isLoading: postsLoading } = useArtistPosts(3);
   
@@ -43,10 +45,32 @@ const Index = () => {
   const totalPostCount = postCount || 0;
 
   const handlePlayLatestRelease = () => {
-    if (latestRelease) {
-      playRelease(latestRelease);
+    if (latestRelease && latestRelease.tracks && latestRelease.tracks.length > 0) {
+      // Check if at least one track has a valid audio URL
+      const playableTrack = latestRelease.tracks.find(track => track.audioUrl);
+      if (playableTrack) {
+        playRelease(latestRelease);
+      } else {
+        toast({
+          title: "Cannot play release",
+          description: "No audio files are available for this release.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Cannot play release",
+        description: "This release has no tracks available.",
+        variant: "destructive",
+      });
     }
   };
+
+  // Check if the latest release is playable
+  const isLatestReleasePlayable = latestRelease && 
+    latestRelease.tracks && 
+    latestRelease.tracks.length > 0 && 
+    latestRelease.tracks.some(track => track.audioUrl);
 
   useSeoMeta({
     title: podcastConfig.podcast.artistName,
@@ -56,7 +80,7 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero Section with Latest Release */}
-      {latestRelease && (
+      {latestRelease ? (
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
           <div className="absolute inset-0 bg-grid-pattern opacity-5" />
           <div className="container mx-auto px-4 py-12 relative">
@@ -73,7 +97,8 @@ const Index = () => {
                     />
                     <button
                       onClick={handlePlayLatestRelease}
-                      className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      disabled={!isLatestReleasePlayable}
+                      className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
                         <Play className="w-8 h-8 text-primary ml-1" fill="currentColor" />
@@ -122,9 +147,14 @@ const Index = () => {
                   )}
 
                   <div className="flex flex-wrap gap-3 justify-center lg:justify-start pt-2">
-                    <Button onClick={handlePlayLatestRelease} size="lg" className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white border-0">
+                    <Button 
+                      onClick={handlePlayLatestRelease} 
+                      disabled={!isLatestReleasePlayable}
+                      size="lg" 
+                      className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white border-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       <Play className="w-5 h-5 mr-2" fill="currentColor" />
-                      Play
+                      {isLatestReleasePlayable ? 'Play' : 'No Audio Available'}
                     </Button>
 
                     <Button variant="outline" size="lg" asChild>
@@ -141,6 +171,37 @@ const Index = () => {
                       </Badge>
                     )}
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* No Latest Release - Show Welcome Message */
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+          <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+          <div className="container mx-auto px-4 py-12 relative">
+            <div className="max-w-4xl mx-auto text-center space-y-6">
+              <div className="space-y-2">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+                  Welcome to {podcastConfig.podcast.artistName}
+                </h1>
+                <p className="text-xl text-muted-foreground">
+                  {podcastConfig.podcast.description}
+                </p>
+              </div>
+              
+              <div className="bg-muted/50 rounded-lg p-6 space-y-4">
+                <h3 className="text-lg font-semibold">No Music Found</h3>
+                <p className="text-muted-foreground">
+                  This artist hasn't published any music yet, or the music might be on different Nostr relays.
+                </p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  <Button variant="outline" asChild>
+                    <Link to="/about">
+                      About Artist
+                    </Link>
+                  </Button>
                 </div>
               </div>
             </div>
