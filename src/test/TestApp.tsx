@@ -22,7 +22,7 @@ export function TestApp({ children }: TestAppProps) {
   });
 
   const defaultConfig: AppConfig = {
-    theme: 'light',
+    theme: 'dark',
     relayUrl: 'wss://relay.ditto.pub',
   };
 
