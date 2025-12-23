@@ -177,9 +177,6 @@ export function releaseToRSSItems(
     // Convert track to RSS item
     const rssItem = trackToRSSItem(trackData, config, trackNaddrEncoder);
     
-    // Add release context to the description
-    rssItem.description = `From release "${release.title}": ${rssItem.description}`;
-    
     return rssItem;
   });
 }
