@@ -238,12 +238,12 @@ export function PersistentAudioPlayer() {
               size="sm"
               onClick={handlePlayPause}
               disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
-              className="h-12 w-12 p-0 rounded-full bg-white/90 backdrop-blur-sm text-black hover:bg-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+              className="h-12 w-12 p-0 rounded-full bg-white/90 backdrop-blur-sm text-black hover:text-black hover:bg-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
             >
               {state.isPlaying ? (
-                <Pause className="h-5 w-5" />
+                <Pause className="h-5 w-5" fill="currentColor" />
               ) : (
-                <Play className="h-5 w-5 ml-0.5" />
+                <Play className="h-5 w-5 ml-0.5" fill="currentColor" />
               )}
             </Button>
 
@@ -344,12 +344,12 @@ export function PersistentAudioPlayer() {
               size="sm"
               onClick={handlePlayPause}
               disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
-              className="h-10 w-10 sm:h-11 sm:w-11 p-0 rounded-full bg-white/90 backdrop-blur-sm text-black hover:bg-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+              className="h-10 w-10 sm:h-11 sm:w-11 p-0 rounded-full bg-white/90 backdrop-blur-sm text-black hover:text-black hover:bg-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
             >
               {state.isPlaying ? (
-                <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Pause className="h-4 w-4 sm:h-5 sm:w-5" fill="currentColor" />
               ) : (
-                <Play className="h-4 w-4 sm:h-5 sm:w-5 ml-0.5" />
+                <Play className="h-4 w-4 sm:h-5 sm:w-5 ml-0.5" fill="currentColor" />
               )}
             </Button>
 
