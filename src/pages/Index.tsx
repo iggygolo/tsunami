@@ -271,7 +271,6 @@ const Index = () => {
 
             <ReleaseList
               showSearch={false}
-              _showPlayer={false}
               limit={6}
               onPlayRelease={(release) => {
                 playRelease(release);

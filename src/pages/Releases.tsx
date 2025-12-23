@@ -20,7 +20,7 @@ const Releases = () => {
             </p>
           </div>
 
-          <ReleaseList showSearch _showPlayer _autoPlay />
+          <ReleaseList showSearch />
         </div>
       </div>
     </Layout>

@@ -11,27 +11,22 @@ import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
 
 interface ReleaseListProps {
   showSearch?: boolean;
-  _showPlayer?: boolean;
   limit?: number;
   className?: string;
   onPlayRelease?: (release: PodcastRelease) => void;
-  _autoPlay?: boolean;
 }
 
 export function ReleaseList({
   showSearch = true,
-  _showPlayer = true,
   limit = 50,
   className,
-  onPlayRelease,
-  _autoPlay = false
+  onPlayRelease
 }: ReleaseListProps) {
   const [searchOptions, setSearchOptions] = useState<ReleaseSearchOptions>({
     limit,
     sortBy: 'date',
     sortOrder: 'desc'
   });
-  const _currentRelease = useState<PodcastRelease | null>(null);
 
   const { data: releases, isLoading, error } = useReleases(searchOptions);
 
