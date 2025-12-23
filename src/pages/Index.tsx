@@ -1,7 +1,7 @@
 import { useSeoMeta } from '@unhead/react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Headphones, Rss, Zap, Users, MessageSquare, Play, ChevronRight, Sparkles } from 'lucide-react';
+import { Headphones, Rss, Zap, Users, MessageSquare, Play, Pause, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useTrackPlayback } from '@/hooks/useTrackPlayback';
 import { useArtistPosts, useArtistPostCount } from '@/hooks/useArtistPosts';
 import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
 import { getArtistPubkeyHex } from '@/lib/podcastConfig';
@@ -44,33 +45,23 @@ const Index = () => {
   const supporterCount = leaderboard?.length || 0;
   const totalPostCount = postCount || 0;
 
+  // Use track playback hook for latest release (only if we have a release)
+  const trackPlayback = latestRelease ? useTrackPlayback(latestRelease) : null;
+
   const handlePlayLatestRelease = () => {
-    if (latestRelease && latestRelease.tracks && latestRelease.tracks.length > 0) {
-      // Check if at least one track has a valid audio URL
-      const playableTrack = latestRelease.tracks.find(track => track.audioUrl);
-      if (playableTrack) {
-        playRelease(latestRelease);
-      } else {
-        toast({
-          title: "Cannot play release",
-          description: "No audio files are available for this release.",
-          variant: "destructive",
-        });
-      }
-    } else {
+    if (trackPlayback?.hasPlayableTracks) {
+      trackPlayback.handleReleasePlay();
+    } else if (latestRelease) {
       toast({
         title: "Cannot play release",
-        description: "This release has no tracks available.",
+        description: "This release has no playable tracks available.",
         variant: "destructive",
       });
     }
   };
 
   // Check if the latest release is playable
-  const isLatestReleasePlayable = latestRelease && 
-    latestRelease.tracks && 
-    latestRelease.tracks.length > 0 && 
-    latestRelease.tracks.some(track => track.audioUrl);
+  const isLatestReleasePlayable = trackPlayback?.hasPlayableTracks || false;
 
   useSeoMeta({
     title: podcastConfig.podcast.artistName,
@@ -97,11 +88,15 @@ const Index = () => {
                     />
                     <button
                       onClick={handlePlayLatestRelease}
-                      disabled={!isLatestReleasePlayable}
+                      disabled={!isLatestReleasePlayable || trackPlayback?.isReleaseLoading}
                       className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
-                        <Play className="w-8 h-8 text-primary ml-1" fill="currentColor" />
+                        {trackPlayback?.isReleasePlaying ? (
+                          <Pause className="w-8 h-8 text-primary" fill="currentColor" />
+                        ) : (
+                          <Play className="w-8 h-8 text-primary ml-1" fill="currentColor" />
+                        )}
                       </div>
                     </button>
                   </div>
@@ -149,12 +144,21 @@ const Index = () => {
                   <div className="flex flex-wrap gap-3 justify-center lg:justify-start pt-2">
                     <Button 
                       onClick={handlePlayLatestRelease} 
-                      disabled={!isLatestReleasePlayable}
+                      disabled={!isLatestReleasePlayable || trackPlayback?.isReleaseLoading}
                       size="lg" 
                       className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white border-0 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Play className="w-5 h-5 mr-2" fill="currentColor" />
-                      {isLatestReleasePlayable ? 'Play' : 'No Audio Available'}
+                      {trackPlayback?.isReleasePlaying ? (
+                        <>
+                          <Pause className="w-5 h-5 mr-2" fill="currentColor" />
+                          Pause
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-5 h-5 mr-2" fill="currentColor" />
+                          {isLatestReleasePlayable ? 'Play' : 'No Audio Available'}
+                        </>
+                      )}
                     </Button>
 
                     <Button variant="outline" size="lg" asChild>

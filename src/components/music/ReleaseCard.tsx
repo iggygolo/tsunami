@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageCircle, Play, Share } from 'lucide-react';
+import { MessageCircle, Play, Pause, Share } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import { useComments } from '@/hooks/useComments';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useTrackPlayback } from '@/hooks/useTrackPlayback';
 import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 import type { PodcastRelease } from '@/types/podcast';
@@ -34,6 +35,7 @@ export function ReleaseCard({
   const [commentsVisible, setCommentsVisible] = useState(showComments);
   const { playRelease } = useAudioPlayer();
   const { toast } = useToast();
+  const trackPlayback = useTrackPlayback(release);
   const formatDuration = (seconds?: number): string => {
     if (!seconds) return '';
 
@@ -114,11 +116,15 @@ export function ReleaseCard({
               className="w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center shadow-lg cursor-pointer"
               onClick={(e) => {
                 e.preventDefault();
-                playRelease(release);
+                trackPlayback.handleReleasePlay();
                 onPlayRelease?.(release);
               }}
             >
-              <Play className="w-6 h-6 text-white fill-current ml-0.5" />
+              {trackPlayback.isReleasePlaying ? (
+                <Pause className="w-6 h-6 text-white fill-current" />
+              ) : (
+                <Play className="w-6 h-6 text-white fill-current ml-0.5" />
+              )}
             </div>
           </div>
         </Link>
