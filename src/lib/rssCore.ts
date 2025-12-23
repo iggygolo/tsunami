@@ -119,7 +119,7 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEn
 
   return {
     title: track.title,
-    description: track.lyrics || track.credits || `${track.title} by ${track.artist}`,
+    description: track.lyrics || track.credits || "",
     link,
     guid: track.artistPubkey ? `${track.artistPubkey}:${track.identifier}` : track.identifier,
     pubDate: track.createdAt ? track.createdAt.toUTCString() : new Date().toUTCString(),
