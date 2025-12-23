@@ -239,16 +239,17 @@ export function generateRSSFeed(
     <itunes:owner itunes:name="${escapeXml(config.podcast.artistName)}" itunes:email=""/>
     ${release.imageUrl ? `<itunes:image href="${escapeXml(release.imageUrl)}" />` : ''}
     ${releaseGenres.length > 0 ? 
-      `<itunes:category text="Music">
+      `<itunes:category>Music<itunes:category>
         ${releaseGenres.map(genre => `<itunes:category text="${escapeXml(genre)}" />`).join('\n        ')}
       </itunes:category>` : 
-      '<itunes:category text="Music" />'
+      '<itunes:category>Music<itunes:category>'
     }
+    <itunes:keywords>music</itunes:keywords>
 
     <!-- Podcasting 2.0 tags -->
+    ${config.podcast.publisher ? `<podcast:publisher>${escapeXml(config.podcast.publisher)}</podcast:publisher>` : ''}
     <podcast:guid>${escapeXml(release.authorPubkey ? `${release.authorPubkey}:${release.identifier}` : release.identifier)}</podcast:guid>
     ${config.podcast.medium ? `<podcast:medium>${escapeXml(config.podcast.medium)}</podcast:medium>` : ''}
-    ${config.podcast.publisher ? `<podcast:publisher>${escapeXml(config.podcast.publisher)}</podcast:publisher>` : ''}
     ${config.podcast.license ?
       `<podcast:license ${config.podcast.license.url ? `url="${escapeXml(config.podcast.license.url)}"` : ''}>${escapeXml(config.podcast.license.identifier)}</podcast:license>` : ''
     }

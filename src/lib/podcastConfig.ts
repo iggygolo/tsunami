@@ -109,30 +109,7 @@ export const PODCAST_CONFIG: PodcastConfig = {
     value: {
       amount: parseInt((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_AMOUNT) || "1000", 10),
       currency: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_CURRENCY) || "sats",
-      recipients: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_RECIPIENTS), [
-        {
-          name: "Artist",
-          type: "node" as const,
-          address: "030a58b8653d32b99200a2334cfe913e51dc7d155aa0116c176657a4f1722677a3",
-          split: 80,
-          fee: false
-        },
-        {
-          name: "Producer",
-          type: "lnaddress" as const, 
-          address: "producer@getalby.com",
-          split: 15,
-          customKey: "podcast",
-          customValue: "producer-fee"
-        },
-        {
-          name: "Platform Fee",
-          type: "node" as const,
-          address: "021f2f8e1e46a48d0a9f1b7e4e8b5c8d5e4f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6",
-          split: 5,
-          fee: true
-        }
-      ])
+      recipients: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_RECIPIENTS), [])
     },
     // Podcasting 2.0 fields from environment
     guid: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_GUID) || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NPUB) || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",

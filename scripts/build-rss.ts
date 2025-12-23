@@ -41,30 +41,7 @@ function createNodejsConfig() {
       recipients = JSON.parse(process.env.VITE_MUSIC_VALUE_RECIPIENTS);
     } else {
       // Default recipients if no env var
-      recipients = [
-        {
-          name: "Podcast Host",
-          type: "node",
-          address: "030a58b8653d32b99200a2334cfe913e51dc7d155aa0116c176657a4f1722677a3",
-          split: 80,
-          fee: false
-        },
-        {
-          name: "Producer",
-          type: "lightning-address",
-          address: "producer@getalby.com",
-          split: 15,
-          customKey: "podcast",
-          customValue: "producer-fee"
-        },
-        {
-          name: "Platform Fee",
-          type: "node",
-          address: "021f2f8e1e46a48d0a9f1b7e4e8b5c8d5e4f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6",
-          split: 5,
-          fee: true
-        }
-      ];
+      recipients = [];
     }
   } catch {
     console.warn('Failed to parse VITE_MUSIC_VALUE_RECIPIENTS, using defaults');
