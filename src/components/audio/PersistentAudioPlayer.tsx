@@ -16,6 +16,8 @@ import * as SliderPrimitive from '@radix-ui/react-slider';
 import { ZapDialog } from '@/components/ZapDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
+import { useNavigate } from 'react-router-dom';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 export function PersistentAudioPlayer() {
@@ -31,6 +33,7 @@ export function PersistentAudioPlayer() {
     previousTrack
   } = useAudioPlayer();
 
+  const navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(false);
   const [previousVolume, setPreviousVolume] = useState(1);
 
@@ -114,6 +117,13 @@ export function PersistentAudioPlayer() {
     setPlaybackRate(rate);
   };
 
+  const handleNavigateToRelease = () => {
+    if (release.identifier) {
+      const naddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
+      navigate(`/${naddr}`);
+    }
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.3)]">
       {/* Progress Bar as Top Border */}
@@ -144,7 +154,8 @@ export function PersistentAudioPlayer() {
                 <img
                   src={release.imageUrl}
                   alt={release.title}
-                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20"
+                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
+                  onClick={handleNavigateToRelease}
                 />
                 {state.isPlaying && (
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-md">
@@ -158,7 +169,12 @@ export function PersistentAudioPlayer() {
                 {release.tracks[state.currentTrackIndex]?.title || `Track ${state.currentTrackIndex + 1}`}
               </p>
               <p className="text-xs text-white/70 line-clamp-1">
-                {release.title}
+                <button 
+                  onClick={handleNavigateToRelease}
+                  className="hover:text-white transition-colors cursor-pointer"
+                >
+                  {release.title}
+                </button>
               </p>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-xs text-white/50 tabular-nums">
@@ -266,7 +282,8 @@ export function PersistentAudioPlayer() {
                 <img
                   src={release.imageUrl}
                   alt={release.title}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
+                  onClick={handleNavigateToRelease}
                 />
                 {state.isPlaying && (
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-md">
@@ -280,7 +297,12 @@ export function PersistentAudioPlayer() {
                 {release.tracks[state.currentTrackIndex]?.title || `Track ${state.currentTrackIndex + 1}`}
               </p>
               <p className="text-xs text-white/70 line-clamp-1">
-                {release.title}
+                <button 
+                  onClick={handleNavigateToRelease}
+                  className="hover:text-white transition-colors cursor-pointer"
+                >
+                  {release.title}
+                </button>
               </p>
               <div className="flex items-center space-x-2 text-xs text-white/50">
                 <span className="tabular-nums">
