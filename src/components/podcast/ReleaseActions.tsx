@@ -4,25 +4,15 @@ import { ZapButton } from '@/components/ZapButton';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
-import { useNostr } from '@nostrify/react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useComments } from '@/hooks/useComments';
+import { useReactions } from '@/hooks/useReactions';
+import { useZapCounts } from '@/hooks/useZapCounts';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { PodcastRelease } from '@/types/podcast';
 import { cn } from '@/lib/utils';
-import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
-
-interface InteractionCounts {
-  likes: number;
-  zaps: number;
-  totalSats: number;
-}
-
-interface UserInteractions {
-  hasLiked: boolean;
-}
 
 interface ReleaseActionsProps {
   release: PodcastRelease;
@@ -52,7 +42,6 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
   const { user } = useCurrentUser();
   const { mutate: createEvent } = useNostrPublish();
   const { toast } = useToast();
-  const { nostr } = useNostr();
   const queryClient = useQueryClient();
 
 
@@ -62,58 +51,11 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
   const { data: commentsData } = useComments(event);
   const commentCount = commentsData?.topLevelComments?.length || 0;
 
-  // Query for user's interactions with this release
-  const { data: userInteractions } = useQuery<UserInteractions>({
-    queryKey: ['release-user-interactions', release.eventId, user?.pubkey],
-    queryFn: async (c) => {
-      if (!user?.pubkey) return { hasLiked: false };
+  // Use the reliable reactions hook for reactions data and user like status
+  const { count: likesCount, hasUserLiked } = useReactions(release.eventId);
 
-      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(3000)]);
-
-      // Query for user's likes of this release
-      const interactions = await nostr.query([{
-        kinds: [7], // Likes
-        authors: [user.pubkey],
-        '#e': [release.eventId],
-        limit: 10
-      }], { signal });
-
-      const hasLiked = interactions.some(e => e.kind === 7);
-
-      return { hasLiked };
-    },
-    enabled: !!user?.pubkey,
-    staleTime: 30000, // 30 seconds
-  });
-
-  // Query for interaction counts
-  const { data: interactionCounts } = useQuery<InteractionCounts>({
-    queryKey: ['release-interaction-counts', release.eventId],
-    queryFn: async (c) => {
-      const signal = AbortSignal.any([c.signal, AbortSignal.timeout(3000)]);
-
-      // Query for all interactions with this release
-      const interactions = await nostr.query([{
-        kinds: [7, 9735], // Likes, zaps (no longer counting replies here)
-        '#e': [release.eventId],
-        limit: 500
-      }], { signal });
-
-      const likes = interactions.filter(e => e.kind === 7).length;
-
-      // Count zaps and calculate total sats
-      const zaps = interactions.filter(e => e.kind === 9735).filter(validateZapEvent);
-      const zapCount = zaps.length;
-      const totalSats = zaps.reduce((total, zap) => {
-        // Use our consistent zap amount extraction utility
-        const amount = extractZapAmount(zap);
-        return total + amount;
-      }, 0);
-
-      return { likes, zaps: zapCount, totalSats };
-    },
-    staleTime: 60000, // 1 minute
-  });
+  // Use the reliable zap counts hook for zap data
+  const { count: zapCount, totalSats } = useZapCounts(release.eventId);
 
 
   const handleLike = async () => {
@@ -126,7 +68,7 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
       return;
     }
 
-    if (userInteractions?.hasLiked) {
+    if (hasUserLiked) {
       toast({
         title: "Already liked",
         description: "You have already liked this release.",
@@ -135,15 +77,16 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
     }
 
     try {
-      // Optimistically update user interactions
-      queryClient.setQueryData(['release-user-interactions', release.eventId, user.pubkey], (_old: UserInteractions | undefined) => {
-        return { hasLiked: true };
-      });
-
-      // Optimistically update interaction counts
-      queryClient.setQueryData(['release-interaction-counts', release.eventId], (old: InteractionCounts | undefined) => {
-        if (!old) return { likes: 1, zaps: 0, totalSats: 0 };
-        return { ...old, likes: old.likes + 1 };
+      // Optimistically update reactions data
+      queryClient.setQueryData(['release-reactions', release.eventId], (old: any) => {
+        if (!old) return [];
+        // Add new reaction entry
+        const newReaction = {
+          userPubkey: user.pubkey,
+          timestamp: new Date(),
+          eventId: `temp-${Date.now()}`
+        };
+        return [newReaction, ...old];
       });
 
       // Publish the like
@@ -164,19 +107,11 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
 
       // Delay invalidation to allow network propagation
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['release-user-interactions', release.eventId, user.pubkey] });
-        queryClient.invalidateQueries({ queryKey: ['release-interaction-counts', release.eventId] });
+        queryClient.invalidateQueries({ queryKey: ['release-reactions', release.eventId] });
       }, 2000);
     } catch {
       // Revert optimistic updates on error
-      queryClient.setQueryData(['release-user-interactions', release.eventId, user.pubkey], (_old: UserInteractions | undefined) => {
-        return { hasLiked: false };
-      });
-
-      queryClient.setQueryData(['release-interaction-counts', release.eventId], (old: InteractionCounts | undefined) => {
-        if (!old) return { likes: 0, zaps: 0, totalSats: 0 };
-        return { ...old, likes: Math.max(0, old.likes - 1) };
-      });
+      queryClient.invalidateQueries({ queryKey: ['release-reactions', release.eventId] });
 
       toast({
         title: "Failed to like",
@@ -233,16 +168,16 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
         size="sm"
         className={cn(
           "text-muted-foreground hover:text-red-500 h-10 px-3 sm:h-8 sm:px-2",
-          userInteractions?.hasLiked && "text-red-500"
+          hasUserLiked && "text-red-500"
         )}
         onClick={handleLike}
       >
         <Heart className={cn(
           "w-5 h-5 sm:w-4 sm:h-4 mr-1.5 sm:mr-1",
-          userInteractions?.hasLiked && "fill-current"
+          hasUserLiked && "fill-current"
         )} />
         <span className="text-sm sm:text-xs">
-          {interactionCounts?.likes || 0}
+          {likesCount}
         </span>
       </Button>
 
@@ -251,16 +186,23 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
         target={event}
         className="text-sm sm:text-xs h-10 px-3 sm:h-8 sm:px-2"
         zapData={{
-          count: interactionCounts?.zaps || 0,
-          totalSats: interactionCounts?.totalSats || 0,
+          count: zapCount,
+          totalSats: totalSats,
           isLoading: false
         }}
         hideWhenEmpty={false}
         onZapSuccess={(amount: number) => {
-          // Optimistically update interaction counts when zap succeeds
-          queryClient.setQueryData(['release-interaction-counts', release.eventId], (old: InteractionCounts | undefined) => {
-            if (!old) return { likes: 0, zaps: 1, totalSats: amount };
-            return { ...old, zaps: old.zaps + 1, totalSats: old.totalSats + amount };
+          // Optimistically update zap counts when zap succeeds
+          queryClient.setQueryData(['release-zap-counts', release.eventId], (old: any) => {
+            if (!old) return [];
+            // Add new zap entry
+            const newZap = {
+              userPubkey: user?.pubkey || '',
+              amount,
+              timestamp: new Date(),
+              eventId: `temp-${Date.now()}`
+            };
+            return [newZap, ...old];
           });
         }}
       />

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useSeoMeta } from '@unhead/react';
-import { ArrowLeft, Play, Heart, Share, MessageCircle, Zap } from 'lucide-react';
+import { ArrowLeft, Play, Heart, Share, MessageCircle } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,8 +31,8 @@ import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { useComments } from '@/hooks/useComments';
 import { useReactions } from '@/hooks/useReactions';
+import { useZapCounts } from '@/hooks/useZapCounts';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
-import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 import { cn } from '@/lib/utils';
 import type { PodcastRelease, MusicTrackData } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -233,40 +233,14 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   // Use the reliable reactions hook for reactions data and user like status
   const { count: reactionsCount, hasUserLiked } = useReactions(finalRelease?.eventId || '');
 
-  // Query for zaps only (since reactions are handled by the hook)
-  const { data: zapCounts } = useQuery({
-    queryKey: ['release-zap-counts', finalRelease?.eventId],
-    queryFn: async () => {
-      if (!finalRelease) return { zaps: 0, totalSats: 0 };
-
-      const interactions = await nostr.query([{
-        kinds: [9735],
-        '#e': [finalRelease.eventId],
-        limit: 500
-      }]);
-
-      const zaps = interactions.filter(validateZapEvent);
-      const zapCount = zaps.length;
-      const totalSats = zaps.reduce((total, zap) => total + extractZapAmount(zap), 0);
-
-      console.log('Zap counts debug:', {
-        eventId: finalRelease.eventId,
-        zapEvents: interactions.length,
-        validZaps: zapCount,
-        totalSats
-      });
-
-      return { zaps: zapCount, totalSats };
-    },
-    enabled: !!finalRelease,
-    staleTime: 60000,
-  });
+  // Use the reliable zap counts hook for zap data
+  const { count: zapCount, totalSats } = useZapCounts(finalRelease?.eventId || '');
 
   // Combine reactions and zaps data
   const interactionCounts = {
     likes: reactionsCount,
-    zaps: zapCounts?.zaps || 0,
-    totalSats: zapCounts?.totalSats || 0
+    zaps: zapCount,
+    totalSats: totalSats
   };
 
   // Calculate total duration

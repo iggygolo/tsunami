@@ -3,14 +3,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthor } from '@/hooks/useAuthor';
-import { useReactions, type ReactionEntry } from '@/hooks/useReactions';
+import { useReactions } from '@/hooks/useReactions';
+import type { ReactionEntry } from '@/hooks/useReactions';
 import { genUserName } from '@/lib/genUserName';
-
-interface ReactionEntry {
-  userPubkey: string;
-  timestamp: Date;
-  eventId: string;
-}
 
 interface ReactionsSectionProps {
   eventId: string;
@@ -111,8 +106,6 @@ export function ReactionsSection({ eventId, className }: ReactionsSectionProps) 
             {count} {count === 1 ? 'Like' : 'Likes'}
           </h3>
         </div>
-        
-        {console.log('ReactionsSection rendering:', { reactionsCount: count, reactions })}
         
         {reactions.map((reaction) => (
           <ReactionItem key={reaction.eventId} reaction={reaction} />
