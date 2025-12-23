@@ -100,8 +100,14 @@ export function escapeXml(text: string): string {
 }
 
 /**
- * Formats duration from seconds to HH:MM:SS format for iTunes
+ * Converts explicit value to iTunes-compatible boolean string
  */
+export function formatExplicitValue(explicit: boolean | string | undefined): string {
+  if (explicit === true || explicit === 'true' || explicit === 'yes') {
+    return 'true';
+  }
+  return 'false';
+}
 export function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -319,7 +325,7 @@ export function generateRSSFeed(
       <!-- iTunes tags -->
       ${item.duration ? `<itunes:duration>${item.duration}</itunes:duration>` : ''}
       ${item.image ? `<itunes:image href="${escapeXml(item.image)}" />` : ''}
-      ${item.explicit ? `<itunes:explicit>yes</itunes:explicit>` : ''}
+      <itunes:explicit>${formatExplicitValue(item.explicit)}</itunes:explicit>
 
       <pubDate>${release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString()}</pubDate>
 
