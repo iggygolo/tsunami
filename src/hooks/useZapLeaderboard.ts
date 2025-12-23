@@ -5,22 +5,31 @@ import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 import { extractZapAmount, extractZapperPubkey, validateZapEvent, extractZappedEventId } from '@/lib/zapUtils';
 
 /**
- * Hook to fetch zap leaderboard for the podcast
+ * Hook to fetch zap leaderboard for the podcast or specific track
  */
-export function useZapLeaderboard(limit: number = 10) {
+export function useZapLeaderboard(limit: number = 10, eventId?: string) {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['zap-leaderboard', limit],
+    queryKey: ['zap-leaderboard', limit, eventId],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
       
-      // Query for zap events (kind 9735) that reference the music artist
-      const zapEvents = await nostr.query([{
+      // Build query filter based on whether we want track-specific or podcast-wide zaps
+      const filter: any = {
         kinds: [9735], // Zap events
-        '#p': [getArtistPubkeyHex()], // Zaps to the artist
         limit: 1000 // Get more zaps to aggregate
-      }], { signal });
+      };
+
+      if (eventId) {
+        // Track-specific: zaps that reference this specific event
+        filter['#e'] = [eventId];
+      } else {
+        // Podcast-wide: zaps to the artist
+        filter['#p'] = [getArtistPubkeyHex()];
+      }
+
+      const zapEvents = await nostr.query([filter], { signal });
 
       // Aggregate zaps by sender
       const zapAggregation = new Map<string, {

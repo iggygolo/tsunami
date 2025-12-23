@@ -42,17 +42,17 @@ export function Comment({ root, comment, depth = 0, maxDepth = 3, limit }: Comme
   const hasReplies = replies.length > 0;
 
   return (
-    <div className={`space-y-3 ${depth > 0 ? 'ml-6 border-l-2 border-purple-500/30 pl-4' : ''}`}>
-      <Card className={`bg-card/50 ${isOptimistic ? 'opacity-70 border-dashed border-purple-500/30' : 'border-purple-500/10 hover:border-purple-500/30 transition-colors'}`}>
+    <div className={`space-y-3 ${depth > 0 ? 'ml-6 border-l-2 border-white/20 pl-4' : ''}`}>
+      <Card className={`bg-white/5 border-white/10 hover:bg-white/10 transition-all duration-200 ${isOptimistic ? 'opacity-70 border-dashed border-white/20' : ''}`}>
         <CardContent className="p-4">
           <div className="space-y-3">
             {/* Comment Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-3">
                 <Link to={`/${nip19.npubEncode(comment.pubkey)}`}>
-                  <Avatar className="h-8 w-8 hover:ring-2 hover:ring-purple-500/30 transition-all cursor-pointer">
+                  <Avatar className="h-9 w-9 hover:ring-2 hover:ring-white/30 transition-all cursor-pointer">
                     <AvatarImage src={metadata?.picture} />
-                    <AvatarFallback className="text-xs bg-purple-500/10">
+                    <AvatarFallback className="text-xs bg-white/20 text-white">
                       {displayName.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
@@ -60,11 +60,11 @@ export function Comment({ root, comment, depth = 0, maxDepth = 3, limit }: Comme
                 <div>
                   <Link 
                     to={`/${nip19.npubEncode(comment.pubkey)}`}
-                    className="font-medium text-sm hover:text-purple-500 transition-colors"
+                    className="font-medium text-sm text-white hover:text-white/80 transition-colors"
                   >
                     {displayName}
                   </Link>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-white/60">
                     {isOptimistic ? 'Posting...' : timeAgo}
                   </p>
                 </div>
@@ -72,7 +72,7 @@ export function Comment({ root, comment, depth = 0, maxDepth = 3, limit }: Comme
             </div>
 
             {/* Comment Content */}
-            <div className="text-sm overflow-hidden">
+            <div className="text-sm overflow-hidden text-white/90">
               <NoteContent event={comment} className="text-sm" />
             </div>
 
@@ -83,7 +83,7 @@ export function Comment({ root, comment, depth = 0, maxDepth = 3, limit }: Comme
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowReplyForm(!showReplyForm)}
-                  className="h-8 px-2 text-xs text-muted-foreground hover:text-purple-500"
+                  className="h-8 px-3 text-xs text-white/60 hover:text-white hover:bg-white/10"
                 >
                   <MessageSquare className="h-3 w-3 mr-1" />
                   Reply
@@ -92,7 +92,7 @@ export function Comment({ root, comment, depth = 0, maxDepth = 3, limit }: Comme
                 {hasReplies && (
                   <Collapsible open={showReplies} onOpenChange={setShowReplies}>
                     <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                      <Button variant="ghost" size="sm" className="h-8 px-3 text-xs text-white/60 hover:text-white hover:bg-white/10">
                         {showReplies ? (
                           <ChevronDown className="h-3 w-3 mr-1" />
                         ) : (
@@ -111,7 +111,7 @@ export function Comment({ root, comment, depth = 0, maxDepth = 3, limit }: Comme
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 px-2 text-xs"
+                    className="h-8 px-2 text-xs text-white/60 hover:text-white hover:bg-white/10"
                     aria-label="Comment options"
                   >
                     <MoreHorizontal className="h-3 w-3" />

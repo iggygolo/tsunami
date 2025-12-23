@@ -29,11 +29,13 @@ export function CommentsSection({
 
   if (error) {
     return (
-      <Card className="rounded-none sm:rounded-lg mx-0 sm:mx-0 border-purple-500/20">
-        <CardContent className="px-2 py-6 sm:p-6">
-          <div className="text-center text-muted-foreground">
-            <MessageSquare className="h-8 w-8 mx-auto mb-2 text-purple-500/50" />
-            <p>Failed to load comments</p>
+      <Card className="bg-transparent border-white/10 backdrop-blur-sm">
+        <CardContent className="px-6 py-8">
+          <div className="text-center text-white/70">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
+              <MessageSquare className="h-8 w-8 text-white/40" />
+            </div>
+            <p className="text-white">Failed to load comments</p>
           </div>
         </CardContent>
       </Card>
@@ -41,19 +43,19 @@ export function CommentsSection({
   }
 
   return (
-    <Card className={cn("rounded-none sm:rounded-lg mx-0 sm:mx-0 border-purple-500/20", className)}>
-      <CardHeader className="px-2 pt-6 pb-4 sm:p-6">
-        <CardTitle className="flex items-center space-x-2">
-          <MessageSquare className="h-5 w-5 text-purple-500" />
-          <span className="bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">{title}</span>
+    <Card className={cn("bg-transparent border-white/10 backdrop-blur-sm", className)}>
+      <CardHeader className="px-6 pt-6 pb-4">
+        <CardTitle className="flex items-center space-x-2 text-white">
+          <MessageSquare className="h-5 w-5 text-white/70" />
+          <span>{title}</span>
           {!isLoading && (
-            <span className="text-sm font-normal text-muted-foreground">
+            <span className="text-sm font-normal text-white/60">
               ({comments.length})
             </span>
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-2 pb-6 pt-4 sm:p-6 sm:pt-0 space-y-6">
+      <CardContent className="px-6 pb-6 pt-0 space-y-6">
         {/* Comment Form */}
         <CommentForm root={root} />
 
@@ -61,27 +63,29 @@ export function CommentsSection({
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Card key={i} className="bg-card/50">
+              <Card key={i} className="bg-white/5 border-white/10">
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
-                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <Skeleton className="h-8 w-8 rounded-full bg-white/20" />
                       <div className="space-y-1">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-3 w-16" />
+                        <Skeleton className="h-4 w-24 bg-white/20" />
+                        <Skeleton className="h-3 w-16 bg-white/20" />
                       </div>
                     </div>
-                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full bg-white/20" />
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <MessageSquare className="h-12 w-12 mx-auto mb-4 text-purple-500/30" />
-            <p className="text-lg font-medium mb-2">{emptyStateMessage}</p>
-            <p className="text-sm">{emptyStateSubtitle}</p>
+          <div className="text-center py-12 text-white/70">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
+              <MessageSquare className="h-8 w-8 text-white/40" />
+            </div>
+            <p className="text-lg font-medium mb-2 text-white">{emptyStateMessage}</p>
+            <p className="text-sm text-white/60">{emptyStateSubtitle}</p>
           </div>
         ) : (
           <div className="space-y-4">

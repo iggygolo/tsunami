@@ -45,11 +45,11 @@ export function CommentForm({
 
   if (!user) {
     return (
-      <Card className={compact ? "border-dashed border-purple-500/20" : "border-purple-500/20"}>
+      <Card className={compact ? "border-dashed border-white/20 bg-white/5" : "border-white/10 bg-white/5"}>
         <CardContent className={compact ? "p-4" : "p-6"}>
           <div className="text-center space-y-4">
-            <div className="flex items-center justify-center space-x-2 text-muted-foreground">
-              <MessageSquare className="h-5 w-5 text-purple-500" />
+            <div className="flex items-center justify-center space-x-2 text-white/70">
+              <MessageSquare className="h-5 w-5 text-white/60" />
               <span>Sign in to {reply ? 'reply' : 'comment'}</span>
             </div>
             <LoginArea />
@@ -60,25 +60,25 @@ export function CommentForm({
   }
 
   return (
-    <Card className={compact ? "border-dashed border-purple-500/20" : "border-purple-500/20"}>
+    <Card className={compact ? "border-dashed border-white/20 bg-white/5" : "border-white/10 bg-white/5"}>
       <CardContent className={compact ? "p-4" : "p-6"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={placeholder}
-            className={`${compact ? "min-h-[80px]" : "min-h-[100px]"} focus-visible:ring-purple-500/50`}
+            className={`${compact ? "min-h-[80px]" : "min-h-[100px]"} bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-white/30 focus-visible:border-white/40`}
             disabled={isPending}
           />
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-white/60">
               {reply ? 'Replying to comment' : 'Adding to the discussion'}
             </span>
             <Button 
               type="submit" 
               disabled={!content.trim() || isPending}
               size={compact ? "sm" : "default"}
-              className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600"
+              className="bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 text-white border-white/20"
             >
               <Send className="h-4 w-4 mr-2" />
               {isPending ? 'Posting...' : (reply ? 'Reply' : 'Comment')}
