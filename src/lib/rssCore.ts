@@ -275,7 +275,6 @@ export function generateRSSFeed(
       releaseGenres.map(genre => `<itunes:category text="${escapeXml(genre)}" />`).join('\n    ') : 
       ''
     }
-    <itunes:keywords>music</itunes:keywords>
 
     <!-- Podcasting 2.0 tags -->
     <podcast:locked owner="${escapeXml(config.podcast.locked?.owner || config.podcast.artistName)}">${config.podcast.locked?.locked !== false ? 'yes' : 'no'}</podcast:locked>
