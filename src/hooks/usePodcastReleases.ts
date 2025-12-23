@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import type { PodcastRelease, ReleaseSearchOptions, MusicTrackData } from '@/types/podcast';
@@ -20,9 +20,16 @@ import {
  * Hook to fetch playlist releases using simplified playlist track resolution
  * Only shows playlists (which can contain multiple tracks), not individual tracks
  * Follows the same pattern as useLatestReleaseSimplified for consistency
+ * 
+ * CACHING STRATEGY:
+ * - When releases are fetched for the list, individual release data is cached
+ * - This includes: release events, resolved tracks, and converted release objects
+ * - When navigating to a specific release page, useReleaseData will find cached data
+ * - This eliminates the need to re-fetch and re-resolve tracks for instant navigation
  */
 export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
   const { nostr } = useNostr();
+  const queryClient = useQueryClient();
 
   // Step 1: Fetch only playlist events from the artist (not individual tracks)
   const { data: playlistEvents, isLoading: isLoadingEvents } = useQuery({
@@ -95,6 +102,47 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
           const playlist = eventToMusicPlaylist(event);
           const release = playlistToRelease(playlist, tracksMap);
           releases.push(release);
+
+          // Cache individual release data for instant loading when navigating to release page
+          const releaseKey = `${release.artistPubkey}:${PODCAST_KINDS.MUSIC_PLAYLIST}:${release.identifier}`;
+          
+          console.log('useReleases - Caching release data for instant navigation:', {
+            title: release.title,
+            releaseKey,
+            eventId: event.id
+          });
+          
+          // Cache the release event
+          queryClient.setQueryData(
+            ['release-event', releaseKey],
+            event,
+            { updatedAt: Date.now() }
+          );
+
+          // Cache the resolved tracks for this release
+          const releaseTrackReferences = playlist.tracks;
+          const releaseResolvedTracks = resolvedTracks?.filter(resolved => 
+            releaseTrackReferences.some(ref => 
+              resolved.trackData && 
+              `${resolved.trackData.artistPubkey}:${resolved.trackData.identifier}` === `${ref.pubkey}:${ref.identifier}`
+            )
+          ) || [];
+
+          if (releaseResolvedTracks.length > 0) {
+            queryClient.setQueryData(
+              ['playlist-track-resolution', JSON.stringify(releaseTrackReferences)],
+              releaseResolvedTracks,
+              { updatedAt: Date.now() }
+            );
+          }
+
+          // Cache the final converted release
+          queryClient.setQueryData(
+            ['release-conversion', event.id, releaseResolvedTracks.length],
+            release,
+            { updatedAt: Date.now() }
+          );
+
         } catch (error) {
           console.error('Failed to convert playlist to release:', error);
         }

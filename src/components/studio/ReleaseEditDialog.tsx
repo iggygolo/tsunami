@@ -33,7 +33,7 @@ import { useUpdateRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { getAudioDuration, formatDurationHuman } from '@/lib/audioDuration';
 import { validateLanguageCode, validateGenre } from '@/lib/musicMetadata';
-import type { PodcastRelease, ReleaseFormData, TrackFormData } from '@/types/podcast';
+import type { PodcastRelease, ReleaseFormData } from '@/types/podcast';
 
 // Track schema for individual tracks
 const trackSchema = z.object({

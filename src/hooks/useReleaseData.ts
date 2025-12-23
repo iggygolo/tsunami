@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import { 
@@ -26,9 +26,15 @@ interface UseReleaseDataProps {
 
 /**
  * Simplified release data hook that eliminates unnecessary complexity
+ * 
+ * CACHING INTEGRATION:
+ * - Checks for cached data from useReleases hook first
+ * - Uses initialData to provide instant loading when navigating from releases list
+ * - Falls back to network requests only when cache misses occur
  */
 export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProps) {
   const { nostr } = useNostr();
+  const queryClient = useQueryClient();
 
   // Single query to fetch the release event
   const { data: releaseEvent, isLoading: isLoadingEvent } = useQuery<NostrEvent | null>({
@@ -62,6 +68,18 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
     },
     enabled: !!(eventId || addressableEvent),
     staleTime: 300000, // 5 minutes
+    // Check cache first - if we have cached data from releases list, use it immediately
+    initialData: () => {
+      if (addressableEvent) {
+        const cacheKey = `${addressableEvent.pubkey}:${addressableEvent.kind}:${addressableEvent.identifier}`;
+        const cachedEvent = queryClient.getQueryData<NostrEvent>(['release-event', cacheKey]);
+        if (cachedEvent) {
+          console.log('useReleaseData - Using cached event data');
+          return cachedEvent;
+        }
+      }
+      return undefined;
+    },
   });
 
   // For playlists, extract track references and resolve them
@@ -117,6 +135,17 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
     },
     enabled: !!releaseEvent && (!trackReferences.length || !!resolvedTracks),
     staleTime: 300000, // 5 minutes
+    // Check cache first - if we have cached converted release data, use it immediately
+    initialData: () => {
+      if (releaseEvent) {
+        const cachedRelease = queryClient.getQueryData<PodcastRelease>(['release-conversion', releaseEvent.id, resolvedTracks?.length]);
+        if (cachedRelease) {
+          console.log('useReleaseData - Using cached converted release data');
+          return cachedRelease;
+        }
+      }
+      return undefined;
+    },
   });
 
   // Calculate total duration

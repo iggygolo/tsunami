@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import { eventToMusicTrack } from '@/hooks/useMusicTracks';
@@ -21,9 +21,10 @@ export interface ResolvedTrack {
  */
 export function usePlaylistTrackResolution(trackReferences: TrackReference[]) {
   const { nostr } = useNostr();
+  const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: ['playlist-track-resolution', trackReferences.map(t => `${t.pubkey}:${t.identifier}`).join(',')],
+    queryKey: ['playlist-track-resolution', JSON.stringify(trackReferences)],
     queryFn: async (context) => {
       if (trackReferences.length === 0) return [];
 
@@ -128,6 +129,17 @@ export function usePlaylistTrackResolution(trackReferences: TrackReference[]) {
     enabled: trackReferences.length > 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
+    // Check cache first - if we have cached resolved tracks data, use it immediately
+    initialData: () => {
+      if (trackReferences.length > 0) {
+        const cachedTracks = queryClient.getQueryData<ResolvedTrack[]>(['playlist-track-resolution', JSON.stringify(trackReferences)]);
+        if (cachedTracks) {
+          console.log('usePlaylistTrackResolution - Using cached resolved tracks data');
+          return cachedTracks;
+        }
+      }
+      return undefined;
+    },
   });
 }
 

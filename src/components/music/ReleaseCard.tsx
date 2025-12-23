@@ -13,6 +13,7 @@ import { useComments } from '@/hooks/useComments';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useTrackPlayback } from '@/hooks/useTrackPlayback';
 import { useToast } from '@/hooks/useToast';
+import { useReleasePrefetch } from '@/hooks/useReleasePrefetch';
 import { cn } from '@/lib/utils';
 import type { PodcastRelease } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -36,6 +37,7 @@ export function ReleaseCard({
   const { playRelease } = useAudioPlayer();
   const { toast } = useToast();
   const trackPlayback = useTrackPlayback(release);
+  const { prefetchRelease } = useReleasePrefetch();
   const formatDuration = (seconds?: number): string => {
     if (!seconds) return '';
 
@@ -100,8 +102,13 @@ export function ReleaseCard({
     }
   };
 
+  const handleMouseEnter = () => {
+    // Prefetch release data when hovering for instant navigation
+    prefetchRelease(release);
+  };
+
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card className={cn("overflow-hidden", className)} onMouseEnter={handleMouseEnter}>
       {/* Cover Image - Top */}
       {release.imageUrl && (
         <Link to={`/${releaseNaddr}`} className="block relative group">
@@ -132,7 +139,7 @@ export function ReleaseCard({
 
       <CardContent className="p-3">
         {/* Title & Meta */}
-        <Link to={`/${releaseNaddr}`} className="block group">
+        <Link to={`/${releaseNaddr}`} className="block group" onMouseEnter={handleMouseEnter}>
           <h3 className="font-semibold text-sm leading-tight line-clamp-1 group-hover:text-primary transition-colors">
             {release.title}
           </h3>
