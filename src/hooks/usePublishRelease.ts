@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNostr } from '@nostrify/react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
@@ -7,6 +6,7 @@ import type { ReleaseFormData, TrackFormData, MusicTrackData, MusicPlaylistData,
 import { PODCAST_KINDS, PODCAST_CONFIG, isArtist } from '@/lib/podcastConfig';
 import { musicTrackPublisher } from '@/lib/musicTrackPublisher';
 import { musicPlaylistPublisher } from '@/lib/musicPlaylistPublisher';
+import { audioTypeToFormat } from '@/lib/audioUtils';
 
 // Helper function to infer audio type from URL
 function inferAudioType(urlString: string, fileType?: string): string {
@@ -70,11 +70,7 @@ async function convertTrackFormDataToMusicTrackData(
   }
 
   // Convert format from audioType
-  const format = audioType === 'audio/mpeg' ? 'mp3' :
-                audioType === 'audio/wav' ? 'wav' :
-                audioType === 'audio/mp4' ? 'm4a' :
-                audioType === 'audio/ogg' ? 'ogg' :
-                audioType === 'audio/flac' ? 'flac' : 'mp3';
+  const format = audioTypeToFormat(audioType || 'audio/mpeg');
 
   // Create MusicTrackData from TrackFormData and ReleaseFormData
   const trackData: MusicTrackData = {
@@ -211,17 +207,16 @@ export function useUpdateRelease() {
   const { user } = useCurrentUser();
   const { mutateAsync: createEvent } = useNostrPublish();
   const { mutateAsync: uploadFile } = useUploadFile();
-  const { nostr } = useNostr();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      playlistId,
-      playlistIdentifier,
+      releaseId,
+      releaseIdentifier,
       releaseData
     }: {
-      playlistId: string;
-      playlistIdentifier: string;
+      releaseId: string;
+      releaseIdentifier: string;
       releaseData: ReleaseFormData;
     }): Promise<string> => {
       // Verify user is logged in and is the artist
@@ -288,7 +283,7 @@ export function useUpdateRelease() {
 
       // Step 2: Update playlist/release event (kind 34139)
       const playlistData: MusicPlaylistData = {
-        identifier: playlistIdentifier, // Preserve original identifier
+        identifier: releaseIdentifier, // Preserve original identifier
         title: releaseData.title,
         tracks: trackReferences,
         description: releaseData.description,
@@ -299,14 +294,14 @@ export function useUpdateRelease() {
       };
 
       // Create updated playlist event
-      const playlistEventData = musicPlaylistPublisher.createUpdateEvent(playlistIdentifier, playlistData);
+      const playlistEventData = musicPlaylistPublisher.createUpdateEvent(releaseIdentifier, playlistData);
       const playlistEvent = await createEvent(playlistEventData);
 
       // Invalidate related queries to refresh the UI
       await queryClient.invalidateQueries({ queryKey: ['releases'] });
       await queryClient.invalidateQueries({ queryKey: ['music-tracks'] });
       await queryClient.invalidateQueries({ queryKey: ['music-playlists'] });
-      await queryClient.invalidateQueries({ queryKey: ['podcast-release', playlistId] });
+      await queryClient.invalidateQueries({ queryKey: ['podcast-release', releaseId] });
       await queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
       await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 
@@ -330,7 +325,6 @@ export function useUpdateRelease() {
 export function useDeleteRelease() {
   const { user } = useCurrentUser();
   const { mutateAsync: createEvent } = useNostrPublish();
-  const { nostr } = useNostr();
   const queryClient = useQueryClient();
 
   return useMutation({

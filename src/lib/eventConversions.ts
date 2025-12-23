@@ -1,6 +1,7 @@
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicTrackData, MusicPlaylistData, TrackReference, PodcastRelease, ReleaseTrack } from '@/types/podcast';
 import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
+import { formatToAudioType } from '@/lib/audioUtils';
 
 /**
  * Centralized event validation and conversion utilities
@@ -146,11 +147,7 @@ export function playlistToRelease(
       const releaseTrack: ReleaseTrack = {
         title: track.title,
         audioUrl: track.audioUrl,
-        audioType: track.format === 'mp3' ? 'audio/mpeg' : 
-                  track.format === 'wav' ? 'audio/wav' :
-                  track.format === 'm4a' ? 'audio/mp4' :
-                  track.format === 'ogg' ? 'audio/ogg' :
-                  track.format === 'flac' ? 'audio/flac' : 'audio/mpeg',
+        audioType: formatToAudioType(track.format || 'mp3'),
         duration: track.duration,
         explicit: track.explicit || false,
         language: track.language || null,
@@ -200,11 +197,7 @@ export function trackToRelease(track: MusicTrackData): PodcastRelease {
     tracks: [{
       title: track.title,
       audioUrl: track.audioUrl,
-      audioType: track.format === 'mp3' ? 'audio/mpeg' : 
-                track.format === 'wav' ? 'audio/wav' :
-                track.format === 'm4a' ? 'audio/mp4' :
-                track.format === 'ogg' ? 'audio/ogg' :
-                track.format === 'flac' ? 'audio/flac' : 'audio/mpeg',
+      audioType: formatToAudioType(track.format || 'mp3'),
       duration: track.duration,
       explicit: track.explicit || false,
       language: track.language || null,

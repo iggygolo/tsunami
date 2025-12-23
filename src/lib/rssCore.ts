@@ -1,5 +1,6 @@
 import type { MusicTrackData, MusicPlaylistData, RSSItem } from '@/types/podcast';
 import type { PodcastConfig } from './podcastConfig';
+import { formatToAudioType } from '@/lib/audioUtils';
 
 /**
  * Core RSS generation utilities that work in both browser and Node.js environments
@@ -128,10 +129,7 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEn
     enclosure: {
       url: track.audioUrl,
       length: track.duration || 0,
-      type: track.format === 'mp3' ? 'audio/mpeg' : 
-            track.format === 'flac' ? 'audio/flac' :
-            track.format === 'm4a' ? 'audio/mp4' :
-            track.format === 'ogg' ? 'audio/ogg' : 'audio/mpeg'
+      type: formatToAudioType(track.format || 'mp3')
     },
     duration: track.duration ? formatDuration(track.duration) : undefined,
     explicit: track.explicit,
