@@ -44,7 +44,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useReleases } from '@/hooks/usePodcastReleases';
 import { useDeleteRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
-import { AudioPlayer } from '@/components/podcast/AudioPlayer';
+import { AudioPlayer } from '@/components/music/AudioPlayer';
 import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
 import { genRSSFeed } from '@/lib/rssGenerator';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';

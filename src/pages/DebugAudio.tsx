@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AudioPlayer } from '@/components/podcast/AudioPlayer';
+import { AudioPlayer } from '@/components/music/AudioPlayer';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import type { PodcastRelease } from '@/types/podcast';
 

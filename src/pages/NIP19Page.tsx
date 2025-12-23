@@ -1,6 +1,6 @@
 import { nip19 } from 'nostr-tools';
 import { useParams } from 'react-router-dom';
-import { ReleasePage } from '@/components/podcast/ReleasePage';
+import { ReleasePage } from '@/components/music/ReleasePage';
 import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import NotFound from './NotFound';
 

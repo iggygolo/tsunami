@@ -21,7 +21,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { PODCAST_KINDS } from '@/lib/podcastConfig';
-import { ReleaseActions } from '@/components/podcast/ReleaseActions';
+import { ReleaseActions } from '@/components/music/ReleaseActions';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 
 import type { NostrEvent } from '@nostrify/nostrify';

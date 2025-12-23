@@ -2,9 +2,9 @@ import { useSeoMeta } from '@unhead/react';
 import { MessageCircle, Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Layout } from '@/components/Layout';
-import { ZapLeaderboard } from '@/components/podcast/ZapLeaderboard';
-import { RecentActivity } from '@/components/podcast/RecentActivity';
-import { ReleaseDiscussions } from '@/components/podcast/ReleaseDiscussions';
+import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
+import { RecentActivity } from '@/components/music/RecentActivity';
+import { ReleaseDiscussions } from '@/components/music/ReleaseDiscussions';
 import { PODCAST_CONFIG } from '@/lib/podcastConfig';
 
 const Community = () => {

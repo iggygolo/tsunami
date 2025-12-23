@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
-import { PublishReleaseForm } from '@/components/podcast/PublishReleaseForm';
+import { PublishReleaseForm } from '@/components/music/PublishReleaseForm';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { isArtist } from '@/lib/podcastConfig';
 

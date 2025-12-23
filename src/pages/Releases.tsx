@@ -1,6 +1,6 @@
 import { useSeoMeta } from '@unhead/react';
 import { Layout } from '@/components/Layout';
-import { ReleaseList } from '@/components/podcast/ReleaseList';
+import { ReleaseList } from '@/components/music/ReleaseList';
 import { PODCAST_CONFIG } from '@/lib/podcastConfig';
 
 const Releases = () => {
