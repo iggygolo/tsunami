@@ -569,7 +569,7 @@ const Studio = () => {
                             identifier: e.target.value
                           })}
                           disabled={false}
-                          placeholder="e.g., CC BY 4.0"
+                          placeholder="All Rights Reserved, CC BY 4.0, etc."
                         />
                       </div>
 
