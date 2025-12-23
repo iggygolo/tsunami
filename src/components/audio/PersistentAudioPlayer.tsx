@@ -144,7 +144,7 @@ export function PersistentAudioPlayer() {
       </div>
 
       {/* Main Player Content */}
-      <div className="px-4 sm:px-6 py-3">
+      <div className="mx-auto px-4 sm:px-6 py-3 max-w-4xl 2xl:max-w-5xl">
         {/* Mobile Layout */}
         <div className="sm:hidden">
           {/* Top Row: Track Info */}
