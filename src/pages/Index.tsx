@@ -1,5 +1,4 @@
 import { useSeoMeta } from '@unhead/react';
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Headphones, Rss, Zap, Users, MessageSquare, Play, Pause, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,6 @@ import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
 import { RecentActivity } from '@/components/music/RecentActivity';
 import { PostCard } from '@/components/social/PostCard';
 import { ZapDialog } from '@/components/ZapDialog';
-import type { PodcastRelease } from '@/types/podcast';
 import { useLatestRelease, useReleases } from '@/hooks/usePodcastReleases';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { useAuthor } from '@/hooks/useAuthor';
@@ -25,7 +23,7 @@ import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
 import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 const Index = () => {
-  const { data: latestRelease } = useLatestRelease();
+  const { data: latestRelease, isLoading: isLoadingLatest } = useLatestRelease();
   const { data: allReleases } = useReleases({ limit: 100 });
   const { data: leaderboard } = useZapLeaderboard(100);
   const { data: postCount } = useArtistPostCount();
@@ -34,8 +32,10 @@ const Index = () => {
   const { user } = useCurrentUser();
   const { playRelease } = useAudioPlayer();
   const { toast } = useToast();
-  const _currentRelease = useState<PodcastRelease | null>(null);
   const { data: postsData, isLoading: postsLoading } = useArtistPosts(3);
+
+  // Overall loading state
+  const isLoading = isLoadingLatest;
   
   // Flatten the first page of posts for preview
   const recentPosts = postsData?.pages.flat().slice(0, 3) || [];
@@ -45,8 +45,18 @@ const Index = () => {
   const supporterCount = leaderboard?.length || 0;
   const totalPostCount = postCount || 0;
 
-  // Use track playback hook for latest release (only if we have a release)
-  const trackPlayback = latestRelease ? useTrackPlayback(latestRelease) : null;
+  // Use track playback hook for latest release (always call hook, but pass null if no release)
+  const trackPlayback = useTrackPlayback(latestRelease || null);
+
+  // Debug logging to understand the release data
+  console.log('Index.tsx - Latest release debug:', {
+    hasLatestRelease: !!latestRelease,
+    releaseTitle: latestRelease?.title,
+    tracksCount: latestRelease?.tracks?.length || 0,
+    tracksWithAudio: latestRelease?.tracks?.filter(t => t.audioUrl).length || 0,
+    isPlayable: trackPlayback?.hasPlayableTracks,
+    isLoading: isLoading
+  });
 
   const handlePlayLatestRelease = () => {
     if (trackPlayback?.hasPlayableTracks) {
@@ -71,7 +81,38 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero Section with Latest Release */}
-      {latestRelease ? (
+      {isLoading ? (
+        /* Loading skeleton for latest release */
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+          <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+          <div className="container mx-auto px-4 py-12 relative">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex flex-col lg:flex-row items-center gap-8">
+                {/* Album Art Skeleton */}
+                <div className="relative group flex-shrink-0">
+                  <Skeleton className="w-64 h-64 lg:w-72 lg:h-72 rounded-2xl" />
+                </div>
+
+                {/* Release Info Skeleton */}
+                <div className="flex-1 text-center lg:text-left space-y-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-32 mx-auto lg:mx-0" />
+                    <Skeleton className="h-12 w-3/4 mx-auto lg:mx-0" />
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 justify-center lg:justify-start">
+                      <Skeleton className="h-6 w-48" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-16 w-full max-w-xl mx-auto lg:mx-0" />
+                  <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+                    <Skeleton className="h-12 w-24" />
+                    <Skeleton className="h-12 w-32" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : latestRelease ? (
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
           <div className="absolute inset-0 bg-grid-pattern opacity-5" />
           <div className="container mx-auto px-4 py-12 relative">

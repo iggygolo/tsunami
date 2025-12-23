@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import type { NostrEvent } from '@nostrify/nostrify';
-import type { PodcastRelease, ReleaseSearchOptions, MusicTrackData, MusicPlaylistData } from '@/types/podcast';
+import type { PodcastRelease, ReleaseSearchOptions, MusicTrackData } from '@/types/podcast';
 import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 import {
@@ -12,8 +11,7 @@ import {
   playlistToRelease,
   eventToPodcastRelease,
   deduplicateEventsByIdentifier,
-  getEventIdentifier,
-  createPlaylistRef
+  getEventIdentifier
 } from '@/lib/eventConversions';
 
 /**
@@ -45,6 +43,8 @@ export function useReleases(options: ReleaseSearchOptions = {}) {
 
       // Step 2: Extract all track references from playlists
       const trackReferences = new Set<string>();
+      const referencedPubkeys = new Set<string>();
+      
       validPlaylists.forEach(playlist => {
         playlist.tags
           .filter(([key]) => key === 'a')
@@ -52,29 +52,74 @@ export function useReleases(options: ReleaseSearchOptions = {}) {
             const parts = ref.split(':');
             if (parts.length === 3 && parts[0] === PODCAST_KINDS.MUSIC_TRACK.toString()) {
               trackReferences.add(`${parts[1]}:${parts[2]}`); // pubkey:identifier
+              referencedPubkeys.add(parts[1]); // Track the pubkey for querying
             }
           });
       });
 
-      // Step 3: Fetch all referenced tracks
-      const trackEvents = await nostr.query([{
-        kinds: [PODCAST_KINDS.MUSIC_TRACK],
-        authors: [artistPubkey],
-        limit: 1000 // High limit to get all tracks
-      }], { signal });
+      console.log('Track references found:', Array.from(trackReferences));
+      console.log('Referenced pubkeys:', Array.from(referencedPubkeys));
+
+      // Step 3: Fetch all referenced tracks from all referenced pubkeys
+      let trackEvents: any[] = [];
+      
+      if (referencedPubkeys.size > 0) {
+        // Extract identifiers for more targeted querying
+        const identifiersByPubkey = new Map<string, string[]>();
+        
+        for (const ref of trackReferences) {
+          const [pubkey, identifier] = ref.split(':');
+          if (!identifiersByPubkey.has(pubkey)) {
+            identifiersByPubkey.set(pubkey, []);
+          }
+          identifiersByPubkey.get(pubkey)!.push(identifier);
+        }
+        
+        // Query tracks from each pubkey with their specific identifiers
+        const trackQueries = Array.from(identifiersByPubkey.entries()).map(([pubkey, identifiers]) => ({
+          kinds: [PODCAST_KINDS.MUSIC_TRACK],
+          authors: [pubkey],
+          '#d': identifiers,
+          limit: identifiers.length * 2 // Allow for multiple versions
+        }));
+        
+        // Execute all queries
+        const allTrackEvents = await Promise.all(
+          trackQueries.map(query => nostr.query([query], { signal }))
+        );
+        
+        // Flatten results
+        trackEvents = allTrackEvents.flat();
+      }
 
       const validTracks = trackEvents.filter(validateMusicTrack);
       console.log('Fetched tracks:', validTracks);
+      console.log('Track events count by pubkey:', 
+        Array.from(referencedPubkeys).map(pubkey => ({
+          pubkey: pubkey.slice(0, 8) + '...',
+          count: trackEvents.filter(e => e.pubkey === pubkey).length
+        }))
+      );
 
       // Step 4: Deduplicate events using centralized utility
       const deduplicatedTracks = deduplicateEventsByIdentifier(validTracks, getEventIdentifier);
       const deduplicatedPlaylists = deduplicateEventsByIdentifier(validPlaylists, getEventIdentifier);
 
       // Step 5: Create track lookup map using centralized conversions
+      // Group tracks by identifier and get the latest version of each
       const tracksMap = new Map<string, MusicTrackData>();
+      const tracksByIdentifier = new Map<string, any>();
+      
+      // First, group tracks by their full identifier (pubkey:identifier)
       deduplicatedTracks.forEach(trackEvent => {
         const track = eventToMusicTrack(trackEvent);
-        tracksMap.set(`${track.artistPubkey}:${track.identifier}`, track);
+        const key = `${track.artistPubkey}:${track.identifier}`;
+        
+        const existing = tracksByIdentifier.get(key);
+        if (!existing || trackEvent.created_at > existing.created_at) {
+          tracksByIdentifier.set(key, trackEvent);
+          tracksMap.set(key, track);
+        }
       });
 
       // Step 6: Convert playlists to releases with resolved tracks using centralized conversions
@@ -82,6 +127,8 @@ export function useReleases(options: ReleaseSearchOptions = {}) {
       const releases = playlistsData.map(playlist => playlistToRelease(playlist, tracksMap));
 
       console.log('Converted releases:', releases);
+      console.log('Tracks map size:', tracksMap.size);
+      console.log('Sample tracks in map:', Array.from(tracksMap.entries()).slice(0, 3));
 
       // Step 7: Fetch zap data for all releases
       const releaseIds = releases.map(release => release.eventId);
@@ -231,20 +278,131 @@ export function usePodcastRelease(playlistId: string) {
 }
 
 /**
- * Hook to get the latest release
- * Uses the same query as the Recent Releases section to ensure cache consistency
+ * Hook to get the latest release with full track data
+ * Reimplemented to work like useReleaseData for proper track resolution
  */
 export function useLatestRelease() {
-  const { data: releases, ...rest } = useReleases({
-    limit: 50, // Use a reasonable default that covers most use cases
-    sortBy: 'date',
-    sortOrder: 'desc'
-  });
+  const { nostr } = useNostr();
 
-  return {
-    data: releases?.[0] || null,
-    ...rest
-  };
+  return useQuery({
+    queryKey: ['latest-release'],
+    queryFn: async (context) => {
+      const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
+      const artistPubkey = getArtistPubkeyHex();
+
+      // Step 1: Get the latest playlist from the artist
+      const playlistEvents = await nostr.query([{
+        kinds: [PODCAST_KINDS.MUSIC_PLAYLIST],
+        authors: [artistPubkey],
+        limit: 1 // Only get the latest one
+      }], { signal });
+
+      if (playlistEvents.length === 0) {
+        return null;
+      }
+
+      const latestPlaylist = playlistEvents[0];
+      if (!validateMusicPlaylist(latestPlaylist)) {
+        return null;
+      }
+
+      // Step 2: Extract track references from the playlist
+      const trackReferences = new Set<string>();
+      const referencedPubkeys = new Set<string>();
+      
+      latestPlaylist.tags
+        .filter(([key]) => key === 'a')
+        .forEach(([, ref]) => {
+          const parts = ref.split(':');
+          if (parts.length === 3 && parts[0] === PODCAST_KINDS.MUSIC_TRACK.toString()) {
+            trackReferences.add(`${parts[1]}:${parts[2]}`); // pubkey:identifier
+            referencedPubkeys.add(parts[1]);
+          }
+        });
+
+      // Step 3: Fetch all referenced tracks
+      let trackEvents: any[] = [];
+      
+      if (referencedPubkeys.size > 0) {
+        const identifiersByPubkey = new Map<string, string[]>();
+        
+        for (const ref of trackReferences) {
+          const [pubkey, identifier] = ref.split(':');
+          if (!identifiersByPubkey.has(pubkey)) {
+            identifiersByPubkey.set(pubkey, []);
+          }
+          identifiersByPubkey.get(pubkey)!.push(identifier);
+        }
+        
+        // Query tracks from each pubkey with their specific identifiers
+        const trackQueries = Array.from(identifiersByPubkey.entries()).map(([pubkey, identifiers]) => ({
+          kinds: [PODCAST_KINDS.MUSIC_TRACK],
+          authors: [pubkey],
+          '#d': identifiers,
+          limit: identifiers.length * 2
+        }));
+        
+        const allTrackEvents = await Promise.all(
+          trackQueries.map(query => nostr.query([query], { signal }))
+        );
+        
+        trackEvents = allTrackEvents.flat();
+      }
+
+      const validTracks = trackEvents.filter(validateMusicTrack);
+
+      // Step 4: Create tracks map with latest versions
+      const tracksMap = new Map<string, MusicTrackData>();
+      const tracksByIdentifier = new Map<string, any>();
+      
+      validTracks.forEach(trackEvent => {
+        const track = eventToMusicTrack(trackEvent);
+        const key = `${track.artistPubkey}:${track.identifier}`;
+        
+        const existing = tracksByIdentifier.get(key);
+        if (!existing || trackEvent.created_at > existing.created_at) {
+          tracksByIdentifier.set(key, trackEvent);
+          tracksMap.set(key, track);
+        }
+      });
+
+      // Step 5: Convert playlist to release with resolved tracks
+      const playlistData = eventToMusicPlaylist(latestPlaylist);
+      const release = playlistToRelease(playlistData, tracksMap);
+
+      // Step 6: Fetch zap data for the release
+      try {
+        const zapEvents = await nostr.query([{
+          kinds: [9735], // Zap receipts
+          '#e': [release.eventId],
+          limit: 100
+        }], { signal });
+
+        const validZaps = zapEvents.filter(validateZapEvent);
+        let zapCount = 0;
+        let totalSats = 0;
+
+        validZaps.forEach(zapEvent => {
+          const amount = extractZapAmount(zapEvent);
+          zapCount++;
+          totalSats += amount;
+        });
+
+        if (zapCount > 0) {
+          return {
+            ...release,
+            zapCount,
+            totalSats
+          };
+        }
+      } catch (error) {
+        console.warn('Failed to fetch zap data for latest release:', error);
+      }
+
+      return release;
+    },
+    staleTime: 60000, // 1 minute
+  });
 }
 
 /**
