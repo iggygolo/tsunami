@@ -12,7 +12,8 @@ import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
 import { RecentActivity } from '@/components/music/RecentActivity';
 import { PostCard } from '@/components/social/PostCard';
 import { ZapDialog } from '@/components/ZapDialog';
-import { useLatestRelease, useReleases } from '@/hooks/usePodcastReleases';
+import { useLatestReleaseSimplified } from '@/hooks/useLatestReleaseSimplified';
+import { useReleases } from '@/hooks/usePodcastReleases';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -23,7 +24,7 @@ import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
 import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 const Index = () => {
-  const { data: latestRelease, isLoading: isLoadingLatest } = useLatestRelease();
+  const { data: latestRelease, isLoading: isLoadingLatest } = useLatestReleaseSimplified();
   const { data: allReleases } = useReleases({ limit: 100 });
   const { data: leaderboard } = useZapLeaderboard(100);
   const { data: postCount } = useArtistPostCount();
