@@ -22,7 +22,6 @@ Our RSS generator already implements many demu.xml elements:
 - ✅ `<podcast:location>` → PodcastConfig.podcast.location
 - ✅ `<podcast:person>` → PodcastConfig.podcast.person
 - ✅ `<podcast:value>` → PodcastConfig.podcast.value with recipients
-- ✅ `<podcast:funding>` → PodcastConfig.podcast.funding
 
 ### Item Level
 - ✅ `<title>` → PodcastRelease.title

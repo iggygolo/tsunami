@@ -56,9 +56,6 @@ function createNodejsConfig() {
       image: process.env.VITE_ARTIST_IMAGE || "",
       website: process.env.VITE_ARTIST_WEBSITE || "https://tsunami.example",
       copyright: process.env.VITE_ARTIST_COPYRIGHT || "© 2025 Tsunami",
-      funding: process.env.VITE_ARTIST_FUNDING ?
-        process.env.VITE_ARTIST_FUNDING.split(',').map(s => s.trim()).filter(s => s.length > 0) :
-        [],
       value: {
         amount: parseInt(process.env.VITE_MUSIC_VALUE_AMOUNT || "1000", 10),
         currency: process.env.VITE_MUSIC_VALUE_CURRENCY || "sats",

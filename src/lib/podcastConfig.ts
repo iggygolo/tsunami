@@ -38,7 +38,6 @@ export interface PodcastConfig {
     image: string;
     website: string;
     copyright: string;
-    funding: string[];
     value: {
       amount: number;
       currency: string;
@@ -105,7 +104,6 @@ export const PODCAST_CONFIG: PodcastConfig = {
     image: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_IMAGE) || "",
     website: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_WEBSITE) || "https://tsunami.example",
     copyright: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_COPYRIGHT) || "© 2025 Tsunami Artist",
-    funding: parseArrayEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_FUNDING), ["/about"]),
     value: {
       amount: parseInt((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_AMOUNT) || "1000", 10),
       currency: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_CURRENCY) || "sats",

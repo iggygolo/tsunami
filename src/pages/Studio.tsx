@@ -47,7 +47,6 @@ interface PodcastFormData {
   image: string;
   website: string;
   copyright: string;
-  funding: string[];
   value: {
     amount: number;
     currency: string;
@@ -105,7 +104,6 @@ const Studio = () => {
     image: PODCAST_CONFIG.podcast.image,
     website: PODCAST_CONFIG.podcast.website,
     copyright: PODCAST_CONFIG.podcast.copyright,
-    funding: PODCAST_CONFIG.podcast.funding || [],
     value: {
       amount: PODCAST_CONFIG.podcast.value.amount,
       currency: PODCAST_CONFIG.podcast.value.currency,
@@ -137,7 +135,6 @@ const Studio = () => {
         image: podcastMetadata.image,
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
-        funding: podcastMetadata.funding || PODCAST_CONFIG.podcast.funding || [],
         value: podcastMetadata.value || {
           amount: PODCAST_CONFIG.podcast.value.amount,
           currency: PODCAST_CONFIG.podcast.value.currency,
@@ -173,37 +170,6 @@ const Studio = () => {
       ...prev,
       [field]: value
     }));
-  };
-
-  const handleFundingAdd = (funding: string) => {
-    if (!funding) return;
-    
-    // Validate URL - allow both full URLs and relative paths
-    const isValidUrl = funding.startsWith('/') || funding.startsWith('./') || funding.startsWith('../');
-    if (!isValidUrl) {
-      try {
-        new URL(funding);
-      } catch {
-        toast({
-          title: 'Invalid URL',
-          description: 'Please enter a valid URL (e.g., https://example.com) or relative path (e.g., /about)',
-          variant: 'destructive',
-        });
-        return;
-      }
-    }
-    
-    if (!formData.funding.includes(funding)) {
-      handleInputChange('funding', [...formData.funding, funding]);
-      toast({
-        title: 'Funding link added',
-        description: 'The funding link has been added successfully.',
-      });
-    }
-  };
-
-  const handleFundingRemove = (funding: string) => {
-    handleInputChange('funding', formData.funding.filter(f => f !== funding));
   };
 
   const handleRecipientAdd = (recipient: { name: string; type: 'node' | 'lnaddress'; address: string; split: number; customKey?: string; customValue?: string; fee?: boolean }) => {
@@ -259,23 +225,6 @@ const Studio = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Convert relative funding URLs to absolute URLs for external consumption
-      const getBaseUrl = () => {
-        if (typeof window !== 'undefined') {
-          return window.location.origin;
-        }
-        return process.env.BASE_URL || 'https://tsunami.example';
-      };
-      
-      const baseUrl = getBaseUrl();
-      const absoluteFundingUrls = formData.funding.map(funding => {
-        // Convert relative URLs to absolute URLs
-        if (funding.startsWith('/') || funding.startsWith('./') || funding.startsWith('../')) {
-          return `${baseUrl}${funding.startsWith('/') ? funding : '/' + funding.replace(/^\.\//, '')}`;
-        }
-        return funding;
-      });
-
       const podcastMetadataEvent = {
         kind: PODCAST_KINDS.ARTIST_METADATA, // Addressable podcast metadata event
         content: JSON.stringify({
@@ -284,7 +233,6 @@ const Studio = () => {
           image: formData.image,
           website: formData.website,
           copyright: formData.copyright,
-          funding: absoluteFundingUrls,
           value: formData.value,
           // Podcasting 2.0 fields
           guid: formData.guid,
@@ -653,53 +601,6 @@ const Studio = () => {
                         />
                       </div>
                     </div>
-                  </div>
-
-                  {/* Funding Links */}
-                  <div>
-                    <Label>Funding Links</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {formData.funding.map((funding, index) => (
-                        <Badge key={index} variant="outline" className="flex items-center space-x-1">
-                          <DollarSign className="w-3 h-3" />
-                          <span className="truncate max-w-xs">{funding}</span>
-                          <button
-                            onClick={() => handleFundingRemove(funding)}
-                            className="ml-1 hover:text-destructive"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-
-                    <div className="flex space-x-2 mt-2">
-                      <Input
-                        placeholder="Add funding link (e.g., /about or https://patreon.com/yourpodcast)"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            handleFundingAdd((e.target as HTMLInputElement).value);
-                            (e.target as HTMLInputElement).value = '';
-                          }
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          const input = document.querySelector('input[placeholder^="Add funding link"]') as HTMLInputElement;
-                          if (input?.value) {
-                            handleFundingAdd(input.value);
-                            input.value = '';
-                          }
-                        }}
-                      >
-                        Add
-                      </Button>
-                    </div>
-
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Add funding links for listeners to support your podcast. Use "/about" to link to your built-in zap page, or add external URLs to platforms like Patreon, Ko-fi, PayPal, etc.
-                    </p>
                   </div>
 
                   {/* Value Recipients */}

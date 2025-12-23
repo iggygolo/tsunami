@@ -314,13 +314,7 @@ export interface RSSItem {
   duration?: string; // HH:MM:SS format
   explicit?: boolean;
   image?: string;
-  // Transcript as URL references
   transcriptUrl?: string;
-  funding?: Array<{
-    url: string;
-    message: string;
-  }>;
-  // Language metadata for tracks
   language?: string | null; // ISO 639-1 code or null for instrumental
 }
 

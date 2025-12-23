@@ -8,7 +8,6 @@ interface PodcastMetadata {
   image: string;
   website: string;
   copyright: string;
-  funding: string[];
   value: {
     amount: number;
     currency: string;
@@ -90,7 +89,6 @@ export function usePodcastMetadata() {
         image: PODCAST_CONFIG.podcast.image,
         website: PODCAST_CONFIG.podcast.website,
         copyright: PODCAST_CONFIG.podcast.copyright,
-        funding: PODCAST_CONFIG.podcast.funding || [],
         value: {
           amount: PODCAST_CONFIG.podcast.value.amount,
           currency: PODCAST_CONFIG.podcast.value.currency,

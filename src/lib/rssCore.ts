@@ -19,7 +19,6 @@ export interface RSSConfig {
     image?: string;
     website?: string;
     copyright: string;
-    funding?: string[];
     value?: {
       amount: number;
       currency?: string;
@@ -256,23 +255,12 @@ export function generateRSSFeed(
         `<podcast:person role="${escapeXml(person.role)}" ${person.group ? `group="${escapeXml(person.group)}"` : ''} ${person.img ? `img="${escapeXml(person.img)}"` : ''} ${person.href ? `href="${escapeXml(person.href)}"` : ''}>${escapeXml(person.name)}</podcast:person>`
       ).join('\n    ') : ''
     }
-    ${config.podcast.funding && config.podcast.funding.length > 0 ?
-      config.podcast.funding.map(funding => {
-        // Convert relative URLs to absolute URLs for RSS feed
-        const absoluteUrl = funding.startsWith('/') || funding.startsWith('./') || funding.startsWith('../') 
-          ? `${baseUrl}${funding.startsWith('/') ? funding : '/' + funding.replace(/^\.\//, '')}`
-          : funding;
-        return `<podcast:funding url="${escapeXml(absoluteUrl)}">Support this podcast</podcast:funding>`;
-      }).join('\n    ') :
-      `<podcast:funding url="${escapeXml(baseUrl)}">Support this podcast via Lightning</podcast:funding>`
-    }
     ${config.podcast.value && config.podcast.value.amount > 0 ?
       `<podcast:value type="lightning" method="keysend" suggested="${config.podcast.value.amount}">
-        ${config.podcast.value.recipients && config.podcast.value.recipients.length > 0 ?
+        ${config.podcast.value.recipients && config.podcast.value.recipients.length > 0 &&
           config.podcast.value.recipients.map(recipient =>
             `<podcast:valueRecipient name="${escapeXml(recipient.name)}" type="${escapeXml(recipient.type)}" address="${escapeXml(recipient.address)}" split="${recipient.split}"${recipient.customKey ? ` customKey="${escapeXml(recipient.customKey)}"` : ''}${recipient.customValue ? ` customValue="${escapeXml(recipient.customValue)}"` : ''}${recipient.fee ? ` fee="true"` : ''} />`
-          ).join('\n        ') :
-          `<podcast:valueRecipient name="${escapeXml(config.podcast.artistName)}" type="node" address="${escapeXml(config.podcast.funding?.[0] || '')}" split="100" />`
+          ).join('\n        ')
         }
       </podcast:value>` : ''
     }
@@ -334,7 +322,6 @@ export function podcastConfigToRSSConfig(config: PodcastConfig): RSSConfig {
       image: config.podcast.image,
       website: config.podcast.website,
       copyright: config.podcast.copyright,
-      funding: config.podcast.funding,
       value: config.podcast.value,
       guid: config.podcast.guid,
       medium: config.podcast.medium,
