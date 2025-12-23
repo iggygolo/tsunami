@@ -74,17 +74,6 @@ export interface RSSConfig {
 }
 
 /**
- * Environment detection and base URL resolution
- */
-export function getBaseUrl(): string {
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-  // Server-side fallback
-  return process.env.BASE_URL || 'https://tsunami.example';
-}
-
-/**
  * Get package version from environment
  */
 export function getPackageVersion(): string {
@@ -124,7 +113,7 @@ export function formatDuration(seconds: number): string {
  * Converts a MusicTrackData to an RSS item
  */
 export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEncoder?: (pubkey: string, identifier: string) => string): RSSItem {
-  const baseUrl = getBaseUrl();
+  const baseUrl = config.podcast.website;
   
   // Generate link - use naddr encoder if provided, otherwise fallback to simple format
   const link = naddrEncoder && track.artistPubkey
@@ -163,7 +152,7 @@ export function releaseToRSSItems(
   config: RSSConfig, 
   trackNaddrEncoder?: (pubkey: string, identifier: string) => string
 ): RSSItem[] {
-  const baseUrl = getBaseUrl();
+  const baseUrl = config.podcast.website;
   
   // Create RSS items for each track in the release
   return release.tracks.map((trackRef, index) => {
@@ -212,7 +201,7 @@ export function generateRSSFeed(
   trackNaddrEncoder?: (pubkey: string, identifier: string) => string,
   releaseNaddrEncoder?: (pubkey: string, identifier: string) => string
 ): string {
-  const baseUrl = getBaseUrl();
+  const baseUrl = config.podcast.website || "";
   
   // Generate channels for each release
   const channels = releases.map(release => {
@@ -247,6 +236,7 @@ export function generateRSSFeed(
 
     <!-- iTunes tags -->
     <itunes:author>${escapeXml(config.podcast.artistName)}</itunes:author>
+    <itunes:owner itunes:name="${escapeXml(config.podcast.artistName)}" itunes:email=""/>
     ${release.imageUrl ? `<itunes:image href="${escapeXml(release.imageUrl)}" />` : ''}
     ${releaseGenres.length > 0 ? 
       `<itunes:category text="Music">
@@ -313,7 +303,7 @@ export function generateRSSFeed(
       <!-- iTunes tags -->
       ${item.duration ? `<itunes:duration>${item.duration}</itunes:duration>` : ''}
       ${item.image ? `<itunes:image href="${escapeXml(item.image)}" />` : ''}
-      ${item.explicit ? `<itunes:explicit>true</itunes:explicit>` : ''}
+      ${item.explicit ? `<itunes:explicit>yes</itunes:explicit>` : ''}
 
       <!-- Podcasting 2.0 tags -->
       <podcast:guid>${escapeXml(item.guid)}</podcast:guid>
