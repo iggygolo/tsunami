@@ -121,9 +121,35 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEn
     ? `${baseUrl}/${naddrEncoder(track.artistPubkey, track.identifier)}`
     : `${baseUrl}/track/${track.identifier}`;
 
+  // Generate a meaningful description with fallbacks
+  let description = '';
+  if (track.lyrics && track.lyrics.trim()) {
+    description = track.lyrics.trim();
+  } else if (track.credits && track.credits.trim()) {
+    description = track.credits.trim();
+  } else {
+    // Create a default description with available metadata
+    const parts = [] as string[];
+    if (track.artist && track.artist !== config.podcast.artistName) {
+      parts.push(`Performed by ${track.artist}`);
+    }
+    if (track.genres && track.genres.length > 0) {
+      parts.push(`Genre: ${track.genres.join(', ')}`);
+    }
+    if (track.duration) {
+      const minutes = Math.floor(track.duration / 60);
+      const seconds = track.duration % 60;
+      parts.push(`Duration: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+    }
+    
+    description = parts.length > 0 
+      ? `${track.title} - ${parts.join(' • ')}` 
+      : `${track.title} by ${config.podcast.artistName}`;
+  }
+
   return {
     title: track.title,
-    description: track.lyrics || track.credits || "",
+    description,
     link,
     guid: track.artistPubkey ? `${track.artistPubkey}:${track.identifier}` : track.identifier,
     pubDate: track.createdAt ? track.createdAt.toUTCString() : new Date().toUTCString(),
@@ -162,9 +188,12 @@ export function releaseToRSSItems(
     
     if (!trackData) {
       // Create a placeholder item if track data is not found
+      const trackTitle = trackRef.title || `Track ${index + 1}`;
+      const description = `${trackTitle} from the release "${release.title}" by ${trackRef.artist || config.podcast.artistName}. This track is part of a ${release.tracks.length}-track release.`;
+      
       return {
-        title: trackRef.title || `Track ${index + 1}`,
-        description: `Track from release: ${release.title}`,
+        title: trackTitle,
+        description,
         link: `${baseUrl}/release/${release.identifier}`,
         guid: `${release.identifier}:track:${index}`,
         pubDate: release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString(),
