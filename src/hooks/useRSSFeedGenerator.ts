@@ -2,8 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
-import type { MusicTrackData, MusicPlaylistData } from '@/types/podcast';
-import type { NostrEvent } from '@nostrify/nostrify';
 import {
   validateMusicTrack,
   validateMusicPlaylist,
@@ -15,6 +13,7 @@ import {
 
 /**
  * Hook to fetch music tracks and playlists and generate RSS feed
+ * Generates single RSS feed with multiple channels (one per release)
  */
 export function useRSSFeedGenerator() {
   const { nostr } = useNostr();
@@ -65,7 +64,7 @@ export function useRSSFeedGenerator() {
           return dateB - dateA;
         });
 
-        // Generate RSS feed with the current configuration and content
+        // Generate RSS feed with multiple channels (one per release)
         await genRSSFeed(tracks, playlists);
 
         return {
@@ -73,6 +72,7 @@ export function useRSSFeedGenerator() {
           playlists,
           rssGenerated: true,
           lastGenerated: new Date(),
+          channelCount: playlists.length, // Number of channels in the RSS feed
         };
       } catch (error) {
         console.error('Failed to generate RSS feed:', error);

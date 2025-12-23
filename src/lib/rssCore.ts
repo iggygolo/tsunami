@@ -161,8 +161,7 @@ export function releaseToRSSItems(
   release: MusicPlaylistData, 
   tracks: MusicTrackData[], 
   config: RSSConfig, 
-  trackNaddrEncoder?: (pubkey: string, identifier: string) => string,
-  releaseNaddrEncoder?: (pubkey: string, identifier: string) => string
+  trackNaddrEncoder?: (pubkey: string, identifier: string) => string
 ): RSSItem[] {
   const baseUrl = getBaseUrl();
   
@@ -203,8 +202,8 @@ export function releaseToRSSItems(
 }
 
 /**
- * Core RSS feed generation function
- * Works in both browser and Node.js environments
+ * Generate single RSS feed with multiple channels - one channel per release
+ * Each channel contains tracks from that specific release as items
  */
 export function generateRSSFeed(
   tracks: MusicTrackData[], 
@@ -215,59 +214,49 @@ export function generateRSSFeed(
 ): string {
   const baseUrl = getBaseUrl();
   
-  // Generate RSS items from releases (each release becomes multiple RSS items, one per track)
-  const releaseItems = releases
-    .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
-    .flatMap(release => releaseToRSSItems(release, tracks, config, trackNaddrEncoder, releaseNaddrEncoder));
-  
-  // Generate RSS items from standalone tracks (tracks not in any release)
-  const releaseTrackIds = new Set(
-    releases.flatMap(release => 
-      release.tracks.map(trackRef => `${trackRef.pubkey}:${trackRef.identifier}`)
-    )
-  );
-  
-  const standaloneTrackItems = tracks
-    .filter(track => !releaseTrackIds.has(`${track.artistPubkey}:${track.identifier}`))
-    .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
-    .map(track => trackToRSSItem(track, config, trackNaddrEncoder));
-  
-  // Combine all RSS items and sort by date
-  const allItems = [...releaseItems, ...standaloneTrackItems]
-    .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+  // Generate channels for each release
+  const channels = releases.map(release => {
+    // Generate RSS items for tracks in this specific release
+    const releaseItems = releaseToRSSItems(release, tracks, config, trackNaddrEncoder);
+    
+    // Get release-specific information
+    const releaseLink = releaseNaddrEncoder && release.authorPubkey
+      ? `${baseUrl}/${releaseNaddrEncoder(release.authorPubkey, release.identifier)}`
+      : `${baseUrl}/release/${release.identifier}`;
 
-  // Collect unique genres from all tracks
-  const uniqueGenres = Array.from(new Set(
-    tracks
-      .flatMap(track => track.genres || [])
-      .filter((genre): genre is string => Boolean(genre && typeof genre === 'string' && genre.trim().length > 0))
-  ));
+    // Collect genres from tracks in this release
+    const releaseGenres = Array.from(new Set(
+      releaseItems
+        .flatMap(item => item.category || [])
+        .filter((genre): genre is string => Boolean(genre && typeof genre === 'string' && genre.trim().length > 0))
+    ));
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"
-     xmlns:podcast="https://podcastindex.org/namespace/1.0"
-     xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
-     xmlns:content="http://purl.org/rss/1.0/modules/content/">
-  <channel>
-    <title>${escapeXml(config.podcast.artistName)}</title>
-    <description>${escapeXml(config.podcast.description)}</description>
-    <link>${escapeXml(config.podcast.website || baseUrl)}</link>
+    return `<channel>
+    <title>${escapeXml(config.podcast.artistName)} - ${escapeXml(release.title)}</title>
+    <description>${escapeXml(release.description || `Music release: ${release.title}`)}</description>
+    <link>${escapeXml(releaseLink)}</link>
     <copyright>${escapeXml(config.podcast.copyright)}</copyright>
-    <pubDate>${new Date().toUTCString()}</pubDate>
+    <pubDate>${release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString()}</pubDate>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <ttl>${config.rss.ttl}</ttl>
+    ${release.imageUrl ? `<image>
+      <url>${escapeXml(release.imageUrl)}</url>
+      <title>${escapeXml(release.title)}</title>
+      <link>${escapeXml(releaseLink)}</link>
+    </image>` : ''}
 
     <!-- iTunes tags -->
     <itunes:author>${escapeXml(config.podcast.artistName)}</itunes:author>
-    ${uniqueGenres.length > 0 ? 
+    ${release.imageUrl ? `<itunes:image href="${escapeXml(release.imageUrl)}" />` : ''}
+    ${releaseGenres.length > 0 ? 
       `<itunes:category text="Music">
-        ${uniqueGenres.map(genre => `<itunes:category text="${escapeXml(genre)}" />`).join('\n        ')}
+        ${releaseGenres.map(genre => `<itunes:category text="${escapeXml(genre)}" />`).join('\n        ')}
       </itunes:category>` : 
       '<itunes:category text="Music" />'
     }
 
     <!-- Podcasting 2.0 tags -->
-    <podcast:guid>${escapeXml(config.podcast.guid || config.artistNpub)}</podcast:guid>
+    <podcast:guid>${escapeXml(release.authorPubkey ? `${release.authorPubkey}:${release.identifier}` : release.identifier)}</podcast:guid>
     ${config.podcast.medium ? `<podcast:medium>${escapeXml(config.podcast.medium)}</podcast:medium>` : ''}
     ${config.podcast.publisher ? `<podcast:publisher>${escapeXml(config.podcast.publisher)}</podcast:publisher>` : ''}
     ${config.podcast.license ?
@@ -281,20 +270,6 @@ export function generateRSSFeed(
         `<podcast:person role="${escapeXml(person.role)}" ${person.group ? `group="${escapeXml(person.group)}"` : ''} ${person.img ? `img="${escapeXml(person.img)}"` : ''} ${person.href ? `href="${escapeXml(person.href)}"` : ''}>${escapeXml(person.name)}</podcast:person>`
       ).join('\n    ') : ''
     }
-    ${config.podcast.txt && config.podcast.txt.length > 0 ?
-      config.podcast.txt.map(txt =>
-        `<podcast:txt purpose="${escapeXml(txt.purpose)}">${escapeXml(txt.content)}</podcast:txt>`
-      ).join('\n    ') : ''
-    }
-    ${config.podcast.remoteItem && config.podcast.remoteItem.length > 0 ?
-      config.podcast.remoteItem.map(item =>
-        `<podcast:remoteItem feedGuid="${escapeXml(item.feedGuid)}" ${item.feedUrl ? `feedUrl="${escapeXml(item.feedUrl)}"` : ''} ${item.itemGuid ? `itemGuid="${escapeXml(item.itemGuid)}"` : ''} ${item.medium ? `medium="${escapeXml(item.medium)}"` : ''} />`
-      ).join('\n    ') : ''
-    }
-    ${config.podcast.block ?
-      `<podcast:block id="${escapeXml(config.podcast.block.id)}" ${config.podcast.block.reason ? `reason="${escapeXml(config.podcast.block.reason)}"` : ''} />` : ''
-    }
-    ${config.podcast.newFeedUrl ? `<podcast:newFeedUrl>${escapeXml(config.podcast.newFeedUrl)}</podcast:newFeedUrl>` : ''}
     ${config.podcast.funding && config.podcast.funding.length > 0 ?
       config.podcast.funding.map(funding => {
         // Convert relative URLs to absolute URLs for RSS feed
@@ -319,7 +294,7 @@ export function generateRSSFeed(
     <!-- Generator -->
     <generator>Tsunami - Nostr Music Platform v${getPackageVersion()}</generator>
 
-    ${allItems.map((item, index) => `
+    ${releaseItems.map((item, index) => `
     <item>
       <title>${escapeXml(item.title)}</title>
       <description>${escapeXml(item.description)}</description>
@@ -344,7 +319,15 @@ export function generateRSSFeed(
       <podcast:guid>${escapeXml(item.guid)}</podcast:guid>
       <podcast:episode>${index + 1}</podcast:episode>
     </item>`).join('')}
-  </channel>
+  </channel>`;
+  }).join('\n\n');
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:podcast="https://podcastindex.org/namespace/1.0"
+     xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/">
+${channels}
 </rss>`;
 
   return xml;

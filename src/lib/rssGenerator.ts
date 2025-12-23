@@ -1,10 +1,14 @@
 import type { MusicTrackData, MusicPlaylistData } from '@/types/podcast';
 import { PODCAST_CONFIG, type PodcastConfig } from './podcastConfig';
 import { encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr } from './nip19Utils';
-import { generateRSSFeed as generateRSSFeedCore, podcastConfigToRSSConfig } from './rssCore';
+import { 
+  generateRSSFeed as generateRSSFeedCore,
+  podcastConfigToRSSConfig 
+} from './rssCore';
 
 /**
  * Browser-compatible RSS feed generation using the consolidated core
+ * Returns single RSS feed with multiple channels (one per release)
  */
 export function generateRSSFeed(tracks: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: PodcastConfig): string {
   const podcastConfig = config || PODCAST_CONFIG;
@@ -39,34 +43,25 @@ export function useRSSFeed(tracks: MusicTrackData[] | undefined, releases: Music
 }
 
 /**
- * Generate RSS feed and make it available at /rss.xml
+ * Generate RSS feeds and store them
  * This function should be called when podcast metadata or tracks are updated
  */
 export async function genRSSFeed(tracks?: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: PodcastConfig): Promise<void> {
   try {
     // Fetch tracks if not provided
     if (!tracks) {
-      // This is a placeholder - in a real implementation, you'd fetch tracks from your data source
       console.warn('genRSSFeed called without tracks - using placeholder data');
       tracks = [];
     }
 
-    // Generate RSS XML with provided configuration or fallback to hardcoded config
+    // Generate single RSS feed with multiple channels (one per release)
     const rssContent = generateRSSFeed(tracks, releases, config);
 
-    // Create a blob and object URL
-    const blob = new Blob([rssContent], { type: 'application/rss+xml' });
-    const rssUrl = URL.createObjectURL(blob);
-
-    // Store the RSS content in localStorage for the RSSFeed component to use
+    // Store the RSS content in localStorage
     localStorage.setItem('podcast-rss-content', rssContent);
     localStorage.setItem('podcast-rss-updated', Date.now().toString());
 
-    // Log success
-    console.log('RSS feed generated and updated');
-
-    // Clean up the object URL
-    setTimeout(() => URL.revokeObjectURL(rssUrl), 1000);
+    console.log(`Generated RSS feed with ${releases.length} channels (one per release)`);
 
   } catch (error) {
     console.error('Failed to generate RSS feed:', error);
