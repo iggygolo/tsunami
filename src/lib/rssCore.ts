@@ -103,10 +103,7 @@ export function formatDuration(seconds: number): string {
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
 
-  if (hours > 0) {
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-  return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 /**
@@ -306,8 +303,11 @@ export function generateRSSFeed(
       ${item.image ? `<itunes:image href="${escapeXml(item.image)}" />` : ''}
       ${item.explicit ? `<itunes:explicit>yes</itunes:explicit>` : ''}
 
+      <pubDate>${release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString()}</pubDate>
+
       <!-- Podcasting 2.0 tags -->
       <podcast:guid>${escapeXml(item.guid)}</podcast:guid>
+      <podcast:season>1</podcast:season>
       <podcast:episode>${index + 1}</podcast:episode>
     </item>`).join('')}
   </channel>`;
