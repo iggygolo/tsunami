@@ -1,4 +1,4 @@
-import { Crown, Zap, Calendar } from 'lucide-react';
+import { Crown, Zap, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -49,37 +49,32 @@ function LeaderboardEntry({ entry, rank }: LeaderboardEntryProps) {
   };
 
   return (
-    <div className="flex items-center space-x-4 py-4 px-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+    <div className="flex items-start space-x-3 py-3">
       <div className="flex-shrink-0">
         {getRankIcon(rank)}
       </div>
       
-      <Avatar className="w-10 h-10 ring-2 ring-white/20">
+      <Avatar className="w-8 h-8">
         <AvatarImage src={metadata?.picture} alt={displayName} />
-        <AvatarFallback className="text-sm bg-white/20 text-white">
+        <AvatarFallback className="text-xs">
           {displayName.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
       
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-white truncate">{displayName}</p>
-          <div className="flex items-center space-x-2">
-            <Badge className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-300 border-yellow-500/30 hover:bg-yellow-500/30">
-              <Zap className="w-3 h-3 mr-1" />
-              {formatAmount(entry.totalAmount)}
-            </Badge>
-          </div>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-sm font-medium">{displayName}</p>
+          <Badge variant="secondary" className="text-xs bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/30">
+            <Zap className="w-3 h-3 mr-1" />
+            {formatAmount(entry.totalAmount)}
+          </Badge>
         </div>
         
-        <div className="flex items-center space-x-4 text-xs text-white/60 mt-1">
+        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
           <span>{entry.zapCount} zaps</span>
-          <div className="flex items-center space-x-1">
-            <Calendar className="w-3 h-3" />
-            <span>
-              {formatDistanceToNow(entry.lastZapDate, { addSuffix: true })}
-            </span>
-          </div>
+          <span>•</span>
+          <Clock className="w-3 h-3" />
+          <span>{formatDistanceToNow(entry.lastZapDate, { addSuffix: true })}</span>
         </div>
       </div>
     </div>
@@ -90,18 +85,15 @@ function LeaderboardSkeleton() {
   return (
     <div className="space-y-3">
       {[...Array(5)].map((_, i) => (
-        <div key={i} className="flex items-center space-x-4 py-4 px-4 rounded-lg bg-white/5">
-          <Skeleton className="w-5 h-5 bg-white/20" />
-          <Skeleton className="w-10 h-10 rounded-full bg-white/20" />
+        <div key={i} className="flex items-start space-x-3 py-3">
+          <Skeleton className="w-5 h-5" />
+          <Skeleton className="w-8 h-8 rounded-full" />
           <div className="flex-1 space-y-2">
             <div className="flex items-center justify-between">
-              <Skeleton className="h-4 w-24 bg-white/20" />
-              <Skeleton className="h-5 w-16 bg-white/20" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-16" />
             </div>
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-3 w-16 bg-white/20" />
-              <Skeleton className="h-3 w-20 bg-white/20" />
-            </div>
+            <Skeleton className="h-3 w-32" />
           </div>
         </div>
       ))}
@@ -132,7 +124,7 @@ export function ZapLeaderboard({
 
     if (leaderboard && leaderboard.length > 0) {
       return (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {leaderboard.map((entry, index) => (
             <LeaderboardEntry
               key={entry.userPubkey}
