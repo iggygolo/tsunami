@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Play,
   Pause,
@@ -9,13 +8,15 @@ import {
   SkipForward,
   Volume2,
   VolumeX,
-  X
+  X,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import * as SliderPrimitive from '@radix-ui/react-slider';
-import { Badge } from '@/components/ui/badge';
+import { ZapDialog } from '@/components/ZapDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import type { NostrEvent } from '@nostrify/nostrify';
 
 export function PersistentAudioPlayer() {
   const {
@@ -39,6 +40,23 @@ export function PersistentAudioPlayer() {
   }
 
   const release = state.currentRelease;
+
+  // Create NostrEvent for zap functionality
+  const releaseEvent: NostrEvent = {
+    id: release.eventId,
+    pubkey: release.artistPubkey,
+    created_at: Math.floor(release.createdAt.getTime() / 1000),
+    kind: PODCAST_KINDS.MUSIC_PLAYLIST,
+    tags: [
+      ['d', release.identifier || release.eventId],
+      ['title', release.title],
+      ...(release.description ? [['description', release.description]] : []),
+      ...(release.imageUrl ? [['image', release.imageUrl]] : []),
+      ...release.tags.map(tag => ['t', tag])
+    ],
+    content: JSON.stringify(release.tracks),
+    sig: ''
+  };
 
   const formatTime = (seconds: number): string => {
     if (!seconds || !isFinite(seconds)) return '0:00';
@@ -97,12 +115,152 @@ export function PersistentAudioPlayer() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-xl border-t border-white/10 shadow-[0_-8px_30px_rgb(0,0,0,0.3)]">
-      {/* Compact Player Bar */}
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.3)]">
+      {/* Progress Bar as Top Border */}
+      <div className="relative h-1 w-full">
+        <SliderPrimitive.Root
+          value={[state.currentTime]}
+          max={state.duration || 100}
+          step={1}
+          onValueChange={handleSeek}
+          disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
+          className="absolute inset-0 flex w-full touch-none select-none items-center cursor-pointer"
+        >
+          <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden bg-white/20">
+            <SliderPrimitive.Range className="absolute h-full bg-white/90" />
+          </SliderPrimitive.Track>
+          <SliderPrimitive.Thumb className="block h-3 w-3 rounded-full bg-white shadow-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110" />
+        </SliderPrimitive.Root>
+      </div>
+
+      {/* Main Player Content */}
       <div className="px-4 sm:px-6 py-3">
-        <div className="flex items-center space-x-4">
-          {/* Album Art & Track Info */}
-          <div className="flex items-center space-x-3 min-w-0 flex-1">
+        {/* Mobile Layout */}
+        <div className="sm:hidden">
+          {/* Top Row: Track Info */}
+          <div className="flex items-center space-x-3 mb-3">
+            {release.imageUrl && (
+              <div className="relative">
+                <img
+                  src={release.imageUrl}
+                  alt={release.title}
+                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20"
+                />
+                {state.isPlaying && (
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-md">
+                    <div className="w-1 h-1 bg-black rounded-full animate-pulse" />
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-sm line-clamp-1 text-white">
+                {release.tracks[state.currentTrackIndex]?.title || `Track ${state.currentTrackIndex + 1}`}
+              </p>
+              <p className="text-xs text-white/70 line-clamp-1">
+                {release.title}
+              </p>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-xs text-white/50 tabular-nums">
+                  {formatTime(state.currentTime)} / {formatTime(state.duration)}
+                </span>
+                <div className="flex items-center space-x-2">
+                  {/* Zap Button */}
+                  <ZapDialog target={releaseEvent}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-yellow-400 transition-colors"
+                      title="Zap this release"
+                    >
+                      <Zap className="h-3 w-3" />
+                    </Button>
+                  </ZapDialog>
+                  {/* Close Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={stop}
+                    className="h-7 w-7 p-0 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Row: Centered Controls */}
+          <div className="flex items-center justify-center space-x-3">
+            {/* Previous Track */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={previousTrack}
+              disabled={!release.tracks || release.tracks.length <= 1 || state.currentTrackIndex === 0}
+              className="h-10 w-10 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
+              title="Previous track"
+            >
+              <SkipBack className="h-4 w-4" />
+            </Button>
+
+            {/* Rewind 15s */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSkipBack}
+              disabled={!release.tracks || release.tracks.length === 0}
+              className="h-10 w-10 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
+              title="Rewind 15 seconds"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+
+            {/* Play/Pause */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePlayPause}
+              disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
+              className="h-12 w-12 p-0 rounded-full bg-white/90 backdrop-blur-sm text-black hover:bg-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+            >
+              {state.isPlaying ? (
+                <Pause className="h-5 w-5" />
+              ) : (
+                <Play className="h-5 w-5 ml-0.5" />
+              )}
+            </Button>
+
+            {/* Forward 15s */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSkipForward}
+              disabled={!release.tracks || release.tracks.length === 0}
+              className="h-10 w-10 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
+              title="Forward 15 seconds"
+            >
+              <RotateCw className="h-4 w-4" />
+            </Button>
+
+            {/* Next Track */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={nextTrack}
+              disabled={!release.tracks || release.tracks.length <= 1 || state.currentTrackIndex >= release.tracks.length - 1}
+              className="h-10 w-10 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
+              title="Next track"
+            >
+              <SkipForward className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden sm:flex items-center">
+          {/* Left: Album Art & Track Info */}
+          <div className="flex items-center space-x-3 min-w-0 w-1/3">
             {release.imageUrl && (
               <div className="relative">
                 <img
@@ -124,11 +282,16 @@ export function PersistentAudioPlayer() {
               <p className="text-xs text-white/70 line-clamp-1">
                 {release.title}
               </p>
+              <div className="flex items-center space-x-2 text-xs text-white/50">
+                <span className="tabular-nums">
+                  {formatTime(state.currentTime)} / {formatTime(state.duration)}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Playback Controls */}
-          <div className="flex items-center space-x-1 sm:space-x-2">
+          {/* Center: Playback Controls */}
+          <div className="flex items-center justify-center space-x-1 sm:space-x-2 w-1/3">
             {/* Previous Track */}
             <Button
               variant="ghost"
@@ -193,95 +356,60 @@ export function PersistentAudioPlayer() {
             </Button>
           </div>
 
-          {/* Progress Bar */}
-          <div className="hidden sm:flex items-center space-x-2 min-w-0 flex-1 max-w-xs">
-            <span className="text-xs font-medium text-white/70 min-w-[35px] tabular-nums">
-              {formatTime(state.currentTime)}
-            </span>
-            <div className="flex-1">
-              <SliderPrimitive.Root
-                value={[state.currentTime]}
-                max={state.duration || 100}
-                step={1}
-                onValueChange={handleSeek}
-                disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
-                className="relative flex w-full touch-none select-none items-center cursor-pointer"
+          {/* Right: Volume, Zap & Close */}
+          <div className="flex items-center justify-end space-x-2 w-1/3">
+            {/* Volume Controls */}
+            <div className="hidden md:flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleMuteToggle}
+                className="h-8 w-8 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
               >
-                <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-white/20">
-                  <SliderPrimitive.Range className="absolute h-full bg-white/90" />
-                </SliderPrimitive.Track>
-                <SliderPrimitive.Thumb className="block h-3 w-3 rounded-full bg-white shadow-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110" />
-              </SliderPrimitive.Root>
+                {isMuted || state.volume === 0 ? (
+                  <VolumeX className="h-3 w-3" />
+                ) : (
+                  <Volume2 className="h-3 w-3" />
+                )}
+              </Button>
+              <div className="w-12">
+                <SliderPrimitive.Root
+                  value={[isMuted ? 0 : state.volume]}
+                  max={1}
+                  step={0.1}
+                  onValueChange={handleVolumeChange}
+                  className="relative flex w-full touch-none select-none items-center cursor-pointer"
+                >
+                  <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-white/20">
+                    <SliderPrimitive.Range className="absolute h-full bg-white/90" />
+                  </SliderPrimitive.Track>
+                  <SliderPrimitive.Thumb className="block h-2.5 w-2.5 rounded-full bg-white shadow-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110" />
+                </SliderPrimitive.Root>
+              </div>
             </div>
-            <span className="text-xs font-medium text-white/70 min-w-[35px] tabular-nums text-right">
-              {formatTime(state.duration)}
-            </span>
-          </div>
 
-          {/* Volume Controls */}
-          <div className="hidden md:flex items-center space-x-2">
+            {/* Zap Button */}
+            <ZapDialog target={releaseEvent}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-yellow-400 transition-colors"
+                title="Zap this release"
+              >
+                <Zap className="h-3 w-3" />
+              </Button>
+            </ZapDialog>
+
+            {/* Close Button */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleMuteToggle}
-              className="h-8 w-8 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
+              onClick={stop}
+              className="h-8 w-8 sm:h-9 sm:w-9 p-0 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
             >
-              {isMuted || state.volume === 0 ? (
-                <VolumeX className="h-3 w-3" />
-              ) : (
-                <Volume2 className="h-3 w-3" />
-              )}
+              <X className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <div className="w-12">
-              <SliderPrimitive.Root
-                value={[isMuted ? 0 : state.volume]}
-                max={1}
-                step={0.1}
-                onValueChange={handleVolumeChange}
-                className="relative flex w-full touch-none select-none items-center cursor-pointer"
-              >
-                <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-white/20">
-                  <SliderPrimitive.Range className="absolute h-full bg-white/90" />
-                </SliderPrimitive.Track>
-                <SliderPrimitive.Thumb className="block h-2.5 w-2.5 rounded-full bg-white shadow-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110" />
-              </SliderPrimitive.Root>
-            </div>
           </div>
-
-          {/* Close Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={stop}
-            className="h-8 w-8 sm:h-9 sm:w-9 p-0 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            <X className="h-3 w-3 sm:h-4 sm:w-4" />
-          </Button>
-        </div>
-
-        {/* Mobile Progress Bar */}
-        <div className="sm:hidden mt-3 flex items-center space-x-3">
-          <span className="text-xs font-medium text-white/70 min-w-[35px] tabular-nums">
-            {formatTime(state.currentTime)}
-          </span>
-          <div className="flex-1">
-            <SliderPrimitive.Root
-              value={[state.currentTime]}
-              max={state.duration || 100}
-              step={1}
-              onValueChange={handleSeek}
-              disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
-              className="relative flex w-full touch-none select-none items-center cursor-pointer"
-            >
-              <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-white/20">
-                <SliderPrimitive.Range className="absolute h-full bg-white/90" />
-              </SliderPrimitive.Track>
-              <SliderPrimitive.Thumb className="block h-3 w-3 rounded-full bg-white shadow-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110" />
-            </SliderPrimitive.Root>
-          </div>
-          <span className="text-xs font-medium text-white/70 min-w-[35px] tabular-nums text-right">
-            {formatTime(state.duration)}
-          </span>
         </div>
       </div>
     </div>
