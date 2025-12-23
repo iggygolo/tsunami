@@ -232,11 +232,10 @@ export function generateRSSFeed(
     <itunes:author>${escapeXml(config.podcast.artistName)}</itunes:author>
     <itunes:owner itunes:name="${escapeXml(config.podcast.artistName)}" itunes:email=""/>
     ${release.imageUrl ? `<itunes:image href="${escapeXml(release.imageUrl)}" />` : ''}
+    <itunes:category text="Music" />
     ${releaseGenres.length > 0 ? 
-      `<itunes:category>Music<itunes:category>
-        ${releaseGenres.map(genre => `<itunes:category text="${escapeXml(genre)}" />`).join('\n        ')}
-      </itunes:category>` : 
-      '<itunes:category>Music</itunes:category>'
+      releaseGenres.map(genre => `<itunes:category text="${escapeXml(genre)}" />`).join('\n    ') : 
+      ''
     }
     <itunes:keywords>music</itunes:keywords>
 
