@@ -151,7 +151,7 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEn
     title: track.title,
     description,
     link,
-    guid: track.artistPubkey ? `${track.artistPubkey}:${track.identifier}` : track.identifier,
+    guid: link, // Use the track link as GUID - it's a proper URI
     pubDate: track.createdAt ? track.createdAt.toUTCString() : new Date().toUTCString(),
     author: track.artist,
     category: track.genres || [],
@@ -190,12 +190,13 @@ export function releaseToRSSItems(
       // Create a placeholder item if track data is not found
       const trackTitle = trackRef.title || `Track ${index + 1}`;
       const description = `${trackTitle} from the release "${release.title}" by ${trackRef.artist || config.podcast.artistName}. This track is part of a ${release.tracks.length}-track release.`;
+      const placeholderLink = `${baseUrl}/release/${release.identifier}`;
       
       return {
         title: trackTitle,
         description,
-        link: `${baseUrl}/release/${release.identifier}`,
-        guid: `${release.identifier}:track:${index}`,
+        link: placeholderLink,
+        guid: placeholderLink, // Use the link as GUID
         pubDate: release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString(),
         author: trackRef.artist || config.podcast.artistName,
         category: release.categories || [],
@@ -272,7 +273,7 @@ export function generateRSSFeed(
     <!-- Podcasting 2.0 tags -->
     <podcast:locked owner="${escapeXml(config.podcast.locked?.owner || config.podcast.artistName)}">${config.podcast.locked?.locked !== false ? 'yes' : 'no'}</podcast:locked>
     ${config.podcast.publisher ? `<podcast:publisher>${escapeXml(config.podcast.publisher)}</podcast:publisher>` : ''}
-    <podcast:guid>${escapeXml(release.authorPubkey ? `${release.authorPubkey}:${release.identifier}` : release.identifier)}</podcast:guid>
+    <podcast:guid>${escapeXml(releaseLink)}</podcast:guid>
     ${config.podcast.medium ? `<podcast:medium>${escapeXml(config.podcast.medium)}</podcast:medium>` : ''}
     ${config.podcast.license ?
       `<podcast:license ${config.podcast.license.url ? `url="${escapeXml(config.podcast.license.url)}"` : ''}>${escapeXml(config.podcast.license.identifier)}</podcast:license>` : ''
