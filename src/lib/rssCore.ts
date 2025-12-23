@@ -239,7 +239,7 @@ export function generateRSSFeed(
       `<itunes:category>Music<itunes:category>
         ${releaseGenres.map(genre => `<itunes:category text="${escapeXml(genre)}" />`).join('\n        ')}
       </itunes:category>` : 
-      '<itunes:category>Music<itunes:category>'
+      '<itunes:category>Music</itunes:category>'
     }
     <itunes:keywords>music</itunes:keywords>
 
