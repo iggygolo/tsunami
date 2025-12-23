@@ -1,13 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useSeoMeta } from '@unhead/react';
-import { ArrowLeft, Play, Edit, Heart, Share, MessageCircle } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft, Play, Heart, Share, MessageCircle, Zap } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ZapLeaderboard } from './ZapLeaderboard';
 import { CommentsSection } from '@/components/comments/CommentsSection';
+import { ReactionsSection } from './ReactionsSection';
 import { Layout } from '@/components/Layout';
 import { Link, useNavigate } from 'react-router-dom';
 import { useNostr } from '@nostrify/react';
@@ -29,6 +30,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { useComments } from '@/hooks/useComments';
+import { useReactions } from '@/hooks/useReactions';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 import { cn } from '@/lib/utils';
@@ -54,6 +56,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   const { user } = useCurrentUser();
   const { mutate: createEvent } = useNostrPublish();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('comments');
 
   // Determine the release ID for the usePodcastRelease hook
@@ -227,47 +230,44 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   );
   const commentCount = commentsData?.topLevelComments?.length || 0;
 
-  // Query for user interactions
-  const { data: userInteractions } = useQuery({
-    queryKey: ['release-user-interactions', finalRelease?.eventId, user?.pubkey],
+  // Use the reliable reactions hook for reactions data and user like status
+  const { count: reactionsCount, hasUserLiked } = useReactions(finalRelease?.eventId || '');
+
+  // Query for zaps only (since reactions are handled by the hook)
+  const { data: zapCounts } = useQuery({
+    queryKey: ['release-zap-counts', finalRelease?.eventId],
     queryFn: async () => {
-      if (!user?.pubkey || !finalRelease) return { hasLiked: false };
+      if (!finalRelease) return { zaps: 0, totalSats: 0 };
 
       const interactions = await nostr.query([{
-        kinds: [7],
-        authors: [user.pubkey],
-        '#e': [finalRelease.eventId],
-        limit: 10
-      }]);
-
-      return { hasLiked: interactions.some(e => e.kind === 7) };
-    },
-    enabled: !!user?.pubkey && !!finalRelease,
-    staleTime: 30000,
-  });
-
-  // Query for interaction counts
-  const { data: interactionCounts } = useQuery({
-    queryKey: ['release-interaction-counts', finalRelease?.eventId],
-    queryFn: async () => {
-      if (!finalRelease) return { likes: 0, zaps: 0, totalSats: 0 };
-
-      const interactions = await nostr.query([{
-        kinds: [7, 9735],
+        kinds: [9735],
         '#e': [finalRelease.eventId],
         limit: 500
       }]);
 
-      const likes = interactions.filter(e => e.kind === 7).length;
-      const zaps = interactions.filter(e => e.kind === 9735).filter(validateZapEvent);
+      const zaps = interactions.filter(validateZapEvent);
       const zapCount = zaps.length;
       const totalSats = zaps.reduce((total, zap) => total + extractZapAmount(zap), 0);
 
-      return { likes, zaps: zapCount, totalSats };
+      console.log('Zap counts debug:', {
+        eventId: finalRelease.eventId,
+        zapEvents: interactions.length,
+        validZaps: zapCount,
+        totalSats
+      });
+
+      return { zaps: zapCount, totalSats };
     },
     enabled: !!finalRelease,
     staleTime: 60000,
   });
+
+  // Combine reactions and zaps data
+  const interactionCounts = {
+    likes: reactionsCount,
+    zaps: zapCounts?.zaps || 0,
+    totalSats: zapCounts?.totalSats || 0
+  };
 
   // Calculate total duration
   const totalDuration = useMemo(() => {
@@ -286,7 +286,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
       return;
     }
 
-    if (userInteractions?.hasLiked) {
+    if (hasUserLiked) {
       toast({
         title: "Already liked",
         description: "You have already liked this release.",
@@ -295,6 +295,18 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
     }
 
     try {
+      // Optimistically update reactions data
+      queryClient.setQueryData(['release-reactions', finalRelease.eventId], (old: any) => {
+        if (!old) return [];
+        // Add new reaction entry
+        const newReaction = {
+          userPubkey: user.pubkey,
+          timestamp: new Date(),
+          eventId: `temp-${Date.now()}`
+        };
+        return [newReaction, ...old];
+      });
+
       createEvent({
         kind: 7,
         content: '+',
@@ -309,7 +321,15 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
         title: "Liked!",
         description: "Your like has been published.",
       });
+
+      // Delay invalidation to allow network propagation
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['release-reactions', finalRelease.eventId] });
+      }, 2000);
     } catch {
+      // Revert optimistic updates on error
+      queryClient.invalidateQueries({ queryKey: ['release-reactions', finalRelease.eventId] });
+
       toast({
         title: "Failed to like",
         description: "Please try again.",
@@ -499,10 +519,10 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                     onClick={handleLike}
                     className={cn(
                       "w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20",
-                      userInteractions?.hasLiked && "text-red-500"
+                      hasUserLiked && "text-red-500"
                     )}
                   >
-                    <Heart className={cn("w-5 h-5", userInteractions?.hasLiked && "fill-current")} />
+                    <Heart className={cn("w-5 h-5", hasUserLiked && "fill-current")} />
                   </Button>
 
                   {/* Share Button */}
@@ -515,47 +535,26 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                     <Share className="w-5 h-5" />
                   </Button>
 
-                </div>
-
-                {/* Stats */}
-                <div className="flex items-center gap-8">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-white">
-                      {interactionCounts?.totalSats || 0} <span className="text-lg text-white/70">sats</span>
-                    </div>
-                    <div className="text-sm text-white/60">
-                      {interactionCounts?.zaps || 0} zaps
+                  {/* Sats and Zaps Display */}
+                  <div className="flex items-center gap-4 ml-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-xl font-bold text-white">
+                          {interactionCounts?.totalSats || 0} sats
+                        </span>
+                        <span className="text-sm font-light text-white/60">
+                          {interactionCounts?.zaps || 0} zaps
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  
-                  {(interactionCounts?.likes || 0) > 0 && (
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-white">
-                        {interactionCounts?.likes}
-                      </div>
-                      <div className="text-sm text-white/60">
-                        likes
-                      </div>
-                    </div>
-                  )}
-                  
-                  {commentCount > 0 && (
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-white">
-                        {commentCount}
-                      </div>
-                      <div className="text-sm text-white/60">
-                        comments
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
 
             {/* Tab Navigation */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="bg-white/10 border-white/20">
+              <TabsList className="bg-white/10 border-white/20 hover:bg-white/15 transition-colors">
                 <TabsTrigger 
                   value="zappers" 
                   className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70"
@@ -568,9 +567,9 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                 >
                   Comments
                   {commentCount > 0 && (
-                    <Badge className="ml-2 bg-white/20 text-white text-xs">
+                    <span className="ml-2 px-2 py-0.5 bg-white/20 text-white text-xs rounded-full">
                       {commentCount}
-                    </Badge>
+                    </span>
                   )}
                 </TabsTrigger>
                 <TabsTrigger 
@@ -579,9 +578,9 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                 >
                   Reactions
                   {(interactionCounts?.likes || 0) > 0 && (
-                    <Badge className="ml-2 bg-white/20 text-white text-xs">
+                    <span className="ml-2 px-2 py-0.5 bg-white/20 text-white text-xs rounded-full">
                       {interactionCounts?.likes}
-                    </Badge>
+                    </span>
                   )}
                 </TabsTrigger>
               </TabsList>
@@ -619,18 +618,10 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
               <TabsContent value="reactions" className="mt-6">
                 <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm">
-                  <div className="text-center text-white/70">
-                    <Heart className="w-12 h-12 mx-auto mb-4 text-white/30" />
-                    <p className="text-lg font-medium text-white mb-2">
-                      {interactionCounts?.likes || 0} likes
-                    </p>
-                    <p className="text-sm">
-                      {interactionCounts?.likes === 0 
-                        ? "No reactions yet" 
-                        : "Thank you for the support!"
-                      }
-                    </p>
-                  </div>
+                  <ReactionsSection 
+                    eventId={finalRelease.eventId}
+                    className="text-white"
+                  />
                 </div>
               </TabsContent>
             </Tabs>
