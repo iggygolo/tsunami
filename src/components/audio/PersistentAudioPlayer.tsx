@@ -162,13 +162,19 @@ export function PersistentAudioPlayer() {
               </p>
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                 {state.error && (
-                  <Badge variant="destructive" className="text-xs">
-                    Error
+                  <Badge variant="destructive" className="text-xs" title={state.error}>
+                    Error: {state.error}
                   </Badge>
                 )}
                 {state.isLoading && (
                   <Badge variant="secondary" className="text-xs">
                     Loading...
+                  </Badge>
+                )}
+                {/* Debug info */}
+                {!release.tracks || release.tracks.length === 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    No tracks
                   </Badge>
                 )}
               </div>

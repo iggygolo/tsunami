@@ -97,19 +97,19 @@ export interface PodcastConfig {
 
 export const PODCAST_CONFIG: PodcastConfig = {
   // Artist npub - loaded from environment
-  artistNpub: import.meta.env.VITE_ARTIST_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
+  artistNpub: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NPUB) || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
 
   podcast: {
-    artistName: import.meta.env.VITE_ARTIST_NAME || "Tsunami Artist",
-    description: import.meta.env.VITE_MUSIC_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
-    image: import.meta.env.VITE_ARTIST_IMAGE || "",
-    website: import.meta.env.VITE_ARTIST_WEBSITE || "https://tsunami.example",
-    copyright: import.meta.env.VITE_ARTIST_COPYRIGHT || "© 2025 Tsunami Artist",
-    funding: parseArrayEnv(import.meta.env.VITE_ARTIST_FUNDING, ["/about"]),
+    artistName: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NAME) || "Tsunami Artist",
+    description: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_DESCRIPTION) || "A Nostr-powered artist exploring decentralized music",
+    image: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_IMAGE) || "",
+    website: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_WEBSITE) || "https://tsunami.example",
+    copyright: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_COPYRIGHT) || "© 2025 Tsunami Artist",
+    funding: parseArrayEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_FUNDING), ["/about"]),
     value: {
-      amount: parseInt(import.meta.env.VITE_MUSIC_VALUE_AMOUNT || "1000", 10),
-      currency: import.meta.env.VITE_MUSIC_VALUE_CURRENCY || "sats",
-      recipients: parseJsonEnv(import.meta.env.VITE_MUSIC_VALUE_RECIPIENTS, [
+      amount: parseInt((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_AMOUNT) || "1000", 10),
+      currency: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_CURRENCY) || "sats",
+      recipients: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_RECIPIENTS), [
         {
           name: "Artist",
           type: "node" as const,
@@ -135,33 +135,33 @@ export const PODCAST_CONFIG: PodcastConfig = {
       ])
     },
     // Podcasting 2.0 fields from environment
-    guid: import.meta.env.VITE_MUSIC_GUID || import.meta.env.VITE_ARTIST_NPUB || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
-    medium: (import.meta.env.VITE_MUSIC_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
-    publisher: import.meta.env.VITE_ARTIST_PUBLISHER || import.meta.env.VITE_ARTIST_NAME || "Tsunami Artist",
-    location: import.meta.env.VITE_ARTIST_LOCATION_NAME ? {
+    guid: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_GUID) || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NPUB) || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
+    medium: ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_MEDIUM) as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
+    publisher: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_PUBLISHER) || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NAME) || "Tsunami Artist",
+    location: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_LOCATION_NAME) ? {
       name: import.meta.env.VITE_ARTIST_LOCATION_NAME,
-      geo: import.meta.env.VITE_ARTIST_LOCATION_GEO || undefined,
-      osm: import.meta.env.VITE_ARTIST_LOCATION_OSM || undefined
+      geo: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_LOCATION_GEO) || undefined,
+      osm: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_LOCATION_OSM) || undefined
     } : undefined,
-    person: parseJsonEnv(import.meta.env.VITE_MUSIC_PERSON, [
+    person: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_PERSON), [
       {
-        name: import.meta.env.VITE_ARTIST_NAME || "Tsunami Artist",
+        name: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NAME) || "Tsunami Artist",
         role: "artist",
         group: "cast"
       }
     ]),
     license: {
-      identifier: import.meta.env.VITE_MUSIC_LICENSE_IDENTIFIER || "All Right Reserved",
-      url: import.meta.env.VITE_MUSIC_LICENSE_URL || ""
+      identifier: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_LICENSE_IDENTIFIER) || "All Right Reserved",
+      url: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_LICENSE_URL) || ""
     },
-    txt: parseJsonEnv(import.meta.env.VITE_MUSIC_TXT, undefined),
-    remoteItem: parseJsonEnv(import.meta.env.VITE_MUSIC_REMOTE_ITEM, undefined),
-    block: parseJsonEnv(import.meta.env.VITE_MUSIC_BLOCK, undefined),
-    newFeedUrl: import.meta.env.VITE_MUSIC_NEW_FEED_URL || undefined,
+    txt: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_TXT), undefined),
+    remoteItem: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_REMOTE_ITEM), undefined),
+    block: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_BLOCK), undefined),
+    newFeedUrl: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_NEW_FEED_URL) || undefined,
   },
 
   rss: {
-    ttl: parseInt(import.meta.env.VITE_MUSIC_RSS_TTL || "60", 10)
+    ttl: parseInt((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_RSS_TTL) || "60", 10)
   }
 };
 

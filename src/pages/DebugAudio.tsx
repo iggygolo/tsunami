@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AudioPlayer } from '@/components/podcast/AudioPlayer';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import type { PodcastRelease } from '@/types/podcast';
 
 export default function DebugAudio() {
   const [testUrl, setTestUrl] = useState('https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav');
+  const { playRelease, state: playerState } = useAudioPlayer();
 
   // Create a mock release for testing
   const createTestRelease = (audioUrl: string): PodcastRelease => ({
@@ -30,7 +32,10 @@ export default function DebugAudio() {
 
   const handleTestAudio = () => {
     if (testUrl.trim()) {
-      setCurrentRelease(createTestRelease(testUrl.trim()));
+      const testRelease = createTestRelease(testUrl.trim());
+      setCurrentRelease(testRelease);
+      // Also test the persistent audio player
+      playRelease(testRelease);
     }
   };
 
@@ -92,7 +97,9 @@ export default function DebugAudio() {
                     variant="outline"
                     onClick={() => {
                       setTestUrl(preset.url);
-                      setCurrentRelease(createTestRelease(preset.url));
+                      const testRelease = createTestRelease(preset.url);
+                      setCurrentRelease(testRelease);
+                      playRelease(testRelease);
                     }}
                   >
                     Test

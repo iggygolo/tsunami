@@ -105,7 +105,28 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     const audio = audioRef.current;
     if (!audio) return;
 
+    // Validate release has tracks
+    if (!release.tracks || release.tracks.length === 0) {
+      console.error('Release has no tracks:', release);
+      setState(prev => ({
+        ...prev,
+        error: 'No tracks available in this release'
+      }));
+      return;
+    }
+
     const validTrackIndex = Math.max(0, Math.min(trackIndex, release.tracks.length - 1));
+    const track = release.tracks[validTrackIndex];
+
+    // Validate track has audio URL
+    if (!track.audioUrl) {
+      console.error('Track has no audio URL:', track);
+      setState(prev => ({
+        ...prev,
+        error: 'Track audio URL is missing'
+      }));
+      return;
+    }
 
     // If it's a different release or different track, load it
     if (state.currentRelease?.eventId !== release.eventId || state.currentTrackIndex !== validTrackIndex) {
@@ -117,9 +138,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         error: null
       }));
 
-      console.log('Loading track:', validTrackIndex, 'from release:', release.title);
-
-      audio.src = release.tracks[validTrackIndex].audioUrl;
+      audio.src = track.audioUrl;
       audio.load();
     }
 
