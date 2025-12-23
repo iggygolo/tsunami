@@ -249,6 +249,7 @@ export function generateRSSFeed(
     <title>${escapeXml(release.title)}</title>
     <description>${escapeXml(release.description || `Music release: ${release.title}`)}</description>
     <link>${escapeXml(releaseLink)}</link>
+    <atom:link href="${escapeXml(baseUrl.replace(/\/$/, ''))}/rss.xml" rel="self" type="application/rss+xml" />
     <copyright>${escapeXml(config.podcast.copyright)}</copyright>
     <pubDate>${release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString()}</pubDate>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
@@ -332,6 +333,7 @@ export function generateRSSFeed(
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
+     xmlns:atom="http://www.w3.org/2005/Atom"
      xmlns:podcast="https://podcastindex.org/namespace/1.0"
      xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
      xmlns:content="http://purl.org/rss/1.0/modules/content/">
