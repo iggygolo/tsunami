@@ -96,7 +96,7 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
         tags: [
           ['e', release.eventId],
           ['p', release.artistPubkey],
-          ['k', '30023'] // Kind of the event being liked
+          ['k', release.tracks.length === 1 ? '36787' : '34139'] // Music track or playlist
         ]
       });
 

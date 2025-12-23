@@ -78,7 +78,7 @@ export function useReleaseInteractions({ release, event, commentEvent }: UseRele
         tags: [
           ['e', release.eventId],
           ['p', release.artistPubkey],
-          ['k', '30023']
+          ['k', release.tracks.length === 1 ? '36787' : '34139'] // Music track or playlist
         ]
       });
 

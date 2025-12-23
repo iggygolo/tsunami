@@ -37,7 +37,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
   // Use custom hook for release data
   const { 
-    release: finalRelease, 
+    release, 
     event, 
     commentEvent, 
     totalDuration, 
@@ -45,7 +45,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   } = useReleaseData({ eventId, addressableEvent });
 
   // Use custom hook for track playback (always call hook, but pass null if no release)
-  const trackPlayback = useTrackPlayback(finalRelease || null);
+  const trackPlayback = useTrackPlayback(release || null);
 
   // Use custom hook for interactions
   const {
@@ -55,15 +55,15 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
     handleLike,
     handleShare
   } = useReleaseInteractions({ 
-    release: finalRelease, 
+    release: release, 
     event, 
     commentEvent 
   });
 
   // Update document title when release loads
   useSeoMeta({
-    title: finalRelease 
-      ? `${finalRelease.title} | ${podcastConfig.podcast.artistName}`
+    title: release 
+      ? `${release.title} | ${podcastConfig.podcast.artistName}`
       : `Release | ${podcastConfig.podcast.artistName}`,
   });
 
@@ -108,7 +108,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
     );
   }
 
-  if (!finalRelease) {
+  if (!release) {
     return (
       <Layout>
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
@@ -150,10 +150,10 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
             <div className="flex flex-col lg:flex-row gap-8 mb-8">
               {/* Album Artwork */}
               <div className="relative group">
-                {finalRelease.imageUrl ? (
+                {release.imageUrl ? (
                   <img
-                    src={finalRelease.imageUrl}
-                    alt={finalRelease.title}
+                    src={release.imageUrl}
+                    alt={release.title}
                     className="w-full lg:w-80 h-80 rounded-2xl object-cover shadow-2xl"
                   />
                 ) : (
@@ -189,7 +189,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
               <div className="flex-1 text-white space-y-6">
                 <div>
                   <h1 className="text-4xl lg:text-5xl font-bold mb-2">
-                    {finalRelease.title}
+                    {release.title}
                   </h1>
                   <p className="text-xl text-white/70">
                     {podcastConfig.podcast.artistName}
@@ -198,15 +198,15 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
                 {/* Genre, Duration, and Track Count */}
                 <div className="flex items-center gap-4 flex-wrap">
-                  {finalRelease.genre && (
+                  {release.genre && (
                     <Badge className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-                      {finalRelease.genre}
+                      {release.genre}
                     </Badge>
                   )}
-                  {finalRelease.tracks && finalRelease.tracks.length > 0 && (
+                  {release.tracks && release.tracks.length > 0 && (
                     <span className="text-white/70 flex items-center gap-1">
                       <Music className="w-4 h-4" />
-                      {finalRelease.tracks.length} track{finalRelease.tracks.length !== 1 ? 's' : ''}
+                      {release.tracks.length} track{release.tracks.length !== 1 ? 's' : ''}
                     </span>
                   )}
                   {totalDuration > 0 && (
@@ -217,9 +217,9 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                 </div>
 
                 {/* Description */}
-                {finalRelease.description && (
+                {release.description && (
                   <p className="text-white/80 leading-relaxed max-w-2xl">
-                    {finalRelease.description}
+                    {release.description}
                   </p>
                 )}
 
@@ -287,9 +287,9 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                   className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/70"
                 >
                   Tracks
-                  {finalRelease.tracks && finalRelease.tracks.length > 0 && (
+                  {release.tracks && release.tracks.length > 0 && (
                     <span className="ml-2 px-2 py-0.5 bg-white/20 text-white text-xs rounded-full">
-                      {finalRelease.tracks.length}
+                      {release.tracks.length}
                     </span>
                   )}
                 </TabsTrigger>
@@ -325,14 +325,14 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
               <TabsContent value="tracks" className="mt-6">
                 <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm">
-                  <TrackList release={finalRelease} className="text-white" />
+                  <TrackList release={release} className="text-white" />
                 </div>
               </TabsContent>
 
               <TabsContent value="zappers" className="mt-6">
                 <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm">
                   <ZapLeaderboard 
-                    eventId={finalRelease.eventId}
+                    eventId={release.eventId}
                     showTitle={false}
                     className="text-white"
                     limit={10}
@@ -363,7 +363,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
               <TabsContent value="reactions" className="mt-6">
                 <div className="bg-white/5 rounded-xl p-6 backdrop-blur-sm">
                   <ReactionsSection 
-                    eventId={finalRelease.eventId}
+                    eventId={release.eventId}
                     className="text-white"
                   />
                 </div>

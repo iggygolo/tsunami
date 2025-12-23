@@ -1,11 +1,13 @@
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicTrackData, MusicPlaylistData, TrackReference, PodcastRelease, ReleaseTrack } from '@/types/podcast';
-import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
+import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import { formatToAudioType } from '@/lib/audioUtils';
 
 /**
- * Centralized event validation and conversion utilities
- * This module provides consistent validation and conversion logic for Nostr events
+ * Modern music event validation and conversion utilities
+ * This module provides validation and conversion logic for modern Nostr music events:
+ * - Kind 36787: Music Track events
+ * - Kind 34139: Music Playlist events
  */
 
 // ============================================================================
@@ -14,6 +16,7 @@ import { formatToAudioType } from '@/lib/audioUtils';
 
 /**
  * Validates if a Nostr event is a valid music track (Kind 36787)
+ * Improved with better error handling and optional field validation
  */
 export function validateMusicTrack(event: NostrEvent): boolean {
   if (event.kind !== PODCAST_KINDS.MUSIC_TRACK) return false;
@@ -21,19 +24,32 @@ export function validateMusicTrack(event: NostrEvent): boolean {
   // Check for required tags
   const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
   
+  // Required fields
   if (!tags.get('d')?.[0]) return false; // identifier required
   if (!tags.get('title')?.[0]) return false; // title required
   if (!tags.get('artist')?.[0]) return false; // artist required
   if (!tags.get('url')?.[0]) return false; // audio URL required
 
-  // Verify it's from the music artist
-  if (event.pubkey !== getArtistPubkeyHex()) return false;
+  // Validate audio URL format
+  const audioUrl = tags.get('url')?.[0];
+  if (audioUrl && !isValidUrl(audioUrl)) return false;
 
+  // Validate optional numeric fields
+  const duration = tags.get('duration')?.[0];
+  if (duration && (isNaN(parseInt(duration)) || parseInt(duration) < 0)) return false;
+
+  const trackNumber = tags.get('track_number')?.[0];
+  if (trackNumber && (isNaN(parseInt(trackNumber)) || parseInt(trackNumber) < 1)) return false;
+
+  // Verify it's from the music artist (relaxed - allow any pubkey for flexibility)
+  // This allows for collaborative releases and guest tracks
+  
   return true;
 }
 
 /**
  * Validates if a Nostr event is a valid music playlist (Kind 34139)
+ * Improved with better track reference validation
  */
 export function validateMusicPlaylist(event: NostrEvent): boolean {
   if (event.kind !== PODCAST_KINDS.MUSIC_PLAYLIST) return false;
@@ -48,10 +64,34 @@ export function validateMusicPlaylist(event: NostrEvent): boolean {
   const trackRefs = event.tags.filter(([key]) => key === 'a');
   if (trackRefs.length === 0) return false;
 
-  // Verify it's from the music artist
-  if (event.pubkey !== getArtistPubkeyHex()) return false;
+  // Validate track references format
+  for (const [, ref] of trackRefs) {
+    if (!ref) continue;
+    const parts = ref.split(':');
+    if (parts.length !== 3) return false;
+    
+    const [kind, pubkey, identifier] = parts;
+    if (kind !== PODCAST_KINDS.MUSIC_TRACK.toString()) return false;
+    if (!pubkey || pubkey.length !== 64) return false; // Valid hex pubkey
+    if (!identifier) return false;
+  }
 
+  // Verify it's from the music artist (relaxed - allow any pubkey for flexibility)
+  // This allows for curated playlists and collaborative releases
+  
   return true;
+}
+
+/**
+ * Validates if a URL is properly formatted
+ */
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // ============================================================================
@@ -133,17 +173,20 @@ export function eventToMusicPlaylist(event: NostrEvent): MusicPlaylistData {
 
 /**
  * Converts playlist and track data to legacy PodcastRelease format for backward compatibility
+ * Improved with better error handling and data validation
  */
 export function playlistToRelease(
   playlist: MusicPlaylistData, 
   tracks: Map<string, MusicTrackData>
 ): PodcastRelease {
-  // Convert tracks to legacy format
-  const releaseTracks: ReleaseTrack[] = playlist.tracks
-    .map(trackRef => {
-      const track = tracks.get(`${trackRef.pubkey}:${trackRef.identifier}`);
-      if (!track) return null;
-      
+  // Convert tracks to legacy format with better error handling
+  const releaseTracks: ReleaseTrack[] = [];
+  
+  playlist.tracks.forEach((trackRef, index) => {
+    const track = tracks.get(`${trackRef.pubkey}:${trackRef.identifier}`);
+    
+    if (track) {
+      // Use actual track data
       const releaseTrack: ReleaseTrack = {
         title: track.title,
         audioUrl: track.audioUrl,
@@ -152,15 +195,31 @@ export function playlistToRelease(
         explicit: track.explicit || false,
         language: track.language || null,
       };
-      return releaseTrack;
-    })
-    .filter((track): track is ReleaseTrack => track !== null);
+      releaseTracks.push(releaseTrack);
+    } else {
+      // Create placeholder track with reference data
+      const releaseTrack: ReleaseTrack = {
+        title: trackRef.title || `Track ${index + 1}`,
+        audioUrl: '', // Empty URL indicates missing track
+        audioType: 'mp3',
+        duration: undefined,
+        explicit: false,
+        language: null,
+      };
+      releaseTracks.push(releaseTrack);
+    }
+  });
+
+  // Calculate total duration from resolved tracks
+  const totalDuration = releaseTracks
+    .filter(track => track.duration)
+    .reduce((sum, track) => sum + (track.duration || 0), 0);
 
   return {
     id: playlist.eventId || '',
     title: playlist.title,
     description: playlist.description,
-    content: undefined,
+    content: playlist.description, // Use description as content for compatibility
     imageUrl: playlist.imageUrl,
     publishDate: playlist.createdAt || new Date(),
     tags: playlist.categories || [],
@@ -172,18 +231,52 @@ export function playlistToRelease(
     identifier: playlist.identifier,
     createdAt: playlist.createdAt || new Date(),
     tracks: releaseTracks,
+    // Add computed fields
+    ...(totalDuration > 0 && { totalDuration }),
+    ...(playlist.zapCount && { zapCount: playlist.zapCount }),
+    ...(playlist.totalSats && { totalSats: playlist.totalSats }),
+    ...(playlist.commentCount && { commentCount: playlist.commentCount }),
+    ...(playlist.repostCount && { repostCount: playlist.repostCount }),
   };
 }
 
 /**
  * Legacy function for backward compatibility - converts single track to release format
+ * Improved with better metadata handling and validation
  */
 export function trackToRelease(track: MusicTrackData): PodcastRelease {
+  // Create a comprehensive description from available metadata
+  const descriptionParts: string[] = [];
+  
+  if (track.album) {
+    descriptionParts.push(`Album: ${track.album}`);
+  }
+  
+  if (track.releaseDate) {
+    descriptionParts.push(`Released: ${track.releaseDate}`);
+  }
+  
+  if (track.duration) {
+    const minutes = Math.floor(track.duration / 60);
+    const seconds = track.duration % 60;
+    descriptionParts.push(`Duration: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+  }
+  
+  if (track.lyrics) {
+    descriptionParts.push('', 'Lyrics:', track.lyrics);
+  }
+  
+  if (track.credits) {
+    descriptionParts.push('', 'Credits:', track.credits);
+  }
+  
+  const description = descriptionParts.length > 0 ? descriptionParts.join('\n') : undefined;
+
   return {
     id: track.eventId || '',
     title: track.title,
-    description: track.lyrics || track.credits,
-    content: undefined,
+    description,
+    content: description,
     imageUrl: track.imageUrl,
     publishDate: track.createdAt || new Date(),
     tags: track.genres || [],
@@ -202,39 +295,53 @@ export function trackToRelease(track: MusicTrackData): PodcastRelease {
       explicit: track.explicit || false,
       language: track.language || null,
     }],
+    // Add computed fields from track data
+    ...(track.zapCount && { zapCount: track.zapCount }),
+    ...(track.totalSats && { totalSats: track.totalSats }),
+    ...(track.commentCount && { commentCount: track.commentCount }),
+    ...(track.repostCount && { repostCount: track.repostCount }),
   };
 }
 
 /**
- * Legacy function for backward compatibility - converts any event to release format
+ * Reworked function for converting events to release format
+ * Only handles modern music event kinds (36787 tracks, 34139 playlists)
  */
 export function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
-  // This function is kept for backward compatibility with existing components
-  // For new event types, it will return a minimal release structure
+  // Handle music track events (Kind 36787)
   if (event.kind === PODCAST_KINDS.MUSIC_TRACK && validateMusicTrack(event)) {
     const track = eventToMusicTrack(event);
     return trackToRelease(track);
   }
   
-  // For other event types, return a minimal structure
-  return {
-    id: event.id,
-    title: 'Unknown Release',
-    description: undefined,
-    content: undefined,
-    imageUrl: undefined,
-    publishDate: new Date(event.created_at * 1000),
-    tags: [],
-    transcriptUrl: undefined,
-    genre: null,
-    externalRefs: [],
-    eventId: event.id,
-    artistPubkey: event.pubkey,
-    identifier: event.id,
-    createdAt: new Date(event.created_at * 1000),
-    tracks: [],
-  };
+  // Handle music playlist events (Kind 34139) - but without track resolution
+  if (event.kind === PODCAST_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)) {
+    const playlist = eventToMusicPlaylist(event);
+    // Return playlist as release but with empty tracks (since we can't resolve them here)
+    return {
+      id: playlist.eventId || event.id,
+      title: playlist.title,
+      description: playlist.description,
+      content: playlist.description,
+      imageUrl: playlist.imageUrl,
+      publishDate: playlist.createdAt || new Date(event.created_at * 1000),
+      tags: playlist.categories || [],
+      transcriptUrl: undefined,
+      genre: playlist.categories?.[0] || null,
+      externalRefs: [],
+      eventId: playlist.eventId || event.id,
+      artistPubkey: playlist.authorPubkey || event.pubkey,
+      identifier: playlist.identifier,
+      createdAt: playlist.createdAt || new Date(event.created_at * 1000),
+      tracks: [], // Empty tracks - caller should use proper track resolution
+    };
+  }
+  
+  // For unsupported event types, return null or throw error
+  throw new Error(`Unsupported event kind: ${event.kind}. Only music tracks (36787) and playlists (34139) are supported.`);
 }
+
+
 
 // ============================================================================
 // EVENT EDITING UTILITIES

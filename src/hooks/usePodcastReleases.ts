@@ -9,6 +9,7 @@ import {
   eventToMusicTrack,
   eventToMusicPlaylist,
   playlistToRelease,
+  trackToRelease,
   eventToPodcastRelease,
   deduplicateEventsByIdentifier,
   getEventIdentifier
@@ -226,6 +227,7 @@ export function useReleases(options: ReleaseSearchOptions = {}) {
 
 /**
  * Hook to fetch a single podcast release by playlist ID
+ * Improved to handle all event types properly with the reworked conversion functions
  */
 export function usePodcastRelease(playlistId: string) {
   const { nostr } = useNostr();
@@ -235,42 +237,84 @@ export function usePodcastRelease(playlistId: string) {
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
 
-      // First try to fetch as a playlist event
-      const playlistEvents = await nostr.query([{
+      // First try to fetch the event
+      const events = await nostr.query([{
         ids: [playlistId]
       }], { signal });
 
-      const playlistEvent = playlistEvents[0];
-      if (!playlistEvent) return null;
+      const event = events[0];
+      if (!event) return null;
 
-      // If it's a playlist, resolve its tracks
-      if (playlistEvent.kind === PODCAST_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(playlistEvent)) {
-        const playlist = eventToMusicPlaylist(playlistEvent);
+      // Handle music playlist events (Kind 34139)
+      if (event.kind === PODCAST_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)) {
+        const playlist = eventToMusicPlaylist(event);
         
+        // Extract track references and fetch tracks
+        const trackReferences = new Set<string>();
+        const referencedPubkeys = new Set<string>();
+        
+        playlist.tracks.forEach(trackRef => {
+          trackReferences.add(`${trackRef.pubkey}:${trackRef.identifier}`);
+          referencedPubkeys.add(trackRef.pubkey);
+        });
+
         // Fetch all referenced tracks
-        const trackEvents = await nostr.query([{
-          kinds: [PODCAST_KINDS.MUSIC_TRACK],
-          authors: [playlistEvent.pubkey],
-          limit: 100
-        }], { signal });
+        let trackEvents: any[] = [];
+        
+        if (referencedPubkeys.size > 0) {
+          const identifiersByPubkey = new Map<string, string[]>();
+          
+          for (const ref of trackReferences) {
+            const [pubkey, identifier] = ref.split(':');
+            if (!identifiersByPubkey.has(pubkey)) {
+              identifiersByPubkey.set(pubkey, []);
+            }
+            identifiersByPubkey.get(pubkey)!.push(identifier);
+          }
+          
+          const trackQueries = Array.from(identifiersByPubkey.entries()).map(([pubkey, identifiers]) => ({
+            kinds: [PODCAST_KINDS.MUSIC_TRACK],
+            authors: [pubkey],
+            '#d': identifiers,
+            limit: identifiers.length * 2
+          }));
+          
+          const allTrackEvents = await Promise.all(
+            trackQueries.map(query => nostr.query([query], { signal }))
+          );
+          
+          trackEvents = allTrackEvents.flat();
+        }
 
         const validTracks = trackEvents.filter(validateMusicTrack);
         const tracksMap = new Map<string, MusicTrackData>();
         
         validTracks.forEach(trackEvent => {
           const track = eventToMusicTrack(trackEvent);
-          tracksMap.set(`${track.artistPubkey}:${track.identifier}`, track);
+          const key = `${track.artistPubkey}:${track.identifier}`;
+          
+          const existing = tracksMap.get(key);
+          if (!existing || trackEvent.created_at > (existing as any).created_at) {
+            tracksMap.set(key, track);
+          }
         });
 
         return playlistToRelease(playlist, tracksMap);
       }
 
-      // If it's a single track, convert to release format
-      if (playlistEvent.kind === PODCAST_KINDS.MUSIC_TRACK && validateMusicTrack(playlistEvent)) {
-        return eventToPodcastRelease(playlistEvent);
+      // Handle music track events (Kind 36787)
+      if (event.kind === PODCAST_KINDS.MUSIC_TRACK && validateMusicTrack(event)) {
+        const track = eventToMusicTrack(event);
+        return trackToRelease(track);
       }
 
-      return null;
+      // Handle any other supported event type
+      try {
+        return eventToPodcastRelease(event);
+      } catch (error) {
+        console.error('usePodcastRelease - Event conversion failed:', error);
+        return null;
+      }
     },
     enabled: !!playlistId,
     staleTime: 300000, // 5 minutes
@@ -444,4 +488,4 @@ export function usePodcastStats() {
   });
 }
 // Re-export centralized conversion functions for backward compatibility
-export { playlistToRelease, eventToPodcastRelease } from '@/lib/eventConversions';
+export { playlistToRelease, trackToRelease, eventToPodcastRelease } from '@/lib/eventConversions';

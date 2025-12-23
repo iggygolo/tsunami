@@ -321,8 +321,8 @@ export interface RSSItem {
 /**
  * Utility type for Nostr event validation
  */
-export interface ValidatedPodcastEvent extends NostrEvent {
-  kind: 30023; // NIP-23 long-form content for podcast releases
+export interface ValidatedMusicEvent extends NostrEvent {
+  kind: 36787 | 34139; // Music Track or Music Playlist events
   tags: Array<[string, ...string[]]>;
 }
 
