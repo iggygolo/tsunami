@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Play, Pause, Clock, Music } from 'lucide-react';
+import { Play, Pause, Clock, Music, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ZapDialog } from '@/components/ZapDialog';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useTrackPlayback } from '@/hooks/useTrackPlayback';
+import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import { cn } from '@/lib/utils';
 import type { PodcastRelease } from '@/types/podcast';
+import type { NostrEvent } from '@nostrify/nostrify';
 
 interface TrackListProps {
   release: PodcastRelease;
@@ -20,6 +23,36 @@ export function TrackList({ release, className }: TrackListProps) {
     isTrackCurrent 
   } = useTrackPlayback(release);
   const [hoveredTrack, setHoveredTrack] = useState<number | null>(null);
+
+  // Create NostrEvent for individual track zapping
+  const createTrackEvent = (trackIndex: number): NostrEvent => {
+    const track = release.tracks[trackIndex];
+    return {
+      id: `${release.eventId}-track-${trackIndex}`, // Unique ID for each track
+      pubkey: release.artistPubkey,
+      created_at: Math.floor(release.createdAt.getTime() / 1000),
+      kind: 36787, // Music track kind (individual track)
+      tags: [
+        ['d', `${release.identifier || release.eventId}-track-${trackIndex}`],
+        ['title', track.title],
+        ['r', track.audioUrl || ''],
+        ['duration', track.duration.toString()],
+        ...(track.language ? [['language', track.language]] : []),
+        ...(track.explicit ? [['content-warning', 'explicit']] : []),
+        // Reference to parent release
+        ['a', `${PODCAST_KINDS.MUSIC_PLAYLIST}:${release.artistPubkey}:${release.identifier || release.eventId}`]
+      ],
+      content: JSON.stringify({
+        title: track.title,
+        audioUrl: track.audioUrl,
+        audioType: track.audioType,
+        duration: track.duration,
+        explicit: track.explicit,
+        language: track.language
+      }),
+      sig: ''
+    };
+  };
 
   if (!release.tracks || release.tracks.length === 0) {
     return (
@@ -113,12 +146,6 @@ export function TrackList({ release, className }: TrackListProps) {
               </div>
             </div>
 
-            {/* Duration */}
-            <div className="flex items-center gap-2 text-white/60 text-sm">
-              <Clock className="w-3 h-3" />
-              <span>{formatDuration(track.duration)}</span>
-            </div>
-
             {/* Current playing indicator */}
             {isCurrentTrack && (
               <div className="flex items-center gap-1">
@@ -136,6 +163,30 @@ export function TrackList({ release, className }: TrackListProps) {
                 )} />
               </div>
             )}
+
+            {/* Duration and Actions */}
+            <div className="flex items-center gap-3 text-white/60 text-sm">
+              <Clock className="w-3 h-3" />
+              <span>{formatDuration(track.duration)}</span>
+              
+              {/* Zap Button for Track - Always visible when track has audio */}
+              {hasAudio && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <ZapDialog target={createTrackEvent(index)}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className={cn(
+                        "w-8 h-8 rounded-full hover:bg-white/10 text-white/60 hover:text-yellow-400",
+                      )}
+                      title={`Zap "${track.title}"`}
+                    >
+                      <Zap className="w-3 h-3" />
+                    </Button>
+                  </ZapDialog>
+                </div>
+              )}
+            </div>
           </div>
         );
       })}

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useSeoMeta } from '@unhead/react';
-import { ArrowLeft, Play, Pause, Heart, Share, MessageCircle, Music } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Heart, Share, MessageCircle, Music, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ZapLeaderboard } from './ZapLeaderboard';
+import { ZapDialog } from '@/components/ZapDialog';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { ReactionsSection } from './ReactionsSection';
 import { TrackList } from './TrackList';
@@ -16,7 +17,9 @@ import { useReleaseData } from '@/hooks/useReleaseData';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useTrackPlayback } from '@/hooks/useTrackPlayback';
+import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import { cn } from '@/lib/utils';
+import type { NostrEvent } from '@nostrify/nostrify';
 
 interface AddressableEventParams {
   pubkey: string;
@@ -59,6 +62,23 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
     event, 
     commentEvent 
   });
+
+  // Create NostrEvent for zap functionality
+  const releaseEvent: NostrEvent | null = release ? {
+    id: release.eventId,
+    pubkey: release.artistPubkey,
+    created_at: Math.floor(release.createdAt.getTime() / 1000),
+    kind: PODCAST_KINDS.MUSIC_PLAYLIST,
+    tags: [
+      ['d', release.identifier || release.eventId],
+      ['title', release.title],
+      ...(release.description ? [['description', release.description]] : []),
+      ...(release.imageUrl ? [['image', release.imageUrl]] : []),
+      ...release.tags.map(tag => ['t', tag])
+    ],
+    content: JSON.stringify(release.tracks),
+    sig: ''
+  } : null;
 
   // Update document title when release loads
   useSeoMeta({
@@ -251,6 +271,20 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                   >
                     <Heart className={cn("w-5 h-5", hasUserLiked && "fill-current")} />
                   </Button>
+
+                  {/* Zap Button */}
+                  {releaseEvent && (
+                    <ZapDialog target={releaseEvent}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 hover:text-yellow-400"
+                        title="Zap this release"
+                      >
+                        <Zap className="w-5 h-5" />
+                      </Button>
+                    </ZapDialog>
+                  )}
 
                   {/* Share Button */}
                   <Button
