@@ -78,8 +78,8 @@ const About = () => {
 
                   {artist?.event && user && (artist.metadata?.lud16 || artist.metadata?.lud06) ? (
                     <ZapDialog target={artist.event}>
-                      <Button className="bg-yellow-500 hover:bg-yellow-600 text-yellow-950">
-                        <Zap className="w-4 h-4 mr-2" />
+                      <Button variant="outline" className="w-full border-yellow-500/50 hover:bg-yellow-500/10">
+                        <Zap className="w-4 h-4 mr-2 text-yellow-500" />
                         Zap the Artist
                       </Button>
                     </ZapDialog>
@@ -168,11 +168,11 @@ const About = () => {
                 </p>
                 {artist?.event && user && (artist.metadata?.lud16 || artist.metadata?.lud06) ? (
                   <ZapDialog target={artist.event}>
-                    <Button variant="outline" className="w-full border-yellow-500/50 hover:bg-yellow-500/10">
-                      <Zap className="w-4 h-4 mr-2 text-yellow-500" />
-                      Zap the Show
-                    </Button>
-                  </ZapDialog>
+                      <Button className="bg-yellow-500 hover:bg-yellow-600 text-yellow-950">
+                        <Zap className="w-4 h-4 mr-2" />
+                        Zap the Artist
+                      </Button>
+                    </ZapDialog>
                 ) : (
                   <Button variant="outline" className="w-full" disabled>
                     <Zap className="w-4 h-4 mr-2" />

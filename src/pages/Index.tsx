@@ -300,7 +300,7 @@ const Index = () => {
                     <ZapDialog target={artist.event}>
                       <Button className="bg-yellow-500 hover:bg-yellow-600 text-yellow-950 shrink-0">
                         <Zap className="w-4 h-4 mr-2" />
-                        Zap the Show
+                        Zap the Artist
                       </Button>
                     </ZapDialog>
                   ) : (
