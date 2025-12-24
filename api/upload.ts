@@ -165,18 +165,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Our custom data should be in the clientPayload
       try {
         const clientPayload = (body as any).clientPayload;
+        console.log('Raw clientPayload:', clientPayload);
+        console.log('clientPayload type:', typeof clientPayload);
+        
         if (typeof clientPayload === 'string') {
-          payload = JSON.parse(clientPayload);
+          console.log('Parsing clientPayload as JSON string');
+          // Try to clean up the string in case there are any encoding issues
+          const cleanPayload = clientPayload.trim();
+          payload = JSON.parse(cleanPayload);
         } else if (typeof clientPayload === 'object' && clientPayload !== null) {
+          console.log('Using clientPayload as object');
           payload = clientPayload;
         } else {
+          console.error('Invalid clientPayload format - not string or object:', clientPayload);
           throw new Error('Invalid clientPayload format');
         }
+        
+        console.log('Parsed payload:', payload);
       } catch (parseError) {
         console.error('Failed to parse clientPayload:', parseError);
+        console.error('clientPayload that failed:', (body as any).clientPayload);
         return res.status(400).json({
-          error: 'Invalid client payload format',
-          code: 'INVALID_PAYLOAD'
+          error: `Invalid client payload format: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
+          code: 'INVALID_PAYLOAD',
+          details: {
+            clientPayload: (body as any).clientPayload,
+            parseError: parseError instanceof Error ? parseError.message : String(parseError)
+          }
         });
       }
     } else {
@@ -189,11 +204,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     const { filename, contentType, size, userPubkey, signature, timestamp } = payload;
     
+    console.log('Extracted fields:', {
+      filename,
+      contentType,
+      size,
+      userPubkey,
+      signature,
+      timestamp
+    });
+    
     // Validate required fields (signature is optional for Vercel uploads)
     if (!filename || !contentType || !size || !userPubkey || !timestamp) {
+      const missingFields = [];
+      if (!filename) missingFields.push('filename');
+      if (!contentType) missingFields.push('contentType');
+      if (!size) missingFields.push('size');
+      if (!userPubkey) missingFields.push('userPubkey');
+      if (!timestamp) missingFields.push('timestamp');
+      
+      console.error('Missing required fields:', missingFields);
       return res.status(400).json({
-        error: 'Missing required fields: filename, contentType, size, userPubkey, timestamp',
-        code: 'MISSING_FIELDS'
+        error: `Missing required fields: ${missingFields.join(', ')}`,
+        code: 'MISSING_FIELDS',
+        details: {
+          received: { filename, contentType, size, userPubkey, timestamp },
+          missing: missingFields
+        }
       });
     }
     
