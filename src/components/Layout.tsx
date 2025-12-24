@@ -15,7 +15,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Main Content Area - Always uses standardized container */}
       <main className="flex-1">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             {children}
           </div>
         </div>

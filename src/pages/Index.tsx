@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/useToast';
 import { Layout } from '@/components/Layout';
+import { BlurredBackground } from '@/components/BlurredBackground';
 import { ReleaseList } from '@/components/music/ReleaseList';
 import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
 import { RecentActivity } from '@/components/music/RecentActivity';
@@ -113,11 +114,11 @@ const Index = () => {
           </div>
         </div>
       ) : latestRelease ? (
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+        <div className="relative -mx-4 px-4 py-12">
+          <BlurredBackground image={latestRelease.imageUrl} />
           <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-          <div className="container mx-auto px-4 py-12 relative">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex flex-col lg:flex-row items-center gap-8">
+          <div className="relative">
+            <div className="flex flex-col lg:flex-row items-center gap-8">
                 {/* Album Art */}
                 {latestRelease.imageUrl && (
                   <div className="relative group flex-shrink-0">
@@ -150,11 +151,11 @@ const Index = () => {
                       <Sparkles className="w-3 h-3 mr-1" />
                       Latest Release
                     </Badge>
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
                       {latestRelease.title}
                     </h1>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                      <Link to="/about" className="inline-flex items-center gap-2 text-lg text-muted-foreground hover:text-foreground transition-colors">
+                      <Link to="/about" className="inline-flex items-center gap-2 text-lg text-white/90 hover:text-white transition-colors drop-shadow-md">
                         {podcastConfig.music.image && (
                           <img
                             src={podcastConfig.music.image}
@@ -166,7 +167,7 @@ const Index = () => {
                       {latestRelease.tags && latestRelease.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 justify-center lg:justify-start">
                           {latestRelease.tags.slice(0, 3).map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs bg-background/50">
+                            <Badge key={tag} variant="outline" className="text-xs bg-white/10 border-white/20 text-white/90">
                               {tag}
                             </Badge>
                           ))}
@@ -176,7 +177,7 @@ const Index = () => {
                   </div>
 
                   {latestRelease.description && (
-                    <p className="text-muted-foreground leading-relaxed max-w-xl line-clamp-2">
+                    <p className="text-white/90 leading-relaxed max-w-xl line-clamp-2 drop-shadow-md">
                       {latestRelease.description}
                     </p>
                   )}
@@ -186,7 +187,7 @@ const Index = () => {
                       onClick={handlePlayLatestRelease} 
                       disabled={!isLatestReleasePlayable || trackPlayback?.isReleaseLoading}
                       size="lg" 
-                      className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white border-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white border-0 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                     >
                       {trackPlayback?.isReleasePlaying ? (
                         <>
@@ -201,7 +202,7 @@ const Index = () => {
                       )}
                     </Button>
 
-                    <Button variant="outline" size="lg" asChild>
+                    <Button variant="outline" size="lg" asChild className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 backdrop-blur-sm">
                       <Link to="/about">
                         About Artist
                         <ChevronRight className="w-4 h-4 ml-1" />
@@ -209,7 +210,7 @@ const Index = () => {
                     </Button>
 
                     {user && latestRelease.totalSats && latestRelease.totalSats > 0 && (
-                      <Badge variant="outline" className="h-11 px-4 text-sm bg-yellow-500/10 border-yellow-500/30 text-yellow-400">
+                      <Badge variant="outline" className="h-11 px-4 text-sm bg-yellow-500/20 border-yellow-500/30 text-yellow-300 backdrop-blur-sm">
                         <Zap className="w-4 h-4 mr-1" />
                         {latestRelease.totalSats.toLocaleString()} sats
                       </Badge>
@@ -219,7 +220,6 @@ const Index = () => {
               </div>
             </div>
           </div>
-        </div>
       ) : (
         /* No Latest Release - Show Welcome Message */
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">

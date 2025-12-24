@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Layout } from '@/components/Layout';
+import { BlurredBackground } from '@/components/BlurredBackground';
 import { ZapDialog } from '@/components/ZapDialog';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -25,7 +26,8 @@ const About = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10 -mx-4 px-4 py-12">
+      <div className="relative -mx-4 px-4 py-12">
+        <BlurredBackground image={podcastConfig.music.image} />
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
         <div className="relative">
           <div className="flex flex-col md:flex-row items-center gap-8">
@@ -48,19 +50,19 @@ const About = () => {
                   <Sparkles className="w-3 h-3 mr-1" />
                   Value4Value Music
                 </Badge>
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
                   {podcastConfig.music.artistName}
                 </h1>
               </div>
 
-              <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
+              <p className="text-lg text-white/90 leading-relaxed max-w-xl drop-shadow-md">
                 {podcastConfig.music.description}
               </p>
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-3 justify-center md:justify-start pt-2">
                 {artist?.metadata?.website && (
-                  <Button variant="outline" asChild>
+                  <Button variant="outline" asChild className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 backdrop-blur-sm">
                     <a href={artist.metadata.website} target="_blank" rel="noopener noreferrer">
                       <Globe className="w-4 h-4 mr-2" />
                       Website
@@ -68,7 +70,7 @@ const About = () => {
                   </Button>
                 )}
 
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 backdrop-blur-sm">
                   <a href={`https://njump.me/${podcastConfig.artistNpub}`} target="_blank" rel="noopener noreferrer">
                     <Hash className="w-4 h-4 mr-2" />
                     Nostr
@@ -77,13 +79,13 @@ const About = () => {
 
                 {artist?.event && user && (artist.metadata?.lud16 || artist.metadata?.lud06) ? (
                   <ZapDialog target={artist.event}>
-                    <Button variant="outline" className="w-full border-yellow-500/50 hover:bg-yellow-500/10">
-                      <Zap className="w-4 h-4 mr-2 text-yellow-500" />
+                    <Button variant="outline" className="bg-yellow-500/20 border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/30 hover:border-yellow-500/40 backdrop-blur-sm">
+                      <Zap className="w-4 h-4 mr-2" />
                       Zap the Artist
                     </Button>
                   </ZapDialog>
                 ) : user ? null : (
-                  <Button variant="outline" disabled>
+                  <Button variant="outline" disabled className="bg-white/10 border-white/20 text-white/50">
                     <Zap className="w-4 h-4 mr-2" />
                     Login to Zap
                   </Button>
@@ -179,6 +181,7 @@ const About = () => {
                 )}
               </CardContent>
             </Card>
+          </div>
         </div>
       </div>
     </Layout>

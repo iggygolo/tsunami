@@ -7,6 +7,7 @@ import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Layout } from '@/components/Layout';
+import { BlurredBackground } from '@/components/BlurredBackground';
 import { EditProfileForm } from '@/components/EditProfileForm';
 import { ZapDialog } from '@/components/ZapDialog';
 import { RepostDialog } from '@/components/RepostDialog';
@@ -184,19 +185,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   return (
     <Layout>
       <div className="relative -mx-4 px-4">
-        {/* Blurred Background Banner - Only covers content area */}
-        {(metadata?.banner || metadata?.picture) && (
-          <>
-            <div 
-              className="absolute top-0 left-0 right-0 bottom-0 bg-cover bg-center blur-3xl opacity-70 pointer-events-none"
-              style={{
-                backgroundImage: `url(${metadata?.banner || metadata?.picture})`
-              }}
-            >
-              <div className="absolute top-0 left-0 right-0 bottom-0 bg-black/60 pointer-events-none" />
-            </div>
-          </>
-        )}
+        <BlurredBackground image={metadata?.banner || metadata?.picture} />
         
         <div className="relative py-8">
           {/* Profile Header */}
