@@ -343,7 +343,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => setReleaseToDelete(release)}
-                                className="text-destructive focus:text-destructive"
+                                className="text-destructive focus:text-destructive focus:bg-destructive/10"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Delete release

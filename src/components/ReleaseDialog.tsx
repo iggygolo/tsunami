@@ -566,7 +566,7 @@ export function ReleaseDialog({
           </div>
 
           {fields.map((field, index) => (
-            <div key={field.id} className="border rounded-lg p-4 space-y-4 bg-gray-50/30">
+            <div key={field.id} className="border rounded-lg p-4 space-y-4 transition-colors duration-200">
               {/* Track Title and Remove */}
               <div className="flex items-center gap-3">
                 <div className="flex-1">
@@ -578,7 +578,7 @@ export function ReleaseDialog({
                         <FormControl>
                           <Input 
                             placeholder={`Track ${index + 1} title...`} 
-                            className="h-9 text-sm bg-white"
+                            className="h-10 text-sm"
                             {...field} 
                           />
                         </FormControl>
@@ -592,7 +592,7 @@ export function ReleaseDialog({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="text-destructive hover:text-destructive h-9 w-9 p-0"
+                    className="text-destructive hover:text-destructive h-10 w-10 p-0"
                     onClick={() => remove(index)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -612,7 +612,7 @@ export function ReleaseDialog({
                     id={`audio-upload-${index}`}
                   />
                   <label htmlFor={`audio-upload-${index}`}>
-                    <div className="border-2 border-dashed rounded-lg p-3 text-center cursor-pointer hover:border-gray-400 transition-colors h-16 flex items-center justify-center bg-white">
+                    <div className="border-2 border-dashed rounded-lg p-3 text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50/30 transition-all duration-200 h-16 flex items-center justify-center">
                       {trackAudioFiles[index] ? (
                         <span className="text-green-600 font-medium text-sm">
                           ✓ {trackAudioFiles[index].name}
@@ -638,7 +638,7 @@ export function ReleaseDialog({
                           <Input
                             placeholder="Paste audio URL..."
                             disabled={!!trackAudioFiles[index]}
-                            className="h-16 text-sm bg-white"
+                            className="h-16 text-sm"
                             {...field}
                           />
                         </FormControl>
@@ -651,13 +651,13 @@ export function ReleaseDialog({
 
               {/* Current audio info for edit mode */}
               {isEditMode && !trackAudioFiles[index] && release?.tracks?.[index]?.audioUrl && (
-                <div className="text-xs text-muted-foreground bg-blue-50 p-2 rounded border-l-2 border-blue-200">
+                <div className="text-xs text-foreground p-2 rounded">
                   <strong>Current:</strong>
                   <span className="break-all ml-1">{release.tracks[index].audioUrl}</span>
                 </div>
               )}
 
-              {/* Track Metadata */}
+              {/* Track Metadata - Fixed sizing */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Duration (seconds)</Label>
@@ -671,7 +671,7 @@ export function ReleaseDialog({
                             type="number"
                             placeholder="180"
                             disabled={detectingDurations[index]}
-                            className="h-8 text-sm bg-white"
+                            className="h-10 text-sm"
                             {...field}
                             onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                           />
@@ -690,10 +690,12 @@ export function ReleaseDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <LanguageSelector
-                            selectedLanguage={field.value}
-                            onLanguageChange={field.onChange}
-                          />
+                          <div className="h-10">
+                            <LanguageSelector
+                              selectedLanguage={field.value}
+                              onLanguageChange={field.onChange}
+                            />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -707,12 +709,11 @@ export function ReleaseDialog({
                     control={form.control}
                     name={`tracks.${index}.explicit`}
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-center rounded-lg border h-8 bg-white">
+                      <FormItem className="flex items-center justify-center rounded-lg border h-10 hover:bg-gray-50/30 transition-colors duration-200">
                         <FormControl>
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className="scale-75"
                           />
                         </FormControl>
                       </FormItem>
