@@ -115,7 +115,7 @@ export function TrackList({ release, className }: TrackListProps) {
 
             {/* Track Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-1">
                 <h4 className={cn(
                   "font-medium truncate",
                   isCurrentTrack ? "text-white" : "text-white/90",
@@ -132,16 +132,6 @@ export function TrackList({ release, className }: TrackListProps) {
                   <Badge variant="outline" className="text-xs px-1.5 py-0.5 h-5 border-white/30 text-white/50">
                     No Audio
                   </Badge>
-                )}
-              </div>
-              
-              {/* Track metadata */}
-              <div className="flex items-center gap-2 text-xs text-white/60">
-                {track.language && track.language !== 'en' && (
-                  <span className="uppercase">{track.language}</span>
-                )}
-                {track.audioType && (
-                  <span className="uppercase">{track.audioType.replace('audio/', '')}</span>
                 )}
               </div>
             </div>
