@@ -153,134 +153,90 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    console.log('Full request body:', JSON.stringify(req.body, null, 2));
+    console.log('Request headers:', JSON.stringify(req.headers, null, 2));
+    
     const body = req.body as HandleUploadBody;
-    
-    // For Vercel Blob client uploads, the payload comes in a different format
-    // Let's extract it from the request body directly
-    let payload: UploadRequest;
-    
-    // Check if this is a client upload request with our custom data
-    if (typeof body === 'object' && 'type' in body && body.type === 'blob.generate-client-token') {
-      // This is the initial token generation request
-      // Our custom data should be in the clientPayload
-      try {
-        const clientPayload = (body as any).clientPayload;
-        console.log('Raw clientPayload:', clientPayload);
-        console.log('clientPayload type:', typeof clientPayload);
-        
-        if (typeof clientPayload === 'string') {
-          console.log('Parsing clientPayload as JSON string');
-          // Try to clean up the string in case there are any encoding issues
-          const cleanPayload = clientPayload.trim();
-          payload = JSON.parse(cleanPayload);
-        } else if (typeof clientPayload === 'object' && clientPayload !== null) {
-          console.log('Using clientPayload as object');
-          payload = clientPayload;
-        } else {
-          console.error('Invalid clientPayload format - not string or object:', clientPayload);
-          throw new Error('Invalid clientPayload format');
-        }
-        
-        console.log('Parsed payload:', payload);
-      } catch (parseError) {
-        console.error('Failed to parse clientPayload:', parseError);
-        console.error('clientPayload that failed:', (body as any).clientPayload);
-        return res.status(400).json({
-          error: `Invalid client payload format: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
-          code: 'INVALID_PAYLOAD',
-          details: {
-            clientPayload: (body as any).clientPayload,
-            parseError: parseError instanceof Error ? parseError.message : String(parseError)
-          }
-        });
-      }
-    } else {
-      console.error('Invalid request body:', body);
-      return res.status(400).json({
-        error: 'Invalid request format - expected blob.generate-client-token',
-        code: 'INVALID_REQUEST'
-      });
-    }
-    
-    const { filename, contentType, size, userPubkey, signature, timestamp } = payload;
-    
-    console.log('Extracted fields:', {
-      filename,
-      contentType,
-      size,
-      userPubkey,
-      signature,
-      timestamp
-    });
-    
-    // Validate required fields (signature is optional for Vercel uploads)
-    if (!filename || !contentType || !size || !userPubkey || !timestamp) {
-      const missingFields = [];
-      if (!filename) missingFields.push('filename');
-      if (!contentType) missingFields.push('contentType');
-      if (!size) missingFields.push('size');
-      if (!userPubkey) missingFields.push('userPubkey');
-      if (!timestamp) missingFields.push('timestamp');
-      
-      console.error('Missing required fields:', missingFields);
-      return res.status(400).json({
-        error: `Missing required fields: ${missingFields.join(', ')}`,
-        code: 'MISSING_FIELDS',
-        details: {
-          received: { filename, contentType, size, userPubkey, timestamp },
-          missing: missingFields
-        }
-      });
-    }
-    
-    // Validate timestamp (should be within last 5 minutes)
-    const now = Math.floor(Date.now() / 1000);
-    const requestTime = Math.floor(timestamp / 1000);
-    if (Math.abs(now - requestTime) > 300) { // 5 minutes
-      return res.status(401).json({
-        error: 'Request timestamp is too old or too far in the future',
-        code: 'INVALID_TIMESTAMP'
-      });
-    }
-    
-    // Validate file parameters
-    const fileValidation = validateFile(filename, contentType, size);
-    if (!fileValidation.valid) {
-      return res.status(400).json({
-        error: fileValidation.error,
-        code: 'INVALID_FILE'
-      });
-    }
-    
-    // Verify Nostr signature only if provided (for Blossom compatibility)
-    if (signature && !verifyNostrSignature(userPubkey, signature, Math.floor(timestamp / 1000), filename, contentType, size)) {
-      return res.status(401).json({
-        error: 'Invalid signature',
-        code: 'INVALID_SIGNATURE'
-      });
-    }
-    
-    // Generate unique filename
-    const uniqueFilename = generateUniqueFilename(filename, userPubkey);
     
     // Handle the upload with Vercel Blob
     const response = await handleUpload({
       body,
       request: req,
-      onBeforeGenerateToken: async (pathname: string) => {
-        // Additional validation can be done here
-        console.log('Generating token for:', pathname);
+      onBeforeGenerateToken: async (pathname: string, clientPayload?: string) => {
+        console.log('onBeforeGenerateToken called with:', { pathname, clientPayload });
+        
+        // Parse the client payload to get our custom data
+        let uploadData: UploadRequest;
+        try {
+          if (clientPayload) {
+            uploadData = JSON.parse(clientPayload);
+          } else {
+            throw new Error('No clientPayload provided');
+          }
+        } catch (error) {
+          console.error('Failed to parse clientPayload in onBeforeGenerateToken:', error);
+          throw new Error('Invalid client payload format');
+        }
+        
+        console.log('Parsed upload data:', uploadData);
+        
+        const { filename, contentType, size, userPubkey, timestamp } = uploadData;
+        
+        // Validate required fields
+        if (!filename || !contentType || !size || !userPubkey || !timestamp) {
+          const missingFields = [];
+          if (!filename) missingFields.push('filename');
+          if (!contentType) missingFields.push('contentType');
+          if (!size) missingFields.push('size');
+          if (!userPubkey) missingFields.push('userPubkey');
+          if (!timestamp) missingFields.push('timestamp');
+          
+          console.error('Missing required fields:', missingFields);
+          throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+        }
+        
+        // Validate timestamp (should be within last 5 minutes)
+        const now = Math.floor(Date.now() / 1000);
+        const requestTime = Math.floor(timestamp / 1000);
+        if (Math.abs(now - requestTime) > 300) { // 5 minutes
+          throw new Error('Request timestamp is too old or too far in the future');
+        }
+        
+        // Validate file parameters
+        const fileValidation = validateFile(filename, contentType, size);
+        if (!fileValidation.valid) {
+          throw new Error(fileValidation.error || 'File validation failed');
+        }
+        
+        // Generate unique filename
+        const uniqueFilename = generateUniqueFilename(filename, userPubkey);
+        
+        console.log('Upload validation passed, generating token for:', uniqueFilename);
+        
         return {
           allowedContentTypes: [contentType],
+          tokenPayload: JSON.stringify({ 
+            originalFilename: filename,
+            userPubkey,
+            timestamp 
+          })
         };
       },
-      onUploadCompleted: async ({ blob }: { blob: any }) => {
+      onUploadCompleted: async ({ blob, tokenPayload }: { blob: any; tokenPayload?: string }) => {
         // Log successful upload
         console.log('Upload completed:', {
           url: blob.url,
-          userPubkey,
-          originalFilename: filename
+          tokenPayload
         });
+        
+        if (tokenPayload) {
+          try {
+            const payload = JSON.parse(tokenPayload);
+            console.log('Upload completed for user:', payload.userPubkey, 'file:', payload.originalFilename);
+          } catch (error) {
+            console.warn('Failed to parse tokenPayload:', error);
+          }
+        }
       },
     });
     
