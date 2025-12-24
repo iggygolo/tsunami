@@ -179,10 +179,7 @@ export function Navigation({ className }: NavigationProps) {
             </Sheet>
 
             {/* Logo */}
-            <Link to="/" className={cn(
-              "flex items-center hover:opacity-80 transition-all duration-200 px-3 py-2 rounded-lg",
-              isActive('/') && "bg-cyan-500/5 border border-cyan-500/10 text-cyan-100/90 hover:opacity-100"
-            )}>
+            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity px-3 py-2 rounded-lg">
               <h1 className="text-xl font-bold gradient-text">{podcastConfig.music.artistName}</h1>
             </Link>
           </div>

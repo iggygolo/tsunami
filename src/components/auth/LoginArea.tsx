@@ -2,7 +2,7 @@
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
 import { useState } from 'react';
-import { User, UserPlus } from 'lucide-react';
+import { User } from 'lucide-react';
 import { Button } from '@/components/ui/button.tsx';
 import LoginDialog from './LoginDialog';
 import SignupDialog from './SignupDialog';
@@ -29,32 +29,17 @@ export function LoginArea({ className }: LoginAreaProps) {
       {currentUser ? (
         <AccountSwitcher onAddAccountClick={() => setLoginDialogOpen(true)} />
       ) : (
-        <div className={cn(
-          "flex justify-center",
-          className?.includes('w-full') ? "flex-col gap-2" : "flex-row gap-2"
-        )}>
-          <Button
-            onClick={() => setLoginDialogOpen(true)}
-            className={cn(
-              'flex items-center gap-1.5 py-2 rounded-full bg-primary text-primary-foreground font-medium transition-all hover:bg-primary/90 animate-scale-in text-sm min-w-0',
-              className?.includes('w-full') ? "px-4 justify-center w-full" : "px-3"
-            )}
-          >
-            <User className='w-4 h-4 flex-shrink-0' />
-            <span className='truncate'>Log in</span>
-          </Button>
-          <Button
-            onClick={() => setSignupDialogOpen(true)}
-            variant="outline"
-            className={cn(
-              "flex items-center gap-1.5 py-2 rounded-full font-medium transition-all text-sm min-w-0",
-              className?.includes('w-full') ? "px-4 justify-center w-full" : "px-3"
-            )}
-          >
-            <UserPlus className="w-4 h-4 flex-shrink-0" />
-            <span className='truncate'>Sign Up</span>
-          </Button>
-        </div>
+        <Button
+          onClick={() => setLoginDialogOpen(true)}
+          variant="outline"
+          className={cn(
+            'flex items-center gap-1.5 py-2 rounded-full font-medium transition-all text-sm min-w-0',
+            className?.includes('w-full') ? "px-4 justify-center w-full" : "px-3"
+          )}
+        >
+          <User className='w-4 h-4 flex-shrink-0' />
+          <span className='truncate'>Log in</span>
+        </Button>
       )}
 
       <LoginDialog
