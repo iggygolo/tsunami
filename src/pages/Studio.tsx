@@ -401,7 +401,7 @@ const Studio = () => {
                         />
                       </div>
 
-                                            <div>
+                      <div>
                         <FileUploadWithProvider
                           accept="image/*"
                           label="Artist Image"
@@ -415,16 +415,8 @@ const Studio = () => {
                           }}
                           onProviderChange={setImageUploadProvider}
                           disabled={isUploading}
+                          imageUrl={formData.image}
                         />
-                        {formData.image && (
-                          <div className="mt-2">
-                            <img 
-                              src={formData.image} 
-                              alt="Artist image preview" 
-                              className="h-20 w-20 rounded object-cover"
-                            />
-                          </div>
-                        )}
                       </div>
                     </div>
 

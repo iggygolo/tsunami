@@ -20,6 +20,8 @@ interface FileUploadWithProviderProps {
   disabled?: boolean;
   /** Additional CSS classes */
   className?: string;
+  /** Image URL for preview (when file is uploaded) */
+  imageUrl?: string;
 }
 
 export function FileUploadWithProvider({
@@ -29,7 +31,8 @@ export function FileUploadWithProvider({
   file,
   onFileSelect,
   disabled = false,
-  className = ""
+  className = "",
+  imageUrl
 }: FileUploadWithProviderProps) {
   const { config } = useUploadConfig();
   const [selectedProvider] = useState<'blossom' | 'vercel'>(config.defaultProvider);
@@ -86,43 +89,66 @@ export function FileUploadWithProvider({
         </span>
       </div>
 
-      {/* File Upload Area */}
-      <div className="mt-1">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={accept}
-          onChange={handleFileChange}
-          className="hidden"
-          disabled={disabled}
-        />
-        <div
-          onClick={handleUploadClick}
-          className={`
-            border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
-            ${disabled 
-              ? 'border-gray-200 bg-gray-50 cursor-not-allowed' 
-              : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-            }
-            ${file ? 'border-green-300 bg-green-50' : ''}
-          `}
-        >
-          <Upload className={`w-6 h-6 mx-auto mb-2 ${disabled ? 'text-gray-300' : 'text-gray-400'}`} />
-          <p className="text-sm text-gray-500">
-            {file ? (
-              <span className="text-green-600 font-medium">
-                ✓ {file.name}
-              </span>
-            ) : (
-              placeholder
-            )}
-          </p>
-          {file && (
-            <p className="text-xs text-gray-400 mt-1">
-              {(file.size / 1024 / 1024).toFixed(2)} MB
+      {/* File Upload Area with Inline Preview */}
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={accept}
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={disabled}
+          />
+          <div
+            onClick={handleUploadClick}
+            className={`
+              border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
+              ${disabled 
+                ? 'border-gray-200 bg-gray-50 cursor-not-allowed' 
+                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+              }
+              ${file || imageUrl ? 'border-green-300 bg-green-50' : ''}
+            `}
+          >
+            <Upload className={`w-6 h-6 mx-auto mb-2 ${disabled ? 'text-gray-300' : 'text-gray-400'}`} />
+            <p className="text-sm text-gray-500">
+              {file ? (
+                <span className="text-green-600 font-medium">
+                  ✓ {file.name}
+                </span>
+              ) : imageUrl ? (
+                <span className="text-green-600 font-medium">
+                  ✓ File uploaded
+                </span>
+              ) : (
+                placeholder
+              )}
             </p>
-          )}
+            {file && (
+              <p className="text-xs text-gray-400 mt-1">
+                {(file.size / 1024 / 1024).toFixed(2)} MB
+              </p>
+            )}
+          </div>
         </div>
+        
+        {/* File Preview */}
+        {(imageUrl || file) && (
+          <div className="w-20 h-20 flex-shrink-0">
+            {accept?.includes('image') ? (
+              <img 
+                src={imageUrl || (file ? URL.createObjectURL(file) : '')} 
+                alt="Preview" 
+                className="w-full h-full rounded object-cover border"
+              />
+            ) : (
+              <div className="w-full h-full rounded border bg-muted flex items-center justify-center">
+                <Upload className="w-6 h-6 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
