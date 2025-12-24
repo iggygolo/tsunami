@@ -25,79 +25,77 @@ const About = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10 -mx-4 px-4 py-12">
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-        <div className="container mx-auto px-4 py-12 relative">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* Artist Image */}
-              {podcastConfig.music.image && (
-                <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-500" />
-                  <img
-                    src={podcastConfig.music.image}
-                    alt={podcastConfig.music.artistName}
-                    className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl object-cover shadow-2xl"
-                  />
-                </div>
-              )}
+        <div className="relative">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            {/* Artist Image */}
+            {podcastConfig.music.image && (
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-500" />
+                <img
+                  src={podcastConfig.music.image}
+                  alt={podcastConfig.music.artistName}
+                  className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl object-cover shadow-2xl"
+                />
+              </div>
+            )}
 
-              {/* Artist Info */}
-              <div className="flex-1 text-center md:text-left space-y-4">
-                <div className="space-y-2">
-                  <Badge variant="primary" className="mb-2">
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Value4Value Music
-                  </Badge>
-                  <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                    {podcastConfig.music.artistName}
-                  </h1>
-                </div>
+            {/* Artist Info */}
+            <div className="flex-1 text-center md:text-left space-y-4">
+              <div className="space-y-2">
+                <Badge variant="primary" className="mb-2">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  Value4Value Music
+                </Badge>
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                  {podcastConfig.music.artistName}
+                </h1>
+              </div>
 
-                <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
-                  {podcastConfig.music.description}
-                </p>
+              <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
+                {podcastConfig.music.description}
+              </p>
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 justify-center md:justify-start pt-2">
-                  {artist?.metadata?.website && (
-                    <Button variant="outline" asChild>
-                      <a href={artist.metadata.website} target="_blank" rel="noopener noreferrer">
-                        <Globe className="w-4 h-4 mr-2" />
-                        Website
-                      </a>
-                    </Button>
-                  )}
-
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start pt-2">
+                {artist?.metadata?.website && (
                   <Button variant="outline" asChild>
-                    <a href={`https://njump.me/${podcastConfig.artistNpub}`} target="_blank" rel="noopener noreferrer">
-                      <Hash className="w-4 h-4 mr-2" />
-                      Nostr
+                    <a href={artist.metadata.website} target="_blank" rel="noopener noreferrer">
+                      <Globe className="w-4 h-4 mr-2" />
+                      Website
                     </a>
                   </Button>
+                )}
 
-                  {artist?.event && user && (artist.metadata?.lud16 || artist.metadata?.lud06) ? (
-                    <ZapDialog target={artist.event}>
-                      <Button variant="outline" className="w-full border-yellow-500/50 hover:bg-yellow-500/10">
-                        <Zap className="w-4 h-4 mr-2 text-yellow-500" />
-                        Zap the Artist
-                      </Button>
-                    </ZapDialog>
-                  ) : user ? null : (
-                    <Button variant="outline" disabled>
-                      <Zap className="w-4 h-4 mr-2" />
-                      Login to Zap
+                <Button variant="outline" asChild>
+                  <a href={`https://njump.me/${podcastConfig.artistNpub}`} target="_blank" rel="noopener noreferrer">
+                    <Hash className="w-4 h-4 mr-2" />
+                    Nostr
+                  </a>
+                </Button>
+
+                {artist?.event && user && (artist.metadata?.lud16 || artist.metadata?.lud06) ? (
+                  <ZapDialog target={artist.event}>
+                    <Button variant="outline" className="w-full border-yellow-500/50 hover:bg-yellow-500/10">
+                      <Zap className="w-4 h-4 mr-2 text-yellow-500" />
+                      Zap the Artist
                     </Button>
-                  )}
-                </div>
+                  </ZapDialog>
+                ) : user ? null : (
+                  <Button variant="outline" disabled>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Login to Zap
+                  </Button>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-4">
-        <div className="max-w-4xl mx-auto space-y-12">
+      <div className="py-4">
+        <div className="space-y-12">
           {/* Stats Section */}
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -181,7 +179,6 @@ const About = () => {
                 )}
               </CardContent>
             </Card>
-          </div>
         </div>
       </div>
     </Layout>

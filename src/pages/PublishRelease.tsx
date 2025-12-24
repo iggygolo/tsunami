@@ -69,21 +69,19 @@ const PublishRelease = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Publish New Release</h1>
-            <p className="text-muted-foreground">
-              Create and publish a new release
-            </p>
-          </div>
-
-          <PublishReleaseForm
-            className="pt-8"
-            onSuccess={handleSuccess}
-            onCancel={handleCancel}
-          />
+      <div className="py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Publish New Release</h1>
+          <p className="text-muted-foreground">
+            Create and publish a new release
+          </p>
         </div>
+
+        <PublishReleaseForm
+          className="pt-8"
+          onSuccess={handleSuccess}
+          onCancel={handleCancel}
+        />
       </div>
     </Layout>
   );

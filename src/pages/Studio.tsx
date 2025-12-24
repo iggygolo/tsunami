@@ -344,18 +344,17 @@ const Studio = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold">Studio</h1>
-              <p className="text-muted-foreground">
-                Manage your profile and artist settings
-              </p>
-            </div>
-
+      <div className="py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Studio</h1>
+            <p className="text-muted-foreground">
+              Manage your profile and artist settings
+            </p>
           </div>
+
+        </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
@@ -960,8 +959,7 @@ const Studio = () => {
                 </Card>
               </div>
             </TabsContent>
-          </Tabs>
-        </div>
+        </Tabs>
       </div>
     </Layout>
   );

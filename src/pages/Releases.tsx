@@ -11,17 +11,15 @@ const Releases = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground via-primary to-purple-600 bg-clip-text text-transparent">All Releases</h1>
-            <p className="text-muted-foreground">
-              Browse and listen to all releases of {MUSIC_CONFIG.music.artistName}
-            </p>
-          </div>
-
-          <ReleaseList showSearch useCache />
+      <div className="py-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground via-primary to-purple-600 bg-clip-text text-transparent">All Releases</h1>
+          <p className="text-muted-foreground">
+            Browse and listen to all releases of {MUSIC_CONFIG.music.artistName}
+          </p>
         </div>
+
+        <ReleaseList showSearch useCache />
       </div>
     </Layout>
   );

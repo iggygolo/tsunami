@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Layout } from '@/components/Layout';
 import { AudioPlayer } from '@/components/music/AudioPlayer';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import type { MusicRelease } from '@/types/music';
@@ -55,8 +56,9 @@ export default function DebugAudio() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Card>
+    <Layout>
+      <div className="py-8">
+        <Card>
         <CardHeader>
           <CardTitle>Audio Player Debug</CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -150,5 +152,6 @@ export default function DebugAudio() {
         </CardContent>
       </Card>
     </div>
+    </Layout>
   );
 }

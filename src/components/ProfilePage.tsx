@@ -183,7 +183,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
 
   return (
     <Layout>
-      <div className="relative">
+      <div className="relative -mx-4 px-4">
         {/* Blurred Background Banner - Only covers content area */}
         {(metadata?.banner || metadata?.picture) && (
           <>
@@ -198,7 +198,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
           </>
         )}
         
-        <div className="relative max-w-4xl mx-auto px-4 py-8">
+        <div className="relative py-8">
           {/* Profile Header */}
           <div className="flex flex-col lg:flex-row items-start gap-4 mb-6">
             {/* Large Profile Image */}

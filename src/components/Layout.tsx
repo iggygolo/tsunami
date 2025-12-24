@@ -12,9 +12,13 @@ export function Layout({ children }: LayoutProps) {
       {/* Full-width Header */}
       <Navigation />
       
-      {/* Main Content Area */}
+      {/* Main Content Area - Always uses standardized container */}
       <main className="flex-1">
-        {children}
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            {children}
+          </div>
+        </div>
       </main>
 
       <Footer />

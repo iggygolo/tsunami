@@ -15,17 +15,16 @@ const Community = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Community</h1>
-            <p className="text-muted-foreground">
-              Engage with the {MUSIC_CONFIG.music.artistName} community
-            </p>
-          </div>
+      <div className="py-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Community</h1>
+          <p className="text-muted-foreground">
+            Engage with the {MUSIC_CONFIG.music.artistName} community
+          </p>
+        </div>
 
-          {/* Two-column layout for Discussions and Activity/Supporters */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Two-column layout for Discussions and Activity/Supporters */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left column - Discussions */}
             <div className="lg:col-span-2">
               <Card className="h-fit">
@@ -69,7 +68,6 @@ const Community = () => {
                 </CardContent>
               </Card>
             </div>
-          </div>
         </div>
       </div>
     </Layout>

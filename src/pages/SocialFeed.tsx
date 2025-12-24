@@ -109,14 +109,13 @@ const SocialFeed = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="max-w-3xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">{artistName}'s Social Feed</h1>
-            <p className="text-sm text-muted-foreground">
-              Follow the latest updates and thoughts from the music artist
-            </p>
-          </div>
+      <div className="py-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">{artistName}'s Social Feed</h1>
+          <p className="text-sm text-muted-foreground">
+            Follow the latest updates and thoughts from the music artist
+          </p>
+        </div>
 
           {/* Artist Info Card */}
           <Card className="mt-4 mb-4">
@@ -258,8 +257,7 @@ const SocialFeed = () => {
                 />
               )}
             </TabsContent>
-          </Tabs>
-        </div>
+        </Tabs>
       </div>
     </Layout>
   );
