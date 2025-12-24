@@ -36,7 +36,7 @@ interface UploadRequest {
   contentType: string;
   size: number;
   userPubkey: string;
-  signature: string;
+  signature?: string; // Make signature optional
   timestamp: number;
 }
 
@@ -181,10 +181,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     const { filename, contentType, size, userPubkey, signature, timestamp } = payload;
     
-    // Validate required fields
-    if (!filename || !contentType || !size || !userPubkey || !signature || !timestamp) {
+    // Validate required fields (signature is optional for Vercel uploads)
+    if (!filename || !contentType || !size || !userPubkey || !timestamp) {
       return res.status(400).json({
-        error: 'Missing required fields: filename, contentType, size, userPubkey, signature, timestamp',
+        error: 'Missing required fields: filename, contentType, size, userPubkey, timestamp',
         code: 'MISSING_FIELDS'
       });
     }
@@ -208,8 +208,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
     
-    // Verify Nostr signature
-    if (!verifyNostrSignature(userPubkey, signature, Math.floor(timestamp / 1000), filename, contentType, size)) {
+    // Verify Nostr signature only if provided (for Blossom compatibility)
+    if (signature && !verifyNostrSignature(userPubkey, signature, Math.floor(timestamp / 1000), filename, contentType, size)) {
       return res.status(401).json({
         error: 'Invalid signature',
         code: 'INVALID_SIGNATURE'

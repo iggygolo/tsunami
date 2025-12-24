@@ -80,6 +80,8 @@ export class VercelUploadProvider implements UploadProvider {
   ) {}
 
   async uploadFile(file: File): Promise<string> {
+    console.log('🚀 VercelUploadProvider.uploadFile called - NO SIGNING SHOULD HAPPEN');
+    
     // Validate file first
     if (!this.validateFile(file)) {
       throw new UploadProviderError(
@@ -92,11 +94,8 @@ export class VercelUploadProvider implements UploadProvider {
     }
 
     try {
-      // Create authentication signature
-      const timestamp = Date.now();
-      const authEvent = await this.createAuthEvent(file, timestamp);
-      
-      // Upload file using Vercel Blob client
+      console.log('Calling Vercel upload API directly...');
+      // Upload file using Vercel Blob client directly (no Nostr auth needed)
       const blob = await upload(file.name, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
@@ -105,11 +104,12 @@ export class VercelUploadProvider implements UploadProvider {
           contentType: file.type,
           size: file.size,
           userPubkey: this.userPubkey,
-          signature: authEvent.sig,
-          timestamp: timestamp
+          // No signature needed for Vercel uploads
+          timestamp: Date.now()
         })
       });
 
+      console.log('Vercel upload completed:', blob.url);
       return blob.url;
     } catch (error) {
       console.error('Vercel upload failed:', error);
@@ -119,7 +119,7 @@ export class VercelUploadProvider implements UploadProvider {
         if (error.message.includes('401') || error.message.includes('Unauthorized')) {
           throw new UploadProviderError(
             'AUTHENTICATION_FAILED',
-            'Authentication failed - invalid signature',
+            'Authentication failed - check Vercel token',
             'vercel',
             { originalError: error.message },
             false
@@ -194,31 +194,6 @@ export class VercelUploadProvider implements UploadProvider {
 
   getSupportedTypes(): string[] {
     return [...ALLOWED_MIME_TYPES];
-  }
-
-  private async createAuthEvent(file: File, timestamp: number): Promise<Event> {
-    const event: Event = {
-      kind: 27235, // Custom kind for file upload authorization
-      pubkey: this.userPubkey,
-      created_at: Math.floor(timestamp / 1000),
-      tags: [
-        ['filename', file.name],
-        ['content-type', file.type],
-        ['size', file.size.toString()],
-        ['action', 'upload']
-      ],
-      content: 'File upload authorization',
-      id: '',
-      sig: ''
-    };
-    
-    // Calculate event ID
-    event.id = getEventHash(event);
-    
-    // Sign the event
-    const signedEvent = await this.signer.signEvent(event);
-    
-    return signedEvent;
   }
 }
 import { BlossomUploader } from '@nostrify/nostrify/uploaders';

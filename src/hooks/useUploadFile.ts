@@ -103,29 +103,51 @@ export function useUploadFile() {
 
       console.log('Starting file upload:', correctedFile.name, correctedFile.size, correctedFile.type);
       console.log('Upload config:', config);
+      console.log('Default provider:', config.defaultProvider);
+      console.log('Vercel enabled:', config.vercelEnabled);
+      console.log('Blossom enabled:', config.blossomEnabled);
 
-      // Always try Blossom first (default behavior)
-      try {
-        console.log('Attempting Blossom upload first...');
-        return await uploadWithBlossom(correctedFile, user, allServers);
-      } catch (blossomError) {
-        console.warn('Blossom upload failed, checking Vercel fallback:', blossomError);
-        
-        // Only fallback to Vercel if it's properly configured
-        const hasVercelToken = import.meta.env.BLOB_READ_WRITE_TOKEN && 
-                              import.meta.env.BLOB_READ_WRITE_TOKEN !== 'your_vercel_blob_token_here';
-        
-        if (config.vercelEnabled && hasVercelToken) {
-          console.log('Vercel is configured, attempting fallback...');
-          try {
-            return await uploadWithVercel(correctedFile, user);
-          } catch (vercelError) {
-            console.error('Both Blossom and Vercel uploads failed');
-            throw new Error(`Upload failed. Blossom: ${blossomError instanceof Error ? blossomError.message : 'Unknown error'}. Vercel: ${vercelError instanceof Error ? vercelError.message : 'Unknown error'}`);
+      // Use the configured default provider
+      if (config.defaultProvider === 'vercel' && config.vercelEnabled) {
+        console.log('🚀 USING VERCEL - NO SIGNING REQUIRED');
+        try {
+          return await uploadWithVercel(correctedFile, user);
+        } catch (vercelError) {
+          console.warn('Vercel upload failed, falling back to Blossom:', vercelError);
+          
+          // Fallback to Blossom if Vercel fails
+          if (config.blossomEnabled) {
+            console.log('⚠️ FALLING BACK TO BLOSSOM - SIGNING REQUIRED');
+            try {
+              return await uploadWithBlossom(correctedFile, user, allServers);
+            } catch (blossomError) {
+              console.error('Both Vercel and Blossom uploads failed');
+              throw new Error(`Upload failed. Vercel: ${vercelError instanceof Error ? vercelError.message : 'Unknown error'}. Blossom: ${blossomError instanceof Error ? blossomError.message : 'Unknown error'}`);
+            }
+          } else {
+            throw vercelError;
           }
-        } else {
-          console.warn('Vercel not configured or disabled, only Blossom attempted');
-          throw new Error(`Blossom upload failed: ${blossomError instanceof Error ? blossomError.message : 'Unknown error'}. Vercel fallback not available (not configured or disabled).`);
+        }
+      } else {
+        console.log('🌸 USING BLOSSOM - SIGNING REQUIRED');
+        // Use Blossom as default or fallback
+        try {
+          return await uploadWithBlossom(correctedFile, user, allServers);
+        } catch (blossomError) {
+          console.warn('Blossom upload failed:', blossomError);
+          
+          // Fallback to Vercel if enabled
+          if (config.vercelEnabled) {
+            console.log('⚠️ FALLING BACK TO VERCEL - NO SIGNING REQUIRED');
+            try {
+              return await uploadWithVercel(correctedFile, user);
+            } catch (vercelError) {
+              console.error('Both Blossom and Vercel uploads failed');
+              throw new Error(`Upload failed. Blossom: ${blossomError instanceof Error ? blossomError.message : 'Unknown error'}. Vercel: ${vercelError instanceof Error ? vercelError.message : 'Unknown error'}`);
+            }
+          } else {
+            throw blossomError;
+          }
         }
       }
     },
@@ -178,14 +200,10 @@ export function useUploadFileWithOptions() {
 
       console.log('Primary provider:', primaryProvider, 'Fallback enabled:', enableFallback);
 
-      // Check if Vercel is properly configured
-      const hasVercelToken = import.meta.env.BLOB_READ_WRITE_TOKEN && 
-                            import.meta.env.BLOB_READ_WRITE_TOKEN !== 'your_vercel_blob_token_here';
-
       // Try primary provider first
       if (primaryProvider === 'vercel') {
-        if (!config.vercelEnabled || !hasVercelToken) {
-          throw new Error('Vercel upload is not properly configured. Please set BLOB_READ_WRITE_TOKEN in your environment.');
+        if (!config.vercelEnabled) {
+          throw new Error('Vercel upload is disabled. Please enable it in Upload Provider settings.');
         }
         
         try {
@@ -213,11 +231,11 @@ export function useUploadFileWithOptions() {
           return { url, provider: 'blossom', tags };
         } catch (error) {
           console.warn('Blossom upload failed:', error);
-          if (!enableFallback || !config.vercelEnabled || !hasVercelToken) {
+          if (!enableFallback || !config.vercelEnabled) {
             throw error;
           }
           
-          // Fallback to Vercel only if it's properly configured
+          // Fallback to Vercel if it's enabled
           try {
             const tags = await uploadWithVercel(correctedFile, user);
             const url = tags.find(tag => tag[0] === 'url')?.[1] || '';
@@ -235,8 +253,11 @@ export function useUploadFileWithOptions() {
  * Upload with Vercel and return tags format for compatibility
  */
 async function uploadWithVercel(file: File, user: any): Promise<string[][]> {
+  console.log('🚀 uploadWithVercel called - NO SIGNING SHOULD HAPPEN');
   try {
+    console.log('Creating Vercel provider...');
     const provider = UploadProviderFactory.createProvider('vercel', user.pubkey, user.signer);
+    console.log('Calling provider.uploadFile...');
     const url = await provider.uploadFile(file);
     
     // Return in tags format for backward compatibility

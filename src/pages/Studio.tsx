@@ -35,6 +35,7 @@ import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { usePodcastAnalytics } from '@/hooks/usePodcastAnalytics';
 import { useRSSFeedGenerator } from '@/hooks/useRSSFeedGenerator';
 import { useUploadFile } from '@/hooks/useUploadFile';
+import { useUploadConfig } from '@/hooks/useUploadConfig';
 import { isArtist, PODCAST_CONFIG, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
 import { ReleaseManagement } from '@/components/studio/ReleaseManagement';
@@ -95,13 +96,14 @@ const Studio = () => {
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
   const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
   const { mutateAsync: uploadFileWithOptions } = useUploadFileWithOptions();
+  const { config } = useUploadConfig();
   const { data: analytics, isLoading: analyticsLoading } = usePodcastAnalytics();
   const isArtist_user = user && isArtist(user.pubkey);
 
   const [activeTab, setActiveTab] = useState('settings');
   const [isSaving, setIsSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUploadProvider, setImageUploadProvider] = useState<'blossom' | 'vercel'>('blossom');
+  const [imageUploadProvider, setImageUploadProvider] = useState<'blossom' | 'vercel'>(config.defaultProvider);
 
   const [formData, setFormData] = useState<PodcastFormData>({
     artistName: PODCAST_CONFIG.podcast.artistName,
