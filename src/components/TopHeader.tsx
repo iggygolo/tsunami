@@ -42,8 +42,8 @@ export function TopHeader({ className }: TopHeaderProps) {
             </Sheet>
 
             <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <Headphones className="w-6 h-6 text-primary" />
-              <h1 className="text-lg font-bold gradient-text truncate">
+              <Headphones className="w-7 h-7 text-primary" />
+              <h1 className="text-xl font-bold gradient-text truncate">
                 {podcastConfig.music.artistName}
               </h1>
             </Link>

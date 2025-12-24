@@ -41,15 +41,10 @@ export function MobileSidebar({ onNavigate }: MobileSidebarProps) {
           onClick={onNavigate}
         >
           <div className="relative">
-            <Headphones className="w-8 h-8 text-primary group-hover:scale-110 transition-transform duration-200" />
+            <Headphones className="w-9 h-9 text-primary group-hover:scale-110 transition-transform duration-200" />
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full animate-pulse-slow"></div>
           </div>
-          <div>
-            <h1 className="text-lg font-bold gradient-text truncate">{podcastConfig.music.artistName}</h1>
-            <p className="text-xs text-muted-foreground">
-              Powered by Nostr
-            </p>
-          </div>
+          <h1 className="text-xl font-bold gradient-text truncate">{podcastConfig.music.artistName}</h1>
         </Link>
       </div>
 

@@ -6,9 +6,6 @@ import { LoginArea } from '@/components/auth/LoginArea';
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -41,27 +38,160 @@ export function Navigation({ className }: NavigationProps) {
 
   return (
     <header className={cn(
-      "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm",
+      "w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm sticky top-0 z-50",
       className
     )}>
-      <div className="container mx-auto px-4 py-4">
+      <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity group">
-            <div className="relative">
-              <Headphones className="w-8 h-8 text-primary group-hover:scale-110 transition-transform duration-200" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full animate-pulse-slow"></div>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold gradient-text">{podcastConfig.music.artistName}</h1>
-              <p className="text-xs text-muted-foreground">
-                Powered by Nostr
-              </p>
-            </div>
-          </Link>
+          {/* Left: Hamburger Menu (mobile/tablet) + Logo */}
+          <div className="flex items-center space-x-3">
+            {/* Hamburger Menu Button - Only on mobile/tablet */}
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="focus-ring lg:hidden">
+                  <Menu className="w-5 h-5" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[280px] p-0">
+                <div className="flex flex-col h-full">
+                  {/* Logo in Menu */}
+                  <div className="p-6 border-b border-border">
+                    <Link 
+                      to="/" 
+                      className="flex items-center hover:opacity-80 transition-opacity"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <h1 className="text-xl font-bold gradient-text truncate">{podcastConfig.music.artistName}</h1>
+                    </Link>
+                  </div>
 
-          {/* Main Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+                  {/* Navigation Items */}
+                  <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+                    {/* Main Navigation */}
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Navigation</h3>
+                      {mainNavItems.map((item) => {
+                        const Icon = item.icon;
+                        const active = isActive(item.path);
+
+                        return (
+                          <Button
+                            key={item.path}
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            className={cn(
+                              "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-600 dark:hover:text-cyan-400",
+                              active && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0"
+                            )}
+                          >
+                            <Link to={item.path} className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
+                              <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400")} />
+                              <div className="text-left min-w-0">
+                                <div className="font-medium">{item.label}</div>
+                                <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
+                              </div>
+                            </Link>
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Secondary Navigation */}
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">More</h3>
+                      {secondaryNavItems.map((item) => {
+                        const Icon = item.icon;
+                        const active = !item.external && isActive(item.path);
+
+                        return (
+                          <Button
+                            key={item.path}
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            className={cn(
+                              "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-600 dark:hover:text-cyan-400",
+                              active && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0"
+                            )}
+                          >
+                            {'external' in item && item.external ? (
+                              <a
+                                href={item.path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-start space-x-3"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400")} />
+                                <div className="text-left min-w-0">
+                                  <div className="font-medium">{item.label}</div>
+                                  <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
+                                </div>
+                              </a>
+                            ) : (
+                              <Link to={item.path} className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
+                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400")} />
+                                <div className="text-left min-w-0">
+                                  <div className="font-medium">{item.label}</div>
+                                  <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
+                                </div>
+                              </Link>
+                            )}
+                          </Button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Artist Studio */}
+                    {isArtist_user && artistItems.length > 0 && (
+                      <div className="space-y-2">
+                        <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Artist</h3>
+                        {artistItems.map((item) => {
+                          const Icon = item.icon;
+                          const active = isActive(item.path);
+
+                          return (
+                            <Button
+                              key={item.path}
+                              size="sm"
+                              asChild
+                              className="w-full justify-start h-auto py-3 px-3 btn-studio focus-ring"
+                            >
+                              <Link to={item.path} className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
+                                <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                                <div className="text-left min-w-0">
+                                  <div className="font-medium">{item.label}</div>
+                                  <div className="text-xs text-white/70 truncate">{item.description}</div>
+                                </div>
+                              </Link>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </nav>
+
+                  {/* Login Area at bottom */}
+                  <div className="p-4 border-t bg-muted/30">
+                    <div className="flex flex-col space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground">Account</h3>
+                      <LoginArea className="w-full" />
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* Logo */}
+            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+              <h1 className="text-xl font-bold gradient-text">{podcastConfig.music.artistName}</h1>
+            </Link>
+          </div>
+
+          {/* Center: Main Navigation (desktop only) */}
+          <nav className="hidden lg:flex items-center space-x-1">
             {mainNavItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -69,12 +199,12 @@ export function Navigation({ className }: NavigationProps) {
               return (
                 <Button
                   key={item.path}
-                  variant={active ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="sm"
                   asChild
                   className={cn(
-                    "relative focus-ring transition-all duration-200",
-                    active && "bg-secondary text-secondary-foreground shadow-sm"
+                    "relative focus-ring transition-all duration-200 hover:bg-cyan-500/10",
+                    active && "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40"
                   )}
                 >
                   <Link to={item.path} className="flex items-center space-x-2">
@@ -86,10 +216,10 @@ export function Navigation({ className }: NavigationProps) {
             })}
           </nav>
 
-          {/* Right side actions */}
+          {/* Right: Secondary Nav + Artist Studio + Login */}
           <div className="flex items-center space-x-2">
-            {/* Secondary nav items */}
-            <div className="hidden sm:flex items-center space-x-1">
+            {/* Secondary nav items (desktop only) */}
+            <div className="hidden lg:flex items-center space-x-1">
               {secondaryNavItems.map((item) => {
                 const Icon = item.icon;
                 const active = !item.external && isActive(item.path);
@@ -97,10 +227,13 @@ export function Navigation({ className }: NavigationProps) {
                 return (
                   <Button
                     key={item.path}
-                    variant={active ? "secondary" : "ghost"}
+                    variant="ghost"
                     size="sm"
                     asChild
-                    className="focus-ring"
+                    className={cn(
+                      "focus-ring transition-all duration-200 hover:bg-cyan-500/10",
+                      active && "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40"
+                    )}
                   >
                     {item.external ? (
                       <a
@@ -110,12 +243,12 @@ export function Navigation({ className }: NavigationProps) {
                         className="flex items-center space-x-2"
                       >
                         <Icon className="w-4 h-4" />
-                        <span className="hidden lg:inline">{item.label}</span>
+                        <span className="hidden xl:inline">{item.label}</span>
                       </a>
                     ) : (
                       <Link to={item.path} className="flex items-center space-x-2">
                         <Icon className="w-4 h-4" />
-                        <span className="hidden lg:inline">{item.label}</span>
+                        <span className="hidden xl:inline">{item.label}</span>
                       </Link>
                     )}
                   </Button>
@@ -123,144 +256,26 @@ export function Navigation({ className }: NavigationProps) {
               })}
             </div>
 
-            {/* Artist studio button */}
+            {/* Artist studio button (desktop only) */}
             {isArtist_user && artistItems.length > 0 && (
-              <Button size="sm" asChild className="btn-studio focus-ring hidden sm:flex">
+              <Button size="sm" asChild className={cn(
+                "focus-ring hidden lg:flex transition-all duration-200",
+                isActive(artistItems[0].path) ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40" : "btn-studio"
+              )}>
                 <Link to={artistItems[0].path}>
                   {(() => {
                     const Icon = artistItems[0].icon;
                     return <Icon className="w-4 h-4 mr-2" />;
                   })()}
-                  <span className="hidden sm:inline">{artistItems[0].label}</span>
+                  <span className="hidden xl:inline">{artistItems[0].label}</span>
                 </Link>
               </Button>
             )}
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="focus-ring">
-                    <Menu className="w-5 h-5" />
-                    <span className="sr-only">Toggle menu</span>
-                  </Button>
-                </SheetTrigger>
-              </Sheet>
-            </div>
 
             {/* Login area */}
             <LoginArea className="max-w-60" />
           </div>
         </div>
-
-        {/* Mobile Menu Sheet */}
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetContent side="right" className="w-[300px] sm:w-[350px]">
-            <SheetHeader>
-              <SheetTitle className="flex items-center gap-2">
-                <Headphones className="w-5 h-5" />
-                {podcastConfig.music.artistName}
-              </SheetTitle>
-              <SheetDescription>
-                Navigate through the podcast
-              </SheetDescription>
-            </SheetHeader>
-
-            <div className="mt-6 space-y-4">
-              {/* Main Navigation Items */}
-              <div className="space-y-2">
-                {mainNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.path);
-
-                  return (
-                    <Button
-                      key={item.path}
-                      variant={active ? "secondary" : "ghost"}
-                      size="sm"
-                      asChild
-                      className={cn(
-                        "w-full justify-start focus-ring transition-all duration-200",
-                        active && "bg-secondary text-secondary-foreground shadow-sm"
-                      )}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Link to={item.path} className="flex items-center space-x-3">
-                        <Icon className="w-4 h-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </Button>
-                  );
-                })}
-              </div>
-
-              {/* Secondary Navigation Items */}
-              <div className="space-y-2">
-                {secondaryNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = !item.external && isActive(item.path);
-
-                  return (
-                    <Button
-                      key={item.path}
-                      variant={active ? "secondary" : "ghost"}
-                      size="sm"
-                      asChild
-                      className={cn(
-                        "w-full justify-start focus-ring",
-                        active && "bg-secondary text-secondary-foreground shadow-sm"
-                      )}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {item.external ? (
-                        <a
-                          href={item.path}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center space-x-3"
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{item.label}</span>
-                        </a>
-                      ) : (
-                        <Link to={item.path} className="flex items-center space-x-3">
-                          <Icon className="w-4 h-4" />
-                          <span>{item.label}</span>
-                        </Link>
-                      )}
-                    </Button>
-                  );
-                })}
-              </div>
-
-              {/* Artist Studio Button */}
-              {isArtist_user && artistItems.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground px-3">Artist</h3>
-                  {artistItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.path);
-
-                    return (
-                      <Button
-                        key={item.path}
-                        size="sm"
-                        asChild
-                        className="w-full justify-start btn-studio focus-ring"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <Link to={item.path} className="flex items-center space-x-3">
-                          <Icon className="w-4 h-4" />
-                          <span>{item.label}</span>
-                        </Link>
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </SheetContent>
-        </Sheet>
       </div>
     </header>
   );
