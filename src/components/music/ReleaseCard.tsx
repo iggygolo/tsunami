@@ -170,7 +170,7 @@ export function ReleaseCard({
                 className={`inline-flex items-center px-1.5 py-0 rounded-full text-[10px] font-medium ${
                   index % 2 === 0 
                     ? 'bg-primary/10 text-primary' 
-                    : 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                    : 'bg-purple-500/10 text-purple-400'
                 }`}
               >
                 {tag}

@@ -76,7 +76,7 @@ function ActivityItem({ userPubkey, type, amount, releaseId, timestamp }: Activi
             </p>
           </div>
           {type === 'zap' && amount && (
-            <Badge variant="secondary" className="text-xs bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/30">
+            <Badge variant="secondary" className="text-xs bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
               <Zap className="w-3 h-3 mr-1" />
               {formatAmount(amount)}
             </Badge>

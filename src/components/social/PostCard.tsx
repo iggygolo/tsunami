@@ -81,13 +81,13 @@ export function PostCard({ event, isCompact = false, previewMode = false, classN
         return {
           icon: <Repeat className="w-4 h-4 text-violet-500" />,
           label: 'reposted',
-          bgColor: 'bg-violet-50 dark:bg-violet-950/30'
+          bgColor: 'bg-violet-950/30'
         };
       case 7:
         return {
           icon: <Heart className="w-4 h-4 text-pink-500" />,
           label: 'liked',
-          bgColor: 'bg-pink-50 dark:bg-pink-950/30'
+          bgColor: 'bg-pink-950/30'
         };
       default:
         return { icon: null, label: null, bgColor: '' };

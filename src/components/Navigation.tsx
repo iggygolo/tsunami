@@ -77,12 +77,12 @@ export function Navigation({ className }: NavigationProps) {
                         size="sm"
                         asChild
                         className={cn(
-                          "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-600 dark:hover:text-cyan-400",
+                          "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-400",
                           isActive('/') && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0"
                         )}
                       >
                         <Link to="/" className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
-                          <Headphones className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", isActive('/') && "text-cyan-600 dark:text-cyan-400")} />
+                          <Headphones className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", isActive('/') && "text-cyan-400")} />
                           <div className="text-left min-w-0">
                             <div className="font-medium">Home</div>
                             <div className={cn("text-xs truncate", isActive('/') ? "text-foreground/60" : "text-muted-foreground")}>Latest releases & highlights</div>
@@ -101,12 +101,12 @@ export function Navigation({ className }: NavigationProps) {
                             size="sm"
                             asChild
                             className={cn(
-                              "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-600 dark:hover:text-cyan-400",
+                              "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-400",
                               active && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0"
                             )}
                           >
                             <Link to={item.path} className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
-                              <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400")} />
+                              <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-400")} />
                               <div className="text-left min-w-0">
                                 <div className="font-medium">{item.label}</div>
                                 <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
@@ -132,7 +132,7 @@ export function Navigation({ className }: NavigationProps) {
                             size="sm"
                             asChild
                             className={cn(
-                              "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-600 dark:hover:text-cyan-400",
+                              "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-400",
                               active && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0",
                               isRSS && "text-orange-400 hover:text-orange-300"
                             )}
@@ -145,7 +145,7 @@ export function Navigation({ className }: NavigationProps) {
                                 className="flex items-start space-x-3"
                                 onClick={() => setIsMobileMenuOpen(false)}
                               >
-                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
+                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-400", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
                                 <div className="text-left min-w-0">
                                   <div className="font-medium">{item.label}</div>
                                   <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
@@ -153,7 +153,7 @@ export function Navigation({ className }: NavigationProps) {
                               </a>
                             ) : (
                               <Link to={item.path} className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
-                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
+                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-400", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
                                 <div className="text-left min-w-0">
                                   <div className="font-medium">{item.label}</div>
                                   <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>

@@ -2,55 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 210 10% 15%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 210 10% 15%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 10% 15%;
-
-    --primary: 187 85% 43%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 270 70% 55%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 187 85% 43%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 187 85% 43%;
-
-    --radius: 0.75rem;
-
-    --chart-1: 210 80% 55%;
-    --chart-2: 142 71% 50%;
-    --chart-3: 280 70% 60%;
-    --chart-4: 30 90% 60%;
-    --chart-5: 340 75% 60%;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
     --background: 210 10% 8%;
     --foreground: 210 40% 98%;
 
@@ -78,6 +35,8 @@
     --border: 217 32% 18%;
     --input: 217 32% 18%;
     --ring: 187 85% 48%;
+
+    --radius: 0.75rem;
 
     --chart-1: 210 80% 60%;
     --chart-2: 142 71% 55%;
@@ -133,11 +92,6 @@
   .glass {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .dark .glass {
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
@@ -145,10 +99,6 @@
   /* Mobile-specific glass effect fallbacks */
   @supports not (backdrop-filter: blur(12px)) {
     .glass {
-      background: rgba(255, 255, 255, 0.25);
-    }
-    
-    .dark .glass {
       background: rgba(0, 0, 0, 0.4);
     }
   }
@@ -302,12 +252,12 @@
   .apple-glass-button {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   .apple-glass-button:hover {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.2);
   }
   
   .apple-glass-button-outline {
@@ -336,7 +286,7 @@
     }
     
     .apple-glass-button {
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.2);
     }
     
     .apple-glass-button-outline {

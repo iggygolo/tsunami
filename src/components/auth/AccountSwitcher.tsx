@@ -12,7 +12,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.tsx';
 import { RelaySelector } from '@/components/RelaySelector';
 import { WalletModal } from '@/components/WalletModal';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useLoggedInAccounts, type Account } from '@/hooks/useLoggedInAccounts';
 import { genUserName } from '@/lib/genUserName';
 import { isArtist } from '@/lib/musicConfig';
@@ -94,14 +93,6 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
           </DropdownMenuItem>
         </WalletModal>
         <DropdownMenuSeparator className="my-2" />
-        <div className='font-medium text-xs uppercase tracking-wider text-muted-foreground px-2 py-2'>Appearance</div>
-        <DropdownMenuItem
-          className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
-          onSelect={(e) => e.preventDefault()}
-        >
-          <ThemeToggle />
-          <span>Theme</span>
-        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onAddAccountClick}
           className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'

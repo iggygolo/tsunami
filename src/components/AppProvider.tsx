@@ -13,9 +13,9 @@ interface AppProviderProps {
   presetRelays?: { name: string; url: string }[];
 }
 
-// Zod schema for AppConfig validation
+// Zod schema for AppConfig validation - dark theme only
 const AppConfigSchema: z.ZodType<AppConfig, z.ZodTypeDef, unknown> = z.object({
-  theme: z.enum(['dark', 'light', 'system']),
+  theme: z.literal('dark'), // Only allow dark theme
   relayUrl: z.string().url(),
 });
 
@@ -62,42 +62,14 @@ export function AppProvider(props: AppProviderProps) {
 }
 
 /**
- * Hook to apply theme changes to the document root
+ * Hook to apply dark theme to the document root
  */
 function useApplyTheme(theme: Theme) {
   useEffect(() => {
     const root = window.document.documentElement;
-
-    root.classList.remove('light', 'dark');
-
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-        .matches
-        ? 'dark'
-        : 'light';
-
-      root.classList.add(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
-  }, [theme]);
-
-  // Handle system theme changes when theme is set to "system"
-  useEffect(() => {
-    if (theme !== 'system') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
-    const handleChange = () => {
-      const root = window.document.documentElement;
-      root.classList.remove('light', 'dark');
-      
-      const systemTheme = mediaQuery.matches ? 'dark' : 'light';
-      root.classList.add(systemTheme);
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    // Always apply dark theme
+    root.classList.remove('light', 'dark');
+    root.classList.add('dark');
   }, [theme]);
 }

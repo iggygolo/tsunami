@@ -209,7 +209,7 @@ const Index = () => {
                     </Button>
 
                     {user && latestRelease.totalSats && latestRelease.totalSats > 0 && (
-                      <Badge variant="outline" className="h-11 px-4 text-sm bg-yellow-500/10 border-yellow-500/30 text-yellow-600 dark:text-yellow-400">
+                      <Badge variant="outline" className="h-11 px-4 text-sm bg-yellow-500/10 border-yellow-500/30 text-yellow-400">
                         <Zap className="w-4 h-4 mr-1" />
                         {latestRelease.totalSats.toLocaleString()} sats
                       </Badge>

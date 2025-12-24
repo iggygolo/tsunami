@@ -197,11 +197,11 @@ const SocialFeed = () => {
 
           <Tabs defaultValue="notes" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2 bg-purple-500/5 h-9">
-              <TabsTrigger value="notes" className="flex items-center space-x-2 text-sm data-[state=active]:bg-purple-500/10 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400">
+              <TabsTrigger value="notes" className="flex items-center space-x-2 text-sm data-[state=active]:bg-purple-500/10 data-[state=active]:text-purple-400">
                 <MessageSquare className="w-4 h-4" />
                 <span>Notes</span>
               </TabsTrigger>
-              <TabsTrigger value="replies" className="flex items-center space-x-2 text-sm data-[state=active]:bg-purple-500/10 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400">
+              <TabsTrigger value="replies" className="flex items-center space-x-2 text-sm data-[state=active]:bg-purple-500/10 data-[state=active]:text-purple-400">
                 <TrendingUp className="w-4 h-4" />
                 <span>Replies</span>
               </TabsTrigger>
