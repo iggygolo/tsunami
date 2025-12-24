@@ -154,7 +154,7 @@ const Index = () => {
                     <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
                       {latestRelease.title}
                     </h1>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    <div className="flex flex-col lg:flex-row items-center gap-2 sm:gap-4">
                       <Link to="/about" className="inline-flex items-center gap-2 text-lg text-white/90 hover:text-white transition-colors drop-shadow-md">
                         {podcastConfig.music.image && (
                           <img
