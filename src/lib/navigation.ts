@@ -59,7 +59,7 @@ export const navigationItems: NavigationItem[] = [
   {
     path: '/rss.xml',
     icon: Rss,
-    label: 'RSS Feed',
+    label: 'RSS',
     description: 'Subscribe to updates',
     external: true,
     group: 'secondary'

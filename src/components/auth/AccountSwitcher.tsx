@@ -1,7 +1,7 @@
 // NOTE: This file is stable and usually should not be modified.
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
-import { ChevronDown, LogOut, UserIcon, UserPlus, Wallet } from 'lucide-react';
+import { ChevronDown, LogOut, UserIcon, UserPlus, Wallet, Settings } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +15,8 @@ import { WalletModal } from '@/components/WalletModal';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useLoggedInAccounts, type Account } from '@/hooks/useLoggedInAccounts';
 import { genUserName } from '@/lib/genUserName';
+import { isArtist } from '@/lib/musicConfig';
+import { Link } from 'react-router-dom';
 
 interface AccountSwitcherProps {
   onAddAccountClick: () => void;
@@ -28,6 +30,8 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
   const getDisplayName = (account: Account): string => {
     return account.metadata.name ?? genUserName(account.pubkey);
   }
+
+  const isArtist_user = currentUser && isArtist(currentUser.pubkey);
 
   return (
     <DropdownMenu modal={false}>
@@ -65,6 +69,21 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator className="my-2" />
+        {isArtist_user && (
+          <>
+            <div className='font-medium text-xs uppercase tracking-wider text-muted-foreground px-2 py-2'>Artist Tools</div>
+            <DropdownMenuItem asChild>
+              <Link
+                to="/studio"
+                className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-cyan-500/10 focus:bg-cyan-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
+              >
+                <Settings className='w-4 h-4 text-cyan-500' />
+                <span>Studio</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-2" />
+          </>
+        )}
         <WalletModal>
           <DropdownMenuItem
             className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'

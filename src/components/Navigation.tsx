@@ -104,6 +104,7 @@ export function Navigation({ className }: NavigationProps) {
                       {secondaryNavItems.map((item) => {
                         const Icon = item.icon;
                         const active = !item.external && isActive(item.path);
+                        const isRSS = item.path === '/rss.xml';
 
                         return (
                           <Button
@@ -113,7 +114,8 @@ export function Navigation({ className }: NavigationProps) {
                             asChild
                             className={cn(
                               "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-600 dark:hover:text-cyan-400",
-                              active && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0"
+                              active && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0",
+                              isRSS && "text-orange-400 hover:text-orange-300"
                             )}
                           >
                             {'external' in item && item.external ? (
@@ -124,7 +126,7 @@ export function Navigation({ className }: NavigationProps) {
                                 className="flex items-start space-x-3"
                                 onClick={() => setIsMobileMenuOpen(false)}
                               >
-                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400")} />
+                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
                                 <div className="text-left min-w-0">
                                   <div className="font-medium">{item.label}</div>
                                   <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
@@ -132,7 +134,7 @@ export function Navigation({ className }: NavigationProps) {
                               </a>
                             ) : (
                               <Link to={item.path} className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
-                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400")} />
+                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-600 dark:text-cyan-400", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
                                 <div className="text-left min-w-0">
                                   <div className="font-medium">{item.label}</div>
                                   <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
@@ -144,33 +146,6 @@ export function Navigation({ className }: NavigationProps) {
                       })}
                     </div>
 
-                    {/* Artist Studio */}
-                    {isArtist_user && artistItems.length > 0 && (
-                      <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Artist</h3>
-                        {artistItems.map((item) => {
-                          const Icon = item.icon;
-                          const active = isActive(item.path);
-
-                          return (
-                            <Button
-                              key={item.path}
-                              size="sm"
-                              asChild
-                              className="w-full justify-start h-auto py-3 px-3 btn-studio focus-ring"
-                            >
-                              <Link to={item.path} className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
-                                <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                                <div className="text-left min-w-0">
-                                  <div className="font-medium">{item.label}</div>
-                                  <div className="text-xs text-white/70 truncate">{item.description}</div>
-                                </div>
-                              </Link>
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    )}
                   </nav>
 
                   {/* Login Area at bottom */}
@@ -223,6 +198,7 @@ export function Navigation({ className }: NavigationProps) {
               {secondaryNavItems.map((item) => {
                 const Icon = item.icon;
                 const active = !item.external && isActive(item.path);
+                const isRSS = item.path === '/rss.xml';
 
                 return (
                   <Button
@@ -232,7 +208,8 @@ export function Navigation({ className }: NavigationProps) {
                     asChild
                     className={cn(
                       "focus-ring transition-all duration-200 hover:bg-cyan-500/10",
-                      active && "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40"
+                      active && "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40",
+                      isRSS && "text-orange-400 hover:text-orange-300"
                     )}
                   >
                     {item.external ? (
@@ -242,12 +219,12 @@ export function Navigation({ className }: NavigationProps) {
                         rel="noopener noreferrer"
                         className="flex items-center space-x-2"
                       >
-                        <Icon className="w-4 h-4" />
+                        <Icon className={cn("w-4 h-4", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
                         <span className="hidden xl:inline">{item.label}</span>
                       </a>
                     ) : (
                       <Link to={item.path} className="flex items-center space-x-2">
-                        <Icon className="w-4 h-4" />
+                        <Icon className={cn("w-4 h-4", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
                         <span className="hidden xl:inline">{item.label}</span>
                       </Link>
                     )}
@@ -255,22 +232,6 @@ export function Navigation({ className }: NavigationProps) {
                 );
               })}
             </div>
-
-            {/* Artist studio button (desktop only) */}
-            {isArtist_user && artistItems.length > 0 && (
-              <Button size="sm" asChild className={cn(
-                "focus-ring hidden lg:flex transition-all duration-200",
-                isActive(artistItems[0].path) ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40" : "btn-studio"
-              )}>
-                <Link to={artistItems[0].path}>
-                  {(() => {
-                    const Icon = artistItems[0].icon;
-                    return <Icon className="w-4 h-4 mr-2" />;
-                  })()}
-                  <span className="hidden xl:inline">{artistItems[0].label}</span>
-                </Link>
-              </Button>
-            )}
 
             {/* Login area */}
             <LoginArea className="max-w-60" />
