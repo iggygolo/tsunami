@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { ZapDialog } from '@/components/ZapDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useGlassEffect } from '@/hooks/useBackdropSupport';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { useNavigate } from 'react-router-dom';
@@ -36,6 +37,7 @@ export function PersistentAudioPlayer() {
   const navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(false);
   const [previousVolume, setPreviousVolume] = useState(1);
+  const { getGlassClass } = useGlassEffect();
 
   // Don't render if no release is loaded
   if (!state.currentRelease) {
@@ -125,7 +127,7 @@ export function PersistentAudioPlayer() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.3)] supports-[backdrop-filter]:bg-black/20 supports-[backdrop-filter]:backdrop-blur-xl sm:bg-black/20 sm:backdrop-blur-xl mobile-glass">
+    <div className={`fixed bottom-0 left-0 right-0 z-50 ${getGlassClass()} shadow-[0_-8px_30px_rgb(0,0,0,0.3)]`}>
       {/* Progress Bar as Top Border */}
       <div className="relative h-1 w-full">
         <SliderPrimitive.Root
