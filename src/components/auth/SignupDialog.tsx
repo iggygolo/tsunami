@@ -2,11 +2,11 @@
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Key, UserPlus, FileText, Shield, User, Sparkles, LogIn, Lock, CheckCircle, Copy, Upload, Globe, FileSignature, Wand2 } from 'lucide-react';
+import { Download, Key, UserPlus, FileText, Shield, User, Sparkles, LogIn, Lock, CheckCircle, Copy, Upload, Globe, FileSignature, Wand2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogOverlay } from "@/components/ui/dialog";
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/useToast';
 import { useLoginActions } from '@/hooks/useLoginActions';
@@ -313,467 +313,305 @@ const SignupDialog: React.FC<SignupDialogProps> = ({ isOpen, onClose, onComplete
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        className={cn("max-w-[95vw] sm:max-w-md max-h-[90vh] max-h-[90dvh] p-0 overflow-hidden rounded-2xl flex flex-col")}
-      >
-        <DialogHeader className={cn('px-6 pt-6 pb-1 relative flex-shrink-0')}>
-          <DialogTitle className={cn('font-semibold text-center text-lg')}>
-            {getTitle()}
-          </DialogTitle>
-          <DialogDescription className={cn(`text-muted-foreground text-center ${step === 'download' && 'hidden'}`)}>
-            {getDescription()}
-          </DialogDescription>
-        </DialogHeader>
-        <div className='px-6 pt-2 pb-4 space-y-4 overflow-y-scroll flex-1'>
-          {/* Welcome Step - New engaging introduction */}
-          {step === 'welcome' && (
-            <div className='text-center space-y-4'>
-              {/* Hero illustration */}
-              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50'>
-                <div className='flex justify-center items-center space-x-4 mb-3'>
-                  <div className='relative'>
-                    <UserPlus className='w-12 h-12 text-blue-600' />
-                    <Sparkles className='w-4 h-4 text-yellow-500 absolute -top-1 -right-1 animate-pulse' />
+      <DialogOverlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+      <DialogContent className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] border-0 bg-transparent p-0 shadow-none duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+        {/* Outer Glass Container */}
+        <div className="relative rounded-3xl border border-white/10 bg-black/30 backdrop-blur-2xl p-8">
+          {/* Main dialog content */}
+          <div className="space-y-6 max-h-[80vh] overflow-y-auto">
+          {/* Header */}
+          <div className="text-center">
+            <h2 className="text-xl font-medium text-white">Create Your Account</h2>
+          </div>
+
+          {/* Main Content Card */}
+          <div className="mx-auto max-w-sm rounded-3xl border border-white/20 bg-black/40 backdrop-blur-xl p-6">
+            {/* Welcome Step */}
+            {step === 'welcome' && (
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Sparkles className="h-6 w-6 text-white" />
+                  <span className="text-lg font-medium text-white">New to Nostr?</span>
+                </div>
+                
+                <div className="space-y-3 text-white/70 text-sm">
+                  <div className="flex items-center justify-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    <span>Decentralized and censorship-resistant</span>
                   </div>
-                  <Globe className='w-16 h-16 text-blue-700 animate-spin-slow' />
-                  <div className='relative'>
-                    <FileText className='w-12 h-12 text-blue-600' />
-                    <Sparkles className='w-4 h-4 text-yellow-500 absolute -top-1 -left-1 animate-pulse' style={{animationDelay: '0.3s'}} />
+                  <div className="flex items-center justify-center gap-2">
+                    <User className="w-4 h-4" />
+                    <span>You control your data</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <Globe className="w-4 h-4" />
+                    <span>Join a global network</span>
                   </div>
                 </div>
 
-                {/* Benefits */}
-                <div className='grid grid-cols-1 gap-2 text-sm'>
-                  <div className='flex items-center justify-center gap-2 text-blue-700 dark:text-blue-300'>
-                    <Shield className='w-4 h-4' />
-                    Decentralized and censorship-resistant
-                  </div>
-                  <div className='flex items-center justify-center gap-2 text-blue-700 dark:text-blue-300'>
-                    <User className='w-4 h-4' />
-                    You are in control of your data
-                  </div>
-                  <div className='flex items-center justify-center gap-2 text-blue-700 dark:text-blue-300'>
-                    <Globe className='w-4 h-4' />
-                    Join a global network
-                  </div>
-                </div>
-              </div>
-
-              <div className='space-y-3'>
-                <p className='text-muted-foreground px-5'>
+                <p className="text-sm text-white/70">
                   Join the Nostr network and take control of your social media experience.
-                  Your journey begins by generating a secret key.
                 </p>
 
                 <Button
-                  className='w-full rounded-full py-6 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform transition-all duration-200 hover:scale-105 shadow-lg'
                   onClick={() => setStep('generate')}
+                  className="w-full rounded-full bg-white text-black hover:bg-white/90 font-medium py-3 transition-all duration-200"
                 >
-                  <LogIn className='w-5 h-5 mr-2' />
+                  <LogIn className="w-4 h-4 mr-2" />
                   Get Started
                 </Button>
-
-                <p className='text-xs text-muted-foreground'>
-                  Free forever • Decentralized • Your data, your control
-                </p>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Generate Step - Enhanced with animations */}
-          {step === 'generate' && (
-            <div className='text-center space-y-4'>
-              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-purple-100 dark:from-blue-950/50 dark:to-purple-950/50 overflow-hidden'>
-                {/* Animated background elements */}
-                {showSparkles && (
-                  <div className='absolute inset-0'>
-                    {[...Array(12)].map((_, i) => (
-                      <Sparkles
-                        key={i}
-                        className={`absolute w-4 h-4 text-yellow-400 animate-ping`}
-                        style={{
-                          left: `${Math.random() * 80 + 10}%`,
-                          top: `${Math.random() * 80 + 10}%`,
-                          animationDelay: `${Math.random() * 2}s`
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                <div className='relative z-10'>
-                  {isLoading ? (
-                    <div className='space-y-3'>
-                      <div className='relative'>
-                        <Key className='w-20 h-20 text-primary mx-auto animate-pulse' />
-                        <div className='absolute inset-0 flex items-center justify-center'>
-                          <div className='w-24 h-24 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin'></div>
-                        </div>
-                      </div>
-                      <div className='space-y-2'>
-                        <p className='text-lg font-semibold text-primary flex items-center justify-center gap-2'>
-                          <Sparkles className='w-5 h-5' />
-                          Generating your secret key...
-                        </p>
-                        <p className='text-sm text-muted-foreground'>
-                          Creating your secure key
-                        </p>
+            {/* Generate Step */}
+            {step === 'generate' && (
+              <div className="text-center space-y-4">
+                {isLoading ? (
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <Key className="w-16 h-16 text-white mx-auto animate-pulse" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-20 h-20 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                       </div>
                     </div>
-                  ) : (
-                    <div className='space-y-3'>
-                      <Key className='w-20 h-20 text-primary mx-auto' />
-                      <div className='space-y-2'>
-                        <p className='text-lg font-semibold'>
-                          Ready to generate your secret key?
-                        </p>
-                        <p className='text-sm text-muted-foreground px-5'>
-                          This key will be your password to access applications within the Nostr network.
-                        </p>
-
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {!isLoading && (
-                <Button
-                  className='w-full rounded-full py-6 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transform transition-all duration-200 hover:scale-105 shadow-lg'
-                  onClick={generateKey}
-                  disabled={isLoading}
-                >
-                  <Sparkles className='w-5 h-5 mr-2' />
-                  Generate My Secret Key
-                </Button>
-              )}
-            </div>
-          )}
-
-          {/* Download Step - Whimsical and magical */}
-          {step === 'download' && (
-            <div className='text-center space-y-4'>
-              {/* Key reveal */}
-              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50 overflow-hidden'>
-                {/* Sparkles */}
-                <div className='absolute inset-0 pointer-events-none'>
-                  <Sparkles className='absolute top-3 left-4 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '0s'}} />
-                  <Sparkles className='absolute top-6 right-6 w-3 h-3 text-yellow-500 animate-pulse' style={{animationDelay: '0.5s'}} />
-                  <Sparkles className='absolute bottom-4 left-6 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '1s'}} />
-                  <Sparkles className='absolute bottom-3 right-4 w-3 h-3 text-yellow-500 animate-pulse' style={{animationDelay: '1.5s'}} />
-                </div>
-
-                <div className='relative z-10 flex justify-center items-center mb-3'>
-                  <div className='relative'>
-                    <div className='w-16 h-16 bg-gradient-to-br from-blue-200 to-indigo-300 rounded-full flex items-center justify-center shadow-lg animate-pulse'>
-                      <Key className='w-8 h-8 text-indigo-800' />
-                    </div>
-                    <div className='absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center animate-bounce'>
-                      <Sparkles className='w-3 h-3 text-white' />
-                    </div>
-                  </div>
-                </div>
-
-                <div className='relative z-10 space-y-2'>
-                  <p className='text-base font-semibold'>
-                    Your secret key has been generated!
-                  </p>
-
-                  {/* Warning */}
-                  <div className='relative mx-auto max-w-sm'>
-                    <div className='p-3 bg-gradient-to-r from-amber-100 via-yellow-50 to-amber-100 dark:from-amber-950/40 dark:via-yellow-950/20 dark:to-amber-950/40 rounded-lg border-2 border-amber-300 dark:border-amber-700 shadow-md'>
-                      <div className='flex items-center gap-2 mb-1'>
-                        <FileText className='w-3 h-3 text-amber-700' />
-                        <span className='text-xs font-bold text-amber-800 dark:text-amber-200'>
-                          Important Warning
-                        </span>
-                      </div>
-                      <p className='text-xs text-red-700 dark:text-amber-300 italic'>
-                        This key is your primary and only means of accessing your account. Store it safely and securely.
+                    <div className="space-y-2">
+                      <p className="text-lg font-medium text-white flex items-center justify-center gap-2">
+                        <Sparkles className="w-5 h-5" />
+                        Generating your secret key...
+                      </p>
+                      <p className="text-sm text-white/70">
+                        Creating your secure key
                       </p>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Key className="w-16 h-16 text-white mx-auto" />
+                    <div className="space-y-2">
+                      <p className="text-lg font-medium text-white">
+                        Ready to generate your secret key?
+                      </p>
+                      <p className="text-sm text-white/70">
+                        This key will be your password to access applications within the Nostr network.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={generateKey}
+                      disabled={isLoading}
+                      className="w-full rounded-full bg-white text-black hover:bg-white/90 font-medium py-3 transition-all duration-200"
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate My Secret Key
+                    </Button>
+                  </div>
+                )}
               </div>
+            )}
 
-              {/* Key vault */}
-
-
-              {/* Security options */}
-              <div className='space-y-3'>
-
-
-                <div className='grid grid-cols-1 gap-2'>
-                  {/* Download Option */}
-                   <Card className={`cursor-pointer transition-all duration-200 ${
-                    keySecured === 'downloaded'
-                       ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20'
-                       : 'hover:bg-primary/5 hover:border-primary/20'
-                   }`}>
-                    <CardContent className='p-3'>
-                      <Button
-                        variant="ghost"
-                        className='w-full h-auto p-0 justify-start hover:bg-transparent'
-                        onClick={downloadKey}
-                      >
-                        <div className='flex items-center gap-3 w-full'>
-                          <div className={`p-1.5 rounded-lg ${
-                            keySecured === 'downloaded'
-                               ? 'bg-green-100 dark:bg-green-900'
-                               : 'bg-primary/10'
-                           }`}>
-                            {keySecured === 'downloaded' ? (
-                               <CheckCircle className='w-4 h-4 text-green-600' />
-                             ) : (
-                               <Download className='w-4 h-4 text-primary' />
-                             )}
-                          </div>
-                          <div className='flex-1 text-left'>
-                             <div className='font-medium text-sm'>
-                               Download as File
-                             </div>
-                             <div className='text-xs text-muted-foreground'>
-                               Save as secret-key.txt file
-                             </div>
-                          </div>
-                          {keySecured === 'downloaded' && (
-                             <div className='text-xs font-medium text-green-600'>
-                               ✓ Downloaded
-                             </div>
-                           )}
-                        </div>
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  {/* Copy Option */}
-                   <Card className={`cursor-pointer transition-all duration-200 ${
-                    keySecured === 'copied'
-                       ? 'ring-2 ring-green-500 bg-green-50 dark:bg-green-950/20'
-                       : 'hover:bg-primary/5 hover:border-primary/20'
-                   }`}>
-                    <CardContent className='p-3'>
-                      <Button
-                        variant="ghost"
-                        className='w-full h-auto p-0 justify-start hover:bg-transparent'
-                        onClick={copyKey}
-                      >
-                        <div className='flex items-center gap-3 w-full'>
-                          <div className={`p-1.5 rounded-lg ${
-                            keySecured === 'copied'
-                               ? 'bg-green-100 dark:bg-green-900'
-                               : 'bg-primary/10'
-                           }`}>
-                            {keySecured === 'copied' ? (
-                               <CheckCircle className='w-4 h-4 text-green-600' />
-                             ) : (
-                               <Copy className='w-4 h-4 text-primary' />
-                             )}
-                          </div>
-                          <div className='flex-1 text-left'>
-                             <div className='font-medium text-sm'>
-                               Copy to Clipboard
-                             </div>
-                             <div className='text-xs text-muted-foreground'>
-                               Save to password manager
-                            </div>
-                            <div className='text-[.7rem] text-muted-foreground'>
-                              {nsec.slice(0,16)}...
-                            </div>
-                          </div>
-                          {keySecured === 'copied' && (
-                             <div className='text-xs font-medium text-green-600'>
-                               ✓ Copied
-                             </div>
-                           )}
-                        </div>
-                      </Button>
-                    </CardContent>
-                  </Card>
+            {/* Download Step */}
+            {step === 'download' && (
+              <div className="text-center space-y-4">
+                <div className="flex justify-center items-center mb-4">
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                      <Key className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                      <Sparkles className="w-3 h-3 text-black" />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Continue button */}
-                <Button
-                  className={`w-full rounded-full py-4 text-base font-semibold transform transition-all duration-200 shadow-lg ${
-                    keySecured !== 'none'
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-950/50 dark:to-purple-950/50 hover:scale-105'
-                      : 'bg-gradient-to-r from-blue-600/60 to-indigo-600/60 text-muted cursor-not-allowed'
-                  }`}
-                  onClick={finishKeySetup}
-                  disabled={keySecured === 'none'}
-                >
-                  <LogIn className='w-4 h-4 mr-2 flex-shrink-0' />
-                  <span className="text-center leading-tight">
-                    {keySecured === 'none' ? (
+                <div className="space-y-2 mb-4">
+                  <p className="text-lg font-medium text-white">
+                    Your secret key is ready!
+                  </p>
+                  <div className="p-3 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+                    <p className="text-xs text-yellow-200">
+                      ⚠️ This key is your only way to access your account. Store it safely!
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Button
+                    onClick={downloadKey}
+                    className={cn(
+                      "w-full rounded-full font-medium py-3 transition-all duration-200",
+                      keySecured === 'downloaded'
+                        ? "bg-green-500/20 text-green-200 border border-green-500/30"
+                        : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
+                    )}
+                  >
+                    {keySecured === 'downloaded' ? (
                       <>
-                        Please secure your key first
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Downloaded
                       </>
                     ) : (
                       <>
-                        <span className="hidden sm:inline">My Key is Safe - Continue</span>
-                        <span className="sm:hidden">Key Secured - Continue</span>
+                        <Download className="w-4 h-4 mr-2" />
+                        Download as File
                       </>
                     )}
-                  </span>
-                </Button>
-              </div>
-            </div>
-          )}
+                  </Button>
 
-          {/* Profile Step - Optional profile setup */}
-          {step === 'profile' && (
-            <div className='text-center space-y-4'>
-              {/* Profile setup illustration */}
-              <div className='relative p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-950/50 overflow-hidden'>
-                {/* Sparkles */}
-                <div className='absolute inset-0 pointer-events-none'>
-                  <Sparkles className='absolute top-3 left-4 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '0s'}} />
-                  <Sparkles className='absolute top-6 right-6 w-3 h-3 text-yellow-500 animate-pulse' style={{animationDelay: '0.5s'}} />
-                  <Sparkles className='absolute bottom-4 left-6 w-3 h-3 text-yellow-400 animate-pulse' style={{animationDelay: '1s'}} />
+                  <Button
+                    onClick={copyKey}
+                    className={cn(
+                      "w-full rounded-full font-medium py-3 transition-all duration-200",
+                      keySecured === 'copied'
+                        ? "bg-green-500/20 text-green-200 border border-green-500/30"
+                        : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
+                    )}
+                  >
+                    {keySecured === 'copied' ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy to Clipboard
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    onClick={finishKeySetup}
+                    disabled={keySecured === 'none'}
+                    className={cn(
+                      "w-full rounded-full font-medium py-3 transition-all duration-200",
+                      keySecured !== 'none'
+                        ? "bg-white text-black hover:bg-white/90"
+                        : "bg-white/30 text-white/50 cursor-not-allowed"
+                    )}
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    {keySecured === 'none' ? 'Please secure your key first' : 'Continue'}
+                  </Button>
                 </div>
+              </div>
+            )}
 
-                <div className='relative z-10 flex justify-center items-center mb-3'>
-                  <div className='relative'>
-                    <div className='w-16 h-16 bg-gradient-to-br from-blue-200 to-indigo-300 rounded-full flex items-center justify-center shadow-lg'>
-                      <User className='w-8 h-8 text-blue-800' />
-                    </div>
-                    <div className='absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center animate-bounce'>
-                      <Sparkles className='w-3 h-3 text-white' />
+            {/* Profile Step */}
+            {step === 'profile' && (
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  <div className="flex justify-center items-center mb-2">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                      <User className="w-6 h-6 text-white" />
                     </div>
                   </div>
+                  <p className="text-lg font-medium text-white">Set up your profile</p>
+                  <p className="text-sm text-white/70">Tell others about yourself</p>
                 </div>
 
-                <div className='relative z-10 space-y-2'>
-                  <p className='text-base font-semibold'>
-                    Almost there! Let's set up your profile
-                  </p>
-
-                  <p className='text-sm text-muted-foreground'>
-                    Your profile is your identity on Nostr.
-                  </p>
-                </div>
-              </div>
-
-              {/* Publishing status indicator */}
-              {isPublishing && (
-                <div className='relative p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800'>
-                  <div className='flex items-center justify-center gap-3'>
-                    <div className='w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin' />
-                    <span className='text-sm font-medium text-blue-700 dark:text-blue-300'>
-                      Publishing your profile...
-                    </span>
+                {isPublishing && (
+                  <div className="flex items-center justify-center gap-3 p-3 bg-blue-500/20 rounded-lg border border-blue-500/30">
+                    <div className="w-4 h-4 border-2 border-blue-300 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm text-blue-200">Publishing your profile...</span>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Profile form */}
-              <div className={`space-y-4 text-left ${isPublishing ? 'opacity-50 pointer-events-none' : ''}`}>
-                <div className='space-y-2'>
-                  <label htmlFor='profile-name' className='text-sm font-medium'>
-                    Display Name
-                  </label>
-                  <Input
-                    id='profile-name'
-                    value={profileData.name}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder='Your name'
-                    className='rounded-lg'
-                    disabled={isPublishing}
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <label htmlFor='profile-about' className='text-sm font-medium'>
-                    Bio
-                  </label>
-                  <Textarea
-                    id='profile-about'
-                    value={profileData.about}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, about: e.target.value }))}
-                    placeholder='Tell others about yourself...'
-                    className='rounded-lg resize-none'
-                    rows={3}
-                    disabled={isPublishing}
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <label htmlFor='profile-picture' className='text-sm font-medium'>
-                    Avatar
-                  </label>
-                  <div className='flex gap-2'>
+                <div className={cn("space-y-4", isPublishing && "opacity-50 pointer-events-none")}>
+                  <div className="space-y-2">
+                    <label htmlFor="profile-name" className="text-sm font-medium text-white/80">
+                      Display Name
+                    </label>
                     <Input
-                      id='profile-picture'
-                      value={profileData.picture}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, picture: e.target.value }))}
-                      placeholder='https://example.com/your-avatar.jpg'
-                      className='rounded-lg flex-1'
+                      id="profile-name"
+                      value={profileData.name}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Your name"
+                      className="rounded-full bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20"
                       disabled={isPublishing}
                     />
-                    <input
-                      type='file'
-                      accept='image/*'
-                      className='hidden'
-                      ref={avatarFileInputRef}
-                      onChange={handleAvatarUpload}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="profile-about" className="text-sm font-medium text-white/80">
+                      Bio
+                    </label>
+                    <Textarea
+                      id="profile-about"
+                      value={profileData.about}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, about: e.target.value }))}
+                      placeholder="Tell others about yourself..."
+                      className="rounded-lg bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20 resize-none"
+                      rows={3}
+                      disabled={isPublishing}
                     />
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='icon'
-                      onClick={() => avatarFileInputRef.current?.click()}
-                      disabled={isUploading || isPublishing}
-                      className='rounded-lg shrink-0'
-                      title='Upload avatar image'
-                    >
-                      {isUploading ? (
-                        <div className='w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin' />
-                      ) : (
-                        <Upload className='w-4 h-4' />
-                      )}
-                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="profile-picture" className="text-sm font-medium text-white/80">
+                      Avatar URL
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="profile-picture"
+                        value={profileData.picture}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, picture: e.target.value }))}
+                        placeholder="https://example.com/avatar.jpg"
+                        className="rounded-full bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20 flex-1"
+                        disabled={isPublishing}
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={avatarFileInputRef}
+                        onChange={handleAvatarUpload}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => avatarFileInputRef.current?.click()}
+                        disabled={isUploading || isPublishing}
+                        className="rounded-full bg-white/10 border-white/20 text-white hover:bg-white/20 px-3"
+                      >
+                        {isUploading ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Action buttons */}
-              <div className='space-y-3'>
-                <Button
-                  className='w-full rounded-full py-4 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform transition-all duration-200 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
-                  onClick={() => finishSignup(false)}
-                  disabled={isPublishing || isUploading}
-                >
-                  {isPublishing ? (
-                    <>
-                      <div className='w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin' />
-                      Creating Profile...
-                    </>
-                  ) : (
-                    <>
-                      <User className='w-4 h-4 mr-2' />
-                      Create Profile & Finish
-                    </>
-                  )}
-                </Button>
+                <div className="space-y-3 pt-2">
+                  <Button
+                    onClick={() => finishSignup(false)}
+                    disabled={isPublishing || isUploading}
+                    className="w-full rounded-full bg-white text-black hover:bg-white/90 font-medium py-3 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isPublishing ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        Creating Profile...
+                      </>
+                    ) : (
+                      <>
+                        <User className="w-4 h-4 mr-2" />
+                        Create Profile & Finish
+                      </>
+                    )}
+                  </Button>
 
-                <Button
-                  variant='outline'
-                  className='w-full rounded-full py-3 disabled:opacity-50 disabled:cursor-not-allowed'
-                  onClick={() => finishSignup(true)}
-                  disabled={isPublishing || isUploading}
-                >
-                  {isPublishing ? (
-                    <>
-                      <div className='w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin' />
-                      Setting up account...
-                    </>
-                  ) : (
-                    'Skip for now'
-                  )}
-                </Button>
+                  <Button
+                    onClick={() => finishSignup(true)}
+                    disabled={isPublishing || isUploading}
+                    className="w-full rounded-full border-white/20 text-white hover:bg-white/10 bg-transparent font-medium py-3 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Skip for now
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

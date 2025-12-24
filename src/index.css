@@ -272,3 +272,75 @@
     transform: translateX(200%) skewX(-12deg);
   }
 }
+/* Apple Glass Effect Utilities */
+@layer utilities {
+  .apple-glass-overlay {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  .apple-glass-card {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .apple-glass-input {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .apple-glass-input:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+  
+  .apple-glass-button {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .apple-glass-button:hover {
+    background: rgba(255, 255, 255, 0.95);
+  }
+  
+  .apple-glass-button-outline {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .apple-glass-button-outline:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Fallbacks for browsers without backdrop-filter support */
+  @supports not (backdrop-filter: blur(16px)) {
+    .apple-glass-overlay {
+      background: rgba(0, 0, 0, 0.9);
+    }
+    
+    .apple-glass-card {
+      background: rgba(0, 0, 0, 0.7);
+    }
+    
+    .apple-glass-input {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .apple-glass-button {
+      background: rgba(255, 255, 255, 0.95);
+    }
+    
+    .apple-glass-button-outline {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
