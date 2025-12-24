@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Headphones, List, Users, MessageSquare, User, Rss, Settings } from 'lucide-react';
+import { Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { isArtist } from '@/lib/musicConfig';
+import { getAllNavItems, getArtistNavItems } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -23,45 +24,8 @@ export function Sidebar({ className }: SidebarProps) {
     return location.pathname.startsWith(path);
   };
 
-  const navItems = [
-    {
-      path: '/',
-      icon: Headphones,
-      label: 'Home',
-      description: 'Latest drops & highlights'
-    },
-    {
-      path: '/releases',
-      icon: List,
-      label: 'Releases',
-      description: 'All tracks & albums'
-    },
-    {
-      path: '/social',
-      icon: MessageSquare,
-      label: 'Social',
-      description: 'Posts & updates'
-    },
-    {
-      path: '/community',
-      icon: Users,
-      label: 'Community',
-      description: 'Fans & supporters'
-    },
-    {
-      path: '/about',
-      icon: User,
-      label: 'About',
-      description: 'Artist bio & info'
-    },
-    {
-      path: '/rss.xml',
-      icon: Rss,
-      label: 'RSS Feed',
-      description: 'Subscribe',
-      external: true
-    }
-  ];
+  const navItems = getAllNavItems();
+  const artistItems = getArtistNavItems();
 
   return (
     <aside className={cn(
@@ -132,22 +96,30 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
 
         {/* Artist Studio */}
-        {isArtist_user && (
+        {isArtist_user && artistItems.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Artist</h3>
-            <Button
-              size="sm"
-              asChild
-              className="w-full justify-start h-auto py-3 px-3 btn-studio focus-ring"
-            >
-              <Link to="/studio" className="flex items-start space-x-3">
-                <Settings className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <div className="text-left min-w-0">
-                  <div className="font-medium">Studio</div>
-                  <div className="text-xs text-white/70 truncate">Artist tools</div>
-                </div>
-              </Link>
-            </Button>
+            {artistItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+
+              return (
+                <Button
+                  key={item.path}
+                  size="sm"
+                  asChild
+                  className="w-full justify-start h-auto py-3 px-3 btn-studio focus-ring"
+                >
+                  <Link to={item.path} className="flex items-start space-x-3">
+                    <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                    <div className="text-left min-w-0">
+                      <div className="font-medium">{item.label}</div>
+                      <div className="text-xs text-white/70 truncate">{item.description}</div>
+                    </div>
+                  </Link>
+                </Button>
+              );
+            })}
           </div>
         )}
       </nav>

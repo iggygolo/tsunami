@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { Headphones, List, Users, MessageSquare, User, Rss, Settings, Menu } from 'lucide-react';
+import { Headphones, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoginArea } from '@/components/auth/LoginArea';
 import {
@@ -14,6 +14,7 @@ import {
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { isArtist } from '@/lib/musicConfig';
+import { getMainNavItems, getSecondaryNavItems, getArtistNavItems } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 
 interface NavigationProps {
@@ -34,48 +35,9 @@ export function Navigation({ className }: NavigationProps) {
     return location.pathname.startsWith(path);
   };
 
-  const navItems = [
-    {
-      path: '/',
-      icon: Headphones,
-      label: 'Home',
-      description: 'Overview & latest release'
-    },
-    {
-      path: '/releases',
-      icon: List,
-      label: 'Releases',
-      description: 'Browse all releases'
-    },
-    {
-      path: '/social',
-      icon: MessageSquare,
-      label: 'Social',
-      description: 'Artist updates'
-    },
-    {
-      path: '/community',
-      icon: Users,
-      label: 'Community',
-      description: 'Engage with listeners'
-    }
-  ];
-
-  const secondaryItems = [
-    {
-      path: '/about',
-      icon: User,
-      label: 'About',
-      description: 'Podcast info'
-    },
-    {
-      path: '/rss.xml',
-      icon: Rss,
-      label: 'RSS Feed',
-      description: 'Subscribe',
-      external: true
-    }
-  ];
+  const mainNavItems = getMainNavItems();
+  const secondaryNavItems = getSecondaryNavItems();
+  const artistItems = getArtistNavItems();
 
   return (
     <header className={cn(
@@ -100,7 +62,7 @@ export function Navigation({ className }: NavigationProps) {
 
           {/* Main Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => {
+            {mainNavItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
 
@@ -128,7 +90,7 @@ export function Navigation({ className }: NavigationProps) {
           <div className="flex items-center space-x-2">
             {/* Secondary nav items */}
             <div className="hidden sm:flex items-center space-x-1">
-              {secondaryItems.map((item) => {
+              {secondaryNavItems.map((item) => {
                 const Icon = item.icon;
                 const active = !item.external && isActive(item.path);
 
@@ -162,11 +124,14 @@ export function Navigation({ className }: NavigationProps) {
             </div>
 
             {/* Artist studio button */}
-            {isArtist_user && (
+            {isArtist_user && artistItems.length > 0 && (
               <Button size="sm" asChild className="btn-studio focus-ring hidden sm:flex">
-                <Link to="/studio">
-                  <Settings className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Studio</span>
+                <Link to={artistItems[0].path}>
+                  {(() => {
+                    const Icon = artistItems[0].icon;
+                    return <Icon className="w-4 h-4 mr-2" />;
+                  })()}
+                  <span className="hidden sm:inline">{artistItems[0].label}</span>
                 </Link>
               </Button>
             )}
@@ -204,7 +169,7 @@ export function Navigation({ className }: NavigationProps) {
             <div className="mt-6 space-y-4">
               {/* Main Navigation Items */}
               <div className="space-y-2">
-                {navItems.map((item) => {
+                {mainNavItems.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.path);
 
@@ -231,7 +196,7 @@ export function Navigation({ className }: NavigationProps) {
 
               {/* Secondary Navigation Items */}
               <div className="space-y-2">
-                {secondaryItems.map((item) => {
+                {secondaryNavItems.map((item) => {
                   const Icon = item.icon;
                   const active = !item.external && isActive(item.path);
 
@@ -269,20 +234,28 @@ export function Navigation({ className }: NavigationProps) {
               </div>
 
               {/* Artist Studio Button */}
-              {isArtist_user && (
+              {isArtist_user && artistItems.length > 0 && (
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-muted-foreground px-3">Artist</h3>
-                  <Button
-                    size="sm"
-                    asChild
-                    className="w-full justify-start btn-studio focus-ring"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Link to="/studio" className="flex items-center space-x-3">
-                      <Settings className="w-4 h-4" />
-                      <span>Studio</span>
-                    </Link>
-                  </Button>
+                  {artistItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.path);
+
+                    return (
+                      <Button
+                        key={item.path}
+                        size="sm"
+                        asChild
+                        className="w-full justify-start btn-studio focus-ring"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Link to={item.path} className="flex items-center space-x-3">
+                          <Icon className="w-4 h-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </Button>
+                    );
+                  })}
                 </div>
               )}
             </div>
