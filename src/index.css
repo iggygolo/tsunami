@@ -142,6 +142,32 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
+  /* Mobile-specific glass effect fallbacks */
+  @supports not (backdrop-filter: blur(12px)) {
+    .glass {
+      background: rgba(255, 255, 255, 0.25);
+    }
+    
+    .dark .glass {
+      background: rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  /* Enhanced mobile backdrop blur support */
+  @media (max-width: 768px) {
+    .mobile-glass {
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    
+    @supports not (backdrop-filter: blur(20px)) {
+      .mobile-glass {
+        background: rgba(0, 0, 0, 0.6);
+      }
+    }
+  }
+
   /* Gradient text */
   .gradient-text {
     @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
