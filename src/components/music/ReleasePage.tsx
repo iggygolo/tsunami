@@ -326,7 +326,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                       icon={<Heart className="w-3 h-3" />}
                       count={interactionCounts?.likes || 0}
                     >
-                      Reactions
+                      Likes
                     </GlassTabsTrigger>
                   </GlassTabsList>
 
