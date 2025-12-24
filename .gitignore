@@ -30,3 +30,4 @@ dist-ssr
 
 # public
 /public/assets
+/public/data

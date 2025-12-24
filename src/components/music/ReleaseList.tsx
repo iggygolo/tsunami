@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ReleaseCard } from './ReleaseCard';
 import { useReleases } from '@/hooks/usePodcastReleases';
+import { useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
 import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
 
 interface ReleaseListProps {
@@ -14,13 +15,15 @@ interface ReleaseListProps {
   limit?: number;
   className?: string;
   onPlayRelease?: (release: PodcastRelease) => void;
+  useCache?: boolean; // Enable cache usage for better performance
 }
 
 export function ReleaseList({
   showSearch = true,
   limit = 50,
   className,
-  onPlayRelease
+  onPlayRelease,
+  useCache = false
 }: ReleaseListProps) {
   const [searchOptions, setSearchOptions] = useState<ReleaseSearchOptions>({
     limit,
@@ -28,7 +31,17 @@ export function ReleaseList({
     sortOrder: 'desc'
   });
 
-  const { data: releases, isLoading, error } = useReleases(searchOptions);
+  // Use cache when enabled and no search/filtering is applied
+  const shouldUseCache = useCache && !searchOptions.query && searchOptions.sortBy === 'date' && searchOptions.sortOrder === 'desc';
+  
+  const { data: cachedReleases, isLoading: isCacheLoading } = useStaticReleaseCache();
+  const { data: liveReleases, isLoading: isLiveLoading, error } = useReleases(
+    shouldUseCache ? { limit: 0 } : searchOptions // Skip live query if using cache
+  );
+
+  // Determine final data source
+  const releases = shouldUseCache ? cachedReleases?.slice(0, limit) : liveReleases;
+  const isLoading = shouldUseCache ? isCacheLoading : isLiveLoading;
 
   const handleSearch = (query: string) => {
     setSearchOptions(prev => ({ ...prev, query: query || undefined }));
@@ -112,7 +125,6 @@ export function ReleaseList({
           </div>
         </div>
       )}
-
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

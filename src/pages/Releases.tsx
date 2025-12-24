@@ -20,7 +20,7 @@ const Releases = () => {
             </p>
           </div>
 
-          <ReleaseList showSearch />
+          <ReleaseList showSearch useCache />
         </div>
       </div>
     </Layout>

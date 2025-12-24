@@ -13,9 +13,10 @@ A Nostr-powered podcast platform for single artist accounts that combines decent
 
 ### 📡 **RSS Feed Generation**
 - Automatic Podcasting 2.0-compliant RSS feed at `/rss.xml`
-- Build-time RSS generation using `scripts/build-rss.ts`
+- Build-time RSS generation using unified `scripts/build-static-data.ts`
 - Lightning value splits with modern `lnaddress` method (no keysend fallback)
 - RSS feed pulls releases from Nostr relays at build time
+- Consistent data between RSS feed and static cache files
 
 ### 🎧 **Listening Experience**
 - Clean, responsive audio player with progress tracking
@@ -74,8 +75,8 @@ npm test
 # Build for production
 npm run build
 
-# Generate RSS feed
-npx tsx scripts/build-rss.ts
+# Generate only static data (RSS + cache)
+npm run build:data
 ```
 
 ### Configuration
@@ -126,14 +127,20 @@ src/
 └── types/              # TypeScript type definitions
 
 scripts/
-├── build-rss.ts        # Build-time RSS feed generation
-├── validate-rss.ts     # RSS feed validation
-└── test-rss-endpoint.ts # RSS endpoint testing
+├── build-static-data.ts   # Unified build for RSS + cache files
+├── shared/
+│   └── nostr-data-fetcher.ts # Shared Nostr data fetching logic
+├── validate-rss.ts        # RSS feed validation
+└── test-rss-endpoint.ts    # RSS endpoint testing
 
 dist/
-├── rss.xml             # Generated Podcasting 2.0 RSS feed
-├── rss-health.json     # RSS health and status monitoring
-└── 404.html            # GitHub Pages compatibility
+├── rss.xml                 # Generated Podcasting 2.0 RSS feed
+├── data/
+│   ├── releases.json       # Static cache of latest releases
+│   └── latest-release.json # Static cache of most recent release
+├── rss-health.json         # RSS health and status monitoring
+├── cache-health.json       # Cache health and status monitoring
+└── 404.html                # GitHub Pages compatibility
 ```
 
 ## 🎯 Core Event Types
@@ -155,11 +162,11 @@ npm run build
 ```
 
 ### RSS Feed Updates
-- **Build-time**: RSS generated automatically during `npm run build`
-- **Manual**: Run `npx tsx scripts/build-rss.ts` to regenerate
+- **Build-time**: RSS and cache files generated automatically during `npm run build`
+- **Manual**: Run `npm run build:data` to regenerate RSS and cache files
 - **Periodic**: Set up cron jobs using updated `RSS_CRON_SETUP.md` guide  
 - **Webhooks**: Trigger builds when new episodes are published
-- **Health monitoring**: Check `/rss-health.json` for feed status
+- **Health monitoring**: Check `/rss-health.json` and `/cache-health.json` for status
 
 ### Environment Variables
 Ensure production environment has all required variables from `.env`

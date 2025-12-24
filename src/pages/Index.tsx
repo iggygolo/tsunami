@@ -12,8 +12,7 @@ import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
 import { RecentActivity } from '@/components/music/RecentActivity';
 import { PostCard } from '@/components/social/PostCard';
 import { ZapDialog } from '@/components/ZapDialog';
-import { useLatestReleaseSimplified } from '@/hooks/useLatestReleaseSimplified';
-import { useReleases } from '@/hooks/usePodcastReleases';
+import { useLatestReleaseCache, useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -24,8 +23,8 @@ import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
 import { getArtistPubkeyHex } from '@/lib/podcastConfig';
 
 const Index = () => {
-  const { data: latestRelease, isLoading: isLoadingLatest } = useLatestReleaseSimplified();
-  const { data: allReleases } = useReleases({ limit: 100 });
+  const { data: latestRelease, isLoading: isLoadingLatest } = useLatestReleaseCache();
+  const { data: allReleases } = useStaticReleaseCache();
   const { data: leaderboard } = useZapLeaderboard(100);
   const { data: postCount } = useArtistPostCount();
   const podcastConfig = usePodcastConfig();
@@ -272,6 +271,7 @@ const Index = () => {
             <ReleaseList
               showSearch={false}
               limit={6}
+              useCache={true}
               onPlayRelease={(release) => {
                 playRelease(release);
               }}
