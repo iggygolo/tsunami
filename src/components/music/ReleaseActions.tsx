@@ -123,6 +123,7 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
 
   const handleShare = async () => {
     try {
+      // Use naddr format for sharing (canonical Nostr format)
       const naddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
       const url = `${window.location.origin}/${naddr}`;
 

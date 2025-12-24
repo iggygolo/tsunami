@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
+import { useStaticSingleReleaseCache } from '@/hooks/useStaticSingleReleaseCache';
 import { 
   validateMusicTrack, 
   validateMusicPlaylist, 
@@ -25,20 +26,46 @@ interface UseReleaseDataProps {
 }
 
 /**
- * Simplified release data hook that eliminates unnecessary complexity
+ * Enhanced release data hook with SSG cache-first strategy
  * 
  * CACHING INTEGRATION:
- * - Checks for cached data from useReleases hook first
+ * - First checks static cache from SSG build (instant loading)
+ * - Then checks runtime cache from useReleases hook
  * - Uses initialData to provide instant loading when navigating from releases list
- * - Falls back to network requests only when cache misses occur
+ * - Falls back to network requests only when all caches miss
  */
 export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProps) {
   const { nostr } = useNostr();
   const queryClient = useQueryClient();
 
+  // Generate release ID for cache lookup - use eventId directly when available
+  const releaseId = eventId || (addressableEvent ? 
+    `${addressableEvent.pubkey}:${addressableEvent.kind}:${addressableEvent.identifier}` : 
+    undefined
+  );
+
+  // Try to load from static cache first (SSG)
+  const { data: staticCachedRelease, isLoading: isLoadingStatic, error: staticCacheError } = useStaticSingleReleaseCache(releaseId);
+
+  console.log('useReleaseData - Cache status:', {
+    releaseId,
+    hasCache: !!staticCachedRelease,
+    isLoadingStatic,
+    cacheError: staticCacheError?.message
+  });
+
+  // Only run network queries if cache is not available
+  const shouldFetchFromNetwork = !staticCachedRelease && !isLoadingStatic;
+
+  console.log('useReleaseData - Network fetch decision:', {
+    shouldFetchFromNetwork,
+    hasCache: !!staticCachedRelease,
+    isLoadingStatic
+  });
+
   // Single query to fetch the release event
   const { data: releaseEvent, isLoading: isLoadingEvent } = useQuery<NostrEvent | null>({
-    queryKey: ['release-event', eventId || `${addressableEvent?.pubkey}:${addressableEvent?.kind}:${addressableEvent?.identifier}`],
+    queryKey: ['release-event', releaseId],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
@@ -66,11 +93,11 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
 
       return null;
     },
-    enabled: !!(eventId || addressableEvent),
+    enabled: shouldFetchFromNetwork && !!(eventId || addressableEvent),
     staleTime: 300000, // 5 minutes
     // Check cache first - if we have cached data from releases list, use it immediately
     initialData: () => {
-      if (addressableEvent) {
+      if (addressableEvent && shouldFetchFromNetwork) {
         const cacheKey = `${addressableEvent.pubkey}:${addressableEvent.kind}:${addressableEvent.identifier}`;
         const cachedEvent = queryClient.getQueryData<NostrEvent>(['release-event', cacheKey]);
         if (cachedEvent) {
@@ -133,11 +160,11 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
       console.warn('useReleaseData - Unsupported event kind:', releaseEvent.kind);
       return null;
     },
-    enabled: !!releaseEvent && (!trackReferences.length || !!resolvedTracks),
+    enabled: shouldFetchFromNetwork && !!releaseEvent && (!trackReferences.length || !!resolvedTracks),
     staleTime: 300000, // 5 minutes
     // Check cache first - if we have cached converted release data, use it immediately
     initialData: () => {
-      if (releaseEvent) {
+      if (releaseEvent && shouldFetchFromNetwork) {
         const cachedRelease = queryClient.getQueryData<PodcastRelease>(['release-conversion', releaseEvent.id, resolvedTracks?.length]);
         if (cachedRelease) {
           console.log('useReleaseData - Using cached converted release data');
@@ -148,22 +175,57 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
     },
   });
 
+  // If we have cached data, use it and create a mock event
+  if (staticCachedRelease) {
+    console.log('useReleaseData - Using static cache data:', {
+      title: staticCachedRelease.title,
+      source: 'static-cache'
+    });
+
+    // Create a mock event object for comments and interactions
+    const mockEvent: NostrEvent = {
+      id: staticCachedRelease.eventId,
+      pubkey: staticCachedRelease.artistPubkey,
+      created_at: Math.floor(staticCachedRelease.createdAt.getTime() / 1000),
+      kind: PODCAST_KINDS.MUSIC_PLAYLIST,
+      tags: [
+        ['d', staticCachedRelease.identifier || staticCachedRelease.eventId],
+        ['title', staticCachedRelease.title],
+        ...(staticCachedRelease.description ? [['description', staticCachedRelease.description]] : []),
+        ...(staticCachedRelease.imageUrl ? [['image', staticCachedRelease.imageUrl]] : []),
+        ...staticCachedRelease.tags.map(tag => ['t', tag])
+      ],
+      content: staticCachedRelease.content || '',
+      sig: ''
+    };
+
+    return {
+      release: staticCachedRelease,
+      event: mockEvent,
+      commentEvent: mockEvent,
+      totalDuration: staticCachedRelease.tracks.reduce((sum, track) => sum + (track.duration || 0), 0),
+      isLoading: false,
+      resolvedTracks: []
+    };
+  }
+
   // Calculate total duration
   const totalDuration = release?.tracks.reduce((sum, track) => sum + (track.duration || 0), 0) || 0;
 
-  const isLoading = isLoadingEvent || isLoadingTracks || isLoadingConversion;
+  const isLoading = isLoadingStatic || (shouldFetchFromNetwork && (isLoadingEvent || isLoadingTracks || isLoadingConversion));
 
-  console.log('useReleaseData - Final result:', {
+  console.log('useReleaseData - Network fallback result:', {
     hasRelease: !!release,
     title: release?.title,
     trackCount: release?.tracks.length,
-    isLoading
+    isLoading,
+    source: 'network'
   });
 
   return {
     release: release || null,
-    event: releaseEvent || null, // Use the original event directly
-    commentEvent: releaseEvent || null, // Same event for comments
+    event: releaseEvent || null,
+    commentEvent: releaseEvent || null,
     totalDuration,
     isLoading,
     resolvedTracks: resolvedTracks || []

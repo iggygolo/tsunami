@@ -118,9 +118,9 @@ export function PersistentAudioPlayer() {
   };
 
   const handleNavigateToRelease = () => {
-    if (release.identifier) {
-      const naddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
-      navigate(`/${naddr}`);
+    if (release.eventId || release.id) {
+      const eventId = release.eventId || release.id;
+      navigate(`/releases/${eventId}`);
     }
   };
 

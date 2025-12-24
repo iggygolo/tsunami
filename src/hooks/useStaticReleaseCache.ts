@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNostr } from '@nostrify/react';
 import type { PodcastRelease } from '@/types/podcast';
 import { useReleases } from '@/hooks/usePodcastReleases';
 

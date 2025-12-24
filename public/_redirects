@@ -1,1 +1,7 @@
-/* /index.html 200
+# Netlify redirects for static release pages
+# Redirect /releases/:id to static HTML if it exists, otherwise fallback to SPA
+/releases/:id /releases/:id.html 200
+/releases/:id/* /releases/:id.html 200
+
+# Fallback to SPA for all other routes
+/*    /index.html   200

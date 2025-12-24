@@ -32,6 +32,17 @@ interface LatestReleaseCache {
   };
 }
 
+interface SingleReleaseCache {
+  release: PodcastRelease;
+  metadata: {
+    generatedAt: string;
+    dataSource: 'nostr' | 'fallback';
+    relaysUsed: string[];
+    cacheVersion: string;
+    releaseId: string;
+  };
+}
+
 /**
  * Create a Node.js compatible config that reads from actual env vars
  */
@@ -125,8 +136,56 @@ function convertToReleases(playlists: MusicPlaylistData[], tracks: MusicTrackDat
 }
 
 /**
- * Generate RSS feed and write to file
+ * Generate individual release cache files for SSG
  */
+async function generateIndividualReleaseCaches(
+  releases: PodcastRelease[], 
+  metadata: ReleaseCache['metadata'], 
+  distDir: string
+): Promise<void> {
+  console.log('📄 Generating individual release cache files...');
+
+  const releasesDir = path.join(distDir, 'data', 'releases');
+  await fs.mkdir(releasesDir, { recursive: true });
+
+  // Generate cache files for top 20 releases (most recent)
+  const topReleases = releases.slice(0, 20);
+  
+  for (const release of topReleases) {
+    try {
+      const eventId = release.eventId || release.id;
+      if (!eventId) {
+        console.warn('⚠️ Skipping release without event ID:', release.title);
+        continue;
+      }
+
+      const singleReleaseCache: SingleReleaseCache = {
+        release,
+        metadata: {
+          ...metadata,
+          releaseId: eventId,
+        },
+      };
+
+      // Generate cache file with event ID (for /releases/:eventId routes)
+      const fileName = `${eventId}.json`;
+      const filePath = path.join(releasesDir, fileName);
+      
+      await fs.writeFile(
+        filePath, 
+        JSON.stringify(singleReleaseCache, null, 2), 
+        'utf-8'
+      );
+
+      console.log(`✅ Generated cache for release: ${fileName}`);
+    } catch (error) {
+      console.error(`❌ Failed to generate cache for release ${release.title}:`, error);
+    }
+  }
+
+  console.log(`✅ Generated ${topReleases.length} individual release cache files`);
+}
+
 async function generateRSSFile(
   tracks: MusicTrackData[], 
   playlists: MusicPlaylistData[], 
@@ -381,6 +440,13 @@ export async function buildStaticData(): Promise<void> {
       generateRSSFile(dataBundle.tracks, dataBundle.playlists, finalConfig, distDir),
       generateReleaseCache(releases, dataBundle.relaysUsed, distDir),
       generateLatestReleaseCache(releases, dataBundle.relaysUsed, distDir),
+      generateIndividualReleaseCaches(releases, {
+        generatedAt: new Date().toISOString(),
+        totalCount: releases.length,
+        dataSource: dataBundle.metadata ? 'nostr' : 'fallback',
+        relaysUsed: dataBundle.relaysUsed,
+        cacheVersion: '1.0.0',
+      }, distDir),
       generateHealthChecks(
         dataBundle.tracks, 
         dataBundle.playlists, 
@@ -397,10 +463,12 @@ export async function buildStaticData(): Promise<void> {
     console.log(`   • RSS feed with ${dataBundle.tracks.length} tracks and ${dataBundle.playlists.length} releases`);
     console.log(`   • Release cache with ${releases.length} releases`);
     console.log(`   • Latest release cache`);
+    console.log(`   • Individual release caches (top 20)`);
     console.log(`   • Health check files`);
-    console.log(`📁 Files available in: dist/`);
+    console.log(`� Files a vailable in: dist/`);
     console.log(`📡 RSS feed: /rss.xml`);
     console.log(`🗂️  Cache files: /data/releases.json, /data/latest-release.json`);
+    console.log(`📄 Individual caches: /data/releases/[id].json`);
     console.log(`🏥 Health checks: /rss-health.json, /cache-health.json`);
 
   } catch (error) {

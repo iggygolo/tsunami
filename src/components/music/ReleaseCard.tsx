@@ -79,13 +79,16 @@ export function ReleaseCard({
   const { data: commentsData } = useComments(releaseEvent);
   const commentCount = commentsData?.topLevelComments?.length || release.commentCount || 0;
 
-  // Generate naddr for release link with relay hints (releases are addressable events)
+  // Generate release URL - prefer explicit route for better SEO
+  // Use consistent /releases/:eventId format for all release links
+  const releaseId = release.eventId || release.id;
+  const releaseUrl = `/releases/${releaseId}`;
   const releaseNaddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
 
   const handleShare = async () => {
     try {
-      const naddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
-      const url = `${window.location.origin}/${naddr}`;
+      // Use naddr format for sharing (canonical Nostr format)
+      const url = `${window.location.origin}/${releaseNaddr}`;
 
       await navigator.clipboard.writeText(url);
 
@@ -111,7 +114,7 @@ export function ReleaseCard({
     <Card className={cn("overflow-hidden", className)} onMouseEnter={handleMouseEnter}>
       {/* Cover Image - Top */}
       {release.imageUrl && (
-        <Link to={`/${releaseNaddr}`} className="block relative group">
+        <Link to={releaseUrl} className="block relative group">
           <img
             src={release.imageUrl}
             alt={release.title}
@@ -139,7 +142,7 @@ export function ReleaseCard({
 
       <CardContent className="p-3">
         {/* Title & Meta */}
-        <Link to={`/${releaseNaddr}`} className="block group" onMouseEnter={handleMouseEnter}>
+        <Link to={releaseUrl} className="block group" onMouseEnter={handleMouseEnter}>
           <h3 className="font-semibold text-sm leading-tight line-clamp-1 group-hover:text-primary transition-colors">
             {release.title}
           </h3>

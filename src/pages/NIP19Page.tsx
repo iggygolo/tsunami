@@ -5,7 +5,17 @@ import { PODCAST_KINDS } from '@/lib/podcastConfig';
 import NotFound from './NotFound';
 
 export function NIP19Page() {
-  const { nip19: identifier } = useParams<{ nip19: string }>();
+  const { nip19: identifier, releaseId } = useParams<{ nip19: string; releaseId: string }>();
+
+  // Handle explicit release routes (/releases/:releaseId)
+  if (releaseId) {
+    // releaseId is just the event ID, not a composite format
+    return (
+      <ReleasePage
+        eventId={releaseId}
+      />
+    );
+  }
 
   if (!identifier) {
     return <NotFound />;

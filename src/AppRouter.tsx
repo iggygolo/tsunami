@@ -20,6 +20,7 @@ export function AppRouter() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/releases" element={<Releases />} />
+        <Route path="/releases/:releaseId" element={<NIP19Page />} />
         <Route path="/community" element={<Community />} />
         <Route path="/social" element={<SocialFeed />} />
         <Route path="/publish" element={<PublishRelease />} />
