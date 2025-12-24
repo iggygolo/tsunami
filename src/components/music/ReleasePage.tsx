@@ -314,9 +314,10 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                 <GlassTabsTrigger 
                   value="zappers"
                   icon={<Zap className="w-3 h-3" />}
+                  count={interactionCounts?.zaps || 0}
                   className="text-xs sm:text-sm px-3 sm:px-4"
                 >
-                  Zappers
+                  Zaps
                 </GlassTabsTrigger>
                 <GlassTabsTrigger 
                   value="comments"
