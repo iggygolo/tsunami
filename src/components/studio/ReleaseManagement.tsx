@@ -64,6 +64,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
   const [releaseToDelete, setReleaseToDelete] = useState<MusicRelease | null>(null);
   const [releaseToEdit, setReleaseToEdit] = useState<MusicRelease | null>(null);
   const [releaseToShare, setReleaseToShare] = useState<MusicRelease | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
 
   const { data: releases, isLoading, error } = useReleases(searchOptions);
@@ -120,12 +121,30 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
       // For now, we'll skip RSS regeneration here and let it be handled elsewhere
       // TODO: Convert PodcastRelease[] to MusicTrackData[] or use proper data source
       
+      // Close the dialog but stay on studio page
       setReleaseToEdit(null);
       console.log('Release edit dialog should close now');
+      
+      // No navigation - stay on studio page
     } catch (error) {
       console.error('Error in handlereleaseUpdated:', error);
       // Still close the dialog even if RSS generation fails
       setReleaseToEdit(null);
+    }
+  };
+
+  const handleReleaseCreated = async (releaseId?: string) => {
+    console.log('handleReleaseCreated called with releaseId:', releaseId);
+    try {
+      // Close the dialog but stay on studio page
+      setShowCreateDialog(false);
+      console.log('Release create dialog should close now');
+      
+      // No navigation - stay on studio page
+    } catch (error) {
+      console.error('Error in handleReleaseCreated:', error);
+      // Still close the dialog even if RSS generation fails
+      setShowCreateDialog(false);
     }
   };
 
@@ -149,7 +168,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
           <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-destructive" />
           <h3 className="text-lg font-semibold mb-2">Failed to load releases</h3>
           <p className="text-muted-foreground mb-4">
-            {error instanceof Error ? error.message : 'An error occurred while loading releases'}
+            {error && typeof error === 'object' && 'message' in error ? (error as Error).message : 'An error occurred while loading releases'}
           </p>
           <Button onClick={() => window.location.reload()}>
             Try Again
@@ -173,12 +192,10 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                 </Badge>
               )}
             </CardTitle>
-            <Button asChild size="sm" className="text-sm">
-              <Link to="/publish">
-                <Plus className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">New Release</span>
-                <span className="sm:hidden">New</span>
-              </Link>
+            <Button onClick={() => setShowCreateDialog(true)} size="sm" className="text-sm">
+              <Plus className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">New Release</span>
+              <span className="sm:hidden">New</span>
             </Button>
           </div>
 
@@ -244,12 +261,10 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                   : 'Start by publishing your first release'
                 }
               </p>
-              <Button asChild size="sm" className="text-sm">
-                <Link to="/publish">
-                  <Plus className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Publish First release</span>
-                  <span className="sm:hidden">Publish release</span>
-                </Link>
+              <Button onClick={() => setShowCreateDialog(true)} size="sm" className="text-sm">
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Publish First release</span>
+                <span className="sm:hidden">Publish release</span>
               </Button>
             </div>
           ) : (
@@ -446,6 +461,16 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Create Release Dialog */}
+      {showCreateDialog && (
+        <ReleaseDialog
+          mode="create"
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+          onSuccess={handleReleaseCreated}
+        />
+      )}
 
       {/* Edit Release Dialog */}
       {releaseToEdit && (
