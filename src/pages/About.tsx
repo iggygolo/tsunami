@@ -18,8 +18,8 @@ const About = () => {
   const podcastConfig = usePodcastConfig();
 
   useSeoMeta({
-    title: `About - ${podcastConfig.podcast.artistName}`,
-    description: podcastConfig.podcast.description,
+    title: `About - ${podcastConfig.music.artistName}`,
+    description: podcastConfig.music.description,
   });
 
   return (
@@ -31,12 +31,12 @@ const About = () => {
           <div className="max-w-4xl mx-auto">
             <div className="flex flex-col md:flex-row items-center gap-8">
               {/* Artist Image */}
-              {podcastConfig.podcast.image && (
+              {podcastConfig.music.image && (
                 <div className="relative group">
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-500" />
                   <img
-                    src={podcastConfig.podcast.image}
-                    alt={podcastConfig.podcast.artistName}
+                    src={podcastConfig.music.image}
+                    alt={podcastConfig.music.artistName}
                     className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl object-cover shadow-2xl"
                   />
                 </div>
@@ -50,12 +50,12 @@ const About = () => {
                     Value4Value Music
                   </Badge>
                   <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                    {podcastConfig.podcast.artistName}
+                    {podcastConfig.music.artistName}
                   </h1>
                 </div>
 
                 <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
-                  {podcastConfig.podcast.description}
+                  {podcastConfig.music.description}
                 </p>
 
                 {/* Action Buttons */}

@@ -83,8 +83,8 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   // Update document title when release loads
   useSeoMeta({
     title: release 
-      ? `${release.title} | ${podcastConfig.podcast.artistName}`
-      : `Release | ${podcastConfig.podcast.artistName}`,
+      ? `${release.title} | ${podcastConfig.music.artistName}`
+      : `Release | ${podcastConfig.music.artistName}`,
   });
 
   if (isLoading) {
@@ -212,7 +212,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                     {release.title}
                   </h1>
                   <p className="text-xl text-white/70">
-                    {podcastConfig.podcast.artistName}
+                    {podcastConfig.music.artistName}
                   </p>
                 </div>
 

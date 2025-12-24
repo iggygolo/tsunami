@@ -74,8 +74,8 @@ const Index = () => {
   const isLatestReleasePlayable = trackPlayback?.hasPlayableTracks || false;
 
   useSeoMeta({
-    title: podcastConfig.podcast.artistName,
-    description: podcastConfig.podcast.description,
+    title: podcastConfig.music.artistName,
+    description: podcastConfig.music.description,
   });
 
   return (
@@ -155,14 +155,13 @@ const Index = () => {
                     </h1>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                       <Link to="/about" className="inline-flex items-center gap-2 text-lg text-muted-foreground hover:text-foreground transition-colors">
-                        {podcastConfig.podcast.image && (
+                        {podcastConfig.music.image && (
                           <img
-                            src={podcastConfig.podcast.image}
-                            alt={podcastConfig.podcast.artistName}
+                            src={podcastConfig.music.image}
                             className="w-6 h-6 rounded-full object-cover"
                           />
                         )}
-                        <span className="font-medium">{podcastConfig.podcast.artistName}</span>
+                        <span className="font-medium">{podcastConfig.music.artistName}</span>
                       </Link>
                       {latestRelease.tags && latestRelease.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 justify-center lg:justify-start">
@@ -229,10 +228,10 @@ const Index = () => {
             <div className="max-w-4xl mx-auto text-center space-y-6">
               <div className="space-y-2">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
-                  Welcome to {podcastConfig.podcast.artistName}
+                  Welcome to {podcastConfig.music.artistName}
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  {podcastConfig.podcast.description}
+                  {podcastConfig.music.description}
                 </p>
               </div>
               

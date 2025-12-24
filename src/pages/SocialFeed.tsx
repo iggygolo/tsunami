@@ -50,7 +50,7 @@ const SocialFeed = () => {
                      genUserName(getArtistPubkeyHex());
 
   useSeoMeta({
-    title: `${artistName}'s Social Feed - ${MUSIC_CONFIG.podcast.artistName}`,
+    title: `${artistName}'s Social Feed - ${MUSIC_CONFIG.music.artistName}`,
     description: `Follow ${artistName}'s social updates and posts`,
   });
 

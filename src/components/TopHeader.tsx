@@ -44,7 +44,7 @@ export function TopHeader({ className }: TopHeaderProps) {
             <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <Headphones className="w-6 h-6 text-primary" />
               <h1 className="text-lg font-bold gradient-text truncate">
-                {podcastConfig.podcast.artistName}
+                {podcastConfig.music.artistName}
               </h1>
             </Link>
           </div>

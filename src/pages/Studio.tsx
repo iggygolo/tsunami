@@ -101,28 +101,28 @@ const Studio = () => {
   const [imageUploadProvider, setImageUploadProvider] = useState<'blossom' | 'vercel'>(config.defaultProvider);
 
   const [formData, setFormData] = useState<PodcastFormData>({
-    artistName: MUSIC_CONFIG.podcast.artistName,
-    description: MUSIC_CONFIG.podcast.description,
-    image: MUSIC_CONFIG.podcast.image,
-    website: MUSIC_CONFIG.podcast.website,
-    copyright: MUSIC_CONFIG.podcast.copyright,
+    artistName: MUSIC_CONFIG.music.artistName,
+    description: MUSIC_CONFIG.music.description,
+    image: MUSIC_CONFIG.music.image,
+    website: MUSIC_CONFIG.music.website,
+    copyright: MUSIC_CONFIG.music.copyright,
     value: {
-      amount: MUSIC_CONFIG.podcast.value.amount,
-      currency: MUSIC_CONFIG.podcast.value.currency,
-      recipients: MUSIC_CONFIG.podcast.value.recipients || []
+      amount: MUSIC_CONFIG.music.value.amount,
+      currency: MUSIC_CONFIG.music.value.currency,
+      recipients: MUSIC_CONFIG.music.value.recipients || []
     },
     // New Podcasting 2.0 defaults
-    guid: MUSIC_CONFIG.podcast.guid || MUSIC_CONFIG.artistNpub,
-    medium: MUSIC_CONFIG.podcast.medium || 'music',
-    publisher: MUSIC_CONFIG.podcast.publisher || MUSIC_CONFIG.podcast.artistName,
-    person: MUSIC_CONFIG.podcast.person || [
+    guid: MUSIC_CONFIG.music.guid || MUSIC_CONFIG.artistNpub,
+    medium: MUSIC_CONFIG.music.medium || 'music',
+    publisher: MUSIC_CONFIG.music.publisher || MUSIC_CONFIG.music.artistName,
+    person: MUSIC_CONFIG.music.person || [
       {
-        name: MUSIC_CONFIG.podcast.artistName,
+        name: MUSIC_CONFIG.music.artistName,
         role: 'artist',
         group: 'cast'
       }
     ],
-    license: MUSIC_CONFIG.podcast.license || {
+    license: MUSIC_CONFIG.music.license || {
       identifier: 'All Right Reserved',
       url: ''
     },
@@ -138,9 +138,9 @@ const Studio = () => {
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
         value: podcastMetadata.value || {
-          amount: MUSIC_CONFIG.podcast.value.amount,
-          currency: MUSIC_CONFIG.podcast.value.currency,
-          recipients: MUSIC_CONFIG.podcast.value.recipients || []
+          amount: MUSIC_CONFIG.music.value.amount,
+          currency: MUSIC_CONFIG.music.value.currency,
+          recipients: MUSIC_CONFIG.music.value.recipients || []
         },
         // Podcasting 2.0 fields
         guid: podcastMetadata.guid || MUSIC_CONFIG.artistNpub,

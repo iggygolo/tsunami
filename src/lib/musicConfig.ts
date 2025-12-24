@@ -32,7 +32,7 @@ export interface MusicConfig {
   artistNpub: string;
 
   /** Podcast metadata */
-  podcast: {
+  music: {
     artistName: string;
     description: string;
     image: string;
@@ -102,7 +102,7 @@ export const MUSIC_CONFIG: MusicConfig = {
   // Artist npub - loaded from environment
   artistNpub: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NPUB) || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
 
-  podcast: {
+  music: {
     artistName: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NAME) || "Tsunami Artist",
     description: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_DESCRIPTION) || "A Nostr-powered artist exploring decentralized music",
     image: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_IMAGE) || "",

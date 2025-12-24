@@ -5,8 +5,8 @@ import { MUSIC_CONFIG } from '@/lib/musicConfig';
 
 const Releases = () => {
   useSeoMeta({
-    title: `Releases - ${MUSIC_CONFIG.podcast.artistName}`,
-    description: `Browse all releases of ${MUSIC_CONFIG.podcast.artistName}`,
+    title: `Releases - ${MUSIC_CONFIG.music.artistName}`,
+    description: `Browse all releases of ${MUSIC_CONFIG.music.artistName}`,
   });
 
   return (
@@ -16,7 +16,7 @@ const Releases = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground via-primary to-purple-600 bg-clip-text text-transparent">All Releases</h1>
             <p className="text-muted-foreground">
-              Browse and listen to all releases of {MUSIC_CONFIG.podcast.artistName}
+              Browse and listen to all releases of {MUSIC_CONFIG.music.artistName}
             </p>
           </div>
 

@@ -7,7 +7,7 @@ export default function Footer() {
   return (
     <div className="text-center mt-8 pb-8">
       <p className="text-sm text-muted-foreground">
-        {podcastConfig.podcast.copyright}
+        {podcastConfig.music.copyright}
       </p>
       <p className="text-sm mt-2 text-center">
         <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent font-medium">

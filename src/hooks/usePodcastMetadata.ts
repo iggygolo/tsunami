@@ -74,7 +74,7 @@ export function usePodcastMetadata() {
 
           return {
             ...metadata,
-            artist: metadata.artist || MUSIC_CONFIG.podcast.artistName,
+            artist: metadata.artist || MUSIC_CONFIG.music.artistName,
             updated_at: latestEvent.created_at
           };
         }
@@ -84,22 +84,22 @@ export function usePodcastMetadata() {
 
       // Fallback to config (includes environment variables)
       return {
-        description: MUSIC_CONFIG.podcast.description,
-        artist: MUSIC_CONFIG.podcast.artistName,
-        image: MUSIC_CONFIG.podcast.image,
-        website: MUSIC_CONFIG.podcast.website,
-        copyright: MUSIC_CONFIG.podcast.copyright,
+        description: MUSIC_CONFIG.music.description,
+        artist: MUSIC_CONFIG.music.artistName,
+        image: MUSIC_CONFIG.music.image,
+        website: MUSIC_CONFIG.music.website,
+        copyright: MUSIC_CONFIG.music.copyright,
         value: {
-          amount: MUSIC_CONFIG.podcast.value.amount,
-          currency: MUSIC_CONFIG.podcast.value.currency,
-          recipients: MUSIC_CONFIG.podcast.value.recipients || []
+          amount: MUSIC_CONFIG.music.value.amount,
+          currency: MUSIC_CONFIG.music.value.currency,
+          recipients: MUSIC_CONFIG.music.value.recipients || []
         },
-        guid: MUSIC_CONFIG.podcast.guid,
-        medium: MUSIC_CONFIG.podcast.medium,
-        publisher: MUSIC_CONFIG.podcast.publisher,
-        location: MUSIC_CONFIG.podcast.location,
-        person: MUSIC_CONFIG.podcast.person,
-        license: MUSIC_CONFIG.podcast.license,
+        guid: MUSIC_CONFIG.music.guid,
+        medium: MUSIC_CONFIG.music.medium,
+        publisher: MUSIC_CONFIG.music.publisher,
+        location: MUSIC_CONFIG.music.location,
+        person: MUSIC_CONFIG.music.person,
+        license: MUSIC_CONFIG.music.license,
         updated_at: 0
       };
     },

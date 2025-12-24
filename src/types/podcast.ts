@@ -14,8 +14,6 @@ export interface PodcastRelease {
   tags: string[];
   // Transcript as URL references
   transcriptUrl?: string;
-  guests?: PodcastGuest[];
-  externalRefs?: ExternalReference[];
   genre?: string | null; // Custom genre string (e.g., "punk", "alternative", "EDM")
 
   // Nostr-specific fields
@@ -155,37 +153,6 @@ export interface MusicPlaylistFormData {
   isPublic?: boolean;
   isPrivate?: boolean;
   isCollaborative?: boolean;
-}
-
-/**
- * Podcast chapter information (Podcasting 2.0)
- */
-export interface PodcastChapter {
-  startTime: number; // seconds
-  title: string;
-  img?: string;
-  url?: string;
-}
-
-/**
- * Podcast guest/person information
- */
-export interface PodcastGuest {
-  name: string;
-  role?: string;
-  group?: string;
-  img?: string;
-  href?: string;
-  npub?: string; // Nostr pubkey if available
-}
-
-/**
- * External reference for RSS/podcast platform integration (NIP-73)
- */
-export interface ExternalReference {
-  type: 'podcast:guid' | 'podcast:item:guid' | 'podcast:publisher:guid' | 'apple:id' | 'spotify:id';
-  value: string;
-  url?: string;
 }
 
 /**

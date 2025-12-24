@@ -44,7 +44,6 @@ This document lists all demu.xml elements that we have corresponding data for in
 ### Podcast 2.0 Elements
 - ✅ `<podcast:transcript>` → PodcastRelease.transcriptUrl
 - ✅ `<podcast:episode>` → Track index in tracks array (1-based)
-- ✅ `<podcast:person>` → PodcastRelease.guests (if we map PodcastGuest to person format)
 - ✅ `<podcast:value>` → Can inherit from channel or be item-specific
 
 ## Implementation Priority

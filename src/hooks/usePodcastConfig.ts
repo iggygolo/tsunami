@@ -8,7 +8,7 @@ export function usePodcastConfig() {
   const config = podcastMetadata ? {
     ...MUSIC_CONFIG,
     podcast: {
-      ...MUSIC_CONFIG.podcast,
+      ...MUSIC_CONFIG.music,
       ...podcastMetadata
     }
   } : MUSIC_CONFIG;
