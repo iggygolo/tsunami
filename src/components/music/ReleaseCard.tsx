@@ -15,14 +15,14 @@ import { useTrackPlayback } from '@/hooks/useTrackPlayback';
 import { useToast } from '@/hooks/useToast';
 import { useReleasePrefetch } from '@/hooks/useReleasePrefetch';
 import { cn } from '@/lib/utils';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface ReleaseCardProps {
-  release: PodcastRelease;
+  release: MusicRelease;
   showPlayer?: boolean;
   showComments?: boolean;
-  onPlayRelease?: (release: PodcastRelease) => void;
+  onPlayRelease?: (release: MusicRelease) => void;
   className?: string;
 }
 

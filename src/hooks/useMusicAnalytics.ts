@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
 import { useReleases } from '@/hooks/useReleases';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 
 interface MusicAnalytics {
   totalReleases: number;
@@ -10,7 +10,7 @@ interface MusicAnalytics {
   totalComments: number;
   totalReposts: number;
   topReleases: Array<{
-    release: PodcastRelease;
+    release: MusicRelease;
     zaps: number;
     comments: number;
     reposts: number;

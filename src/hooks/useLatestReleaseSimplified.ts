@@ -7,7 +7,7 @@ import {
   playlistToRelease
 } from '@/lib/eventConversions';
 import { MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
-import type { PodcastRelease, MusicTrackData } from '@/types/podcast';
+import type { MusicRelease, MusicTrackData } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 /**
@@ -64,7 +64,7 @@ export function useLatestReleaseSimplified() {
   const { data: resolvedTracks, isLoading: isLoadingTracks } = usePlaylistTrackResolution(trackReferences);
 
   // Step 4: Convert to final release format
-  const { data: release, isLoading: isLoadingConversion } = useQuery<PodcastRelease | null>({
+  const { data: release, isLoading: isLoadingConversion } = useQuery<MusicRelease | null>({
     queryKey: ['latest-release-conversion', latestPlaylistEvent?.id, resolvedTracks?.length],
     queryFn: async () => {
       if (!latestPlaylistEvent || !resolvedTracks) return null;

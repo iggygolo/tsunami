@@ -5,14 +5,14 @@ import { fetchNostrDataBundle } from './shared/nostr-data-fetcher.js';
 import { generateRSSFeed, type RSSConfig } from '../src/lib/rssCore.js';
 import { encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr } from '../src/lib/nip19Utils.js';
 import { playlistToRelease } from '../src/lib/eventConversions.js';
-import type { PodcastRelease, MusicTrackData, MusicPlaylistData } from '../src/types/podcast.js';
+import type { MusicRelease, MusicTrackData, MusicPlaylistData } from '../src/types/music.js';
 
 // Load environment variables
 config();
 
 // Cache file interfaces
 interface ReleaseCache {
-  releases: PodcastRelease[];
+  releases: MusicRelease[];
   metadata: {
     generatedAt: string;
     totalCount: number;
@@ -23,7 +23,7 @@ interface ReleaseCache {
 }
 
 interface LatestReleaseCache {
-  release: PodcastRelease | null;
+  release: MusicRelease | null;
   metadata: {
     generatedAt: string;
     dataSource: 'nostr' | 'fallback';
@@ -33,7 +33,7 @@ interface LatestReleaseCache {
 }
 
 interface SingleReleaseCache {
-  release: PodcastRelease;
+  release: MusicRelease;
   metadata: {
     generatedAt: string;
     dataSource: 'nostr' | 'fallback';
@@ -71,7 +71,7 @@ function createNodejsConfig(): RSSConfig {
 
   return {
     artistNpub: artistNpub || "",
-    podcast: {
+    music: {
       description: process.env.VITE_MUSIC_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
       artistName: process.env.VITE_ARTIST_NAME || "Tsunami Artist",
       image: process.env.VITE_ARTIST_IMAGE || "",
@@ -108,7 +108,7 @@ function createNodejsConfig(): RSSConfig {
 /**
  * Convert playlists and tracks to PodcastRelease format
  */
-function convertToReleases(playlists: MusicPlaylistData[], tracks: MusicTrackData[]): PodcastRelease[] {
+function convertToReleases(playlists: MusicPlaylistData[], tracks: MusicTrackData[]): MusicRelease[] {
   console.log('🔄 Converting playlists to releases...');
 
   // Create tracks map for efficient lookup
@@ -126,7 +126,7 @@ function convertToReleases(playlists: MusicPlaylistData[], tracks: MusicTrackDat
       console.error(`Failed to convert playlist ${playlist.title}:`, error);
       return null;
     }
-  }).filter((release): release is PodcastRelease => release !== null);
+  }).filter((release): release is MusicRelease => release !== null);
 
   // Sort by creation date (newest first)
   releases.sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
@@ -139,7 +139,7 @@ function convertToReleases(playlists: MusicPlaylistData[], tracks: MusicTrackDat
  * Generate individual release cache files for SSG
  */
 async function generateIndividualReleaseCaches(
-  releases: PodcastRelease[], 
+  releases: MusicRelease[], 
   metadata: ReleaseCache['metadata'], 
   distDir: string
 ): Promise<void> {
@@ -218,7 +218,7 @@ async function generateRSSFile(
  * Generate releases.json cache file
  */
 async function generateReleaseCache(
-  releases: PodcastRelease[], 
+  releases: MusicRelease[], 
   relayUrls: string[], 
   distDir: string
 ): Promise<void> {
@@ -277,7 +277,7 @@ async function generateReleaseCache(
  * Generate latest-release.json cache file
  */
 async function generateLatestReleaseCache(
-  releases: PodcastRelease[], 
+  releases: MusicRelease[], 
   relayUrls: string[], 
   distDir: string
 ): Promise<void> {
@@ -335,7 +335,7 @@ async function generateLatestReleaseCache(
 async function generateHealthChecks(
   tracks: MusicTrackData[],
   playlists: MusicPlaylistData[],
-  releases: PodcastRelease[],
+  releases: MusicRelease[],
   relayUrls: string[],
   metadata: Record<string, unknown> | null,
   distDir: string
@@ -417,8 +417,8 @@ export async function buildStaticData(): Promise<void> {
     if (dataBundle.metadata) {
       finalConfig = {
         ...baseConfig,
-        podcast: {
-          ...baseConfig.podcast,
+        music: {
+          ...baseConfig.music,
           ...dataBundle.metadata
         }
       };

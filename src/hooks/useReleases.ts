@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
-import type { PodcastRelease, ReleaseSearchOptions, MusicTrackData } from '@/types/podcast';
+import type { MusicRelease, ReleaseSearchOptions, MusicTrackData } from '@/types/music';
 import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
 import {
   validateMusicTrack,
@@ -82,7 +82,7 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
 
       console.log('Converting playlist events to releases');
 
-      const releases: PodcastRelease[] = [];
+      const releases: MusicRelease[] = [];
 
       // Create tracks map from resolved tracks
       const tracksMap = new Map<string, MusicTrackData>();

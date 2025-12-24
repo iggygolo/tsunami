@@ -3,7 +3,7 @@
  * Comprehensive language and genre support for music releases
  */
 
-import type { LanguageOption, LanguageConfiguration, GenreConfiguration } from '@/types/podcast';
+import type { LanguageOption, LanguageConfiguration, GenreConfiguration } from '@/types/music';
 
 /**
  * Comprehensive list of languages with ISO 639-1 codes

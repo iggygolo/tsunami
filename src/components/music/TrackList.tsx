@@ -7,11 +7,11 @@ import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useTrackPlayback } from '@/hooks/useTrackPlayback';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface TrackListProps {
-  release: PodcastRelease;
+  release: MusicRelease;
   className?: string;
 }
 

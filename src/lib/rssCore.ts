@@ -1,4 +1,4 @@
-import type { MusicTrackData, MusicPlaylistData, RSSItem } from '@/types/podcast';
+import type { MusicTrackData, MusicPlaylistData, RSSItem } from '@/types/music';
 import type { MusicConfig } from './musicConfig';
 import { formatToAudioType } from '@/lib/audioUtils';
 
@@ -13,7 +13,7 @@ import { formatToAudioType } from '@/lib/audioUtils';
  */
 export interface RSSConfig {
   artistNpub: string;
-  podcast: {
+  music: {
     artistName: string;
     description: string;
     image?: string;
@@ -120,7 +120,7 @@ export function formatDuration(seconds: number): string {
  * Converts a MusicTrackData to an RSS item
  */
 export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEncoder?: (pubkey: string, identifier: string) => string): RSSItem {
-  const baseUrl = config.podcast.website;
+  const baseUrl = config.music.website;
   
   // Generate link - use naddr encoder if provided, otherwise fallback to simple format
   const link = naddrEncoder && track.artistPubkey
@@ -136,7 +136,7 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEn
   } else {
     // Create a default description with available metadata
     const parts = [] as string[];
-    if (track.artist && track.artist !== config.podcast.artistName) {
+    if (track.artist && track.artist !== config.music.artistName) {
       parts.push(`Performed by ${track.artist}`);
     }
     if (track.genres && track.genres.length > 0) {
@@ -150,7 +150,7 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEn
     
     description = parts.length > 0 
       ? `${track.title} - ${parts.join(' • ')}` 
-      : `${track.title} by ${config.podcast.artistName}`;
+      : `${track.title} by ${config.music.artistName}`;
   }
 
   return {
@@ -182,7 +182,7 @@ export function releaseToRSSItems(
   config: RSSConfig, 
   trackNaddrEncoder?: (pubkey: string, identifier: string) => string
 ): RSSItem[] {
-  const baseUrl = config.podcast.website;
+  const baseUrl = config.music.website;
   
   // Create RSS items for each track in the release
   return release.tracks.map((trackRef, index) => {
@@ -195,7 +195,7 @@ export function releaseToRSSItems(
     if (!trackData) {
       // Create a placeholder item if track data is not found
       const trackTitle = trackRef.title || `Track ${index + 1}`;
-      const description = `${trackTitle} from the release "${release.title}" by ${trackRef.artist || config.podcast.artistName}. This track is part of a ${release.tracks.length}-track release.`;
+      const description = `${trackTitle} from the release "${release.title}" by ${trackRef.artist || config.music.artistName}. This track is part of a ${release.tracks.length}-track release.`;
       const placeholderLink = `${baseUrl}/release/${release.identifier}`;
       
       return {
@@ -204,7 +204,7 @@ export function releaseToRSSItems(
         link: placeholderLink,
         guid: placeholderLink, // Use the link as GUID
         pubDate: release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString(),
-        author: trackRef.artist || config.podcast.artistName,
+        author: trackRef.artist || config.music.artistName,
         category: release.categories || [],
         enclosure: {
           url: '',
@@ -232,7 +232,7 @@ export function generateRSSFeed(
   trackNaddrEncoder?: (pubkey: string, identifier: string) => string,
   releaseNaddrEncoder?: (pubkey: string, identifier: string) => string
 ): string {
-  const baseUrl = config.podcast.website || "";
+  const baseUrl = config.music.website || "";
   
   // Generate channels for each release
   const channels = releases.map(release => {
@@ -256,7 +256,7 @@ export function generateRSSFeed(
     <description>${escapeXml(release.description || `Music release: ${release.title}`)}</description>
     <link>${escapeXml(releaseLink)}</link>
     <atom:link href="${escapeXml(baseUrl.replace(/\/$/, ''))}/rss.xml" rel="self" type="application/rss+xml" />
-    <copyright>${escapeXml(config.podcast.copyright)}</copyright>
+    <copyright>${escapeXml(config.music.copyright)}</copyright>
     <pubDate>${release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString()}</pubDate>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <ttl>${config.rss.ttl}</ttl>
@@ -267,8 +267,8 @@ export function generateRSSFeed(
     </image>` : ''}
 
     <!-- iTunes tags -->
-    <itunes:author>${escapeXml(config.podcast.artistName)}</itunes:author>
-    <itunes:owner itunes:name="${escapeXml(config.podcast.artistName)}" itunes:email=""/>
+    <itunes:author>${escapeXml(config.music.artistName)}</itunes:author>
+    <itunes:owner itunes:name="${escapeXml(config.music.artistName)}" itunes:email=""/>
     ${release.imageUrl ? `<itunes:image href="${escapeXml(release.imageUrl)}" />` : ''}
     <itunes:category text="Music" />
     ${releaseGenres.length > 0 ? 
@@ -277,25 +277,25 @@ export function generateRSSFeed(
     }
 
     <!-- Podcasting 2.0 tags -->
-    <podcast:locked owner="${escapeXml(config.podcast.locked?.owner || config.podcast.artistName)}">${config.podcast.locked?.locked !== false ? 'yes' : 'no'}</podcast:locked>
-    ${config.podcast.publisher ? `<podcast:publisher>${escapeXml(config.podcast.publisher)}</podcast:publisher>` : ''}
+    <podcast:locked owner="${escapeXml(config.music.locked?.owner || config.music.artistName)}">${config.music.locked?.locked !== false ? 'yes' : 'no'}</podcast:locked>
+    ${config.music.publisher ? `<podcast:publisher>${escapeXml(config.music.publisher)}</podcast:publisher>` : ''}
     <podcast:guid>${escapeXml(releaseLink)}</podcast:guid>
-    ${config.podcast.medium ? `<podcast:medium>${escapeXml(config.podcast.medium)}</podcast:medium>` : ''}
-    ${config.podcast.license ?
-      `<podcast:license ${config.podcast.license.url ? `url="${escapeXml(config.podcast.license.url)}"` : ''}>${escapeXml(config.podcast.license.identifier)}</podcast:license>` : ''
+    ${config.music.medium ? `<podcast:medium>${escapeXml(config.music.medium)}</podcast:medium>` : ''}
+    ${config.music.license ?
+      `<podcast:license ${config.music.license.url ? `url="${escapeXml(config.music.license.url)}"` : ''}>${escapeXml(config.music.license.identifier)}</podcast:license>` : ''
     }
-    ${config.podcast.location ?
-      `<podcast:location ${config.podcast.location.geo ? `geo="${escapeXml(config.podcast.location.geo)}"` : ''} ${config.podcast.location.osm ? `osm="${escapeXml(config.podcast.location.osm)}"` : ''}>${escapeXml(config.podcast.location.name)}</podcast:location>` : ''
+    ${config.music.location ?
+      `<podcast:location ${config.music.location.geo ? `geo="${escapeXml(config.music.location.geo)}"` : ''} ${config.music.location.osm ? `osm="${escapeXml(config.music.location.osm)}"` : ''}>${escapeXml(config.music.location.name)}</podcast:location>` : ''
     }
-    ${config.podcast.person && config.podcast.person.length > 0 ?
-      config.podcast.person.map(person =>
+    ${config.music.person && config.music.person.length > 0 ?
+      config.music.person.map(person =>
         `<podcast:person role="${escapeXml(person.role)}" ${person.group ? `group="${escapeXml(person.group)}"` : ''} ${person.img ? `img="${escapeXml(person.img)}"` : ''} ${person.href ? `href="${escapeXml(person.href)}"` : ''}>${escapeXml(person.name)}</podcast:person>`
       ).join('\n    ') : ''
     }
-    ${config.podcast.value && config.podcast.value.amount > 0 ?
-      `<podcast:value type="lightning" method="keysend" suggested="${config.podcast.value.amount}">
-        ${config.podcast.value.recipients && config.podcast.value.recipients.length > 0 &&
-          config.podcast.value.recipients.map(recipient =>
+    ${config.music.value && config.music.value.amount > 0 ?
+      `<podcast:value type="lightning" method="keysend" suggested="${config.music.value.amount}">
+        ${config.music.value.recipients && config.music.value.recipients.length > 0 &&
+          config.music.value.recipients.map(recipient =>
             `<podcast:valueRecipient name="${escapeXml(recipient.name)}" type="${escapeXml(recipient.type)}" address="${escapeXml(recipient.address)}" split="${recipient.split}"${recipient.customKey ? ` customKey="${escapeXml(recipient.customKey)}"` : ''}${recipient.customValue ? ` customValue="${escapeXml(recipient.customValue)}"` : ''}${recipient.fee ? ` fee="true"` : ''} />`
           ).join('\n        ')
         }
@@ -312,7 +312,7 @@ export function generateRSSFeed(
       <link>${escapeXml(item.link)}</link>
       <guid isPermaLink="false">${escapeXml(item.guid)}</guid>
       <pubDate>${item.pubDate}</pubDate>
-      <author>${escapeXml(item.author || config.podcast.artistName)}</author>
+      <author>${escapeXml(item.author || config.music.artistName)}</author>
       ${item.category?.map(cat => `<category>${escapeXml(cat)}</category>`).join('\n      ') || ''}
       ${item.language ? `<language>${escapeXml(item.language)}</language>` : ''}
 
@@ -355,7 +355,7 @@ ${channels}
 export function podcastConfigToRSSConfig(config: MusicConfig): RSSConfig {
   return {
     artistNpub: config.artistNpub,
-    podcast: {
+    music: {
       artistName: config.music.artistName,
       description: config.music.description,
       image: config.music.image,

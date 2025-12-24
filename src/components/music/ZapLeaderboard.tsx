@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
 import { genUserName } from '@/lib/genUserName';
-import type { ZapLeaderboardEntry } from '@/types/podcast';
+import type { ZapLeaderboardEntry } from '@/types/music';
 
 interface ZapLeaderboardProps {
   limit?: number;

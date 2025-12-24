@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PublishReleaseForm } from '../PublishReleaseForm';
 import { ReleaseEditDialog } from '../../studio/ReleaseEditDialog';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 
 // Mock hooks
 vi.mock('@/hooks/useCurrentUser', () => ({
@@ -187,7 +187,7 @@ describe('Form Integration Tests', () => {
   });
 
   describe('ReleaseEditDialog', () => {
-    const mockRelease: PodcastRelease = {
+    const mockRelease: MusicRelease = {
       id: 'test-id',
       title: 'Test Release',
       description: 'Test Description',
@@ -292,7 +292,7 @@ describe('Form Integration Tests', () => {
     });
 
     it('should handle release without genre or language', () => {
-      const releaseWithoutMetadata: PodcastRelease = {
+      const releaseWithoutMetadata: MusicRelease = {
         ...mockRelease,
         genre: null,
         tracks: [{

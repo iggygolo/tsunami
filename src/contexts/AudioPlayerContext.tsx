@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ReactNode } from 'react';
 import { AudioPlayerContext, type AudioPlayerState, type AudioPlayerContextType } from './AudioPlayerContext';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 
 interface AudioPlayerProviderProps {
   children: ReactNode;
@@ -101,7 +101,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   }, []);
 
   // Actions
-  const playRelease = (release: PodcastRelease, trackIndex: number = 0) => {
+  const playRelease = (release: MusicRelease, trackIndex: number = 0) => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -153,7 +153,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     });
   };
 
-  const playTrack = (release: PodcastRelease, trackIndex: number) => {
+  const playTrack = (release: MusicRelease, trackIndex: number) => {
     playRelease(release, trackIndex);
   };
 

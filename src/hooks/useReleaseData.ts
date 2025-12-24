@@ -11,7 +11,7 @@ import {
   trackToRelease
 } from '@/lib/eventConversions';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
-import type { PodcastRelease, MusicTrackData } from '@/types/podcast';
+import type { MusicRelease, MusicTrackData } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface AddressableEventParams {
@@ -117,7 +117,7 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
   const { data: resolvedTracks, isLoading: isLoadingTracks } = usePlaylistTrackResolution(trackReferences);
 
   // Single conversion to final release format
-  const { data: release, isLoading: isLoadingConversion } = useQuery<PodcastRelease | null>({
+  const { data: release, isLoading: isLoadingConversion } = useQuery<MusicRelease | null>({
     queryKey: ['release-conversion', releaseEvent?.id, resolvedTracks?.length],
     queryFn: async () => {
       if (!releaseEvent) return null;
@@ -165,7 +165,7 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
     // Check cache first - if we have cached converted release data, use it immediately
     initialData: () => {
       if (releaseEvent && shouldFetchFromNetwork) {
-        const cachedRelease = queryClient.getQueryData<PodcastRelease>(['release-conversion', releaseEvent.id, resolvedTracks?.length]);
+        const cachedRelease = queryClient.getQueryData<MusicRelease>(['release-conversion', releaseEvent.id, resolvedTracks?.length]);
         if (cachedRelease) {
           console.log('useReleaseData - Using cached converted release data');
           return cachedRelease;

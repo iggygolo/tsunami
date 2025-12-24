@@ -8,13 +8,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ReleaseCard } from './ReleaseCard';
 import { useReleases } from '@/hooks/useReleases';
 import { useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
-import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
+import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
 
 interface ReleaseListProps {
   showSearch?: boolean;
   limit?: number;
   className?: string;
-  onPlayRelease?: (release: PodcastRelease) => void;
+  onPlayRelease?: (release: MusicRelease) => void;
   useCache?: boolean; // Enable cache usage for better performance
 }
 
@@ -61,7 +61,7 @@ export function ReleaseList({
     }));
   };
 
-  const handlePlayRelease = (release: PodcastRelease) => {
+  const handlePlayRelease = (release: MusicRelease) => {
     if (onPlayRelease) {
       onPlayRelease(release);
     }

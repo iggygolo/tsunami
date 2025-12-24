@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useMusicTracks } from '@/hooks/useMusicTracks';
-import type { TrackReference, MusicTrackData } from '@/types/podcast';
+import type { TrackReference, MusicTrackData } from '@/types/music';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 
 /**

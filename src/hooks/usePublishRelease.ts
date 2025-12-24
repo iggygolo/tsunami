@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
-import type { ReleaseFormData, TrackFormData, MusicTrackData, MusicPlaylistData, TrackReference } from '@/types/podcast';
+import type { ReleaseFormData, TrackFormData, MusicTrackData, MusicPlaylistData, TrackReference } from '@/types/music';
 import { MUSIC_KINDS, MUSIC_CONFIG, isArtist } from '@/lib/musicConfig';
 import { musicTrackPublisher } from '@/lib/musicTrackPublisher';
 import { musicPlaylistPublisher } from '@/lib/musicPlaylistPublisher';

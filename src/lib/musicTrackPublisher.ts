@@ -1,5 +1,5 @@
 import type { NostrEvent } from '@nostrify/nostrify';
-import type { MusicTrackData, ZapSplit } from '@/types/podcast';
+import type { MusicTrackData, ZapSplit } from '@/types/music';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { validateAudioUrl, validateImageUrl, validateVideoUrl } from '@/lib/urlValidation';
 

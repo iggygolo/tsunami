@@ -3,7 +3,7 @@ import { useNostr } from '@nostrify/react';
 import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 import type { NostrEvent } from '@nostrify/nostrify';
-import type { MusicPlaylistData, TrackReference } from '@/types/podcast';
+import type { MusicPlaylistData, TrackReference } from '@/types/music';
 import { musicPlaylistPublisher } from '@/lib/musicPlaylistPublisher';
 
 /**

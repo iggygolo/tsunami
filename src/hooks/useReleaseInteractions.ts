@@ -6,11 +6,11 @@ import { useComments } from '@/hooks/useComments';
 import { useReactions } from '@/hooks/useReactions';
 import { useZapCounts } from '@/hooks/useZapCounts';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 interface UseReleaseInteractionsProps {
-  release: PodcastRelease | null;
+  release: MusicRelease | null;
   event: NostrEvent | null;
   commentEvent: NostrEvent | null;
 }

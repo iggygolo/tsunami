@@ -17,7 +17,6 @@ import {
   Share
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,9 +44,7 @@ import { useReleases } from '@/hooks/useReleases';
 import { useDeleteRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { AudioPlayer } from '@/components/music/AudioPlayer';
-import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
-import { genRSSFeed } from '@/lib/rssGenerator';
-import { useMusicConfig } from '@/hooks/useMusicConfig';
+import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
 import { ReleaseEditDialog } from './ReleaseEditDialog';
 import { ShareReleaseDialog } from './ShareReleaseDialog';
 
@@ -57,7 +54,6 @@ interface ReleaseManagementProps {
 
 export function ReleaseManagement({ className }: ReleaseManagementProps) {
   const { toast } = useToast();
-  const podcastConfig = useMusicConfig();
   const { mutateAsync: deleteRelease, isPending: isDeleting } = useDeleteRelease();
 
   const [searchOptions, setSearchOptions] = useState<ReleaseSearchOptions>({
@@ -65,9 +61,9 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
     sortBy: 'date',
     sortOrder: 'desc'
   });
-  const [releaseToDelete, setReleaseToDelete] = useState<PodcastRelease | null>(null);
-  const [releaseToEdit, setReleaseToEdit] = useState<PodcastRelease | null>(null);
-  const [releaseToShare, setReleaseToShare] = useState<PodcastRelease | null>(null);
+  const [releaseToDelete, setReleaseToDelete] = useState<MusicRelease | null>(null);
+  const [releaseToEdit, setReleaseToEdit] = useState<MusicRelease | null>(null);
+  const [releaseToShare, setReleaseToShare] = useState<MusicRelease | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
 
   const { data: releases, isLoading, error } = useReleases(searchOptions);
@@ -90,7 +86,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
     }));
   };
 
-  const handleDeleteRelease = async (release: PodcastRelease) => {
+  const handleDeleteRelease = async (release: MusicRelease) => {
     try {
       await deleteRelease({
         playlistId: release.eventId,

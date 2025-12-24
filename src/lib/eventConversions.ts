@@ -1,5 +1,5 @@
 import type { NostrEvent } from '@nostrify/nostrify';
-import type { MusicTrackData, MusicPlaylistData, TrackReference, PodcastRelease, ReleaseTrack } from '@/types/podcast';
+import type { MusicTrackData, MusicPlaylistData, TrackReference, MusicRelease, ReleaseTrack } from '@/types/music';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { formatToAudioType } from '@/lib/audioUtils';
 
@@ -178,7 +178,7 @@ export function eventToMusicPlaylist(event: NostrEvent): MusicPlaylistData {
 export function playlistToRelease(
   playlist: MusicPlaylistData, 
   tracks: Map<string, MusicTrackData>
-): PodcastRelease {
+): MusicRelease {
   // Convert tracks to legacy format with better error handling
   const releaseTracks: ReleaseTrack[] = [];
   
@@ -244,7 +244,7 @@ export function playlistToRelease(
  * Legacy function for backward compatibility - converts single track to release format
  * Improved with better metadata handling and validation
  */
-export function trackToRelease(track: MusicTrackData): PodcastRelease {
+export function trackToRelease(track: MusicTrackData): MusicRelease {
   // Create a comprehensive description from available metadata
   const descriptionParts: string[] = [];
   
@@ -307,7 +307,7 @@ export function trackToRelease(track: MusicTrackData): PodcastRelease {
  * Reworked function for converting events to release format
  * Only handles modern music event kinds (36787 tracks, 34139 playlists)
  */
-export function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
+export function eventToPodcastRelease(event: NostrEvent): MusicRelease {
   // Handle music track events (Kind 36787)
   if (event.kind === MUSIC_KINDS.MUSIC_TRACK && validateMusicTrack(event)) {
     const track = eventToMusicTrack(event);

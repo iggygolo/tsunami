@@ -15,10 +15,10 @@ import { useToast } from '@/hooks/useToast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { createPlaylistRef } from '@/lib/eventConversions';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 
 interface ShareReleaseDialogProps {
-  release: PodcastRelease | null;
+  release: MusicRelease | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

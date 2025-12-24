@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 
 // Cache file interface matching the SSG output
 interface SingleReleaseCache {
-  release: PodcastRelease;
+  release: MusicRelease;
   metadata: {
     generatedAt: string;
     dataSource: 'nostr' | 'fallback';
@@ -14,7 +14,7 @@ interface SingleReleaseCache {
 }
 
 interface StaticSingleReleaseCacheHook {
-  data: PodcastRelease | null;
+  data: MusicRelease | null;
   isLoading: boolean;
   isStale: boolean;
   lastUpdated: Date | null;
@@ -24,7 +24,7 @@ interface StaticSingleReleaseCacheHook {
 /**
  * Transform cached release data to ensure Date objects are properly converted
  */
-function transformCachedRelease(release: any): PodcastRelease {
+function transformCachedRelease(release: any): MusicRelease {
   return {
     ...release,
     createdAt: new Date(release.createdAt),

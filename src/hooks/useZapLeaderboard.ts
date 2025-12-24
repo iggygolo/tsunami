@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import type { ZapLeaderboardEntry } from '@/types/podcast';
+import type { ZapLeaderboardEntry } from '@/types/music';
 import { getArtistPubkeyHex } from '@/lib/musicConfig';
 import { extractZapAmount, extractZapperPubkey, validateZapEvent, extractZappedEventId } from '@/lib/zapUtils';
 

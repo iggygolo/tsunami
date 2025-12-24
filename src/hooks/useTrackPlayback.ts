@@ -1,7 +1,7 @@
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 
-export function useTrackPlayback(release: PodcastRelease | null) {
+export function useTrackPlayback(release: MusicRelease | null) {
   const { playRelease, pause, play, state } = useAudioPlayer();
 
   const isCurrentRelease = release ? state.currentRelease?.eventId === release.eventId : false;

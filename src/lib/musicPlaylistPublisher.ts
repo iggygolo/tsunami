@@ -1,5 +1,5 @@
 import type { NostrEvent } from '@nostrify/nostrify';
-import type { MusicPlaylistData, TrackReference } from '@/types/podcast';
+import type { MusicPlaylistData, TrackReference } from '@/types/music';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { validateImageUrl } from '@/lib/urlValidation';
 

@@ -1,4 +1,4 @@
-import type { MusicTrackData, MusicPlaylistData } from '@/types/podcast';
+import type { MusicTrackData, MusicPlaylistData } from '@/types/music';
 import { MUSIC_CONFIG, type MusicConfig } from './musicConfig';
 import { encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr } from './nip19Utils';
 import { 

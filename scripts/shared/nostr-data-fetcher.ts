@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 import { nip19 } from 'nostr-tools';
 import { NRelay1, NostrEvent } from '@nostrify/nostrify';
-import type { MusicTrackData, MusicPlaylistData } from '../../src/types/podcast.js';
+import type { MusicTrackData, MusicPlaylistData } from '../../src/types/music.js';
 import { 
   validateMusicTrack, 
   validateMusicPlaylist, 

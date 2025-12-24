@@ -3,7 +3,7 @@ import { useNostr } from '@nostrify/react';
 import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 import type { NostrEvent } from '@nostrify/nostrify';
-import type { MusicTrackData } from '@/types/podcast';
+import type { MusicTrackData } from '@/types/music';
 
 /**
  * Validates if a Nostr event is a valid music track (Kind 36787)

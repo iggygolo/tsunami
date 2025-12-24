@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent } from '@/components/ui/card';
 import { ReleaseActions } from './ReleaseActions';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 
 interface AudioPlayerProps {
-  release: PodcastRelease;
+  release: MusicRelease;
   className?: string;
   autoPlay?: boolean;
 }

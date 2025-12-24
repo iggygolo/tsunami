@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/useToast';
 import { isArtist } from '@/lib/musicConfig';
 import { getAudioDuration, formatDurationHuman } from '@/lib/audioDuration';
 import { validateLanguageCode, validateGenre } from '@/lib/musicMetadata';
-import type { ReleaseFormData } from '@/types/podcast';
+import type { ReleaseFormData } from '@/types/music';
 
 const trackSchema = z.object({
   title: z.string().min(1, 'Track title is required').max(200, 'Track title too long'),

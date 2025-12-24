@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 import { useReleases } from '@/hooks/useReleases';
 
 // Cache file interfaces matching the SSG output
 interface ReleaseCache {
-  releases: PodcastRelease[];
+  releases: MusicRelease[];
   metadata: {
     generatedAt: string;
     totalCount: number;
@@ -15,7 +15,7 @@ interface ReleaseCache {
 }
 
 interface LatestReleaseCache {
-  release: PodcastRelease | null;
+  release: MusicRelease | null;
   metadata: {
     generatedAt: string;
     dataSource: 'nostr' | 'fallback';
@@ -25,7 +25,7 @@ interface LatestReleaseCache {
 }
 
 interface StaticCacheHook {
-  data: PodcastRelease[] | null;
+  data: MusicRelease[] | null;
   isLoading: boolean;
   isStale: boolean;
   lastUpdated: Date | null;
@@ -33,7 +33,7 @@ interface StaticCacheHook {
 }
 
 interface LatestReleaseCacheHook {
-  data: PodcastRelease | null;
+  data: MusicRelease | null;
   isLoading: boolean;
   isStale: boolean;
   lastUpdated: Date | null;
@@ -43,7 +43,7 @@ interface LatestReleaseCacheHook {
 /**
  * Transform cached release data to ensure Date objects are properly converted
  */
-function transformCachedRelease(release: any): PodcastRelease {
+function transformCachedRelease(release: any): MusicRelease {
   return {
     ...release,
     createdAt: new Date(release.createdAt),
@@ -143,7 +143,7 @@ export function useStaticReleaseCache(): StaticCacheHook {
   });
 
   // Determine final data and loading state
-  let finalData: PodcastRelease[] | null = null;
+  let finalData: MusicRelease[] | null = null;
   let isLoading = false;
   let lastUpdated: Date | null = null;
   let error: Error | null = null;
@@ -208,7 +208,7 @@ export function useLatestReleaseCache(): LatestReleaseCacheHook {
   });
 
   // Determine final data and loading state
-  let finalData: PodcastRelease | null = null;
+  let finalData: MusicRelease | null = null;
   let isLoading = false;
   let lastUpdated: Date | null = null;
   let error: Error | null = null;

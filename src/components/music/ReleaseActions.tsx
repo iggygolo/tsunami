@@ -11,18 +11,18 @@ import { useZapCounts } from '@/hooks/useZapCounts';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import type { NostrEvent } from '@nostrify/nostrify';
-import type { PodcastRelease } from '@/types/podcast';
+import type { MusicRelease } from '@/types/music';
 import { cn } from '@/lib/utils';
 
 interface ReleaseActionsProps {
-  release: PodcastRelease;
+  release: MusicRelease;
   className?: string;
   showComments?: boolean;
   onToggleComments?: () => void;
 }
 
 // Create a NostrEvent-like object from PodcastRelease
-function createEventFromrelease(release: PodcastRelease): NostrEvent {
+function createEventFromrelease(release: MusicRelease): NostrEvent {
   return {
     id: release.eventId,
     kind: MUSIC_KINDS.MUSIC_PLAYLIST, // Music playlist events (releases)

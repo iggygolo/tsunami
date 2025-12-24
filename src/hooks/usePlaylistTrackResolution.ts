@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { eventToMusicTrack } from '@/hooks/useMusicTracks';
-import type { TrackReference, MusicTrackData } from '@/types/podcast';
+import type { TrackReference, MusicTrackData } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 /**

@@ -33,7 +33,7 @@ import { useUpdateRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { getAudioDuration, formatDurationHuman } from '@/lib/audioDuration';
 import { validateLanguageCode, validateGenre } from '@/lib/musicMetadata';
-import type { PodcastRelease, ReleaseFormData } from '@/types/podcast';
+import type { MusicRelease, ReleaseFormData } from '@/types/music';
 
 // Track schema for individual tracks
 const trackSchema = z.object({
@@ -61,7 +61,7 @@ const releaseEditSchema = z.object({
 type ReleaseEditFormValues = z.infer<typeof releaseEditSchema>;
 
 interface ReleaseEditDialogProps {
-  release: PodcastRelease;
+  release: MusicRelease;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;

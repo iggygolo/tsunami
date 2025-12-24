@@ -4,8 +4,8 @@ import {
   isValidLanguageCode, 
   isValidGenre, 
   type ReleaseTrack,
-  type PodcastRelease
-} from '../podcast';
+  type MusicRelease
+} from '../music';
 
 describe('Music Metadata Enhancement - Data Model Validation', () => {
   describe('Property 3: Language Code Validation', () => {
@@ -151,7 +151,7 @@ describe('Music Metadata Enhancement - Data Model Validation', () => {
           commentCount: fc.option(fc.nat(), { nil: undefined }),
           repostCount: fc.option(fc.nat(), { nil: undefined })
         }),
-        (release: PodcastRelease) => {
+        (release: MusicRelease) => {
           expect(isValidGenre(release.genre)).toBe(true);
           // Also validate that all tracks have valid languages
           release.tracks.forEach(track => {

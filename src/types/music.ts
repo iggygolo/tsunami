@@ -3,7 +3,7 @@ import type { NostrEvent } from '@nostrify/nostrify';
 /**
  * Podcast release metadata based on NIP-54
  */
-export interface PodcastRelease {
+export interface MusicRelease {
   id: string;
   title: string;
   imageUrl?: string;
@@ -228,8 +228,8 @@ export interface PodcastStats {
   totalZaps: number;
   totalComments: number;
   totalReposts: number;
-  mostZappedRelease?: PodcastRelease;
-  mostCommentedRelease?: PodcastRelease;
+  mostZappedRelease?: MusicRelease;
+  mostCommentedRelease?: MusicRelease;
   recentEngagement: EngagementActivity[];
 }
 
@@ -314,8 +314,8 @@ export interface AudioPlayerState {
   duration: number;
   volume: number;
   playbackRate: number;
-  currentRelease?: PodcastRelease;
-  playlist: PodcastRelease[];
+  currentRelease?: MusicRelease;
+  playlist: MusicRelease[];
   currentIndex: number;
 }
 
