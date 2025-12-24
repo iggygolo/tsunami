@@ -50,22 +50,6 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
         <div className='font-medium text-xs uppercase tracking-wider text-muted-foreground px-2 py-2'>Switch Relay</div>
         <RelaySelector className="w-full" />
         <DropdownMenuSeparator className="my-2" />
-        <DropdownMenuItem
-          onClick={onAddAccountClick}
-          className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
-        >
-          <UserPlus className='w-4 h-4 text-purple-500' />
-          <span>Switch account</span>
-        </DropdownMenuItem>
-        <WalletModal>
-          <DropdownMenuItem
-            className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
-            onSelect={(e) => e.preventDefault()}
-          >
-            <Wallet className='w-4 h-4 text-purple-500' />
-            <span>Wallet Settings</span>
-          </DropdownMenuItem>
-        </WalletModal>
         <DropdownMenuSeparator className="my-2" />
         {isArtist_user && (
           <>
@@ -81,6 +65,22 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
             <DropdownMenuSeparator className="my-2" />
           </>
         )}
+        <WalletModal>
+          <DropdownMenuItem
+            className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
+            onSelect={(e) => e.preventDefault()}
+          >
+            <Wallet className='w-4 h-4 text-purple-500' />
+            <span>Wallet Settings</span>
+          </DropdownMenuItem>
+        </WalletModal>
+        <DropdownMenuItem
+          onClick={onAddAccountClick}
+          className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
+        >
+          <UserPlus className='w-4 h-4 text-purple-500' />
+          <span>Switch account</span>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => removeLogin(currentUser.id)}
           className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-red-500/10 focus:bg-red-500/10 text-red-500 hover:text-red-500 focus:text-red-500 transition-all duration-200'
