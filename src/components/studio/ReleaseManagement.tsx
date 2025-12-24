@@ -47,7 +47,7 @@ import { useToast } from '@/hooks/useToast';
 import { AudioPlayer } from '@/components/music/AudioPlayer';
 import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
 import { genRSSFeed } from '@/lib/rssGenerator';
-import { usePodcastConfig } from '@/hooks/usePodcastConfig';
+import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { ReleaseEditDialog } from './ReleaseEditDialog';
 import { ShareReleaseDialog } from './ShareReleaseDialog';
 
@@ -57,7 +57,7 @@ interface ReleaseManagementProps {
 
 export function ReleaseManagement({ className }: ReleaseManagementProps) {
   const { toast } = useToast();
-  const podcastConfig = usePodcastConfig();
+  const podcastConfig = useMusicConfig();
   const { mutateAsync: deleteRelease, isPending: isDeleting } = useDeleteRelease();
 
   const [searchOptions, setSearchOptions] = useState<ReleaseSearchOptions>({

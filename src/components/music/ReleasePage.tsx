@@ -12,7 +12,7 @@ import { ReactionsSection } from './ReactionsSection';
 import { TrackList } from './TrackList';
 import { Layout } from '@/components/Layout';
 import { Link, useNavigate } from 'react-router-dom';
-import { usePodcastConfig } from '@/hooks/usePodcastConfig';
+import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { useReleaseData } from '@/hooks/useReleaseData';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
@@ -34,7 +34,7 @@ interface ReleasePageProps {
 
 export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   const navigate = useNavigate();
-  const podcastConfig = usePodcastConfig();
+  const podcastConfig = useMusicConfig();
   const { formatDuration } = useFormatDuration();
   const [activeTab, setActiveTab] = useState('tracks');
 

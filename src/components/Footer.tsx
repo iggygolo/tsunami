@@ -1,8 +1,8 @@
 import { Waves } from 'lucide-react';
-import { usePodcastConfig } from '@/hooks/usePodcastConfig';
+import { useMusicConfig } from '@/hooks/useMusicConfig';
 
 export default function Footer() {
-  const podcastConfig = usePodcastConfig();
+  const podcastConfig = useMusicConfig();
 
   return (
     <div className="text-center mt-8 pb-8">

@@ -55,7 +55,7 @@ dist/
 
 ```typescript
 interface ReleaseCache {
-  releases: PodcastRelease[];
+  releases: MusicRelease[];
   metadata: {
     generatedAt: string;
     totalCount: number;
@@ -64,7 +64,7 @@ interface ReleaseCache {
 }
 
 interface LatestReleaseCache {
-  release: PodcastRelease | null;
+  release: MusicRelease | null;
   metadata: {
     generatedAt: string;
     dataSource: 'nostr' | 'fallback';
@@ -75,10 +75,10 @@ interface LatestReleaseCache {
 async function generateStaticSite(): Promise<void>
 
 // Generate JSON cache files
-async function generateReleaseCache(releases: PodcastRelease[]): Promise<void>
+async function generateReleaseCache(releases: MusicRelease[]): Promise<void>
 
 // Pre-render HTML pages
-async function preRenderPages(releases: PodcastRelease[]): Promise<void>
+async function preRenderPages(releases: MusicRelease[]): Promise<void>
 ```
 
 ### Client-Side Cache Integration
@@ -87,7 +87,7 @@ async function preRenderPages(releases: PodcastRelease[]): Promise<void>
 
 ```typescript
 interface StaticCacheHook {
-  data: PodcastRelease[] | null;
+  data: MusicRelease[] | null;
   isLoading: boolean;
   isStale: boolean;
   lastUpdated: Date | null;
@@ -106,7 +106,7 @@ function useLatestReleaseCache(): StaticCacheHook
 
 ```typescript
 interface PageRenderContext {
-  release: PodcastRelease;
+  release: MusicRelease;
   baseUrl: string;
   assetManifest: Record<string, string>;
 }
@@ -125,7 +125,7 @@ function generatePageHTML(content: string, meta: PageMeta): string
 **releases.json**:
 ```typescript
 {
-  releases: PodcastRelease[];
+  releases: MusicRelease[];
   metadata: {
     generatedAt: string;        // ISO timestamp
     totalCount: number;         // Total releases found
@@ -139,7 +139,7 @@ function generatePageHTML(content: string, meta: PageMeta): string
 **latest-release.json**:
 ```typescript
 {
-  release: PodcastRelease | null;
+  release: MusicRelease | null;
   metadata: {
     generatedAt: string;
     dataSource: 'nostr' | 'fallback';
@@ -290,7 +290,7 @@ The testing strategy combines unit tests for specific scenarios with property-ba
 The design leverages existing code to minimize complexity:
 
 - **Nostr Fetching**: Reuse functions from `scripts/build-rss.ts`
-- **Data Models**: Use existing `PodcastRelease` and `MusicTrackData` types
+- **Data Models**: Use existing `MusicRelease` and `MusicTrackData` types
 - **Validation**: Reuse existing validation functions from `eventConversions.ts`
 - **Build Pipeline**: Extend existing `npm run build` command
 

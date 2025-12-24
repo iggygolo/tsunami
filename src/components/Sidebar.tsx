@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Headphones, List, Users, MessageSquare, User, Rss, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { usePodcastConfig } from '@/hooks/usePodcastConfig';
+import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { isArtist } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
 
@@ -13,7 +13,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const location = useLocation();
   const { user } = useCurrentUser();
-  const podcastConfig = usePodcastConfig();
+  const podcastConfig = useMusicConfig();
   const isArtist_user = user && isArtist(user.pubkey);
 
   const isActive = (path: string) => {

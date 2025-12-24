@@ -13,7 +13,7 @@ import { RecentActivity } from '@/components/music/RecentActivity';
 import { PostCard } from '@/components/social/PostCard';
 import { ZapDialog } from '@/components/ZapDialog';
 import { useLatestReleaseCache, useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
-import { usePodcastConfig } from '@/hooks/usePodcastConfig';
+import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
@@ -27,7 +27,7 @@ const Index = () => {
   const { data: allReleases } = useStaticReleaseCache();
   const { data: leaderboard } = useZapLeaderboard(100);
   const { data: postCount } = useArtistPostCount();
-  const podcastConfig = usePodcastConfig();
+  const podcastConfig = useMusicConfig();
   const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { user } = useCurrentUser();
   const { playRelease } = useAudioPlayer();

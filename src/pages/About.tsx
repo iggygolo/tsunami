@@ -8,14 +8,14 @@ import { ZapDialog } from '@/components/ZapDialog';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePodcastStats } from '@/hooks/usePodcastReleases';
-import { usePodcastConfig } from '@/hooks/usePodcastConfig';
+import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { getArtistPubkeyHex } from '@/lib/musicConfig';
 
 const About = () => {
   const { data: stats } = usePodcastStats();
   const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { user } = useCurrentUser();
-  const podcastConfig = usePodcastConfig();
+  const podcastConfig = useMusicConfig();
 
   useSeoMeta({
     title: `About - ${podcastConfig.music.artistName}`,

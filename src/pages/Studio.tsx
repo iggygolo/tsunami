@@ -27,7 +27,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { usePodcastMetadata } from '@/hooks/usePodcastMetadata';
-import { usePodcastConfig } from '@/hooks/usePodcastConfig';
+import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { usePodcastAnalytics } from '@/hooks/usePodcastAnalytics';
 import { useRSSFeedGenerator } from '@/hooks/useRSSFeedGenerator';
 import { useUploadConfig } from '@/hooks/useUploadConfig';
@@ -87,7 +87,7 @@ const Studio = () => {
   const { mutateAsync: createEvent } = useNostrPublish();
   const { toast } = useToast();
   const { data: podcastMetadata, isLoading: isLoadingMetadata } = usePodcastMetadata();
-  const podcastConfig = usePodcastConfig();
+  const podcastConfig = useMusicConfig();
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
   const { mutateAsync: uploadFileWithOptions } = useUploadFileWithOptions();
   const { config } = useUploadConfig();

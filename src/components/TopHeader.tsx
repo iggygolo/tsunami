@@ -8,7 +8,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { usePodcastConfig } from '@/hooks/usePodcastConfig';
+import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { cn } from '@/lib/utils';
 import { MobileSidebar } from '@/components/MobileSidebar';
 
@@ -17,7 +17,7 @@ interface TopHeaderProps {
 }
 
 export function TopHeader({ className }: TopHeaderProps) {
-  const podcastConfig = usePodcastConfig();
+  const podcastConfig = useMusicConfig();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
