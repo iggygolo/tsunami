@@ -4,17 +4,16 @@ import { useMusicTracks } from '@/hooks/useMusicTracks';
 import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Layout } from '@/components/Layout';
 import { EditProfileForm } from '@/components/EditProfileForm';
 import { ZapDialog } from '@/components/ZapDialog';
+import { RepostDialog } from '@/components/RepostDialog';
 import { genUserName } from '@/lib/genUserName';
 import { playlistToRelease } from '@/lib/eventConversions';
 import { formatToAudioType } from '@/lib/audioUtils';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
-import { useToast } from '@/hooks/useToast';
 import type { MusicRelease, MusicTrackData, MusicPlaylistData } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { 
@@ -79,8 +78,6 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const { data: playlists = [], isLoading: isLoadingPlaylists } = useMusicPlaylists();
   const { user: currentUser } = useCurrentUser();
   const { state: playerState, playRelease, pause } = useAudioPlayer();
-  const { mutateAsync: publishEvent } = useNostrPublish();
-  const { toast } = useToast();
   
   const isOwnProfile = currentUser?.pubkey === pubkey;
   const metadata = authorData?.metadata;
@@ -125,42 +122,6 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
       content: playlist.description || '',
       sig: ''
     };
-  };
-
-  // Helper function to handle repost
-  const handleRepost = async (event: NostrEvent, type: 'track' | 'playlist') => {
-    if (!currentUser) {
-      toast({
-        title: 'Login required',
-        description: 'You need to be logged in to repost.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    try {
-      await publishEvent({
-        kind: 6, // Legacy repost
-        content: '',
-        tags: [
-          ['e', event.id],
-          ['p', event.pubkey],
-          ['k', String(event.kind)]
-        ]
-      });
-
-      toast({
-        title: 'Reposted!',
-        description: `Successfully reposted this ${type}.`,
-      });
-    } catch (error) {
-      console.error('Failed to repost:', error);
-      toast({
-        title: 'Repost failed',
-        description: 'Failed to repost. Please try again.',
-        variant: 'destructive'
-      });
-    }
   };
 
   // Helper functions for playing tracks and playlists
@@ -330,20 +291,20 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                 <Tabs defaultValue="tracks" className="w-full">
                   <TabsList className="bg-transparent p-0 h-auto gap-2">
                     <TabsTrigger 
-                      value="playlists" 
-                      className="bg-black/30 border border-white/20 text-white/80 data-[state=active]:text-white data-[state=active]:bg-white/15 hover:text-white transition-all duration-200 rounded-full px-4 py-1.5 backdrop-blur-xl shadow-lg text-sm"
-                    >
-                      <ListMusic className="w-3 h-3 mr-1.5" />
-                      Playlists
-                      <span className="ml-1.5 bg-white/20 px-1.5 py-0.5 rounded-full text-xs">{playlists.length}</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
                       value="tracks" 
                       className="bg-black/30 border border-white/20 text-white/80 data-[state=active]:text-white data-[state=active]:bg-white/15 hover:text-white transition-all duration-200 rounded-full px-4 py-1.5 backdrop-blur-xl shadow-lg text-sm"
                     >
                       <Music className="w-3 h-3 mr-1.5" />
                       Tracks
                       <span className="ml-1.5 bg-white/20 px-1.5 py-0.5 rounded-full text-xs">{tracks.length}</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="playlists" 
+                      className="bg-black/30 border border-white/20 text-white/80 data-[state=active]:text-white data-[state=active]:bg-white/15 hover:text-white transition-all duration-200 rounded-full px-4 py-1.5 backdrop-blur-xl shadow-lg text-sm"
+                    >
+                      <ListMusic className="w-3 h-3 mr-1.5" />
+                      Playlists
+                      <span className="ml-1.5 bg-white/20 px-1.5 py-0.5 rounded-full text-xs">{playlists.length}</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -383,14 +344,15 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                                   <Zap className="w-3 h-3" />
                                 </Button>
                               </ZapDialog>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => handleRepost(createTrackEvent(track), 'track')}
-                                className="text-white/70 hover:text-green-400 p-1.5 rounded-full"
+                              <RepostDialog 
+                                target={createTrackEvent(track)} 
+                                item={track} 
+                                type="track"
                               >
-                                <Repeat2 className="w-3 h-3" />
-                              </Button>
+                                <Button size="sm" variant="ghost" className="text-white/70 hover:text-green-400 p-1.5 rounded-full">
+                                  <Repeat2 className="w-3 h-3" />
+                                </Button>
+                              </RepostDialog>
                               <Button 
                                 size="sm" 
                                 onClick={() => handlePlayTrack(track)}
@@ -453,14 +415,15 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                                   <Zap className="w-3 h-3" />
                                 </Button>
                               </ZapDialog>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={() => handleRepost(createPlaylistEvent(playlist), 'playlist')}
-                                className="text-white/70 hover:text-green-400 p-1.5 rounded-full"
+                              <RepostDialog 
+                                target={createPlaylistEvent(playlist)} 
+                                item={playlist} 
+                                type="playlist"
                               >
-                                <Repeat2 className="w-3 h-3" />
-                              </Button>
+                                <Button size="sm" variant="ghost" className="text-white/70 hover:text-green-400 p-1.5 rounded-full">
+                                  <Repeat2 className="w-3 h-3" />
+                                </Button>
+                              </RepostDialog>
                               <Button 
                                 size="sm" 
                                 onClick={() => handlePlayPlaylist(playlist)}
