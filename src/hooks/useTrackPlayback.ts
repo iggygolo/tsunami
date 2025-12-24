@@ -10,7 +10,20 @@ export function useTrackPlayback(release: PodcastRelease | null) {
   const isReleasePlaying = isCurrentRelease && state.isPlaying;
 
   const handleTrackPlay = (trackIndex: number) => {
-    if (release?.tracks && release.tracks.length > trackIndex) {
+    if (!release?.tracks || release.tracks.length <= trackIndex) {
+      return;
+    }
+
+    // If clicking on the currently playing track, pause it
+    if (isCurrentRelease && currentTrackIndex === trackIndex && state.isPlaying) {
+      pause();
+    }
+    // If clicking on the current track that's paused, resume it
+    else if (isCurrentRelease && currentTrackIndex === trackIndex && !state.isPlaying) {
+      play();
+    }
+    // If clicking on a different track or no track is loaded, play the new track
+    else {
       playRelease(release, trackIndex);
     }
   };

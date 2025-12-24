@@ -47,8 +47,8 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
     isLoading 
   } = useReleaseData({ eventId, addressableEvent });
 
-  // Use custom hook for track playback (always call hook, but pass null if no release)
-  const trackPlayback = useTrackPlayback(release || null);
+  // Use custom hook for track playback
+  const trackPlayback = useTrackPlayback(release);
 
   // Use custom hook for interactions
   const {
