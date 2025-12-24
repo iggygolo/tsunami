@@ -116,7 +116,7 @@ const Index = () => {
           <BlurredBackground image={latestRelease.imageUrl} />
           <div className="absolute inset-0 bg-grid-pattern opacity-5" />
           <div className="relative">
-            <div className="flex flex-col lg:flex-row items-center gap-8">
+            <div className="flex flex-col lg:flex-row justify-center items-center gap-8">
                 {/* Album Art */}
                 {latestRelease.imageUrl && (
                   <div className="relative group flex-shrink-0">
@@ -143,7 +143,7 @@ const Index = () => {
                 )}
 
                 {/* Release Info */}
-                <div className="flex-1 text-center lg:text-left space-y-4">
+                <div className="flex-shrink-0 text-center lg:text-left space-y-4">
                   <div className="space-y-2">
                     <Badge variant="primary" className="mb-2">
                       <Sparkles className="w-3 h-3 mr-1" />
