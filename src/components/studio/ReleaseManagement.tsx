@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useReleases } from '@/hooks/usePodcastReleases';
+import { useReleases } from '@/hooks/useReleases';
 import { useDeleteRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { AudioPlayer } from '@/components/music/AudioPlayer';

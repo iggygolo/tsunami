@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { MUSIC_CONFIG, MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
 
-interface PodcastMetadata {
+interface ArtistMetadata {
   artist: string;
   description: string;
   image: string;
@@ -44,12 +44,12 @@ interface PodcastMetadata {
   updated_at: number;
 }
 
-export function usePodcastMetadata() {
+export function useArtistMetadata() {
   const { nostr } = useNostr();
 
   return useQuery({
     queryKey: ['artist-metadata'],
-    queryFn: async (context): Promise<PodcastMetadata> => {
+    queryFn: async (context): Promise<ArtistMetadata> => {
       try {
         // Query for podcast metadata events with shorter timeout for speed
         // NPool will query all configured relays and return results from fastest responders

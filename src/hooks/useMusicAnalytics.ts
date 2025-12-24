@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
-import { useReleases } from '@/hooks/usePodcastReleases';
+import { useReleases } from '@/hooks/useReleases';
 import type { PodcastRelease } from '@/types/podcast';
 
-interface PodcastAnalytics {
+interface MusicAnalytics {
   totalReleases: number;
   totalZaps: number;
   totalComments: number;
@@ -33,14 +33,14 @@ interface PodcastAnalytics {
 }
 
 /**
- * Comprehensive analytics hook for podcast performance tracking
+ * Comprehensive analytics hook for music performance tracking
  */
-export function usePodcastAnalytics() {
+export function useMusicAnalytics() {
   const { nostr } = useNostr();
   const artistPubkeyHex = getArtistPubkeyHex();
   const { data: releases } = useReleases();
 
-  return useQuery<PodcastAnalytics>({
+  return useQuery<MusicAnalytics>({
     queryKey: ['podcast-analytics', artistPubkeyHex],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
@@ -196,23 +196,4 @@ export function usePodcastAnalytics() {
     gcTime: 1000 * 60 * 30, // 30 minutes
     enabled: !!releases, // Only run when releases are loaded
   });
-}
-
-/**
- * Lightweight analytics hook for quick stats (used in About page)
- */
-export function usePodcastQuickStats() {
-  const analytics = usePodcastAnalytics();
-
-  return {
-    data: analytics.data ? {
-      totalReleases: analytics.data.totalReleases,
-      totalZaps: analytics.data.totalZaps,
-      totalComments: analytics.data.totalComments,
-      totalReposts: analytics.data.totalReposts,
-      mostEngagedRelease: analytics.data.topReleases[0]?.release || null,
-    } : null,
-    isLoading: analytics.isLoading,
-    error: analytics.error,
-  };
 }

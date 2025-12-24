@@ -7,12 +7,12 @@ import { Layout } from '@/components/Layout';
 import { ZapDialog } from '@/components/ZapDialog';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { usePodcastStats } from '@/hooks/usePodcastReleases';
+import { useArtistStats } from '@/hooks/useReleases';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { getArtistPubkeyHex } from '@/lib/musicConfig';
 
 const About = () => {
-  const { data: stats } = usePodcastStats();
+  const { data: stats } = useArtistStats();
   const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { user } = useCurrentUser();
   const podcastConfig = useMusicConfig();

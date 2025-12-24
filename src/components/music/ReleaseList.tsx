@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ReleaseCard } from './ReleaseCard';
-import { useReleases } from '@/hooks/usePodcastReleases';
+import { useReleases } from '@/hooks/useReleases';
 import { useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
 import type { PodcastRelease, ReleaseSearchOptions } from '@/types/podcast';
 

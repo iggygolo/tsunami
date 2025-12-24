@@ -3,7 +3,6 @@ import { useNostr } from '@nostrify/react';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import type { PodcastRelease, ReleaseSearchOptions, MusicTrackData } from '@/types/podcast';
 import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
-import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 import {
   validateMusicTrack,
   validateMusicPlaylist,
@@ -304,9 +303,9 @@ export function usePodcastRelease(playlistId: string) {
 }
 
 /**
- * Hook to get podcast statistics
+ * Hook to get artist statistics
  */
-export function usePodcastStats() {
+export function useArtistStats() {
   const { data: releases } = useReleases();
 
   return useQuery({

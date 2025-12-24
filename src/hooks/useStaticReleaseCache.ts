@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { PodcastRelease } from '@/types/podcast';
-import { useReleases } from '@/hooks/usePodcastReleases';
+import { useReleases } from '@/hooks/useReleases';
 
 // Cache file interfaces matching the SSG output
 interface ReleaseCache {

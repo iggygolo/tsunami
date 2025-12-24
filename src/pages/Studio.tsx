@@ -26,9 +26,9 @@ import { Layout } from '@/components/Layout';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
-import { usePodcastMetadata } from '@/hooks/usePodcastMetadata';
+import { useArtistMetadata } from '@/hooks/useArtistMetadata';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
-import { usePodcastAnalytics } from '@/hooks/usePodcastAnalytics';
+import { useMusicAnalytics } from '@/hooks/useMusicAnalytics';
 import { useRSSFeedGenerator } from '@/hooks/useRSSFeedGenerator';
 import { useUploadConfig } from '@/hooks/useUploadConfig';
 import { isArtist, MUSIC_CONFIG, MUSIC_KINDS } from '@/lib/musicConfig';
@@ -86,12 +86,12 @@ const Studio = () => {
   const { user } = useCurrentUser();
   const { mutateAsync: createEvent } = useNostrPublish();
   const { toast } = useToast();
-  const { data: podcastMetadata, isLoading: isLoadingMetadata } = usePodcastMetadata();
+  const { data: podcastMetadata, isLoading: isLoadingMetadata } = useArtistMetadata();
   const podcastConfig = useMusicConfig();
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
   const { mutateAsync: uploadFileWithOptions } = useUploadFileWithOptions();
   const { config } = useUploadConfig();
-  const { data: analytics, isLoading: analyticsLoading } = usePodcastAnalytics();
+  const { data: analytics, isLoading: analyticsLoading } = useMusicAnalytics();
   const isArtist_user = user && isArtist(user.pubkey);
 
   const [activeTab, setActiveTab] = useState('settings');

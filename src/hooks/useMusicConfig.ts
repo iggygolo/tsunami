@@ -1,8 +1,8 @@
-import { usePodcastMetadata } from './usePodcastMetadata';
+import { useArtistMetadata } from './useArtistMetadata';
 import { MUSIC_CONFIG } from '@/lib/musicConfig';
 
 export function useMusicConfig() {
-  const { data: podcastMetadata } = usePodcastMetadata();
+  const { data: podcastMetadata } = useArtistMetadata();
 
   // Return dynamic config if metadata exists, otherwise fallback to hardcoded config
   const config = podcastMetadata ? {

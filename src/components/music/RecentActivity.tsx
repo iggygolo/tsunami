@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useRecentZapActivity } from '@/hooks/useZapLeaderboard';
-import { usePodcastRelease } from '@/hooks/usePodcastReleases';
+import { usePodcastRelease } from '@/hooks/useReleases';
 import { genUserName } from '@/lib/genUserName';
 
 interface ActivityItemProps {

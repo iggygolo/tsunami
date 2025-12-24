@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { NoteContent } from '@/components/NoteContent';
 import { useAuthor } from '@/hooks/useAuthor';
-import { useReleases } from '@/hooks/usePodcastReleases';
+import { useReleases } from '@/hooks/useReleases';
 import { encodeEventIdAsNevent } from '@/lib/nip19Utils';
 import { genUserName } from '@/lib/genUserName';
 import { createPlaylistRef } from '@/lib/eventConversions';
