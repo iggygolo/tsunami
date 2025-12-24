@@ -153,9 +153,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    console.log('Full request body:', JSON.stringify(req.body, null, 2));
-    console.log('Request headers:', JSON.stringify(req.headers, null, 2));
-    
     const body = req.body as HandleUploadBody;
     
     // Handle the upload with Vercel Blob
@@ -163,8 +160,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body,
       request: req,
       onBeforeGenerateToken: async (pathname: string, clientPayload?: string) => {
-        console.log('onBeforeGenerateToken called with:', { pathname, clientPayload });
-        
         // Parse the client payload to get our custom data
         let uploadData: UploadRequest;
         try {
@@ -177,8 +172,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.error('Failed to parse clientPayload in onBeforeGenerateToken:', error);
           throw new Error('Invalid client payload format');
         }
-        
-        console.log('Parsed upload data:', uploadData);
         
         const { filename, contentType, size, userPubkey, timestamp } = uploadData;
         
@@ -211,8 +204,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Generate unique filename
         const uniqueFilename = generateUniqueFilename(filename, userPubkey);
         
-        console.log('Upload validation passed, generating token for:', uniqueFilename);
-        
         return {
           allowedContentTypes: [contentType],
           tokenPayload: JSON.stringify({ 
@@ -224,15 +215,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       onUploadCompleted: async ({ blob, tokenPayload }: { blob: any; tokenPayload?: string }) => {
         // Log successful upload
-        console.log('Upload completed:', {
-          url: blob.url,
-          tokenPayload
-        });
+        console.log('Upload completed:', blob.url);
         
         if (tokenPayload) {
           try {
             const payload = JSON.parse(tokenPayload);
-            console.log('Upload completed for user:', payload.userPubkey, 'file:', payload.originalFilename);
+            console.log('Upload completed for user:', payload.userPubkey);
           } catch (error) {
             console.warn('Failed to parse tokenPayload:', error);
           }
