@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSeoMeta } from '@unhead/react';
-import { ArrowLeft, Play, Pause, Heart, Share, MessageCircle, Music, Zap, ListMusic, Users } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Heart, Share, MessageCircle, Music, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -91,7 +91,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   if (isLoading) {
     return (
       <Layout>
-        <div className="relative -mx-4 px-4">
+        <div className="relative">
           <BlurredBackground image={undefined} />
           
           <div className="relative py-8">
@@ -156,10 +156,10 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
   return (
     <Layout>
-      <div className="relative -mx-4 px-4">
+      <div className="relative w-full max-w-full">
         <BlurredBackground image={release.imageUrl} />
         
-        <div className="relative py-8">
+        <div className="relative py-8 w-full max-w-full overflow-hidden">
           {/* Back Button */}
           <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 text-white/70 hover:text-white">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -167,10 +167,10 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
           </Button>
 
           {/* Release Header - ProfilePage Style */}
-          <div className="flex flex-col lg:flex-row items-start gap-4 mb-6">
+          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 mb-6">
             {/* Large Release Artwork */}
             <div className="flex-shrink-0">
-              <div className="w-48 h-48 rounded-2xl overflow-hidden shadow-2xl relative group">
+              <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden shadow-2xl relative group">
                 {release.imageUrl ? (
                   <img 
                     src={release.imageUrl} 
@@ -179,7 +179,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <Music className="text-6xl text-white" />
+                    <Music className="text-4xl sm:text-6xl text-white" />
                   </div>
                 )}
                 
@@ -190,11 +190,11 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                     disabled={trackPlayback?.isReleaseLoading}
                     className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 disabled:cursor-not-allowed"
                   >
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
                       {trackPlayback?.isReleasePlaying ? (
-                        <Pause className="w-8 h-8 text-black" fill="currentColor" />
+                        <Pause className="w-6 h-6 sm:w-8 sm:h-8 text-black" fill="currentColor" />
                       ) : (
-                        <Play className="w-8 h-8 text-black ml-1" fill="currentColor" />
+                        <Play className="w-6 h-6 sm:w-8 sm:h-8 text-black ml-1" fill="currentColor" />
                       )}
                     </div>
                   </button>
@@ -203,9 +203,9 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
             </div>
 
             {/* Release Info */}
-            <div className="flex-1 space-y-3 relative z-10 max-w-lg">
+            <div className="flex-1 space-y-3 relative z-10 w-full max-w-lg text-center lg:text-left">
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-2">{release.title}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg mb-2">{release.title}</h1>
                 <p className="text-white/90 text-sm drop-shadow-md mb-2">{podcastConfig.music.artistName}</p>
                 {release.description && (
                   <p className="text-white/80 drop-shadow-md text-xs mb-2">{release.description}</p>
@@ -213,7 +213,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
               </div>
 
               {/* Genre, Duration, and Track Count */}
-              <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center lg:justify-start">
                 {release.genre && (
                   <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs">
                     {release.genre}
@@ -233,7 +233,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
               </div>
 
               {/* Stats */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 justify-center lg:justify-start">
                 <div className="text-white">
                   <div className="text-xl font-bold drop-shadow-lg">{interactionCounts?.totalSats || 0}</div>
                   <div className="text-white/80 text-xs drop-shadow-md">sats</div>
@@ -244,7 +244,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 justify-center lg:justify-start">
                 {/* Play/Pause Button */}
                 <Button
                   size="sm"
@@ -296,88 +296,94 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                   <Share className="w-4 h-4" />
                 </Button>
               </div>
-
-              {/* Tab Pills */}
-              <div className="flex gap-2">
-                <GlassTabs defaultValue="tracks" value={activeTab} onValueChange={setActiveTab}>
-                  <GlassTabsList>
-                    <GlassTabsTrigger 
-                      value="tracks"
-                      icon={<Music className="w-3 h-3" />}
-                      count={release.tracks?.length || 0}
-                    >
-                      Tracks
-                    </GlassTabsTrigger>
-                    <GlassTabsTrigger 
-                      value="zappers"
-                      icon={<Zap className="w-3 h-3" />}
-                    >
-                      Zappers
-                    </GlassTabsTrigger>
-                    <GlassTabsTrigger 
-                      value="comments"
-                      icon={<MessageCircle className="w-3 h-3" />}
-                      count={commentCount}
-                    >
-                      Comments
-                    </GlassTabsTrigger>
-                    <GlassTabsTrigger 
-                      value="reactions"
-                      icon={<Heart className="w-3 h-3" />}
-                      count={interactionCounts?.likes || 0}
-                    >
-                      Likes
-                    </GlassTabsTrigger>
-                  </GlassTabsList>
-
-                  <GlassTabsContent value="tracks">
-                    <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-4 max-w-2xl">
-                      <TrackList release={release} className="text-white" />
-                    </div>
-                  </GlassTabsContent>
-
-                  <GlassTabsContent value="zappers">
-                    <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-4 max-w-2xl">
-                      <ZapLeaderboard 
-                        eventId={release.eventId}
-                        showTitle={false}
-                        className="text-white"
-                        limit={10}
-                      />
-                    </div>
-                  </GlassTabsContent>
-
-                  <GlassTabsContent value="comments">
-                    <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg max-w-2xl">
-                      {event && (
-                        <CommentsSection
-                          root={event}
-                          title=""
-                          emptyStateMessage="No comments yet"
-                          emptyStateSubtitle="Be the first to share your thoughts!"
-                          className="bg-transparent border-none"
-                        />
-                      )}
-                      {!event && (
-                        <div className="p-6 text-center text-white/70">
-                          <MessageCircle className="w-12 h-12 mx-auto mb-4 text-white/30" />
-                          <p>Comments unavailable</p>
-                        </div>
-                      )}
-                    </div>
-                  </GlassTabsContent>
-
-                  <GlassTabsContent value="reactions">
-                    <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-4 max-w-2xl">
-                      <ReactionsSection 
-                        eventId={release.eventId}
-                        className="text-white"
-                      />
-                    </div>
-                  </GlassTabsContent>
-                </GlassTabs>
-              </div>
             </div>
+          </div>
+
+          {/* Tab Pills - Moved outside the flex container */}
+          <div className="w-full max-w-full">
+            <GlassTabs defaultValue="tracks" value={activeTab} onValueChange={setActiveTab} className="w-full max-w-full">
+              <GlassTabsList className="flex-wrap justify-center lg:justify-start">
+                <GlassTabsTrigger 
+                  value="tracks"
+                  icon={<Music className="w-3 h-3" />}
+                  count={release.tracks?.length || 0}
+                  className="text-xs sm:text-sm px-3 sm:px-4"
+                >
+                  Tracks
+                </GlassTabsTrigger>
+                <GlassTabsTrigger 
+                  value="zappers"
+                  icon={<Zap className="w-3 h-3" />}
+                  className="text-xs sm:text-sm px-3 sm:px-4"
+                >
+                  Zappers
+                </GlassTabsTrigger>
+                <GlassTabsTrigger 
+                  value="comments"
+                  icon={<MessageCircle className="w-3 h-3" />}
+                  count={commentCount}
+                  className="text-xs sm:text-sm px-3 sm:px-4"
+                >
+                  Comments
+                </GlassTabsTrigger>
+                <GlassTabsTrigger 
+                  value="reactions"
+                  icon={<Heart className="w-3 h-3" />}
+                  count={interactionCounts?.likes || 0}
+                  className="text-xs sm:text-sm px-3 sm:px-4"
+                >
+                  Likes
+                </GlassTabsTrigger>
+              </GlassTabsList>
+
+              <GlassTabsContent value="tracks" className="w-full max-w-full">
+                <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
+                  <TrackList release={release} className="text-white" />
+                </div>
+              </GlassTabsContent>
+
+              <GlassTabsContent value="zappers" className="w-full max-w-full">
+                <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
+                  <ZapLeaderboard 
+                    eventId={release.eventId}
+                    showTitle={false}
+                    className="text-white"
+                    limit={10}
+                  />
+                </div>
+              </GlassTabsContent>
+
+              <GlassTabsContent value="comments" className="w-full max-w-full">
+                <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg w-full max-w-full overflow-hidden">
+                  {event && (
+                    <CommentsSection
+                      root={event}
+                      title=""
+                      emptyStateMessage="No comments yet"
+                      emptyStateSubtitle="Be the first to share your thoughts!"
+                      className="bg-transparent border-none"
+                    />
+                  )}
+                  {!event && (
+                    <div className="p-6 text-center text-white/70">
+                      <MessageCircle className="w-12 h-12 mx-auto mb-4 text-white/30" />
+                      <p>Comments unavailable</p>
+                    </div>
+                  )}
+                </div>
+              </GlassTabsContent>
+
+              <GlassTabsContent value="reactions" className="w-full max-w-full">
+                <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
+                  <div className="w-full max-w-full overflow-hidden">
+                    <ReactionsSection 
+                      eventId={release.eventId}
+                      className="text-white w-full max-w-full overflow-hidden"
+                    />
+                  </div>
+                </div>
+              </GlassTabsContent>
+            </GlassTabs>
           </div>
         </div>
       </div>

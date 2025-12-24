@@ -36,7 +36,7 @@ export function TrackList({ release, className }: TrackListProps) {
         ['d', `${release.identifier || release.eventId}-track-${trackIndex}`],
         ['title', track.title],
         ['r', track.audioUrl || ''],
-        ['duration', track.duration.toString()],
+        ['duration', (track.duration || 0).toString()],
         ...(track.language ? [['language', track.language]] : []),
         ...(track.explicit ? [['content-warning', 'explicit']] : []),
         // Reference to parent release
@@ -75,7 +75,7 @@ export function TrackList({ release, className }: TrackListProps) {
           <div
             key={index}
             className={cn(
-              "group flex items-center gap-4 p-3 rounded-lg transition-all duration-200",
+              "group flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg transition-all duration-200",
               "hover:bg-white/5 cursor-pointer",
               isCurrentTrack && "bg-white/10",
               !hasAudio && "opacity-50 cursor-not-allowed"
@@ -85,26 +85,26 @@ export function TrackList({ release, className }: TrackListProps) {
             onClick={() => hasAudio && handleTrackPlay(index)}
           >
             {/* Track Number / Play Button */}
-            <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center flex-shrink-0">
               {hasAudio && (isHovered || isCurrentTrack) ? (
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                  className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 text-white"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleTrackPlay(index);
                   }}
                 >
                   {isPlaying ? (
-                    <Pause className="w-4 h-4" fill="currentColor" />
+                    <Pause className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" />
                   ) : (
-                    <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
+                    <Play className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5" fill="currentColor" />
                   )}
                 </Button>
               ) : (
                 <span className={cn(
-                  "text-sm font-medium",
+                  "text-xs sm:text-sm font-medium",
                   isCurrentTrack ? "text-white" : "text-white/60",
                   !hasAudio && "text-white/30"
                 )}>
@@ -114,22 +114,22 @@ export function TrackList({ release, className }: TrackListProps) {
             </div>
 
             {/* Track Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1">
+            <div className="flex-1 min-w-0 pr-2">
+              <div className="flex items-center gap-1 flex-wrap">
                 <h4 className={cn(
-                  "font-medium truncate",
+                  "font-medium truncate max-w-full",
                   isCurrentTrack ? "text-white" : "text-white/90",
                   !hasAudio && "text-white/50"
                 )}>
                   {track.title}
                 </h4>
                 {track.explicit && (
-                  <Badge variant="destructive" className="text-xs px-1.5 py-0.5 h-5">
+                  <Badge variant="destructive" className="text-xs px-1.5 py-0.5 h-5 flex-shrink-0">
                     E
                   </Badge>
                 )}
                 {!hasAudio && (
-                  <Badge variant="outline" className="text-xs px-1.5 py-0.5 h-5 border-white/30 text-white/50">
+                  <Badge variant="outline" className="text-xs px-1.5 py-0.5 h-5 border-white/30 text-white/50 flex-shrink-0">
                     No Audio
                   </Badge>
                 )}
@@ -155,9 +155,14 @@ export function TrackList({ release, className }: TrackListProps) {
             )}
 
             {/* Duration and Actions */}
-            <div className="flex items-center gap-3 text-white/60 text-sm">
-              <Clock className="w-3 h-3" />
-              <span>{formatDuration(track.duration)}</span>
+            <div className="flex items-center gap-2 sm:gap-3 text-white/60 text-sm flex-shrink-0">
+              <div className="hidden xs:flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                <span className="text-xs sm:text-sm">{formatDuration(track.duration || 0)}</span>
+              </div>
+              <div className="flex xs:hidden items-center">
+                <span className="text-xs">{formatDuration(track.duration || 0)}</span>
+              </div>
               
               {/* Zap Button for Track - Always visible when track has audio */}
               {hasAudio && (
@@ -167,7 +172,7 @@ export function TrackList({ release, className }: TrackListProps) {
                       size="icon"
                       variant="ghost"
                       className={cn(
-                        "w-8 h-8 rounded-full hover:bg-white/10 text-white/60 hover:text-yellow-400",
+                        "w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:bg-white/10 text-white/60 hover:text-yellow-400 flex-shrink-0",
                       )}
                       title={`Zap "${track.title}"`}
                     >

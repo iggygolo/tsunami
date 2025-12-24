@@ -35,7 +35,7 @@ export function GlassTabs({ defaultValue, value, onValueChange, className, child
       defaultValue={defaultValue} 
       value={value} 
       onValueChange={onValueChange} 
-      className={cn("w-full", className)}
+      className={cn("w-full max-w-full overflow-hidden", className)}
     >
       {children}
     </Tabs>
@@ -44,7 +44,7 @@ export function GlassTabs({ defaultValue, value, onValueChange, className, child
 
 export function GlassTabsList({ className, children }: GlassTabsListProps) {
   return (
-    <TabsList className={cn("bg-transparent p-0 h-auto gap-2", className)}>
+    <TabsList className={cn("bg-transparent p-0 h-auto gap-2 flex-wrap", className)}>
       {children}
     </TabsList>
   );
@@ -72,7 +72,7 @@ export function GlassTabsTrigger({ value, className, children, icon, count }: Gl
 
 export function GlassTabsContent({ value, className, children }: GlassTabsContentProps) {
   return (
-    <TabsContent value={value} className={cn("mt-4", className)}>
+    <TabsContent value={value} className={cn("mt-4 w-full max-w-full overflow-hidden", className)}>
       {children}
     </TabsContent>
   );
