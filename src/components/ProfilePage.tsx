@@ -5,7 +5,8 @@ import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GlassTabs, GlassTabsList, GlassTabsTrigger, GlassTabsContent } from '@/components/ui/GlassTabs';
+import { GlassList, GlassListItem, GlassListEmptyState, GlassListSkeleton } from '@/components/ui/GlassList';
 import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { EditProfileForm } from '@/components/EditProfileForm';
@@ -277,43 +278,31 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
 
               {/* Tab Pills */}
               <div className="flex gap-2">
-                <Tabs defaultValue="tracks" className="w-full">
-                  <TabsList className="bg-transparent p-0 h-auto gap-2">
-                    <TabsTrigger 
-                      value="tracks" 
-                      className="bg-black/30 border border-white/20 text-white/80 data-[state=active]:text-white data-[state=active]:bg-white/15 hover:text-white transition-all duration-200 rounded-full px-4 py-1.5 backdrop-blur-xl shadow-lg text-sm"
+                <GlassTabs defaultValue="tracks">
+                  <GlassTabsList>
+                    <GlassTabsTrigger 
+                      value="tracks"
+                      icon={<Music className="w-3 h-3" />}
+                      count={tracks.length}
                     >
-                      <Music className="w-3 h-3 mr-1.5" />
                       Tracks
-                      <span className="ml-1.5 bg-white/20 px-1.5 py-0.5 rounded-full text-xs">{tracks.length}</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="playlists" 
-                      className="bg-black/30 border border-white/20 text-white/80 data-[state=active]:text-white data-[state=active]:bg-white/15 hover:text-white transition-all duration-200 rounded-full px-4 py-1.5 backdrop-blur-xl shadow-lg text-sm"
+                    </GlassTabsTrigger>
+                    <GlassTabsTrigger 
+                      value="playlists"
+                      icon={<ListMusic className="w-3 h-3" />}
+                      count={playlists.length}
                     >
-                      <ListMusic className="w-3 h-3 mr-1.5" />
                       Playlists
-                      <span className="ml-1.5 bg-white/20 px-1.5 py-0.5 rounded-full text-xs">{playlists.length}</span>
-                    </TabsTrigger>
-                  </TabsList>
+                    </GlassTabsTrigger>
+                  </GlassTabsList>
 
-                  <TabsContent value="tracks" className="mt-4">
+                  <GlassTabsContent value="tracks">
                     {isLoadingTracks ? (
-                      <div className="space-y-2 max-w-2xl">
-                        {[...Array(3)].map((_, i) => (
-                          <div key={i} className="flex items-center gap-3 p-3 bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg animate-pulse">
-                            <div className="w-10 h-10 bg-white/15 rounded-lg"></div>
-                            <div className="flex-1 space-y-2">
-                              <div className="h-3 bg-white/15 rounded w-1/3"></div>
-                              <div className="h-2 bg-white/15 rounded w-1/4"></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <GlassListSkeleton count={3} />
                     ) : tracks.length > 0 ? (
-                      <div className="space-y-2 max-w-2xl">
+                      <GlassList>
                         {tracks.map((track) => (
-                          <div key={track.eventId} className="flex items-center gap-3 p-3 bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg hover:bg-black/40 hover:border-white/30 transition-all duration-200 shadow-lg group">
+                          <GlassListItem key={track.eventId}>
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
                               {track.imageUrl ? (
                                 <img src={track.imageUrl} alt={track.title} className="w-full h-full object-cover" />
@@ -354,37 +343,25 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                                 )}
                               </Button>
                             </div>
-                          </div>
+                          </GlassListItem>
                         ))}
-                      </div>
+                      </GlassList>
                     ) : (
-                      <div className="text-center py-6 bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg max-w-2xl">
-                        <Music className="w-6 h-6 text-white/60 mx-auto mb-2" />
-                        <h3 className="text-sm font-medium mb-1 text-white">No tracks yet</h3>
-                        <p className="text-white/80 text-xs">
-                          {isOwnProfile ? "Start creating music to see your tracks here." : "This artist hasn't published any tracks yet."}
-                        </p>
-                      </div>
+                      <GlassListEmptyState
+                        icon={<Music className="w-6 h-6" />}
+                        title="No tracks yet"
+                        description={isOwnProfile ? "Start creating music to see your tracks here." : "This artist hasn't published any tracks yet."}
+                      />
                     )}
-                  </TabsContent>
+                  </GlassTabsContent>
 
-                  <TabsContent value="playlists" className="mt-4">
+                  <GlassTabsContent value="playlists">
                     {isLoadingPlaylists ? (
-                      <div className="space-y-2 max-w-2xl">
-                        {[...Array(2)].map((_, i) => (
-                          <div key={i} className="flex items-center gap-3 p-3 bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg animate-pulse">
-                            <div className="w-10 h-10 bg-white/15 rounded-lg"></div>
-                            <div className="flex-1 space-y-2">
-                              <div className="h-3 bg-white/15 rounded w-1/3"></div>
-                              <div className="h-2 bg-white/15 rounded w-1/4"></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <GlassListSkeleton count={2} />
                     ) : playlists.length > 0 ? (
-                      <div className="space-y-2 max-w-2xl">
+                      <GlassList>
                         {playlists.map((playlist) => (
-                          <div key={playlist.eventId} className="flex items-center gap-3 p-3 bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg hover:bg-black/40 hover:border-white/30 transition-all duration-200 shadow-lg group">
+                          <GlassListItem key={playlist.eventId}>
                             <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
                               {playlist.imageUrl ? (
                                 <img src={playlist.imageUrl} alt={playlist.title} className="w-full h-full object-cover" />
@@ -425,20 +402,18 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                                 )}
                               </Button>
                             </div>
-                          </div>
+                          </GlassListItem>
                         ))}
-                      </div>
+                      </GlassList>
                     ) : (
-                      <div className="text-center py-6 bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg max-w-2xl">
-                        <ListMusic className="w-6 h-6 text-white/60 mx-auto mb-2" />
-                        <h3 className="text-sm font-medium mb-1 text-white">No playlists yet</h3>
-                        <p className="text-white/80 text-xs">
-                          {isOwnProfile ? "Create your first playlist to see it here." : "This artist hasn't created any playlists yet."}
-                        </p>
-                      </div>
+                      <GlassListEmptyState
+                        icon={<ListMusic className="w-6 h-6" />}
+                        title="No playlists yet"
+                        description={isOwnProfile ? "Create your first playlist to see it here." : "This artist hasn't created any playlists yet."}
+                      />
                     )}
-                  </TabsContent>
-                </Tabs>
+                  </GlassTabsContent>
+                </GlassTabs>
               </div>
             </div>
           </div>
