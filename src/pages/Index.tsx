@@ -17,7 +17,6 @@ import { useLatestReleaseCache, useStaticReleaseCache } from '@/hooks/useStaticR
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useTrackPlayback } from '@/hooks/useTrackPlayback';
 import { useArtistPosts, useArtistPostCount } from '@/hooks/useArtistPosts';
 import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
@@ -31,7 +30,6 @@ const Index = () => {
   const podcastConfig = useMusicConfig();
   const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { user } = useCurrentUser();
-  const { playRelease } = useAudioPlayer();
   const { toast } = useToast();
   const { data: postsData, isLoading: postsLoading } = useArtistPosts(3);
 
@@ -135,9 +133,9 @@ const Index = () => {
                     >
                       <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
                         {trackPlayback?.isReleasePlaying ? (
-                          <Pause className="w-8 h-8 text-primary" fill="currentColor" />
+                          <Pause className="w-8 h-8 text-black" fill="currentColor" />
                         ) : (
-                          <Play className="w-8 h-8 text-primary ml-1" fill="currentColor" />
+                          <Play className="w-8 h-8 text-black ml-1" fill="currentColor" />
                         )}
                       </div>
                     </button>
@@ -264,9 +262,6 @@ const Index = () => {
               showSearch={false}
               limit={6}
               useCache={true}
-              onPlayRelease={(release) => {
-                playRelease(release);
-              }}
             />
           </section>
 

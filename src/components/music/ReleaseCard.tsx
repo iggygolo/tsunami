@@ -1,41 +1,25 @@
-import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { MessageCircle, Play, Pause, Share } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ZapButton } from '@/components/ZapButton';
-import { CommentsSection } from '@/components/comments/CommentsSection';
 import { Link } from 'react-router-dom';
-import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
-import { MUSIC_KINDS } from '@/lib/musicConfig';
-import { useComments } from '@/hooks/useComments';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useTrackPlayback } from '@/hooks/useTrackPlayback';
-import { useToast } from '@/hooks/useToast';
 import { useReleasePrefetch } from '@/hooks/useReleasePrefetch';
 import { cn } from '@/lib/utils';
 import type { MusicRelease } from '@/types/music';
-import type { NostrEvent } from '@nostrify/nostrify';
 
 interface ReleaseCardProps {
   release: MusicRelease;
   showPlayer?: boolean;
   showComments?: boolean;
-  onPlayRelease?: (release: MusicRelease) => void;
   className?: string;
 }
 
 export function ReleaseCard({
   release,
   showPlayer: _showPlayer = false,
-  showComments = false,
-  onPlayRelease,
   className
 }: ReleaseCardProps) {
-  const [commentsVisible, setCommentsVisible] = useState(showComments);
-  const { playRelease } = useAudioPlayer();
-  const { toast } = useToast();
   const trackPlayback = useTrackPlayback(release);
   const { prefetchRelease } = useReleasePrefetch();
   const formatDuration = (seconds?: number): string => {
@@ -56,54 +40,11 @@ export function ReleaseCard({
   
   // Calculate total duration from all tracks
   const totalDuration = release.tracks?.reduce((sum, track) => sum + (track.duration || 0), 0) || 0;
-  
-  // Create a mock NostrEvent for the CommentsSection
-  const releaseEvent: NostrEvent = {
-    id: release.eventId,
-    pubkey: release.artistPubkey,
-    created_at: Math.floor(release.createdAt.getTime() / 1000),
-    kind: MUSIC_KINDS.MUSIC_PLAYLIST, // Music playlist events (releases)
-    tags: [
-      ['d', release.identifier], // Addressable event identifier
-      ['title', release.title],
-      ...(firstTrack ? [['audio', firstTrack.audioUrl, firstTrack.audioType || 'audio/mpeg']] : []),
-      ...(release.description ? [['description', release.description]] : []),
-      ...(release.imageUrl ? [['image', release.imageUrl]] : []),
-      ...release.tags.map(tag => ['t', tag])
-    ],
-    content: release.content || '',
-    sig: ''
-  };
-
-  // Get comment data for count - fallback to release.commentCount if available
-  const { data: commentsData } = useComments(releaseEvent);
-  const commentCount = commentsData?.topLevelComments?.length || release.commentCount || 0;
 
   // Generate release URL - prefer explicit route for better SEO
   // Use consistent /releases/:eventId format for all release links
   const releaseId = release.eventId || release.id;
   const releaseUrl = `/releases/${releaseId}`;
-  const releaseNaddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
-
-  const handleShare = async () => {
-    try {
-      // Use naddr format for sharing (canonical Nostr format)
-      const url = `${window.location.origin}/${releaseNaddr}`;
-
-      await navigator.clipboard.writeText(url);
-
-      toast({
-        title: "Link copied!",
-        description: "The release link has been copied to your clipboard.",
-      });
-    } catch {
-      toast({
-        title: "Failed to copy link",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleMouseEnter = () => {
     // Prefetch release data when hovering for instant navigation
@@ -123,17 +64,16 @@ export function ReleaseCard({
           {/* Play overlay on hover */}
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
             <div 
-              className="w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center shadow-lg cursor-pointer"
+              className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg cursor-pointer"
               onClick={(e) => {
                 e.preventDefault();
                 trackPlayback.handleReleasePlay();
-                onPlayRelease?.(release);
               }}
             >
               {trackPlayback.isReleasePlaying ? (
-                <Pause className="w-6 h-6 text-white fill-current" />
+                <Pause className="w-6 h-6 text-black fill-current" />
               ) : (
-                <Play className="w-6 h-6 text-white fill-current ml-0.5" />
+                <Play className="w-6 h-6 text-black fill-current ml-0.5" />
               )}
             </div>
           </div>
@@ -181,59 +121,6 @@ export function ReleaseCard({
                 +{release.tags.length - 2}
               </span>
             )}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex items-center justify-between mt-3 pt-2 border-t">
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "text-muted-foreground hover:text-primary h-7 px-1.5",
-                commentsVisible && "text-primary"
-              )}
-              onClick={() => setCommentsVisible(!commentsVisible)}
-            >
-              <MessageCircle className={cn("w-3.5 h-3.5", commentsVisible && "fill-current")} />
-              <span className="text-[11px] ml-0.5">{commentCount}</span>
-            </Button>
-            <ZapButton
-              target={releaseEvent}
-              className="h-7 px-1.5"
-              zapData={{
-                count: release.zapCount || 0,
-                totalSats: release.totalSats || 0,
-                isLoading: false
-              }}
-              hideWhenEmpty={false}
-            />
-            <Button variant="ghost" size="sm" onClick={handleShare} className="h-7 px-1.5 text-muted-foreground hover:text-primary">
-              <Share className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-          <Button
-            onClick={() => {
-              playRelease(release);
-              onPlayRelease?.(release);
-            }}
-            size="sm"
-            className="h-6 px-2.5 text-[11px] bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600"
-          >
-            <Play className="w-3 h-3 fill-current mr-1" />
-            Play
-          </Button>
-        </div>
-
-        {commentsVisible && (
-          <div className="mt-3 pt-3 border-t">
-            <CommentsSection
-              root={releaseEvent}
-              title="Release Discussion"
-              emptyStateMessage="No comments yet"
-              emptyStateSubtitle="Be the first to share your thoughts about this release!"
-            />
           </div>
         )}
       </CardContent>
