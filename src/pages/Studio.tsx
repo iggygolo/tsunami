@@ -4,13 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Save,
-  Upload,
   Users,
   Zap,
   Loader2,
-  DollarSign,
   Server,
-  Play,
   MessageSquare,
   Repeat2,
   Volume2,
@@ -23,7 +20,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Layout } from '@/components/Layout';
@@ -34,7 +30,6 @@ import { usePodcastMetadata } from '@/hooks/usePodcastMetadata';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { usePodcastAnalytics } from '@/hooks/usePodcastAnalytics';
 import { useRSSFeedGenerator } from '@/hooks/useRSSFeedGenerator';
-import { useUploadFile } from '@/hooks/useUploadFile';
 import { useUploadConfig } from '@/hooks/useUploadConfig';
 import { isArtist, PODCAST_CONFIG, PODCAST_KINDS } from '@/lib/podcastConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
@@ -94,7 +89,6 @@ const Studio = () => {
   const { data: podcastMetadata, isLoading: isLoadingMetadata } = usePodcastMetadata();
   const podcastConfig = usePodcastConfig();
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
-  const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
   const { mutateAsync: uploadFileWithOptions } = useUploadFileWithOptions();
   const { config } = useUploadConfig();
   const { data: analytics, isLoading: analyticsLoading } = usePodcastAnalytics();
@@ -102,6 +96,7 @@ const Studio = () => {
 
   const [activeTab, setActiveTab] = useState('settings');
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUploadProvider, setImageUploadProvider] = useState<'blossom' | 'vercel'>(config.defaultProvider);
 
@@ -212,15 +207,16 @@ const Studio = () => {
 
   // Handle file uploads for podcast image
   const uploadPodcastImage = async (file: File, provider?: 'blossom' | 'vercel') => {
+    setIsUploading(true);
     try {
-      const [[_, url]] = await uploadFileWithOptions({ 
+      const result = await uploadFileWithOptions({ 
         file, 
         options: { provider: provider || imageUploadProvider } 
       });
-      handleInputChange('image', url);
+      handleInputChange('image', result.url);
       toast({
         title: 'Success',
-        description: `Podcast cover image uploaded successfully via ${provider || imageUploadProvider}`,
+        description: `Podcast cover image uploaded successfully via ${result.provider}`,
       });
     } catch (error) {
       console.error('Failed to upload podcast image:', error);
@@ -229,6 +225,8 @@ const Studio = () => {
         description: 'Failed to upload podcast cover image. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 

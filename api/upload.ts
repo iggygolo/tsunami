@@ -165,16 +165,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Our custom data should be in the clientPayload
       try {
         const clientPayload = (body as any).clientPayload;
-        payload = JSON.parse(clientPayload || '{}');
+        if (typeof clientPayload === 'string') {
+          payload = JSON.parse(clientPayload);
+        } else if (typeof clientPayload === 'object' && clientPayload !== null) {
+          payload = clientPayload;
+        } else {
+          throw new Error('Invalid clientPayload format');
+        }
       } catch (parseError) {
+        console.error('Failed to parse clientPayload:', parseError);
         return res.status(400).json({
           error: 'Invalid client payload format',
           code: 'INVALID_PAYLOAD'
         });
       }
     } else {
+      console.error('Invalid request body:', body);
       return res.status(400).json({
-        error: 'Invalid request format',
+        error: 'Invalid request format - expected blob.generate-client-token',
         code: 'INVALID_REQUEST'
       });
     }

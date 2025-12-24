@@ -40,7 +40,6 @@ export class UploadProviderError extends Error {
 }
 
 import { upload } from '@vercel/blob/client';
-import { getEventHash, type Event } from 'nostr-tools';
 
 // File validation constants
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -76,7 +75,7 @@ export class VercelUploadProvider implements UploadProvider {
   
   constructor(
     private userPubkey: string,
-    private signer: any // Use any for now to avoid strict typing issues
+    private _signer: any // Prefix with underscore to indicate intentionally unused
   ) {}
 
   async uploadFile(file: File): Promise<string> {
