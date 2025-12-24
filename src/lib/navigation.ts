@@ -75,7 +75,7 @@ export const navigationItems: NavigationItem[] = [
 ];
 
 // Helper functions to get navigation items by group
-export const getMainNavItems = () => navigationItems.filter(item => item.group === 'main');
+export const getMainNavItems = () => navigationItems.filter(item => item.group === 'main' && item.path !== '/');
 export const getSecondaryNavItems = () => navigationItems.filter(item => item.group === 'secondary');
 export const getArtistNavItems = () => navigationItems.filter(item => item.group === 'artist');
 export const getAllNavItems = () => navigationItems.filter(item => item.group !== 'artist');

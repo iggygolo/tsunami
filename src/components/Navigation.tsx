@@ -71,6 +71,25 @@ export function Navigation({ className }: NavigationProps) {
                     {/* Main Navigation */}
                     <div className="space-y-2">
                       <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Navigation</h3>
+                      {/* Home item - only in mobile menu */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className={cn(
+                          "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-600 dark:hover:text-cyan-400",
+                          isActive('/') && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0"
+                        )}
+                      >
+                        <Link to="/" className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
+                          <Headphones className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", isActive('/') && "text-cyan-600 dark:text-cyan-400")} />
+                          <div className="text-left min-w-0">
+                            <div className="font-medium">Home</div>
+                            <div className={cn("text-xs truncate", isActive('/') ? "text-foreground/60" : "text-muted-foreground")}>Latest releases & highlights</div>
+                          </div>
+                        </Link>
+                      </Button>
+                      {/* Other main nav items */}
                       {mainNavItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
@@ -160,7 +179,10 @@ export function Navigation({ className }: NavigationProps) {
             </Sheet>
 
             {/* Logo */}
-            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <Link to="/" className={cn(
+              "flex items-center hover:opacity-80 transition-all duration-200 px-3 py-2 rounded-lg",
+              isActive('/') && "bg-cyan-500/5 border border-cyan-500/10 text-cyan-100/90 hover:opacity-100"
+            )}>
               <h1 className="text-xl font-bold gradient-text">{podcastConfig.music.artistName}</h1>
             </Link>
           </div>
