@@ -1,15 +1,17 @@
 import { useSeoMeta } from '@unhead/react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
-import { PublishReleaseForm } from '@/components/music/PublishReleaseForm';
+import { ReleaseDialog } from '@/components/ReleaseDialog';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { isArtist } from '@/lib/musicConfig';
 
 const PublishRelease = () => {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
+  const [dialogOpen, setDialogOpen] = useState(true);
   const isArtist_user = user && isArtist(user.pubkey);
 
   useSeoMeta({
@@ -23,6 +25,13 @@ const PublishRelease = () => {
 
   const handleCancel = () => {
     navigate('/');
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      navigate('/');
+    }
   };
 
   if (!user) {
@@ -77,11 +86,19 @@ const PublishRelease = () => {
           </p>
         </div>
 
-        <PublishReleaseForm
-          className="pt-8"
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-        />
+        <div className="flex justify-center">
+          <ReleaseDialog
+            mode="create"
+            open={dialogOpen}
+            onOpenChange={handleDialogClose}
+            onSuccess={handleSuccess}
+          >
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Create New Release
+            </Button>
+          </ReleaseDialog>
+        </div>
       </div>
     </Layout>
   );

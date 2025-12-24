@@ -45,7 +45,7 @@ import { useDeleteRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { AudioPlayer } from '@/components/music/AudioPlayer';
 import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
-import { ReleaseEditDialog } from './ReleaseEditDialog';
+import { ReleaseDialog } from '../ReleaseDialog';
 import { ShareReleaseDialog } from './ShareReleaseDialog';
 
 interface ReleaseManagementProps {
@@ -447,9 +447,10 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit release Dialog */}
+      {/* Edit Release Dialog */}
       {releaseToEdit && (
-        <ReleaseEditDialog
+        <ReleaseDialog
+          mode="edit"
           release={releaseToEdit}
           open={!!releaseToEdit}
           onOpenChange={() => setReleaseToEdit(null)}
