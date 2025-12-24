@@ -23,6 +23,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Layout } from '@/components/Layout';
+import { AddRecipientDialog } from '@/components/AddRecipientDialog';
+import { RecipientList } from '@/components/RecipientList';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
@@ -192,13 +194,10 @@ const Studio = () => {
     });
   };
 
-  const handleRecipientUpdate = (index: number, field: string, value: string | number | boolean) => {
+  const handleRecipientUpdate = (index: number, recipient: { name: string; type: 'node' | 'lnaddress'; address: string; split: number; customKey?: string; customValue?: string; fee?: boolean }) => {
     const currentRecipients = formData.value.recipients || [];
     const updatedRecipients = [...currentRecipients];
-    updatedRecipients[index] = {
-      ...updatedRecipients[index],
-      [field]: value
-    };
+    updatedRecipients[index] = recipient;
     handleInputChange('value', {
       ...formData.value,
       recipients: updatedRecipients
@@ -596,169 +595,13 @@ const Studio = () => {
                       Configure Lightning payment recipients for value-for-value support. Recipients will receive payments automatically when listeners send value.
                     </p>
 
-                    {/* Existing Recipients */}
-                    <div className="space-y-3 mb-4">
-                      {(formData.value.recipients || []).map((recipient, index) => (
-                        <div key={index} className="p-4 border rounded-lg space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium">Recipient {index + 1}</h4>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRecipientRemove(index)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div>
-                              <Label>Name</Label>
-                              <Input
-                                value={recipient.name}
-                                onChange={(e) => handleRecipientUpdate(index, 'name', e.target.value)}
-                                disabled={false}
-                                placeholder="Recipient name"
-                              />
-                            </div>
-
-                            <div>
-                              <Label>Type</Label>
-                              <select
-                                value={recipient.type}
-                                onChange={(e) => handleRecipientUpdate(index, 'type', e.target.value)}
-                                disabled={false}
-                                className="w-full p-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-ring disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                <option value="node">Lightning Node</option>
-                                <option value="lnaddress">Lightning Address</option>
-                              </select>
-                            </div>
-
-                            <div>
-                              <Label>Address</Label>
-                              <Input
-                                value={recipient.address}
-                                onChange={(e) => handleRecipientUpdate(index, 'address', e.target.value)}
-                                disabled={false}
-                                placeholder="Lightning node pubkey or lightning address"
-                              />
-                            </div>
-
-                            <div>
-                              <Label>Split (%)</Label>
-                              <Input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={recipient.split}
-                                onChange={(e) => handleRecipientUpdate(index, 'split', parseInt(e.target.value) || 0)}
-                                disabled={false}
-                                placeholder="0-100"
-                              />
-                            </div>
-
-                            <div>
-                              <Label>Custom Key (Optional)</Label>
-                              <Input
-                                value={recipient.customKey || ''}
-                                onChange={(e) => handleRecipientUpdate(index, 'customKey', e.target.value)}
-                                disabled={false}
-                                placeholder="Custom TLV key for Lightning payments"
-                              />
-                            </div>
-
-                            <div>
-                              <Label>Custom Value (Optional)</Label>
-                              <Input
-                                value={recipient.customValue || ''}
-                                onChange={(e) => handleRecipientUpdate(index, 'customValue', e.target.value)}
-                                disabled={false}
-                                placeholder="Custom TLV value for Lightning payments"
-                              />
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                checked={recipient.fee || false}
-                                onCheckedChange={(checked) => handleRecipientUpdate(index, 'fee', checked)}
-                                disabled={false}
-                              />
-                              <Label>Fee Recipient</Label>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-
-                      {(formData.value.recipients || []).length === 0 && (
-                        <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-                          No value recipients configured. Add recipients to enable Lightning payments.
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Add New Recipient */}
-                    <div className="p-4 border-2 border-dashed rounded-lg">
-                      <h4 className="font-medium mb-3">Add New Recipient</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                          <Input
-                            id="new-recipient-name"
-                            placeholder="Recipient name"
-                          />
-                          <select
-                            id="new-recipient-type"
-                            className="w-full p-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-ring disabled:cursor-not-allowed disabled:opacity-50"
-                            defaultValue="node"
-                          >
-                            <option value="node">Lightning Node</option>
-                            <option value="lnaddress">Lightning Address</option>
-                          </select>
-                          <Input
-                            id="new-recipient-address"
-                            placeholder="Lightning node pubkey or lightning address"
-                            className="md:col-span-2"
-                          />
-                          <Input
-                            id="new-recipient-split"
-                            type="number"
-                            min="0"
-                            max="100"
-                            placeholder="Split percentage (0-100)"
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            const nameInput = document.getElementById('new-recipient-name') as HTMLInputElement;
-                            const typeSelect = document.getElementById('new-recipient-type') as HTMLSelectElement;
-                            const addressInput = document.getElementById('new-recipient-address') as HTMLInputElement;
-                            const splitInput = document.getElementById('new-recipient-split') as HTMLInputElement;
-
-                            if (nameInput?.value && addressInput?.value && splitInput?.value) {
-                              handleRecipientAdd({
-                                name: nameInput.value,
-                                type: typeSelect.value as 'node' | 'lnaddress',
-                                address: addressInput.value,
-                                split: parseInt(splitInput.value) || 0
-                              });
-
-                              nameInput.value = '';
-                              addressInput.value = '';
-                              splitInput.value = '';
-                            }
-                          }}
-                        >
-                          Add Recipient
-                        </Button>
-                      </div>
-
-                    <div className="mt-4">
-                      <div className="text-sm text-muted-foreground space-y-1">
-                        <p><strong>Total Split:</strong> {(formData.value.recipients || []).reduce((sum, r) => sum + r.split, 0)}%</p>
-                        <p className="text-xs">Note: Total split percentage should equal 100% for proper value distribution.</p>
-                      </div>
-                    </div>
+                    {/* Recipients Management */}
+                    <RecipientList
+                      recipients={formData.value.recipients || []}
+                      onAddRecipient={handleRecipientAdd}
+                      onEditRecipient={handleRecipientUpdate}
+                      onRemoveRecipient={handleRecipientRemove}
+                    />
                   </div>
 
                   <div>  
