@@ -1,27 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Upload, Save, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
-  DrawerTrigger,
-} from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,6 +55,70 @@ const releaseSchema = z.object({
 });
 
 type ReleaseFormValues = z.infer<typeof releaseSchema>;
+
+// Simple Modal Component without focus trapping
+interface SimpleModalProps {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+function SimpleModal({ open, onClose, title, description, children, className }: SimpleModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to close (optional)
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      // Uncomment if you want click outside to close
+      // onClose();
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={handleOverlayClick}
+    >
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
+      
+      {/* Modal Content */}
+      <div 
+        ref={modalRef}
+        className={`relative bg-background border border-border rounded-lg shadow-lg max-h-[90vh] w-full max-w-3xl ${className || ''}`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-lg font-semibold">{title}</h2>
+            {description && (
+              <p className="text-sm text-muted-foreground mt-1">{description}</p>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0 rounded-sm opacity-70 hover:opacity-100"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </Button>
+        </div>
+        
+        {/* Content */}
+        <div className="max-h-[calc(90vh-8rem)] overflow-y-auto">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface ReleaseDialogProps {
   open: boolean;
@@ -361,6 +407,10 @@ export function ReleaseDialog({
     }
   };
 
+  const handleClose = () => {
+    onOpenChange(false);
+  };
+
   const ReleaseForm = () => (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -575,50 +625,29 @@ export function ReleaseDialog({
     </Form>
   );
 
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        {children && <DrawerTrigger asChild>{children}</DrawerTrigger>}
-        <DrawerContent className="max-h-[90vh]">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-lg">
-              {isEditMode ? 'Edit Release' : 'Publish New Release'}
-            </DrawerTitle>
-            <DrawerDescription className="text-sm">
-              {isEditMode 
-                ? 'Update release details and metadata.' 
-                : 'Create and publish a new music release.'
-              }
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className="px-4 overflow-y-auto flex-1">
-            <ReleaseForm />
-          </div>
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="max-w-3xl max-h-[90vh] w-[90vw] sm:w-full">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="text-lg">
-            {isEditMode ? 'Edit Release' : 'Publish New Release'}
-          </DialogTitle>
-          <DialogDescription className="text-sm">
-            {isEditMode 
-              ? 'Update release details and metadata.' 
-              : 'Create and publish a new music release.'
-            }
-          </DialogDescription>
-        </DialogHeader>
-
-        <ScrollArea className="max-h-[calc(90vh-6rem)] pr-4">
+    <>
+      {/* Trigger button if provided */}
+      {children && (
+        <div onClick={() => onOpenChange(true)}>
+          {children}
+        </div>
+      )}
+      
+      {/* Simple Modal - NO FOCUS TRAPPING! */}
+      <SimpleModal
+        open={open}
+        onClose={handleClose}
+        title={isEditMode ? 'Edit Release' : 'Publish New Release'}
+        description={isEditMode 
+          ? 'Update release details and metadata.' 
+          : 'Create and publish a new music release.'
+        }
+      >
+        <div className="p-6">
           <ReleaseForm />
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </SimpleModal>
+    </>
   );
 }

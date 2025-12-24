@@ -262,6 +262,30 @@
     @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2 focus:ring-offset-background;
   }
 
+  /* Disable focus trapping for dialogs */
+  .focus-trap-disabled {
+    /* Allow focus to move outside the dialog */
+    contain: none !important;
+  }
+  
+  .focus-trap-disabled * {
+    /* Ensure all child elements can receive focus naturally */
+    pointer-events: auto !important;
+  }
+  
+  /* Override Radix UI focus trapping styles */
+  .focus-trap-disabled[data-radix-focus-guard] {
+    display: none !important;
+  }
+  
+  /* Allow natural tab navigation */
+  .focus-trap-disabled input,
+  .focus-trap-disabled textarea,
+  .focus-trap-disabled select,
+  .focus-trap-disabled button {
+    tab-index: auto !important;
+  }
+
   /* Card hover effects */
   .card-hover {
     @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;

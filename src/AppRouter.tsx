@@ -6,12 +6,18 @@ import Releases from "./pages/Releases";
 import Community from "./pages/Community";
 import SocialFeed from "./pages/SocialFeed";
 import PublishRelease from "./pages/PublishRelease";
-import Studio from "./pages/Studio";
 import About from "./pages/About";
 import DebugAudio from "./pages/DebugAudio";
 import { NIP19Page } from "./pages/NIP19Page";
 import NotFound from "./pages/NotFound";
 import { PersistentAudioPlayer } from "./components/audio/PersistentAudioPlayer";
+import { 
+  StudioLayout, 
+  Settings as StudioSettings, 
+  Releases as StudioReleases, 
+  Providers as StudioProviders, 
+  Analytics as StudioAnalytics 
+} from "./pages/studio/index";
 
 export function AppRouter() {
   return (
@@ -24,7 +30,16 @@ export function AppRouter() {
         <Route path="/community" element={<Community />} />
         <Route path="/social" element={<SocialFeed />} />
         <Route path="/publish" element={<PublishRelease />} />
-        <Route path="/studio" element={<Studio />} />
+        
+        {/* Studio nested routes */}
+        <Route path="/studio" element={<StudioLayout />}>
+          <Route index element={<StudioSettings />} />
+          <Route path="settings" element={<StudioSettings />} />
+          <Route path="releases" element={<StudioReleases />} />
+          <Route path="providers" element={<StudioProviders />} />
+          <Route path="analytics" element={<StudioAnalytics />} />
+        </Route>
+        
         <Route path="/about" element={<About />} />
         <Route path="/debug-audio" element={<DebugAudio />} />
         {/* NIP-19 route for npub1, note1, naddr1, nevent1, nprofile1 */}
