@@ -4,14 +4,19 @@ import { useMusicTracks } from '@/hooks/useMusicTracks';
 import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Layout } from '@/components/Layout';
 import { EditProfileForm } from '@/components/EditProfileForm';
+import { ZapDialog } from '@/components/ZapDialog';
 import { genUserName } from '@/lib/genUserName';
 import { playlistToRelease } from '@/lib/eventConversions';
 import { formatToAudioType } from '@/lib/audioUtils';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
+import { useToast } from '@/hooks/useToast';
 import type { MusicRelease, MusicTrackData, MusicPlaylistData } from '@/types/music';
+import type { NostrEvent } from '@nostrify/nostrify';
 import { 
   Edit, 
   ExternalLink, 
@@ -20,7 +25,9 @@ import {
   Users,
   Globe,
   Play,
-  Pause
+  Pause,
+  Zap,
+  Repeat2
 } from 'lucide-react';
 import {
   Dialog,
@@ -72,10 +79,89 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const { data: playlists = [], isLoading: isLoadingPlaylists } = useMusicPlaylists();
   const { user: currentUser } = useCurrentUser();
   const { state: playerState, playRelease, pause } = useAudioPlayer();
+  const { mutateAsync: publishEvent } = useNostrPublish();
+  const { toast } = useToast();
   
   const isOwnProfile = currentUser?.pubkey === pubkey;
   const metadata = authorData?.metadata;
   const displayName = metadata?.name || genUserName(pubkey);
+
+  // Helper function to create NostrEvent from track data
+  const createTrackEvent = (track: MusicTrackData): NostrEvent => {
+    return {
+      id: track.eventId || '',
+      pubkey: track.artistPubkey || pubkey,
+      created_at: Math.floor((track.createdAt?.getTime() || Date.now()) / 1000),
+      kind: MUSIC_KINDS.MUSIC_TRACK,
+      tags: [
+        ['d', track.identifier],
+        ['title', track.title],
+        ['artist', track.artist],
+        ['audio', track.audioUrl],
+        ...(track.album ? [['album', track.album]] : []),
+        ...(track.imageUrl ? [['image', track.imageUrl]] : []),
+        ...(track.genres ? track.genres.map(genre => ['t', genre]) : []),
+      ],
+      content: track.lyrics || track.credits || '',
+      sig: ''
+    };
+  };
+
+  // Helper function to create NostrEvent from playlist data
+  const createPlaylistEvent = (playlist: MusicPlaylistData): NostrEvent => {
+    return {
+      id: playlist.eventId || '',
+      pubkey: playlist.authorPubkey || pubkey,
+      created_at: Math.floor((playlist.createdAt?.getTime() || Date.now()) / 1000),
+      kind: MUSIC_KINDS.MUSIC_PLAYLIST,
+      tags: [
+        ['d', playlist.identifier],
+        ['title', playlist.title],
+        ...(playlist.description ? [['description', playlist.description]] : []),
+        ...(playlist.imageUrl ? [['image', playlist.imageUrl]] : []),
+        ...(playlist.categories ? playlist.categories.map(cat => ['t', cat]) : []),
+        ...playlist.tracks.map(track => ['a', `${track.kind}:${track.pubkey}:${track.identifier}`]),
+      ],
+      content: playlist.description || '',
+      sig: ''
+    };
+  };
+
+  // Helper function to handle repost
+  const handleRepost = async (event: NostrEvent, type: 'track' | 'playlist') => {
+    if (!currentUser) {
+      toast({
+        title: 'Login required',
+        description: 'You need to be logged in to repost.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      await publishEvent({
+        kind: 6, // Legacy repost
+        content: '',
+        tags: [
+          ['e', event.id],
+          ['p', event.pubkey],
+          ['k', String(event.kind)]
+        ]
+      });
+
+      toast({
+        title: 'Reposted!',
+        description: `Successfully reposted this ${type}.`,
+      });
+    } catch (error) {
+      console.error('Failed to repost:', error);
+      toast({
+        title: 'Repost failed',
+        description: 'Failed to repost. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  };
 
   // Helper functions for playing tracks and playlists
   const handlePlayTrack = (track: MusicTrackData) => {
@@ -292,8 +378,18 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                               <p className="text-white/70 text-xs truncate">{track.artist}</p>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Button size="sm" variant="ghost" className="text-white/70 hover:text-white p-1.5 rounded-full">
-                                <Music className="w-3 h-3" />
+                              <ZapDialog target={createTrackEvent(track)}>
+                                <Button size="sm" variant="ghost" className="text-white/70 hover:text-yellow-400 p-1.5 rounded-full">
+                                  <Zap className="w-3 h-3" />
+                                </Button>
+                              </ZapDialog>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => handleRepost(createTrackEvent(track), 'track')}
+                                className="text-white/70 hover:text-green-400 p-1.5 rounded-full"
+                              >
+                                <Repeat2 className="w-3 h-3" />
                               </Button>
                               <Button 
                                 size="sm" 
@@ -352,8 +448,18 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                               <p className="text-white/70 text-xs truncate">{playlist.tracks.length} tracks</p>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Button size="sm" variant="ghost" className="text-white/70 hover:text-white p-1.5 rounded-full">
-                                <ListMusic className="w-3 h-3" />
+                              <ZapDialog target={createPlaylistEvent(playlist)}>
+                                <Button size="sm" variant="ghost" className="text-white/70 hover:text-yellow-400 p-1.5 rounded-full">
+                                  <Zap className="w-3 h-3" />
+                                </Button>
+                              </ZapDialog>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => handleRepost(createPlaylistEvent(playlist), 'playlist')}
+                                className="text-white/70 hover:text-green-400 p-1.5 rounded-full"
+                              >
+                                <Repeat2 className="w-3 h-3" />
                               </Button>
                               <Button 
                                 size="sm" 
