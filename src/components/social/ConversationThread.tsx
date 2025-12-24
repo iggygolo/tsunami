@@ -1,5 +1,5 @@
 import { PostCard } from './PostCard';
-import { getArtistPubkeyHex } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex } from '@/lib/musicConfig';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { cn } from '@/lib/utils';
 

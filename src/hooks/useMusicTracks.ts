@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicTrackData } from '@/types/podcast';
@@ -9,7 +9,7 @@ import type { MusicTrackData } from '@/types/podcast';
  * Validates if a Nostr event is a valid music track (Kind 36787)
  */
 function validateMusicTrack(event: NostrEvent): boolean {
-  if (event.kind !== PODCAST_KINDS.MUSIC_TRACK) return false;
+  if (event.kind !== MUSIC_KINDS.MUSIC_TRACK) return false;
 
   // Check for required tags
   const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
@@ -124,7 +124,7 @@ export function useMusicTracks(options: {
 
       // Query for music track events from the artist
       const events = await nostr.query([{
-        kinds: [PODCAST_KINDS.MUSIC_TRACK],
+        kinds: [MUSIC_KINDS.MUSIC_TRACK],
         authors: [artistPubkeyHex],
         limit: options.limit || 100
       }], { signal });
@@ -192,7 +192,7 @@ export function useMusicTrack(identifier: string) {
 
       // Query for specific music track by identifier
       const events = await nostr.query([{
-        kinds: [PODCAST_KINDS.MUSIC_TRACK],
+        kinds: [MUSIC_KINDS.MUSIC_TRACK],
         authors: [artistPubkeyHex],
         '#d': [identifier],
         limit: 10 // Get multiple versions to find the latest

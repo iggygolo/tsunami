@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { PODCAST_KINDS, getArtistPubkeyHex } from '@/lib/podcastConfig';
+import { MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
 import { useReleases } from '@/hooks/usePodcastReleases';
 import type { PodcastRelease } from '@/types/podcast';
 
@@ -72,7 +72,7 @@ export function usePodcastAnalytics() {
 
         // Comments (kind 1111) targeting our releases  
         nostr.query([{
-          kinds: [PODCAST_KINDS.COMMENT],
+          kinds: [MUSIC_KINDS.COMMENT],
           '#e': releaseEventIds,
           limit: 1000
         }], { signal }).catch(() => []),

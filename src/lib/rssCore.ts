@@ -1,5 +1,5 @@
 import type { MusicTrackData, MusicPlaylistData, RSSItem } from '@/types/podcast';
-import type { PodcastConfig } from './podcastConfig';
+import type { MusicConfig } from './musicConfig';
 import { formatToAudioType } from '@/lib/audioUtils';
 
 /**
@@ -352,7 +352,7 @@ ${channels}
 /**
  * Convert PodcastConfig to RSSConfig format
  */
-export function podcastConfigToRSSConfig(config: PodcastConfig): RSSConfig {
+export function podcastConfigToRSSConfig(config: MusicConfig): RSSConfig {
   return {
     artistNpub: config.artistNpub,
     podcast: {

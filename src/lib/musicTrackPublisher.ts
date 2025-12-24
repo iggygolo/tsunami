@@ -1,6 +1,6 @@
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicTrackData, ZapSplit } from '@/types/podcast';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { validateAudioUrl, validateImageUrl, validateVideoUrl } from '@/lib/urlValidation';
 
 /**
@@ -194,7 +194,7 @@ export class MusicTrackPublisher {
     const content = this.buildEventContent(trackData);
     
     return {
-      kind: PODCAST_KINDS.MUSIC_TRACK,
+      kind: MUSIC_KINDS.MUSIC_TRACK,
       content,
       tags,
       created_at: Math.floor(Date.now() / 1000)
@@ -222,8 +222,8 @@ export class MusicTrackPublisher {
     const errors: string[] = [];
     
     // Check event kind
-    if (event.kind !== PODCAST_KINDS.MUSIC_TRACK) {
-      errors.push(`Event kind must be ${PODCAST_KINDS.MUSIC_TRACK}, got ${event.kind}`);
+    if (event.kind !== MUSIC_KINDS.MUSIC_TRACK) {
+      errors.push(`Event kind must be ${MUSIC_KINDS.MUSIC_TRACK}, got ${event.kind}`);
     }
     
     // Check required tags

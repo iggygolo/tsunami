@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { eventToMusicTrack } from '@/hooks/useMusicTracks';
 import type { TrackReference, MusicTrackData } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -47,7 +47,7 @@ export function usePlaylistTrackResolution(trackReferences: TrackReference[]) {
           
           // Query for all tracks from this pubkey with the specified identifiers
           const events = await nostr.query([{
-            kinds: [PODCAST_KINDS.MUSIC_TRACK],
+            kinds: [MUSIC_KINDS.MUSIC_TRACK],
             authors: [pubkey],
             '#d': identifiers,
             limit: identifiers.length * 2 // Allow for multiple versions

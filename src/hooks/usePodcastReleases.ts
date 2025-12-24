@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import type { PodcastRelease, ReleaseSearchOptions, MusicTrackData } from '@/types/podcast';
-import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 import {
   validateMusicTrack,
@@ -42,7 +42,7 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
 
       // Fetch only playlists (not individual tracks)
       const playlistEvents = await nostr.query([{
-        kinds: [PODCAST_KINDS.MUSIC_PLAYLIST],
+        kinds: [MUSIC_KINDS.MUSIC_PLAYLIST],
         authors: [artistPubkey],
         limit: searchOptions.limit || 50
       }], { signal });
@@ -63,7 +63,7 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
   // Step 2: Process playlist events and extract track references
   const processedEvents = playlistEvents || [];
   const validPlaylistEvents = processedEvents.filter(event => 
-    event.kind === PODCAST_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)
+    event.kind === MUSIC_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)
   );
 
   // Extract all track references from playlists
@@ -104,7 +104,7 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
           releases.push(release);
 
           // Cache individual release data for instant loading when navigating to release page
-          const releaseKey = `${release.artistPubkey}:${PODCAST_KINDS.MUSIC_PLAYLIST}:${release.identifier}`;
+          const releaseKey = `${release.artistPubkey}:${MUSIC_KINDS.MUSIC_PLAYLIST}:${release.identifier}`;
           
           console.log('useReleases - Caching release data for instant navigation:', {
             title: release.title,
@@ -228,7 +228,7 @@ export function usePodcastRelease(playlistId: string) {
       if (!event) return null;
 
       // Handle music playlist events (Kind 34139)
-      if (event.kind === PODCAST_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)) {
+      if (event.kind === MUSIC_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)) {
         const playlist = eventToMusicPlaylist(event);
         
         // Extract track references and fetch tracks
@@ -255,7 +255,7 @@ export function usePodcastRelease(playlistId: string) {
           }
           
           const trackQueries = Array.from(identifiersByPubkey.entries()).map(([pubkey, identifiers]) => ({
-            kinds: [PODCAST_KINDS.MUSIC_TRACK],
+            kinds: [MUSIC_KINDS.MUSIC_TRACK],
             authors: [pubkey],
             '#d': identifiers,
             limit: identifiers.length * 2
@@ -285,7 +285,7 @@ export function usePodcastRelease(playlistId: string) {
       }
 
       // Handle music track events (Kind 36787)
-      if (event.kind === PODCAST_KINDS.MUSIC_TRACK && validateMusicTrack(event)) {
+      if (event.kind === MUSIC_KINDS.MUSIC_TRACK && validateMusicTrack(event)) {
         const track = eventToMusicTrack(event);
         return trackToRelease(track);
       }

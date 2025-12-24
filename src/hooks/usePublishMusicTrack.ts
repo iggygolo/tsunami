@@ -3,7 +3,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import type { MusicTrackFormData, MusicTrackData } from '@/types/podcast';
-import { isArtist } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/musicConfig';
 import { musicTrackPublisher } from '@/lib/musicTrackPublisher';
 
 // Helper function to infer audio type from URL

@@ -3,7 +3,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import type { MusicPlaylistFormData, MusicPlaylistData } from '@/types/podcast';
-import { isArtist } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/musicConfig';
 import { musicPlaylistPublisher } from '@/lib/musicPlaylistPublisher';
 
 /**

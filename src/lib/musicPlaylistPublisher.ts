@@ -1,6 +1,6 @@
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicPlaylistData, TrackReference } from '@/types/podcast';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { validateImageUrl } from '@/lib/urlValidation';
 
 /**
@@ -32,8 +32,8 @@ export class MusicPlaylistPublisher {
     // Validate track references
     for (let i = 0; i < playlistData.tracks.length; i++) {
       const track = playlistData.tracks[i];
-      if (track.kind !== PODCAST_KINDS.MUSIC_TRACK) {
-        throw new Error(`Track ${i + 1}: Invalid track kind, must be ${PODCAST_KINDS.MUSIC_TRACK}`);
+      if (track.kind !== MUSIC_KINDS.MUSIC_TRACK) {
+        throw new Error(`Track ${i + 1}: Invalid track kind, must be ${MUSIC_KINDS.MUSIC_TRACK}`);
       }
       if (!track.pubkey?.trim()) {
         throw new Error(`Track ${i + 1}: Track pubkey is required`);
@@ -146,7 +146,7 @@ export class MusicPlaylistPublisher {
     const content = this.buildEventContent(playlistData);
     
     return {
-      kind: PODCAST_KINDS.MUSIC_PLAYLIST,
+      kind: MUSIC_KINDS.MUSIC_PLAYLIST,
       content,
       tags,
       created_at: Math.floor(Date.now() / 1000)
@@ -244,8 +244,8 @@ export class MusicPlaylistPublisher {
     const errors: string[] = [];
     
     // Check event kind
-    if (event.kind !== PODCAST_KINDS.MUSIC_PLAYLIST) {
-      errors.push(`Event kind must be ${PODCAST_KINDS.MUSIC_PLAYLIST}, got ${event.kind}`);
+    if (event.kind !== MUSIC_KINDS.MUSIC_PLAYLIST) {
+      errors.push(`Event kind must be ${MUSIC_KINDS.MUSIC_PLAYLIST}, got ${event.kind}`);
     }
     
     // Check required tags
@@ -279,8 +279,8 @@ export class MusicPlaylistPublisher {
       }
       
       const [kind, pubkey, identifier] = parts;
-      if (kind !== PODCAST_KINDS.MUSIC_TRACK.toString()) {
-        errors.push(`Track reference ${i + 1}: Invalid kind, expected ${PODCAST_KINDS.MUSIC_TRACK}`);
+      if (kind !== MUSIC_KINDS.MUSIC_TRACK.toString()) {
+        errors.push(`Track reference ${i + 1}: Invalid kind, expected ${MUSIC_KINDS.MUSIC_TRACK}`);
       }
       
       if (!/^[0-9a-f]{64}$/i.test(pubkey)) {
@@ -312,12 +312,12 @@ export class MusicPlaylistPublisher {
     if (parts.length !== 3) return null;
     
     const [kind, pubkey, identifier] = parts;
-    if (kind !== PODCAST_KINDS.MUSIC_TRACK.toString()) return null;
+    if (kind !== MUSIC_KINDS.MUSIC_TRACK.toString()) return null;
     if (!/^[0-9a-f]{64}$/i.test(pubkey)) return null;
     if (!identifier.trim()) return null;
     
     return {
-      kind: PODCAST_KINDS.MUSIC_TRACK,
+      kind: MUSIC_KINDS.MUSIC_TRACK,
       pubkey,
       identifier
     };

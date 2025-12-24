@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { PODCAST_CONFIG, PODCAST_KINDS, getArtistPubkeyHex } from '@/lib/podcastConfig';
+import { MUSIC_CONFIG, MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
 
 interface PodcastMetadata {
   artist: string;
@@ -57,7 +57,7 @@ export function usePodcastMetadata() {
 
         const events = await nostr.query([
           {
-            kinds: [PODCAST_KINDS.ARTIST_METADATA], // Addressable podcast metadata event
+            kinds: [MUSIC_KINDS.ARTIST_METADATA], // Addressable podcast metadata event
             authors: [getArtistPubkeyHex()],
             '#d': ['artist-metadata'],
             limit: 10 // Only need the most recent event
@@ -74,7 +74,7 @@ export function usePodcastMetadata() {
 
           return {
             ...metadata,
-            artist: metadata.artist || PODCAST_CONFIG.podcast.artistName,
+            artist: metadata.artist || MUSIC_CONFIG.podcast.artistName,
             updated_at: latestEvent.created_at
           };
         }
@@ -84,22 +84,22 @@ export function usePodcastMetadata() {
 
       // Fallback to config (includes environment variables)
       return {
-        description: PODCAST_CONFIG.podcast.description,
-        artist: PODCAST_CONFIG.podcast.artistName,
-        image: PODCAST_CONFIG.podcast.image,
-        website: PODCAST_CONFIG.podcast.website,
-        copyright: PODCAST_CONFIG.podcast.copyright,
+        description: MUSIC_CONFIG.podcast.description,
+        artist: MUSIC_CONFIG.podcast.artistName,
+        image: MUSIC_CONFIG.podcast.image,
+        website: MUSIC_CONFIG.podcast.website,
+        copyright: MUSIC_CONFIG.podcast.copyright,
         value: {
-          amount: PODCAST_CONFIG.podcast.value.amount,
-          currency: PODCAST_CONFIG.podcast.value.currency,
-          recipients: PODCAST_CONFIG.podcast.value.recipients || []
+          amount: MUSIC_CONFIG.podcast.value.amount,
+          currency: MUSIC_CONFIG.podcast.value.currency,
+          recipients: MUSIC_CONFIG.podcast.value.recipients || []
         },
-        guid: PODCAST_CONFIG.podcast.guid,
-        medium: PODCAST_CONFIG.podcast.medium,
-        publisher: PODCAST_CONFIG.podcast.publisher,
-        location: PODCAST_CONFIG.podcast.location,
-        person: PODCAST_CONFIG.podcast.person,
-        license: PODCAST_CONFIG.podcast.license,
+        guid: MUSIC_CONFIG.podcast.guid,
+        medium: MUSIC_CONFIG.podcast.medium,
+        publisher: MUSIC_CONFIG.podcast.publisher,
+        location: MUSIC_CONFIG.podcast.location,
+        person: MUSIC_CONFIG.podcast.person,
+        license: MUSIC_CONFIG.podcast.license,
         updated_at: 0
       };
     },

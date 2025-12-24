@@ -3,7 +3,7 @@ import { Headphones, List, Users, MessageSquare, User, Rss, Settings } from 'luc
 import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePodcastConfig } from '@/hooks/usePodcastConfig';
-import { isArtist } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {

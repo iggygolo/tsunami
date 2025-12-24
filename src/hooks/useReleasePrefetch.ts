@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import type { PodcastRelease } from '@/types/podcast';
 
 /**
@@ -11,7 +11,7 @@ export function useReleasePrefetch() {
   const queryClient = useQueryClient();
 
   const prefetchRelease = async (release: PodcastRelease) => {
-    const releaseKey = `${release.artistPubkey}:${PODCAST_KINDS.MUSIC_PLAYLIST}:${release.identifier}`;
+    const releaseKey = `${release.artistPubkey}:${MUSIC_KINDS.MUSIC_PLAYLIST}:${release.identifier}`;
     
     // Check if we already have this data cached
     const cachedEvent = queryClient.getQueryData(['release-event', releaseKey]);
@@ -29,7 +29,7 @@ export function useReleasePrefetch() {
           queryKey: ['release-event', releaseKey],
           queryFn: async () => {
             const events = await nostr.query([{
-              kinds: [PODCAST_KINDS.MUSIC_PLAYLIST],
+              kinds: [MUSIC_KINDS.MUSIC_PLAYLIST],
               authors: [release.artistPubkey],
               '#d': [release.identifier],
               limit: 1

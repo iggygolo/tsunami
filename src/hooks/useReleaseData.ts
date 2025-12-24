@@ -10,7 +10,7 @@ import {
   playlistToRelease, 
   trackToRelease
 } from '@/lib/eventConversions';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import type { PodcastRelease, MusicTrackData } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -110,7 +110,7 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
   });
 
   // For playlists, extract track references and resolve them
-  const trackReferences = releaseEvent?.kind === PODCAST_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(releaseEvent)
+  const trackReferences = releaseEvent?.kind === MUSIC_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(releaseEvent)
     ? eventToMusicPlaylist(releaseEvent).tracks
     : [];
 
@@ -125,7 +125,7 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
       console.log('useReleaseData - Converting event:', { kind: releaseEvent.kind, id: releaseEvent.id });
 
       // Handle music track events
-      if (releaseEvent.kind === PODCAST_KINDS.MUSIC_TRACK && validateMusicTrack(releaseEvent)) {
+      if (releaseEvent.kind === MUSIC_KINDS.MUSIC_TRACK && validateMusicTrack(releaseEvent)) {
         const track = eventToMusicTrack(releaseEvent);
         const release = trackToRelease(track);
         console.log('useReleaseData - Track converted:', { title: release.title, hasAudio: !!release.tracks[0]?.audioUrl });
@@ -133,7 +133,7 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
       }
 
       // Handle music playlist events
-      if (releaseEvent.kind === PODCAST_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(releaseEvent)) {
+      if (releaseEvent.kind === MUSIC_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(releaseEvent)) {
         if (!resolvedTracks) return null; // Wait for track resolution
 
         const playlist = eventToMusicPlaylist(releaseEvent);
@@ -187,7 +187,7 @@ export function useReleaseData({ eventId, addressableEvent }: UseReleaseDataProp
       id: staticCachedRelease.eventId,
       pubkey: staticCachedRelease.artistPubkey,
       created_at: Math.floor(staticCachedRelease.createdAt.getTime() / 1000),
-      kind: PODCAST_KINDS.MUSIC_PLAYLIST,
+      kind: MUSIC_KINDS.MUSIC_PLAYLIST,
       tags: [
         ['d', staticCachedRelease.identifier || staticCachedRelease.eventId],
         ['title', staticCachedRelease.title],

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ZapDialog } from '@/components/ZapDialog';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useTrackPlayback } from '@/hooks/useTrackPlayback';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
 import type { PodcastRelease } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -40,7 +40,7 @@ export function TrackList({ release, className }: TrackListProps) {
         ...(track.language ? [['language', track.language]] : []),
         ...(track.explicit ? [['content-warning', 'explicit']] : []),
         // Reference to parent release
-        ['a', `${PODCAST_KINDS.MUSIC_PLAYLIST}:${release.artistPubkey}:${release.identifier || release.eventId}`]
+        ['a', `${MUSIC_KINDS.MUSIC_PLAYLIST}:${release.artistPubkey}:${release.identifier || release.eventId}`]
       ],
       content: JSON.stringify({
         title: track.title,

@@ -17,7 +17,7 @@ import { useReleaseData } from '@/hooks/useReleaseData';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useTrackPlayback } from '@/hooks/useTrackPlayback';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -68,7 +68,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
     id: release.eventId,
     pubkey: release.artistPubkey,
     created_at: Math.floor(release.createdAt.getTime() / 1000),
-    kind: PODCAST_KINDS.MUSIC_PLAYLIST,
+    kind: MUSIC_KINDS.MUSIC_PLAYLIST,
     tags: [
       ['d', release.identifier || release.eventId],
       ['title', release.title],

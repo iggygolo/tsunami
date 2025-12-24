@@ -1,7 +1,7 @@
 import { nip19 } from 'nostr-tools';
 
 /**
- * Podcast configuration for Tsunami
+ * Music configuration for Tsunami
  * This defines the music metadata and artist information
  * Values are loaded from environment variables with fallbacks
  */
@@ -27,7 +27,7 @@ function parseArrayEnv(envValue: string | undefined, fallback: string[]): string
   return envValue.split(',').map(s => s.trim()).filter(s => s.length > 0);
 }
 
-export interface PodcastConfig {
+export interface MusicConfig {
   /** The hardcoded npub of the music artist */
   artistNpub: string;
 
@@ -98,7 +98,7 @@ export interface PodcastConfig {
   };
 }
 
-export const PODCAST_CONFIG: PodcastConfig = {
+export const MUSIC_CONFIG: MusicConfig = {
   // Artist npub - loaded from environment
   artistNpub: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NPUB) || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
 
@@ -151,7 +151,7 @@ export const PODCAST_CONFIG: PodcastConfig = {
 /**
  * Nostr event kinds used by Tsunami
  */
-export const PODCAST_KINDS = {
+export const MUSIC_KINDS = {
   /** Music Track Event (addressable, individual tracks) */
   MUSIC_TRACK: 36787,
   /** Music Playlist Event (addressable, ordered track collections) */
@@ -171,7 +171,7 @@ export const PODCAST_KINDS = {
  */
 export function getArtistPubkeyHex(): string {
   try {
-    const decoded = nip19.decode(PODCAST_CONFIG.artistNpub);
+    const decoded = nip19.decode(MUSIC_CONFIG.artistNpub);
     if (decoded.type === 'npub') {
       return decoded.data;
     }
@@ -179,7 +179,7 @@ export function getArtistPubkeyHex(): string {
   } catch (error) {
     console.error('Failed to decode artist npub:', error);
     // Fallback to the original value in case it's already hex
-    return PODCAST_CONFIG.artistNpub;
+    return MUSIC_CONFIG.artistNpub;
   }
 }
 

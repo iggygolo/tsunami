@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { ZapDialog } from '@/components/ZapDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { useNavigate } from 'react-router-dom';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -49,7 +49,7 @@ export function PersistentAudioPlayer() {
     id: release.eventId,
     pubkey: release.artistPubkey,
     created_at: Math.floor(release.createdAt.getTime() / 1000),
-    kind: PODCAST_KINDS.MUSIC_PLAYLIST,
+    kind: MUSIC_KINDS.MUSIC_PLAYLIST,
     tags: [
       ['d', release.identifier || release.eventId],
       ['title', release.title],

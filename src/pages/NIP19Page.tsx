@@ -1,7 +1,7 @@
 import { nip19 } from 'nostr-tools';
 import { useParams } from 'react-router-dom';
 import { ReleasePage } from '@/components/music/ReleasePage';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import NotFound from './NotFound';
 
 export function NIP19Page() {
@@ -59,7 +59,7 @@ export function NIP19Page() {
     case 'naddr': {
       // Handle addressable events (music playlists are kind 34139)
       const naddr = decoded.data;
-      if (naddr.kind === PODCAST_KINDS.MUSIC_PLAYLIST) {
+      if (naddr.kind === MUSIC_KINDS.MUSIC_PLAYLIST) {
         // This is a music playlist (release) - pass the addressable event parameters
         return (
           <ReleasePage

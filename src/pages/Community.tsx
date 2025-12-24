@@ -5,12 +5,12 @@ import { Layout } from '@/components/Layout';
 import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
 import { RecentActivity } from '@/components/music/RecentActivity';
 import { ReleaseDiscussions } from '@/components/music/ReleaseDiscussions';
-import { PODCAST_CONFIG } from '@/lib/podcastConfig';
+import { MUSIC_CONFIG } from '@/lib/musicConfig';
 
 const Community = () => {
   useSeoMeta({
-    title: `Community - ${PODCAST_CONFIG.podcast.artistName}`,
-    description: `Join the community discussion for ${PODCAST_CONFIG.podcast.artistName}`,
+    title: `Community - ${MUSIC_CONFIG.podcast.artistName}`,
+    description: `Join the community discussion for ${MUSIC_CONFIG.podcast.artistName}`,
   });
 
   return (
@@ -20,7 +20,7 @@ const Community = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Community</h1>
             <p className="text-muted-foreground">
-              Engage with the {PODCAST_CONFIG.podcast.artistName} community
+              Engage with the {MUSIC_CONFIG.podcast.artistName} community
             </p>
           </div>
 

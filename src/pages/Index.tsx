@@ -20,7 +20,7 @@ import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useTrackPlayback } from '@/hooks/useTrackPlayback';
 import { useArtistPosts, useArtistPostCount } from '@/hooks/useArtistPosts';
 import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
-import { getArtistPubkeyHex } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex } from '@/lib/musicConfig';
 
 const Index = () => {
   const { data: latestRelease, isLoading: isLoadingLatest } = useLatestReleaseCache();

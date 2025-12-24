@@ -9,7 +9,7 @@ import { useComments } from '@/hooks/useComments';
 import { useReactions } from '@/hooks/useReactions';
 import { useZapCounts } from '@/hooks/useZapCounts';
 import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { PodcastRelease } from '@/types/podcast';
 import { cn } from '@/lib/utils';
@@ -25,7 +25,7 @@ interface ReleaseActionsProps {
 function createEventFromrelease(release: PodcastRelease): NostrEvent {
   return {
     id: release.eventId,
-    kind: PODCAST_KINDS.MUSIC_PLAYLIST, // Music playlist events (releases)
+    kind: MUSIC_KINDS.MUSIC_PLAYLIST, // Music playlist events (releases)
     pubkey: release.artistPubkey,
     created_at: Math.floor(release.createdAt.getTime() / 1000),
     tags: [

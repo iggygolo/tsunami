@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useMusicTracks } from '@/hooks/useMusicTracks';
 import type { TrackReference, MusicTrackData } from '@/types/podcast';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 
 /**
  * Hook for managing track selection in playlist creation/editing
@@ -16,14 +16,14 @@ export function useTrackSelection(initialTracks: TrackReference[] = []) {
   const addTrack = useCallback((track: MusicTrackData | TrackReference) => {
     let trackRef: TrackReference;
     
-    if ('kind' in track && track.kind === PODCAST_KINDS.MUSIC_TRACK) {
+    if ('kind' in track && track.kind === MUSIC_KINDS.MUSIC_TRACK) {
       // It's already a TrackReference
       trackRef = track as TrackReference;
     } else {
       // It's a MusicTrackData, convert to TrackReference
       const musicTrack = track as MusicTrackData;
       trackRef = {
-        kind: PODCAST_KINDS.MUSIC_TRACK,
+        kind: MUSIC_KINDS.MUSIC_TRACK,
         pubkey: musicTrack.artistPubkey || '',
         identifier: musicTrack.identifier,
         title: musicTrack.title,
@@ -117,14 +117,14 @@ export function useTrackSelection(initialTracks: TrackReference[] = []) {
    */
   const addMultipleTracks = useCallback((tracks: (MusicTrackData | TrackReference)[]) => {
     const trackRefs: TrackReference[] = tracks.map(track => {
-      if ('kind' in track && track.kind === PODCAST_KINDS.MUSIC_TRACK) {
+      if ('kind' in track && track.kind === MUSIC_KINDS.MUSIC_TRACK) {
         // It's already a TrackReference
         return track as TrackReference;
       } else {
         // It's a MusicTrackData, convert to TrackReference
         const musicTrack = track as MusicTrackData;
         return {
-          kind: PODCAST_KINDS.MUSIC_TRACK,
+          kind: MUSIC_KINDS.MUSIC_TRACK,
           pubkey: musicTrack.artistPubkey || '',
           identifier: musicTrack.identifier,
           title: musicTrack.title,

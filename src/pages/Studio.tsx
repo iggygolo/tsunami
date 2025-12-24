@@ -31,7 +31,7 @@ import { usePodcastConfig } from '@/hooks/usePodcastConfig';
 import { usePodcastAnalytics } from '@/hooks/usePodcastAnalytics';
 import { useRSSFeedGenerator } from '@/hooks/useRSSFeedGenerator';
 import { useUploadConfig } from '@/hooks/useUploadConfig';
-import { isArtist, PODCAST_CONFIG, PODCAST_KINDS } from '@/lib/podcastConfig';
+import { isArtist, MUSIC_CONFIG, MUSIC_KINDS } from '@/lib/musicConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
 import { ReleaseManagement } from '@/components/studio/ReleaseManagement';
 import { UploadProviderManager } from '@/components/studio/UploadProviderManager';
@@ -101,28 +101,28 @@ const Studio = () => {
   const [imageUploadProvider, setImageUploadProvider] = useState<'blossom' | 'vercel'>(config.defaultProvider);
 
   const [formData, setFormData] = useState<PodcastFormData>({
-    artistName: PODCAST_CONFIG.podcast.artistName,
-    description: PODCAST_CONFIG.podcast.description,
-    image: PODCAST_CONFIG.podcast.image,
-    website: PODCAST_CONFIG.podcast.website,
-    copyright: PODCAST_CONFIG.podcast.copyright,
+    artistName: MUSIC_CONFIG.podcast.artistName,
+    description: MUSIC_CONFIG.podcast.description,
+    image: MUSIC_CONFIG.podcast.image,
+    website: MUSIC_CONFIG.podcast.website,
+    copyright: MUSIC_CONFIG.podcast.copyright,
     value: {
-      amount: PODCAST_CONFIG.podcast.value.amount,
-      currency: PODCAST_CONFIG.podcast.value.currency,
-      recipients: PODCAST_CONFIG.podcast.value.recipients || []
+      amount: MUSIC_CONFIG.podcast.value.amount,
+      currency: MUSIC_CONFIG.podcast.value.currency,
+      recipients: MUSIC_CONFIG.podcast.value.recipients || []
     },
     // New Podcasting 2.0 defaults
-    guid: PODCAST_CONFIG.podcast.guid || PODCAST_CONFIG.artistNpub,
-    medium: PODCAST_CONFIG.podcast.medium || 'music',
-    publisher: PODCAST_CONFIG.podcast.publisher || PODCAST_CONFIG.podcast.artistName,
-    person: PODCAST_CONFIG.podcast.person || [
+    guid: MUSIC_CONFIG.podcast.guid || MUSIC_CONFIG.artistNpub,
+    medium: MUSIC_CONFIG.podcast.medium || 'music',
+    publisher: MUSIC_CONFIG.podcast.publisher || MUSIC_CONFIG.podcast.artistName,
+    person: MUSIC_CONFIG.podcast.person || [
       {
-        name: PODCAST_CONFIG.podcast.artistName,
+        name: MUSIC_CONFIG.podcast.artistName,
         role: 'artist',
         group: 'cast'
       }
     ],
-    license: PODCAST_CONFIG.podcast.license || {
+    license: MUSIC_CONFIG.podcast.license || {
       identifier: 'All Right Reserved',
       url: ''
     },
@@ -138,12 +138,12 @@ const Studio = () => {
         website: podcastMetadata.website,
         copyright: podcastMetadata.copyright,
         value: podcastMetadata.value || {
-          amount: PODCAST_CONFIG.podcast.value.amount,
-          currency: PODCAST_CONFIG.podcast.value.currency,
-          recipients: PODCAST_CONFIG.podcast.value.recipients || []
+          amount: MUSIC_CONFIG.podcast.value.amount,
+          currency: MUSIC_CONFIG.podcast.value.currency,
+          recipients: MUSIC_CONFIG.podcast.value.recipients || []
         },
         // Podcasting 2.0 fields
-        guid: podcastMetadata.guid || PODCAST_CONFIG.artistNpub,
+        guid: podcastMetadata.guid || MUSIC_CONFIG.artistNpub,
         medium: podcastMetadata.medium || 'music',
         publisher: podcastMetadata.publisher || podcastMetadata.artist,
         location: podcastMetadata.location,
@@ -234,7 +234,7 @@ const Studio = () => {
     setIsSaving(true);
     try {
       const podcastMetadataEvent = {
-        kind: PODCAST_KINDS.ARTIST_METADATA, // Addressable podcast metadata event
+        kind: MUSIC_KINDS.ARTIST_METADATA, // Addressable podcast metadata event
         content: JSON.stringify({
           artist: formData.artistName,
           description: formData.description,

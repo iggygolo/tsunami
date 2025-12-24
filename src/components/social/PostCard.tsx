@@ -28,7 +28,7 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDeleteNote } from '@/hooks/useDeleteNote';
 import { genUserName } from '@/lib/genUserName';
-import { isArtist } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import type { NostrEvent } from '@nostrify/nostrify';

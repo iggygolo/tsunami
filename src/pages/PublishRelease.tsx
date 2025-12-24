@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
 import { PublishReleaseForm } from '@/components/music/PublishReleaseForm';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { isArtist } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/musicConfig';
 
 const PublishRelease = () => {
   const navigate = useNavigate();

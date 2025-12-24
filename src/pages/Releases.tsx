@@ -1,12 +1,12 @@
 import { useSeoMeta } from '@unhead/react';
 import { Layout } from '@/components/Layout';
 import { ReleaseList } from '@/components/music/ReleaseList';
-import { PODCAST_CONFIG } from '@/lib/podcastConfig';
+import { MUSIC_CONFIG } from '@/lib/musicConfig';
 
 const Releases = () => {
   useSeoMeta({
-    title: `Releases - ${PODCAST_CONFIG.podcast.artistName}`,
-    description: `Browse all releases of ${PODCAST_CONFIG.podcast.artistName}`,
+    title: `Releases - ${MUSIC_CONFIG.podcast.artistName}`,
+    description: `Browse all releases of ${MUSIC_CONFIG.podcast.artistName}`,
   });
 
   return (
@@ -16,7 +16,7 @@ const Releases = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground via-primary to-purple-600 bg-clip-text text-transparent">All Releases</h1>
             <p className="text-muted-foreground">
-              Browse and listen to all releases of {PODCAST_CONFIG.podcast.artistName}
+              Browse and listen to all releases of {MUSIC_CONFIG.podcast.artistName}
             </p>
           </div>
 

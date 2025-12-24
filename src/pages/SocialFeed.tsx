@@ -12,7 +12,7 @@ import { useArtistPosts, useArtistRepliesTab } from '@/hooks/useArtistPosts';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useQueryClient } from '@tanstack/react-query';
-import { getArtistPubkeyHex, isArtist, PODCAST_CONFIG } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex, isArtist, MUSIC_CONFIG } from '@/lib/musicConfig';
 import { genUserName } from '@/lib/genUserName';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -50,7 +50,7 @@ const SocialFeed = () => {
                      genUserName(getArtistPubkeyHex());
 
   useSeoMeta({
-    title: `${artistName}'s Social Feed - ${PODCAST_CONFIG.podcast.artistName}`,
+    title: `${artistName}'s Social Feed - ${MUSIC_CONFIG.podcast.artistName}`,
     description: `Follow ${artistName}'s social updates and posts`,
   });
 

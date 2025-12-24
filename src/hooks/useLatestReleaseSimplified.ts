@@ -6,7 +6,7 @@ import {
   eventToMusicPlaylist, 
   playlistToRelease
 } from '@/lib/eventConversions';
-import { PODCAST_KINDS, getArtistPubkeyHex } from '@/lib/podcastConfig';
+import { MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
 import type { PodcastRelease, MusicTrackData } from '@/types/podcast';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -28,7 +28,7 @@ export function useLatestReleaseSimplified() {
 
       // Get the latest playlist from the artist
       const playlistEvents = await nostr.query([{
-        kinds: [PODCAST_KINDS.MUSIC_PLAYLIST],
+        kinds: [MUSIC_KINDS.MUSIC_PLAYLIST],
         authors: [artistPubkey],
         limit: 1 // Only get the latest one
       }], { signal });

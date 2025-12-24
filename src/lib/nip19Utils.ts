@@ -1,6 +1,6 @@
 import { nip19 } from 'nostr-tools';
 import type { NostrEvent } from '@nostrify/nostrify';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 
 /**
  * Default relays to include in nevent encodings for better discoverability
@@ -110,7 +110,7 @@ export function encodeMusicTrackAsNaddr(
   return nip19.naddrEncode({
     identifier,
     pubkey,
-    kind: PODCAST_KINDS.MUSIC_TRACK,
+    kind: MUSIC_KINDS.MUSIC_TRACK,
     relays
   });
 }
@@ -132,7 +132,7 @@ export function encodeMusicPlaylistAsNaddr(
   return nip19.naddrEncode({
     identifier,
     pubkey,
-    kind: PODCAST_KINDS.MUSIC_PLAYLIST,
+    kind: MUSIC_KINDS.MUSIC_PLAYLIST,
     relays
   });
 }

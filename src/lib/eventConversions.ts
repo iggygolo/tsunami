@@ -1,6 +1,6 @@
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicTrackData, MusicPlaylistData, TrackReference, PodcastRelease, ReleaseTrack } from '@/types/podcast';
-import { PODCAST_KINDS } from '@/lib/podcastConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { formatToAudioType } from '@/lib/audioUtils';
 
 /**
@@ -19,7 +19,7 @@ import { formatToAudioType } from '@/lib/audioUtils';
  * Improved with better error handling and optional field validation
  */
 export function validateMusicTrack(event: NostrEvent): boolean {
-  if (event.kind !== PODCAST_KINDS.MUSIC_TRACK) return false;
+  if (event.kind !== MUSIC_KINDS.MUSIC_TRACK) return false;
 
   // Check for required tags
   const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
@@ -52,7 +52,7 @@ export function validateMusicTrack(event: NostrEvent): boolean {
  * Improved with better track reference validation
  */
 export function validateMusicPlaylist(event: NostrEvent): boolean {
-  if (event.kind !== PODCAST_KINDS.MUSIC_PLAYLIST) return false;
+  if (event.kind !== MUSIC_KINDS.MUSIC_PLAYLIST) return false;
 
   // Check for required tags
   const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
@@ -71,7 +71,7 @@ export function validateMusicPlaylist(event: NostrEvent): boolean {
     if (parts.length !== 3) return false;
     
     const [kind, pubkey, identifier] = parts;
-    if (kind !== PODCAST_KINDS.MUSIC_TRACK.toString()) return false;
+    if (kind !== MUSIC_KINDS.MUSIC_TRACK.toString()) return false;
     if (!pubkey || pubkey.length !== 64) return false; // Valid hex pubkey
     if (!identifier) return false;
   }
@@ -309,13 +309,13 @@ export function trackToRelease(track: MusicTrackData): PodcastRelease {
  */
 export function eventToPodcastRelease(event: NostrEvent): PodcastRelease {
   // Handle music track events (Kind 36787)
-  if (event.kind === PODCAST_KINDS.MUSIC_TRACK && validateMusicTrack(event)) {
+  if (event.kind === MUSIC_KINDS.MUSIC_TRACK && validateMusicTrack(event)) {
     const track = eventToMusicTrack(event);
     return trackToRelease(track);
   }
   
   // Handle music playlist events (Kind 34139) - but without track resolution
-  if (event.kind === PODCAST_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)) {
+  if (event.kind === MUSIC_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)) {
     const playlist = eventToMusicPlaylist(event);
     // Return playlist as release but with empty tracks (since we can't resolve them here)
     return {
@@ -425,12 +425,12 @@ export function createAddressableEventRef(kind: number, pubkey: string, identifi
  * Creates a playlist addressable event reference
  */
 export function createPlaylistRef(pubkey: string, identifier: string): string {
-  return createAddressableEventRef(PODCAST_KINDS.MUSIC_PLAYLIST, pubkey, identifier);
+  return createAddressableEventRef(MUSIC_KINDS.MUSIC_PLAYLIST, pubkey, identifier);
 }
 
 /**
  * Creates a track addressable event reference
  */
 export function createTrackRef(pubkey: string, identifier: string): string {
-  return createAddressableEventRef(PODCAST_KINDS.MUSIC_TRACK, pubkey, identifier);
+  return createAddressableEventRef(MUSIC_KINDS.MUSIC_TRACK, pubkey, identifier);
 }

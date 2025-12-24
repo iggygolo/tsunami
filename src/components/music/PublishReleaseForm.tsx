@@ -16,7 +16,7 @@ import { GenreSelector } from '@/components/ui/genre-selector';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePublishRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
-import { isArtist } from '@/lib/podcastConfig';
+import { isArtist } from '@/lib/musicConfig';
 import { getAudioDuration, formatDurationHuman } from '@/lib/audioDuration';
 import { validateLanguageCode, validateGenre } from '@/lib/musicMetadata';
 import type { ReleaseFormData } from '@/types/podcast';

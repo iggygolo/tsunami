@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { getArtistPubkeyHex, PODCAST_KINDS } from '@/lib/podcastConfig';
+import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
 import {
   validateMusicTrack,
@@ -27,12 +27,12 @@ export function useRSSFeedGenerator() {
         // Fetch both music tracks (36787) and playlists (34139)
         const [trackEvents, playlistEvents] = await Promise.all([
           nostr.query([{
-            kinds: [PODCAST_KINDS.MUSIC_TRACK],
+            kinds: [MUSIC_KINDS.MUSIC_TRACK],
             authors: [artistPubkey],
             limit: 1000,
           }]),
           nostr.query([{
-            kinds: [PODCAST_KINDS.MUSIC_PLAYLIST],
+            kinds: [MUSIC_KINDS.MUSIC_PLAYLIST],
             authors: [artistPubkey],
             limit: 100,
           }])

@@ -1,5 +1,5 @@
 import type { MusicTrackData, MusicPlaylistData } from '@/types/podcast';
-import { PODCAST_CONFIG, type PodcastConfig } from './podcastConfig';
+import { MUSIC_CONFIG, type MusicConfig } from './musicConfig';
 import { encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr } from './nip19Utils';
 import { 
   generateRSSFeed as generateRSSFeedCore,
@@ -10,8 +10,8 @@ import {
  * Browser-compatible RSS feed generation using the consolidated core
  * Returns single RSS feed with multiple channels (one per release)
  */
-export function generateRSSFeed(tracks: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: PodcastConfig): string {
-  const podcastConfig = config || PODCAST_CONFIG;
+export function generateRSSFeed(tracks: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: MusicConfig): string {
+  const podcastConfig = config || MUSIC_CONFIG;
   const rssConfig = podcastConfigToRSSConfig(podcastConfig);
   
   return generateRSSFeedCore(tracks, releases, rssConfig, encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr);
@@ -46,7 +46,7 @@ export function useRSSFeed(tracks: MusicTrackData[] | undefined, releases: Music
  * Generate RSS feeds and store them
  * This function should be called when podcast metadata or tracks are updated
  */
-export async function genRSSFeed(tracks?: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: PodcastConfig): Promise<void> {
+export async function genRSSFeed(tracks?: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: MusicConfig): Promise<void> {
   try {
     // Fetch tracks if not provided
     if (!tracks) {
