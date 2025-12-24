@@ -202,13 +202,6 @@ const Index = () => {
                       )}
                     </Button>
 
-                    <Button variant="outline" size="lg" asChild className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 backdrop-blur-sm">
-                      <Link to="/about">
-                        About Artist
-                        <ChevronRight className="w-4 h-4 ml-1" />
-                      </Link>
-                    </Button>
-
                     {user && latestRelease.totalSats && latestRelease.totalSats > 0 && (
                       <Badge variant="outline" className="h-11 px-4 text-sm bg-yellow-500/20 border-yellow-500/30 text-yellow-300 backdrop-blur-sm">
                         <Zap className="w-4 h-4 mr-1" />

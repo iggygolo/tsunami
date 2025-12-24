@@ -70,7 +70,6 @@ export function Navigation({ className }: NavigationProps) {
                   <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
                     {/* Main Navigation */}
                     <div className="space-y-2">
-                      <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Navigation</h3>
                       {/* Home item - only in mobile menu */}
                       <Button
                         variant="ghost"
@@ -89,38 +88,7 @@ export function Navigation({ className }: NavigationProps) {
                           </div>
                         </Link>
                       </Button>
-                      {/* Other main nav items */}
-                      {mainNavItems.map((item) => {
-                        const Icon = item.icon;
-                        const active = isActive(item.path);
-
-                        return (
-                          <Button
-                            key={item.path}
-                            variant="ghost"
-                            size="sm"
-                            asChild
-                            className={cn(
-                              "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-400",
-                              active && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0"
-                            )}
-                          >
-                            <Link to={item.path} className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
-                              <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-400")} />
-                              <div className="text-left min-w-0">
-                                <div className="font-medium">{item.label}</div>
-                                <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
-                              </div>
-                            </Link>
-                          </Button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Secondary Navigation */}
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">More</h3>
-                      {secondaryNavItems.map((item) => {
+                      {[...mainNavItems,...secondaryNavItems].map((item) => {
                         const Icon = item.icon;
                         const active = !item.external && isActive(item.path);
                         const isRSS = item.path === '/rss.xml';

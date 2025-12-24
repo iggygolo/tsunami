@@ -52,7 +52,6 @@ export function MobileSidebar({ onNavigate }: MobileSidebarProps) {
       <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
         {/* Main Navigation */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground px-3 mb-3">Navigation</h3>
           {(isMobile ? [...mainNavItems, ...secondaryNavItems] : mainNavItems).map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
