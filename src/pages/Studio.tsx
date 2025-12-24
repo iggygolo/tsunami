@@ -40,7 +40,7 @@ import { genRSSFeed } from '@/lib/rssGenerator';
 import { ReleaseManagement } from '@/components/studio/ReleaseManagement';
 import { UploadProviderManager } from '@/components/studio/UploadProviderManager';
 import { FileUploadWithProvider } from '@/components/ui/FileUploadWithProvider';
-import { useUploadFileWithOptions } from '@/hooks/useUploadFileWithOptions';
+import { useUploadFileWithOptions } from '@/hooks/useUploadFile';
 // Footer is provided by Layout
 
 interface PodcastFormData {

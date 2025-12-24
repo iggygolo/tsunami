@@ -4,8 +4,7 @@ import { BlossomUploader } from '@nostrify/nostrify/uploaders';
 import { useCurrentUser } from "./useCurrentUser";
 import { useBlossomServers } from "./useBlossomServers";
 import { useUploadConfig } from "./useUploadConfig";
-import { UploadProviderFactory, UploadProviderError } from '@/lib/uploadProviders';
-import type { UploadProvider } from '@/lib/uploadProviders';
+import { UploadProviderFactory } from '@/lib/uploadProviders';
 
 /**
  * Upload file options
@@ -103,13 +102,31 @@ export function useUploadFile() {
       const correctedFile = ensureCorrectMimeType(file);
 
       console.log('Starting file upload:', correctedFile.name, correctedFile.size, correctedFile.type);
-      console.log('Using upload provider:', config.defaultProvider);
+      console.log('Upload config:', config);
 
-      // Use configured provider
-      if (config.defaultProvider === 'vercel' && config.vercelEnabled) {
-        return await uploadWithVercel(correctedFile, user);
-      } else {
+      // Always try Blossom first (default behavior)
+      try {
+        console.log('Attempting Blossom upload first...');
         return await uploadWithBlossom(correctedFile, user, allServers);
+      } catch (blossomError) {
+        console.warn('Blossom upload failed, checking Vercel fallback:', blossomError);
+        
+        // Only fallback to Vercel if it's properly configured
+        const hasVercelToken = import.meta.env.BLOB_READ_WRITE_TOKEN && 
+                              import.meta.env.BLOB_READ_WRITE_TOKEN !== 'your_vercel_blob_token_here';
+        
+        if (config.vercelEnabled && hasVercelToken) {
+          console.log('Vercel is configured, attempting fallback...');
+          try {
+            return await uploadWithVercel(correctedFile, user);
+          } catch (vercelError) {
+            console.error('Both Blossom and Vercel uploads failed');
+            throw new Error(`Upload failed. Blossom: ${blossomError instanceof Error ? blossomError.message : 'Unknown error'}. Vercel: ${vercelError instanceof Error ? vercelError.message : 'Unknown error'}`);
+          }
+        } else {
+          console.warn('Vercel not configured or disabled, only Blossom attempted');
+          throw new Error(`Blossom upload failed: ${blossomError instanceof Error ? blossomError.message : 'Unknown error'}. Vercel fallback not available (not configured or disabled).`);
+        }
       }
     },
   });
@@ -134,6 +151,84 @@ async function uploadWithBlossom(file: File, user: any, allServers: string[]): P
     console.error('Upload failed:', error);
     throw new Error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+/**
+ * Enhanced upload hook with provider options and fallback support
+ */
+export function useUploadFileWithOptions() {
+  const { user } = useCurrentUser();
+  const { allServers } = useBlossomServers();
+  const { config } = useUploadConfig();
+
+  return useMutation({
+    mutationFn: async ({ file, options = {} }: { file: File; options?: UploadFileOptions }): Promise<UploadFileResult> => {
+      if (!user) {
+        throw new Error('Must be logged in to upload files');
+      }
+
+      // Ensure file has correct MIME type
+      const correctedFile = ensureCorrectMimeType(file);
+
+      console.log('Starting file upload with options:', correctedFile.name, correctedFile.size, correctedFile.type, options);
+
+      // Determine which provider to use - default to blossom unless explicitly overridden
+      const primaryProvider = options.provider || 'blossom';
+      const enableFallback = options.enableFallback ?? config.fallbackEnabled;
+
+      console.log('Primary provider:', primaryProvider, 'Fallback enabled:', enableFallback);
+
+      // Check if Vercel is properly configured
+      const hasVercelToken = import.meta.env.BLOB_READ_WRITE_TOKEN && 
+                            import.meta.env.BLOB_READ_WRITE_TOKEN !== 'your_vercel_blob_token_here';
+
+      // Try primary provider first
+      if (primaryProvider === 'vercel') {
+        if (!config.vercelEnabled || !hasVercelToken) {
+          throw new Error('Vercel upload is not properly configured. Please set BLOB_READ_WRITE_TOKEN in your environment.');
+        }
+        
+        try {
+          const tags = await uploadWithVercel(correctedFile, user);
+          const url = tags.find(tag => tag[0] === 'url')?.[1] || '';
+          return { url, provider: 'vercel', tags };
+        } catch (error) {
+          console.warn('Vercel upload failed:', error);
+          if (!enableFallback) throw error;
+          
+          // Fallback to Blossom
+          try {
+            const tags = await uploadWithBlossom(correctedFile, user, allServers);
+            const url = tags.find(tag => tag[0] === 'url')?.[1] || '';
+            return { url, provider: 'blossom', tags };
+          } catch (fallbackError) {
+            throw new Error(`Both providers failed. Vercel: ${error instanceof Error ? error.message : 'Unknown'}. Blossom: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown'}`);
+          }
+        }
+      } else {
+        // Primary provider is Blossom
+        try {
+          const tags = await uploadWithBlossom(correctedFile, user, allServers);
+          const url = tags.find(tag => tag[0] === 'url')?.[1] || '';
+          return { url, provider: 'blossom', tags };
+        } catch (error) {
+          console.warn('Blossom upload failed:', error);
+          if (!enableFallback || !config.vercelEnabled || !hasVercelToken) {
+            throw error;
+          }
+          
+          // Fallback to Vercel only if it's properly configured
+          try {
+            const tags = await uploadWithVercel(correctedFile, user);
+            const url = tags.find(tag => tag[0] === 'url')?.[1] || '';
+            return { url, provider: 'vercel', tags };
+          } catch (fallbackError) {
+            throw new Error(`Both providers failed. Blossom: ${error instanceof Error ? error.message : 'Unknown'}. Vercel: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown'}`);
+          }
+        }
+      }
+    },
+  });
 }
 
 /**

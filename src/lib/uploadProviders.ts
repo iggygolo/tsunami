@@ -359,7 +359,7 @@ export class UploadProviderFactory {
   }
 
   static getDefaultConfig(): UploadConfig {
-    // Get default provider from environment variable, fallback to 'blossom'
+    // Get default provider from environment variable, fallback to 'vercel'
     const envProvider = import.meta.env.VITE_DEFAULT_UPLOAD_PROVIDER as 'blossom' | 'vercel' | undefined;
     const defaultProvider = (envProvider === 'blossom' || envProvider === 'vercel') ? envProvider : 'blossom';
     
@@ -369,7 +369,7 @@ export class UploadProviderFactory {
       blossomEnabled: true,
       maxFileSize: MAX_FILE_SIZE,
       allowedTypes: [...ALLOWED_MIME_TYPES],
-      fallbackEnabled: false
+      fallbackEnabled: true // Enable fallback by default
     };
   }
 }
