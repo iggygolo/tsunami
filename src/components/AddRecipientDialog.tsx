@@ -231,7 +231,17 @@ export function AddRecipientDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent 
+        className="sm:max-w-[500px]"
+        onPointerDownOutside={(e) => {
+          // Prevent closing when clicking on parent dialog
+          e.preventDefault();
+        }}
+        onInteractOutside={(e) => {
+          // Prevent closing when clicking on parent dialog
+          e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Recipient' : 'Add New Recipient'}</DialogTitle>
           <DialogDescription>

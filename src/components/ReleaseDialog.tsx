@@ -29,7 +29,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card } from '@/components/ui/card';
+import { TrackList } from './TrackList';
 import {
   Form,
   FormControl,
@@ -204,52 +204,39 @@ export function ReleaseDialog({
     return null;
   }
 
-  const handleTrackAudioFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('audio/')) {
-        toast({
-          title: 'Invalid file type',
-          description: 'Please select an audio file.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Validate file size (100MB limit)
-      if (file.size > 100 * 1024 * 1024) {
-        toast({
-          title: 'File too large',
-          description: 'Audio file must be less than 100MB.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      setTrackAudioFiles(prev => ({ ...prev, [index]: file }));
-      setValue(`tracks.${index}.audioUrl`, '');
-
-      // Detect audio duration
-      setDetectingDurations(prev => ({ ...prev, [index]: true }));
-      try {
-        const duration = await getAudioDuration(file);
-        setValue(`tracks.${index}.duration`, duration);
-
-        toast({
-          title: 'Audio file selected',
-          description: `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB, ${formatDurationHuman(duration)})`,
-        });
-      } catch {
-        toast({
-          title: 'Audio file selected',
-          description: `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) - Could not detect duration. You can enter it manually.`,
-          variant: 'default',
-        });
-      } finally {
-        setDetectingDurations(prev => ({ ...prev, [index]: false }));
-      }
+  const handleTrackAdd = (track: { title: string; audioUrl: string; duration?: number; explicit: boolean; language: string | null }, audioFile?: File) => {
+    if (audioFile) {
+      setTrackAudioFiles(prev => ({ ...prev, [fields.length]: audioFile }));
     }
+    append({
+      title: track.title,
+      audioUrl: track.audioUrl,
+      duration: track.duration,
+      explicit: track.explicit,
+      language: track.language,
+    });
+  };
+
+  const handleTrackEdit = (index: number, track: { title: string; audioUrl: string; duration?: number; explicit: boolean; language: string | null }, audioFile?: File) => {
+    if (audioFile) {
+      setTrackAudioFiles(prev => ({ ...prev, [index]: audioFile }));
+    }
+    // Update the form field values
+    setValue(`tracks.${index}.title`, track.title);
+    setValue(`tracks.${index}.audioUrl`, track.audioUrl);
+    setValue(`tracks.${index}.duration`, track.duration);
+    setValue(`tracks.${index}.explicit`, track.explicit);
+    setValue(`tracks.${index}.language`, track.language);
+  };
+
+  const handleTrackRemove = (index: number) => {
+    remove(index);
+    // Clean up audio file
+    setTrackAudioFiles(prev => {
+      const newFiles = { ...prev };
+      delete newFiles[index];
+      return newFiles;
+    });
   };
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -546,195 +533,20 @@ export function ReleaseDialog({
 
         {/* Audio Tracks Section */}
         <div className="space-y-4 border-t pt-6">
-          <div className="flex items-center justify-between">
-            <Label className="text-base font-semibold">Audio Tracks *</Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => append({
-                title: '',
-                audioUrl: '',
-                duration: undefined,
-                explicit: false,
-                language: null,
-              })}
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              Add Track
-            </Button>
-          </div>
-
-          {fields.map((field, index) => (
-            <div key={field.id} className="border rounded-lg p-4 space-y-4 transition-colors duration-200">
-              {/* Track Title and Remove */}
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <FormField
-                    control={form.control}
-                    name={`tracks.${index}.title`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input 
-                            placeholder={`Track ${index + 1} title...`} 
-                            className="h-10 text-sm"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                {fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive h-10 w-10 p-0"
-                    onClick={() => remove(index)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-
-              {/* Audio Upload Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-2 block">Upload Audio File</Label>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={(e) => handleTrackAudioFileChange(index, e)}
-                    className="hidden"
-                    id={`audio-upload-${index}`}
-                  />
-                  <label htmlFor={`audio-upload-${index}`}>
-                    <div className="border-2 border-dashed rounded-lg p-3 text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50/30 transition-all duration-200 h-16 flex items-center justify-center">
-                      {trackAudioFiles[index] ? (
-                        <span className="text-green-600 font-medium text-sm">
-                          ✓ {trackAudioFiles[index].name}
-                        </span>
-                      ) : (
-                        <div className="flex items-center gap-2 text-gray-500">
-                          <Upload className="w-4 h-4" />
-                          <span className="text-sm">Upload audio</span>
-                        </div>
-                      )}
-                    </div>
-                  </label>
-                </div>
-                
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-2 block">Or Audio URL</Label>
-                  <FormField
-                    control={form.control}
-                    name={`tracks.${index}.audioUrl`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            placeholder="Paste audio URL..."
-                            disabled={!!trackAudioFiles[index]}
-                            className="h-16 text-sm"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Current audio info for edit mode */}
-              {isEditMode && !trackAudioFiles[index] && release?.tracks?.[index]?.audioUrl && (
-                <div className="text-xs text-foreground p-2 rounded">
-                  <strong>Current:</strong>
-                  <span className="break-all ml-1">{release.tracks[index].audioUrl}</span>
-                </div>
-              )}
-
-              {/* Track Metadata - Fixed sizing */}
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Duration (seconds)</Label>
-                  <FormField
-                    control={form.control}
-                    name={`tracks.${index}.duration`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="180"
-                            disabled={detectingDurations[index]}
-                            className="h-10 text-sm"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Language</Label>
-                  <FormField
-                    control={form.control}
-                    name={`tracks.${index}.language`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <div className="h-10">
-                            <LanguageSelector
-                              selectedLanguage={field.value}
-                              onLanguageChange={field.onChange}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Explicit</Label>
-                  <FormField
-                    control={form.control}
-                    name={`tracks.${index}.explicit`}
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-center rounded-lg border h-10 hover:bg-gray-50/30 transition-colors duration-200">
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Duration and detection feedback */}
-              <div className="flex gap-4 text-xs text-muted-foreground">
-                {form.watch(`tracks.${index}.duration`) && (
-                  <span>Duration: {formatDurationHuman(form.watch(`tracks.${index}.duration`) || 0)}</span>
-                )}
-                {detectingDurations[index] && (
-                  <span>Detecting duration...</span>
-                )}
-              </div>
-            </div>
-          ))}
+          <Label className="text-base font-semibold">Audio Tracks *</Label>
+          <TrackList
+            tracks={fields.map((field, index) => ({
+              title: form.watch(`tracks.${index}.title`) || '',
+              audioUrl: form.watch(`tracks.${index}.audioUrl`) || '',
+              duration: form.watch(`tracks.${index}.duration`) || undefined,
+              explicit: form.watch(`tracks.${index}.explicit`) || false,
+              language: form.watch(`tracks.${index}.language`) || null,
+            }))}
+            onAddTrack={handleTrackAdd}
+            onEditTrack={handleTrackEdit}
+            onRemoveTrack={handleTrackRemove}
+          />
         </div>
-
         {/* Form Actions */}
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button
