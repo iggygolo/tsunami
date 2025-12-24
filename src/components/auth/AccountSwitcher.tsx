@@ -22,7 +22,7 @@ interface AccountSwitcherProps {
 }
 
 export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
-  const { currentUser, otherUsers, setLogin, removeLogin } = useLoggedInAccounts();
+  const { currentUser, removeLogin } = useLoggedInAccounts();
 
   if (!currentUser) return null;
 
@@ -50,27 +50,25 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
         <div className='font-medium text-xs uppercase tracking-wider text-muted-foreground px-2 py-2'>Switch Relay</div>
         <RelaySelector className="w-full" />
         <DropdownMenuSeparator className="my-2" />
-        <div className='font-medium text-xs uppercase tracking-wider text-muted-foreground px-2 py-2'>Switch Account</div>
-        {otherUsers.map((user) => (
+        <DropdownMenuItem
+          onClick={onAddAccountClick}
+          className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
+        >
+          <UserPlus className='w-4 h-4 text-purple-500' />
+          <span>Switch account</span>
+        </DropdownMenuItem>
+        <WalletModal>
           <DropdownMenuItem
-            key={user.id}
-            onClick={() => setLogin(user.id)}
             className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
+            onSelect={(e) => e.preventDefault()}
           >
-            <Avatar className='w-8 h-8 ring-2 ring-transparent hover:ring-purple-500/30 transition-all'>
-              <AvatarImage src={user.metadata.picture} alt={getDisplayName(user)} />
-              <AvatarFallback className="bg-purple-500/10 text-purple-600">{getDisplayName(user)?.charAt(0) || <UserIcon />}</AvatarFallback>
-            </Avatar>
-            <div className='flex-1 truncate'>
-              <p className='text-sm font-medium'>{getDisplayName(user)}</p>
-            </div>
-            {user.id === currentUser.id && <div className='w-2 h-2 rounded-full bg-purple-500'></div>}
+            <Wallet className='w-4 h-4 text-purple-500' />
+            <span>Wallet Settings</span>
           </DropdownMenuItem>
-        ))}
+        </WalletModal>
         <DropdownMenuSeparator className="my-2" />
         {isArtist_user && (
           <>
-            <div className='font-medium text-xs uppercase tracking-wider text-muted-foreground px-2 py-2'>Artist Tools</div>
             <DropdownMenuItem asChild>
               <Link
                 to="/studio"
@@ -83,23 +81,6 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
             <DropdownMenuSeparator className="my-2" />
           </>
         )}
-        <WalletModal>
-          <DropdownMenuItem
-            className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
-            onSelect={(e) => e.preventDefault()}
-          >
-            <Wallet className='w-4 h-4 text-purple-500' />
-            <span>Wallet Settings</span>
-          </DropdownMenuItem>
-        </WalletModal>
-        <DropdownMenuSeparator className="my-2" />
-        <DropdownMenuItem
-          onClick={onAddAccountClick}
-          className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
-        >
-          <UserPlus className='w-4 h-4 text-purple-500' />
-          <span>Add another account</span>
-        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => removeLogin(currentUser.id)}
           className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-red-500/10 focus:bg-red-500/10 text-red-500 hover:text-red-500 focus:text-red-500 transition-all duration-200'

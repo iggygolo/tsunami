@@ -7,21 +7,31 @@ export function useLoginActions() {
   const { nostr } = useNostr();
   const { logins, addLogin, removeLogin } = useNostrLogin();
 
+  // Helper function to clear existing logins before adding a new one
+  const clearAndAddLogin = (login: any) => {
+    // Remove all existing logins
+    logins.forEach(existingLogin => {
+      removeLogin(existingLogin.id);
+    });
+    // Add the new login
+    addLogin(login);
+  };
+
   return {
     // Login with a Nostr secret key
     nsec(nsec: string): void {
       const login = NLogin.fromNsec(nsec);
-      addLogin(login);
+      clearAndAddLogin(login);
     },
     // Login with a NIP-46 "bunker://" URI
     async bunker(uri: string): Promise<void> {
       const login = await NLogin.fromBunker(uri, nostr);
-      addLogin(login);
+      clearAndAddLogin(login);
     },
     // Login with a NIP-07 browser extension
     async extension(): Promise<void> {
       const login = await NLogin.fromExtension();
-      addLogin(login);
+      clearAndAddLogin(login);
     },
     // Log out the current user
     async logout(): Promise<void> {

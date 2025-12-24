@@ -12,7 +12,19 @@ export interface Account {
 
 export function useLoggedInAccounts() {
   const { nostr } = useNostr();
-  const { logins, setLogin, removeLogin } = useNostrLogin();
+  const { logins, setLogin: originalSetLogin, removeLogin } = useNostrLogin();
+
+  // Custom setLogin that removes all other logins when switching
+  const setLogin = (id: string) => {
+    // Remove all logins except the one we're switching to
+    logins.forEach(login => {
+      if (login.id !== id) {
+        removeLogin(login.id);
+      }
+    });
+    // Set the selected login as current
+    originalSetLogin(id);
+  };
 
   const { data: authors = [] } = useQuery({
     queryKey: ['logins', logins.map((l) => l.id).join(';')],
@@ -43,8 +55,8 @@ export function useLoggedInAccounts() {
     return { metadata: {}, ...author, id: login.id, pubkey: login.pubkey };
   })();
 
-  // Other users are all logins except the current one
-  const otherUsers = (authors || []).slice(1) as Account[];
+  // Other users are all logins except the current one (should be empty with single account policy)
+  const otherUsers: Account[] = [];
 
   return {
     authors,
