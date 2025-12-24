@@ -1,6 +1,7 @@
 import { nip19 } from 'nostr-tools';
 import { useParams } from 'react-router-dom';
 import { ReleasePage } from '@/components/music/ReleasePage';
+import { ProfilePage } from '@/components/ProfilePage';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import NotFound from './NotFound';
 
@@ -31,10 +32,15 @@ export function NIP19Page() {
   const { type } = decoded;
 
   switch (type) {
-    case 'npub':
-    case 'nprofile':
-      // AI agent should implement profile view here
-      return <div>Profile placeholder</div>;
+    case 'npub': {
+      const pubkey = decoded.data;
+      return <ProfilePage pubkey={pubkey} />;
+    }
+    
+    case 'nprofile': {
+      const nprofile = decoded.data;
+      return <ProfilePage pubkey={nprofile.pubkey} />;
+    }
 
     case 'note': {
       // Handle note1 identifiers - could be podcast releases (kind 54)

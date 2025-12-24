@@ -1,7 +1,7 @@
 // NOTE: This file is stable and usually should not be modified.
 // It is important that all functionality in this file is preserved, and should only be modified if explicitly requested.
 
-import { ChevronDown, LogOut, UserIcon, UserPlus, Wallet, Settings } from 'lucide-react';
+import { ChevronDown, LogOut, User, UserPlus, Wallet, Settings, Edit } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,12 +10,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu.tsx';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.tsx';
-import { RelaySelector } from '@/components/RelaySelector';
 import { WalletModal } from '@/components/WalletModal';
 import { useLoggedInAccounts, type Account } from '@/hooks/useLoggedInAccounts';
 import { genUserName } from '@/lib/genUserName';
 import { isArtist } from '@/lib/musicConfig';
 import { Link } from 'react-router-dom';
+import { nip19 } from 'nostr-tools';
 
 interface AccountSwitcherProps {
   onAddAccountClick: () => void;
@@ -47,10 +47,15 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className='w-64 p-2 animate-scale-in'>
-        <div className='font-medium text-xs uppercase tracking-wider text-muted-foreground px-2 py-2'>Switch Relay</div>
-        <RelaySelector className="w-full" />
-        <DropdownMenuSeparator className="my-2" />
-        <DropdownMenuSeparator className="my-2" />
+        <DropdownMenuItem asChild>
+          <Link
+            to={`/${nip19.npubEncode(currentUser.pubkey)}`}
+            className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-cyan-500/10 focus:bg-cyan-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
+          >
+            <User className='w-4 h-4 text-cyan-500' />
+            <span>Profile</span>
+          </Link>
+        </DropdownMenuItem>
         {isArtist_user && (
           <>
             <DropdownMenuItem asChild>
@@ -62,9 +67,9 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
                 <span>Studio</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="my-2" />
           </>
         )}
+        <DropdownMenuSeparator className="my-2" />
         <WalletModal>
           <DropdownMenuItem
             className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-purple-500/10 focus:bg-purple-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
