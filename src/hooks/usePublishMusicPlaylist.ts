@@ -33,10 +33,7 @@ async function processPlaylistFormData(
     tracks: formData.trackReferences || [],
     description: formData.description,
     imageUrl,
-    categories: formData.categories,
-    isPublic: formData.isPublic !== false, // Default to true
-    isPrivate: formData.isPrivate || false,
-    isCollaborative: formData.isCollaborative || false
+    categories: formData.categories
   };
 
   return playlistData;

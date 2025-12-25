@@ -71,21 +71,11 @@ export function eventToMusicPlaylist(event: NostrEvent): MusicPlaylistData {
     imageUrl: tags.get('image')?.[0],
     categories: categories.length > 0 ? categories : undefined,
     
-    // Playlist settings
-    isPublic: tags.get('public')?.[0] === 'true',
-    isPrivate: tags.get('private')?.[0] === 'true',
-    isCollaborative: tags.get('collaborative')?.[0] === 'true',
-    
     // Nostr-specific fields
     eventId: event.id,
     authorPubkey: event.pubkey,
     createdAt: new Date(event.created_at * 1000)
   };
-
-  // Default to public if neither public nor private is set
-  if (!playlistData.isPublic && !playlistData.isPrivate) {
-    playlistData.isPublic = true;
-  }
 
   return playlistData;
 }
@@ -295,9 +285,6 @@ export function usePlaylistStats() {
       if (!playlists) return null;
 
       const totalPlaylists = playlists.length;
-      const publicPlaylists = playlists.filter(p => p.isPublic).length;
-      const privatePlaylists = playlists.filter(p => p.isPrivate).length;
-      const collaborativePlaylists = playlists.filter(p => p.isCollaborative).length;
       
       const totalTracks = playlists.reduce((sum, playlist) => sum + playlist.tracks.length, 0);
       const averageTracksPerPlaylist = totalPlaylists > 0 ? totalTracks / totalPlaylists : 0;
@@ -309,9 +296,6 @@ export function usePlaylistStats() {
 
       return {
         totalPlaylists,
-        publicPlaylists,
-        privatePlaylists,
-        collaborativePlaylists,
         totalTracks,
         averageTracksPerPlaylist: Math.round(averageTracksPerPlaylist * 10) / 10,
         longestPlaylist: longestPlaylist.tracks.length > 0 ? longestPlaylist : null

@@ -118,18 +118,6 @@ export function EditPlaylistPage() {
     );
   }
 
-  // Convert playlist data to form data
-  const initialFormData: MusicPlaylistFormData = {
-    title: playlist.title,
-    description: playlist.description || '',
-    imageUrl: playlist.imageUrl,
-    trackReferences: playlist.tracks,
-    categories: playlist.categories,
-    isPublic: playlist.isPublic,
-    isPrivate: playlist.isPrivate,
-    isCollaborative: playlist.isCollaborative,
-  };
-
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="max-w-4xl mx-auto">

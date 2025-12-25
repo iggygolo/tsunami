@@ -49,21 +49,6 @@ export class MusicPlaylistPublisher {
   }
 
   /**
-   * Validate playlist settings for consistency
-   */
-  private validatePlaylistSettings(playlistData: MusicPlaylistData): void {
-    // Can't be both public and private
-    if (playlistData.isPublic && playlistData.isPrivate) {
-      throw new Error('Playlist cannot be both public and private');
-    }
-    
-    // Default to public if neither is specified
-    if (!playlistData.isPublic && !playlistData.isPrivate) {
-      playlistData.isPublic = true;
-    }
-  }
-
-  /**
    * Build tags array for music playlist event
    */
   private buildEventTags(playlistData: MusicPlaylistData): Array<[string, ...string[]]> {
@@ -103,17 +88,7 @@ export class MusicPlaylistPublisher {
     }
     
     // Playlist settings
-    if (playlistData.isPublic) {
-      tags.push(['public', 'true']);
-    }
-    
-    if (playlistData.isPrivate) {
-      tags.push(['private', 'true']);
-    }
-    
-    if (playlistData.isCollaborative) {
-      tags.push(['collaborative', 'true']);
-    }
+    tags.push(['public', 'true']);
     
     return tags;
   }

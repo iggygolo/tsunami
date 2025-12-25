@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -28,9 +27,6 @@ const playlistFormSchema = z.object({
   description: z.string().max(1000, 'Description too long').optional(),
   imageUrl: z.string().url().optional().or(z.literal('')),
   categories: z.array(z.string()).default([]),
-  isPublic: z.boolean().default(true),
-  isPrivate: z.boolean().default(false),
-  isCollaborative: z.boolean().default(false),
 });
 
 type PlaylistFormValues = z.infer<typeof playlistFormSchema>;
@@ -72,10 +68,7 @@ export function PlaylistForm({
       title: '',
       description: '',
       imageUrl: '',
-      categories: [],
-      isPublic: true,
-      isPrivate: false,
-      isCollaborative: false,
+      categories: []
     },
   });
 
@@ -90,9 +83,6 @@ export function PlaylistForm({
         description: playlist.description || '',
         imageUrl: playlist.imageUrl || '',
         categories: playlist.categories || [],
-        isPublic: playlist.isPublic !== false,
-        isPrivate: playlist.isPrivate || false,
-        isCollaborative: playlist.isCollaborative || false,
       });
       setSelectedTracks(playlist.tracks || []);
     }
@@ -394,75 +384,6 @@ export function PlaylistForm({
                           />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Playlist Settings */}
-              <div className="space-y-4 border-t pt-8">
-                <Label className="text-base font-semibold">Playlist Settings</Label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="isPublic"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Public Playlist</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            Visible to everyone
-                          </p>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="isPrivate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Private Playlist</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            Only visible to you
-                          </p>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="isCollaborative"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Collaborative</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            Others can add tracks
-                          </p>
-                        </div>
                       </FormItem>
                     )}
                   />

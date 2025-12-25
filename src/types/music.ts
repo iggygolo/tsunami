@@ -119,11 +119,6 @@ export interface MusicPlaylistData {
   imageUrl?: string;           // Playlist artwork URL
   categories?: string[];       // Category tags for discovery
   
-  // Playlist settings
-  isPublic?: boolean;          // Public playlist (default true)
-  isPrivate?: boolean;         // Private playlist
-  isCollaborative?: boolean;   // Allow others to add tracks
-  
   // Nostr-specific fields
   eventId?: string;            // Event ID (set after publishing)
   authorPubkey?: string;       // Playlist creator's pubkey
@@ -149,11 +144,6 @@ export interface MusicPlaylistFormData {
   imageFile?: File;            // Playlist artwork file
   imageUrl?: string;           // Playlist artwork URL
   categories?: string[];       // Category tags
-  
-  // Playlist settings
-  isPublic?: boolean;
-  isPrivate?: boolean;
-  isCollaborative?: boolean;
 }
 
 /**
