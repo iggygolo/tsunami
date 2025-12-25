@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, ReactNode, createContext, useContext } from 'react';
+import { MUSIC_CONFIG } from '@/lib/musicConfig';
 import type { MusicTrackData } from '@/types/music';
 
 /**
@@ -114,7 +115,7 @@ export function releaseTracksToUniversal(
   return release.tracks.map((track: any, index: number) => ({
     id: `${release.eventId}-track-${index}`,
     title: track.title,
-    artist: release.artistName || 'Unknown Artist',
+    artist: track.artist || MUSIC_CONFIG.music.artistName, // Use track's artist or default to configured artist
     audioUrl: track.audioUrl,
     duration: track.duration,
     imageUrl: track.imageUrl || release.imageUrl,
