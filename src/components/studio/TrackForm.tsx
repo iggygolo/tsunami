@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Upload, Save, Loader2, Plus, X } from 'lucide-react';
+import { Upload, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -19,19 +18,17 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { GenreSelector } from '@/components/ui/genre-selector';
+import { LanguageSelector } from '@/components/ui/language-selector';
 import { useToast } from '@/hooks/useToast';
-import { validateLanguageCode, validateGenre } from '@/lib/musicMetadata';
+import { validateLanguageCode } from '@/lib/musicMetadata';
 import { 
   AUDIO_MIME_TYPES, 
-  AUDIO_EXTENSIONS, 
-  VIDEO_MIME_TYPES,
+  AUDIO_EXTENSIONS,
   validateAudioFile 
 } from '@/lib/fileTypes';
 import type { MusicTrackFormData, MusicTrackData } from '@/types/music';
 
-// Use centralized file type configuration
-
-// Schema for track form
+// Simplified track form schema
 const trackFormSchema = z.object({
   title: z.string().min(1, 'Track title is required').max(200, 'Track title too long'),
   artist: z.string().min(1, 'Artist name is required').max(100, 'Artist name too long'),
@@ -44,9 +41,7 @@ const trackFormSchema = z.object({
     message: 'Invalid audio URL format'
   }),
   
-  // Optional metadata
-  album: z.string().max(200, 'Album name too long').optional(),
-  trackNumber: z.number().positive().optional(),
+  // Release info
   releaseDate: z.string().optional().refine((val) => {
     if (!val) return true;
     return /^\d{4}-\d{2}-\d{2}$/.test(val);
@@ -55,9 +50,8 @@ const trackFormSchema = z.object({
   }),
   duration: z.number().positive().optional(),
   
-  // Media URLs
+  // Media
   imageUrl: z.string().url().optional().or(z.literal('')),
-  videoUrl: z.string().url().optional().or(z.literal('')),
   
   // Content
   lyrics: z.string().optional(),
@@ -94,8 +88,6 @@ export function TrackForm({
   
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [currentGenre, setCurrentGenre] = useState('');
 
   const isEditMode = mode === 'edit' && track;
 
@@ -106,12 +98,9 @@ export function TrackForm({
       artist: '',
       description: '',
       audioUrl: '',
-      album: '',
-      trackNumber: undefined,
       releaseDate: '',
       duration: undefined,
       imageUrl: '',
-      videoUrl: '',
       lyrics: '',
       credits: '',
       language: null,
@@ -129,14 +118,11 @@ export function TrackForm({
       reset({
         title: track.title,
         artist: track.artist,
-        description: '', // MusicTrackData doesn't have description, so use empty string
+        description: track.description || '',
         audioUrl: track.audioUrl || '',
-        album: track.album || '',
-        trackNumber: track.trackNumber,
         releaseDate: track.releaseDate || '',
         duration: track.duration,
         imageUrl: track.imageUrl || '',
-        videoUrl: track.videoUrl || '',
         lyrics: track.lyrics || '',
         credits: track.credits || '',
         language: track.language || null,
@@ -172,6 +158,22 @@ export function TrackForm({
       setAudioFile(file);
       setValue('audioUrl', '');
 
+      // Extract audio duration
+      const audio = new Audio();
+      const url = URL.createObjectURL(file);
+      audio.src = url;
+      
+      audio.addEventListener('loadedmetadata', () => {
+        if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+          setValue('duration', Math.round(audio.duration));
+        }
+        URL.revokeObjectURL(url);
+      });
+
+      audio.addEventListener('error', () => {
+        URL.revokeObjectURL(url);
+      });
+
       toast({
         title: 'Audio file selected',
         description: `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`,
@@ -204,68 +206,18 @@ export function TrackForm({
       setValue('imageUrl', '');
 
       toast({
-        title: 'Cover image selected',
+        title: 'Track image selected',
         description: `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`,
       });
-    }
-  };
-
-  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('video/')) {
-        toast({
-          title: 'Invalid file type',
-          description: 'Please select a video file.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      if (file.size > 500 * 1024 * 1024) { // 500MB limit
-        toast({
-          title: 'File too large',
-          description: 'Video file must be less than 500MB.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      setVideoFile(file);
-      setValue('videoUrl', '');
-
-      toast({
-        title: 'Video file selected',
-        description: `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`,
-      });
-    }
-  };
-
-  const addGenre = () => {
-    if (currentGenre.trim() && !genres.includes(currentGenre.trim())) {
-      setValue('genres', [...genres, currentGenre.trim()]);
-      setCurrentGenre('');
-    }
-  };
-
-  const removeGenre = (genreToRemove: string) => {
-    setValue('genres', genres.filter(genre => genre !== genreToRemove));
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addGenre();
     }
   };
 
   const handleSubmit = async (data: TrackFormValues) => {
     try {
-      // Validate that either audio file or URL is provided
       if (!audioFile && !data.audioUrl) {
         toast({
           title: 'Audio required',
-          description: 'Please provide either an audio file or audio URL.',
+          description: 'Please upload an audio file or provide an audio URL.',
           variant: 'destructive',
         });
         return;
@@ -274,21 +226,18 @@ export function TrackForm({
       const trackData: MusicTrackFormData = {
         title: data.title,
         artist: data.artist,
+        description: data.description,
         audioFile: audioFile || undefined,
-        imageFile: imageFile || undefined,
-        videoFile: videoFile || undefined,
-        audioType: audioFile?.type,
-        description: data.description || undefined,
-        album: data.album || undefined,
-        trackNumber: data.trackNumber,
+        audioUrl: data.audioUrl || undefined,
         releaseDate: data.releaseDate || undefined,
+        duration: data.duration,
+        imageFile: imageFile || undefined,
         imageUrl: data.imageUrl || undefined,
-        videoUrl: data.videoUrl || undefined,
-        lyrics: data.lyrics || undefined,
-        credits: data.credits || undefined,
+        lyrics: data.lyrics,
+        credits: data.credits,
         language: data.language || undefined,
         explicit: data.explicit,
-        genres: data.genres || undefined,
+        genres: data.genres,
       };
 
       await onSubmit(trackData);
@@ -311,17 +260,16 @@ export function TrackForm({
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
               {/* Basic Information */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                {/* Cover Art */}
+                {/* Cover Art - Left Side */}
                 <div className="space-y-4">
-                  <Label className="text-base font-semibold">Cover Art</Label>
+                  <Label className="text-base font-semibold">Track Cover</Label>
                   
                   <div className="aspect-square w-full max-w-sm">
                     {(imageFile || (isEditMode && track?.imageUrl)) ? (
                       <div className="relative w-full h-full group cursor-pointer">
                         <img 
                           src={imageFile ? URL.createObjectURL(imageFile) : track?.imageUrl} 
-                          alt="Track cover art" 
+                          alt="Track cover" 
                           className="w-full h-full rounded-lg object-cover border shadow-lg transition-all duration-200 group-hover:brightness-75"
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-center justify-center">
@@ -353,7 +301,7 @@ export function TrackForm({
                           <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4 group-hover:bg-muted/80 transition-colors duration-200">
                             <Upload className="w-8 h-8 text-muted-foreground group-hover:text-foreground transition-colors duration-200" />
                           </div>
-                          <p className="text-muted-foreground font-medium mb-1 group-hover:text-foreground transition-colors duration-200">Upload Cover Art</p>
+                          <p className="text-muted-foreground font-medium mb-1 group-hover:text-foreground transition-colors duration-200">Upload Cover</p>
                           <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-200">Click to select image</p>
                         </label>
                       </div>
@@ -377,6 +325,8 @@ export function TrackForm({
                     )}
                   />
                 </div>
+
+                {/* Basic Info - Right Side */}
                 <div className="space-y-6">
                   <FormField
                     control={form.control}
@@ -432,201 +382,84 @@ export function TrackForm({
                       </FormItem>
                     )}
                   />
-                </div>
-              </div>
-
-              {/* Audio Upload */}
-              <div className="space-y-4 border-t pt-8">
-                <Label className="text-xl font-semibold">Audio File *</Label>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 hover:border-muted-foreground/50 hover:bg-muted/30 transition-all duration-200">
-                      <input
-                        type="file"
-                        accept={AUDIO_MIME_TYPES.join(',')}
-                        onChange={handleAudioFileChange}
-                        className="hidden"
-                        id="audio-upload"
-                      />
-                      <label htmlFor="audio-upload" className="cursor-pointer flex flex-col items-center">
-                        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center mb-3">
-                          <Upload className="w-6 h-6 text-muted-foreground" />
-                        </div>
-                        <p className="text-foreground font-medium mb-1">
-                          {audioFile ? audioFile.name : 'Upload Audio File'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {audioFile 
-                            ? `${(audioFile.size / 1024 / 1024).toFixed(1)}MB`
-                            : `Supports: ${AUDIO_EXTENSIONS.join(', ').toUpperCase()}`
-                          }
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="audioUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Or Audio URL</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="https://example.com/track.mp3"
-                              disabled={!!audioFile}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Metadata */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t pt-8">
-                <div className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="album"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Album</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Album name..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="trackNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Track Number</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="1" 
-                              {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="releaseDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Release Date</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="date"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
 
                   <FormField
                     control={form.control}
-                    name="language"
+                    name="releaseDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Language</FormLabel>
+                        <FormLabel>Release Date</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="en, es, fr, etc. (ISO 639-1 code)"
+                          <Input
+                            type="date"
                             {...field}
-                            value={field.value || ''}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="explicit"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Explicit Content</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            Check if this track contains explicit content
-                          </p>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
                 </div>
+              </div>
 
-                <div className="space-y-6">
-                  {/* Genres */}
-                  <div className="space-y-3">
-                    <Label className="text-base font-semibold">Genres</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={currentGenre}
-                        onChange={(e) => setCurrentGenre(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Add genre..."
-                        className="flex-1"
-                      />
-                      <Button type="button" onClick={addGenre} variant="outline">
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    {genres.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {genres.map((genre) => (
-                          <Badge key={genre} variant="secondary" className="text-sm">
-                            {genre}
-                            <button
-                              type="button"
-                              onClick={() => removeGenre(genre)}
-                              className="ml-2 hover:text-red-500"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
+              {/* Audio File - Smaller Section */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Audio File *</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    {audioFile ? (
+                      <div className="p-4 border rounded-lg bg-muted">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                            <Upload className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{audioFile.name}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>{(audioFile.size / 1024 / 1024).toFixed(1)}MB</span>
+                              {form.watch('duration') && (
+                                <>
+                                  <span>•</span>
+                                  <span>{Math.floor(form.watch('duration')! / 60)}:{(form.watch('duration')! % 60).toString().padStart(2, '0')}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-4 hover:border-muted-foreground/50 hover:bg-muted/30 transition-all duration-200">
+                        <input
+                          type="file"
+                          accept={AUDIO_MIME_TYPES.join(',')}
+                          onChange={handleAudioFileChange}
+                          className="hidden"
+                          id="audio-upload"
+                        />
+                        <label htmlFor="audio-upload" className="cursor-pointer flex flex-col items-center">
+                          <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center mb-2">
+                            <Upload className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                          <p className="text-foreground font-medium mb-1 text-sm">
+                            Upload Audio File
+                          </p>
+                          <p className="text-xs text-muted-foreground text-center">
+                            Supports: {AUDIO_EXTENSIONS.join(', ').toUpperCase()}
+                          </p>
+                        </label>
                       </div>
                     )}
                   </div>
-
+                  
                   <FormField
                     control={form.control}
-                    name="videoUrl"
+                    name="audioUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Music Video URL</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="https://example.com/video.mp4"
-                            disabled={!!videoFile}
+                            placeholder="Or paste audio URL..."
+                            disabled={!!audioFile}
                             {...field}
                           />
                         </FormControl>
@@ -634,39 +467,46 @@ export function TrackForm({
                       </FormItem>
                     )}
                   />
-
-                  <div className="space-y-4">
-                    <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-4 hover:border-muted-foreground/50 hover:bg-muted/30 transition-all duration-200">
-                      <input
-                        type="file"
-                        accept={VIDEO_MIME_TYPES.join(',')}
-                        onChange={handleVideoFileChange}
-                        className="hidden"
-                        id="video-upload"
-                      />
-                      <label htmlFor="video-upload" className="cursor-pointer flex items-center gap-3">
-                        <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
-                          <Upload className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">
-                            {videoFile ? videoFile.name : 'Upload Video File'}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {videoFile 
-                              ? `${(videoFile.size / 1024 / 1024).toFixed(1)}MB`
-                              : 'Optional music video'
-                            }
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="space-y-6 border-t pt-8">
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Genres */}
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">Genres</Label>
+                  <GenreSelector
+                    multiSelect={true}
+                    selectedGenres={genres}
+                    onGenresChange={(newGenres) => setValue('genres', newGenres)}
+                    placeholder="Select genres..."
+                    maxGenres={5}
+                  />
+                </div>
+
+                {/* Language */}
+                <FormField
+                  control={form.control}
+                  name="language"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Language</FormLabel>
+                      <FormControl>
+                        <LanguageSelector
+                          selectedLanguage={field.value}
+                          onLanguageChange={(value) => field.onChange(value)}
+                          placeholder="Select language..."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Additional Content */}
+              <div className="space-y-6">
+                {/* Lyrics */}
                 <FormField
                   control={form.control}
                   name="lyrics"
@@ -677,7 +517,29 @@ export function TrackForm({
                         <Textarea
                           placeholder="Enter track lyrics..."
                           rows={8}
-                          className="resize-none font-mono text-sm"
+                          className="resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Credits and Settings */}
+              <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="credits"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Credits</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Producer, songwriter, etc..."
+                          rows={3}
+                          className="resize-none"
                           {...field}
                         />
                       </FormControl>
@@ -688,19 +550,21 @@ export function TrackForm({
 
                 <FormField
                   control={form.control}
-                  name="credits"
+                  name="explicit"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold">Credits</FormLabel>
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
-                        <Textarea
-                          placeholder="Producer: John Doe&#10;Songwriter: Jane Smith&#10;Mixed by: Audio Engineer"
-                          rows={4}
-                          className="resize-none"
-                          {...field}
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      <FormMessage />
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Explicit Content</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Check if this track contains explicit content
+                        </p>
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -720,12 +584,12 @@ export function TrackForm({
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {submitButtonLoadingText || (isEditMode ? 'Updating...' : 'Publishing...')}
+                      {submitButtonLoadingText || (isEditMode ? 'Updating...' : 'Creating...')}
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      {submitButtonText || (isEditMode ? 'Update Track' : 'Publish Track')}
+                      {submitButtonText || (isEditMode ? 'Update Track' : 'Create Track')}
                     </>
                   )}
                 </Button>
