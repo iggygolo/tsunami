@@ -13,7 +13,7 @@ import { PersistentAudioPlayer } from "./components/audio/PersistentAudioPlayer"
 import { 
   StudioLayout, 
   Settings as StudioSettings, 
-  Releases as StudioReleases, 
+  ReleaseManagement as StudioReleases, 
   Providers as StudioProviders, 
   Analytics as StudioAnalytics,
   CreateRelease as StudioCreateRelease,

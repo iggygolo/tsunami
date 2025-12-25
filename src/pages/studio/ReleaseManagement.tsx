@@ -46,7 +46,7 @@ import { useDeleteRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { AudioPlayer } from '@/components/music/AudioPlayer';
 import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
-import { ShareReleaseDialog } from './ShareReleaseDialog';
+import { ShareReleaseDialog } from '@/components/studio/ShareReleaseDialog';
 
 interface ReleaseManagementProps {
   className?: string;
@@ -436,3 +436,5 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
     </div>
   );
 }
+
+export default ReleaseManagement;
