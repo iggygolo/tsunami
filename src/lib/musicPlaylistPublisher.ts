@@ -127,9 +127,6 @@ export class MusicPlaylistPublisher {
     // Validate required fields
     this.validateRequiredFields(playlistData);
     
-    // Validate playlist settings
-    this.validatePlaylistSettings(playlistData);
-    
     // Build event structure
     const tags = this.buildEventTags(playlistData);
     const content = this.buildEventContent(playlistData);
