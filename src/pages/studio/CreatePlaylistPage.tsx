@@ -58,13 +58,6 @@ export function CreatePlaylistPage() {
           </Button>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Create New Playlist</h1>
-          <p className="text-muted-foreground">
-            Organize your tracks into a playlist and share it with your audience.
-          </p>
-        </div>
-
         {/* Form */}
         <PlaylistForm
           mode="create"

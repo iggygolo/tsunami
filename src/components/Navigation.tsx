@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { Headphones, Menu } from 'lucide-react';
+import { Headphones, Menu, Settings, Music, ListMusic, Zap, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { LoginArea } from '@/components/auth/LoginArea';
 import {
   Sheet,
@@ -30,6 +31,18 @@ export function Navigation({ className }: NavigationProps) {
 
   const mainNavItems = getMainNavItems();
   const secondaryNavItems = getSecondaryNavItems();
+  
+  // Check if we're in studio mode
+  const isStudioMode = location.pathname.startsWith('/studio');
+  
+  // Studio navigation items
+  const studioNavItems = [
+    { path: '/studio/tracks', label: 'Tracks', icon: Music },
+    { path: '/studio/playlists', label: 'Playlists', icon: ListMusic },
+    { path: '/studio/analytics', label: 'Analytics', icon: Zap },
+    { path: '/studio/settings', label: 'Settings', icon: Settings },
+    { path: '/studio/providers', label: 'Providers', icon: Server },
+  ];
 
   return (
     <header className={cn(
@@ -50,19 +63,57 @@ export function Navigation({ className }: NavigationProps) {
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] p-0">
                 <div className="flex flex-col h-full">
-                  {/* Logo in Menu */}
+                  {/* Logo in Menu with Studio Badge */}
                   <div className="p-6 border-b border-border">
                     <Link 
                       to="/" 
                       className="flex items-center hover:opacity-80 transition-opacity"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <h1 className="text-xl font-bold gradient-text truncate">{musicConfig.music.artistName}</h1>
+                      <div className="flex items-center space-x-2">
+                        <h1 className="text-xl font-bold gradient-text truncate">{musicConfig.music.artistName}</h1>
+                        {isStudioMode && (
+                          <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/20 text-primary border-primary/30 hover:bg-primary/30 transition-colors">
+                            Studio
+                          </Badge>
+                        )}
+                      </div>
                     </Link>
                   </div>
 
                   {/* Navigation Items */}
                   <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+                    {/* Studio Navigation (if in studio mode) */}
+                    {isStudioMode && (
+                      <div className="space-y-2">
+                        <h3 className="text-sm font-medium text-muted-foreground px-3">Studio</h3>
+                        {studioNavItems.map((item) => {
+                          const Icon = item.icon;
+                          const active = isActive(item.path);
+
+                          return (
+                            <Button
+                              key={item.path}
+                              variant="ghost"
+                              size="sm"
+                              asChild
+                              className={cn(
+                                "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-primary",
+                                active && "bg-primary/10 border border-primary/20 text-primary shadow-sm hover:translate-x-0"
+                              )}
+                            >
+                              <Link to={item.path} className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
+                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-primary")} />
+                                <div className="text-left min-w-0">
+                                  <div className="font-medium">{item.label}</div>
+                                </div>
+                              </Link>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     {/* Main Navigation */}
                     <div className="space-y-2">
                       {/* Home item - only in mobile menu */}
@@ -83,7 +134,54 @@ export function Navigation({ className }: NavigationProps) {
                           </div>
                         </Link>
                       </Button>
-                      {[...mainNavItems,...secondaryNavItems].map((item) => {
+                      
+                      {/* Show main nav items */}
+                      {mainNavItems.map((item) => {
+                        const Icon = item.icon;
+                        const active = !item.external && isActive(item.path);
+                        const isRSS = item.path === '/rss.xml';
+
+                        return (
+                          <Button
+                            key={item.path}
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            className={cn(
+                              "w-full justify-start h-auto py-3 px-3 focus-ring transition-all duration-200 hover:bg-transparent hover:translate-x-1 hover:text-cyan-400",
+                              active && "bg-cyan-500/5 border border-cyan-500/20 text-foreground shadow-sm hover:translate-x-0",
+                              isRSS && "text-orange-400 hover:text-orange-300"
+                            )}
+                          >
+                            {'external' in item && item.external ? (
+                              <a
+                                href={item.path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-start space-x-3"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-400", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
+                                <div className="text-left min-w-0">
+                                  <div className="font-medium">{item.label}</div>
+                                  <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
+                                </div>
+                              </a>
+                            ) : (
+                              <Link to={item.path} className="flex items-start space-x-3" onClick={() => setIsMobileMenuOpen(false)}>
+                                <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0 transition-colors", active && "text-cyan-400", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
+                                <div className="text-left min-w-0">
+                                  <div className="font-medium">{item.label}</div>
+                                  <div className={cn("text-xs truncate", active ? "text-foreground/60" : "text-muted-foreground")}>{item.description}</div>
+                                </div>
+                              </Link>
+                            )}
+                          </Button>
+                        );
+                      })}
+                      
+                      {/* Show secondary nav items only when not in studio mode */}
+                      {!isStudioMode && secondaryNavItems.map((item) => {
                         const Icon = item.icon;
                         const active = !item.external && isActive(item.path);
                         const isRSS = item.path === '/rss.xml';
@@ -127,7 +225,6 @@ export function Navigation({ className }: NavigationProps) {
                         );
                       })}
                     </div>
-
                   </nav>
 
                   {/* Login Area at bottom */}
@@ -141,79 +238,119 @@ export function Navigation({ className }: NavigationProps) {
               </SheetContent>
             </Sheet>
 
-            {/* Logo */}
+            {/* Logo with Studio Badge */}
             <Link to="/" className="flex items-center hover:opacity-80 transition-opacity px-3 py-2 rounded-lg">
-              <h1 className="text-xl font-bold gradient-text">{musicConfig.music.artistName}</h1>
+              <div className="flex items-center space-x-2">
+                <h1 className="text-xl font-bold gradient-text">{musicConfig.music.artistName}</h1>
+                {isStudioMode && (
+                  <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/20 text-primary border-primary/30 hover:bg-primary/30 transition-colors">
+                    Studio
+                  </Badge>
+                )}
+              </div>
             </Link>
           </div>
 
-          {/* Center: Main Navigation (desktop only) */}
+          {/* Center: Main Navigation or Studio Navigation (desktop only) */}
           <nav className="hidden lg:flex items-center space-x-1">
-            {mainNavItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
+            {isStudioMode ? (
+              // Studio Navigation
+              <>
+                {studioNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.path);
 
-              return (
-                <Button
-                  key={item.path}
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className={cn(
-                    "relative focus-ring transition-all duration-200 hover:bg-cyan-500/10",
-                    active && "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40"
-                  )}
-                >
-                  <Link to={item.path} className="flex items-center space-x-2">
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                </Button>
-              );
-            })}
+                  return (
+                    <Button
+                      key={item.path}
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className={cn(
+                        "relative focus-ring transition-all duration-200 hover:bg-primary/10",
+                        active && "bg-primary/20 text-primary border border-primary/30 shadow-sm"
+                      )}
+                    >
+                      <Link to={item.path} className="flex items-center space-x-2">
+                        <Icon className="w-4 h-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </Button>
+                  );
+                })}
+              </>
+            ) : (
+              // Regular Navigation
+              <>
+                {mainNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.path);
+
+                  return (
+                    <Button
+                      key={item.path}
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className={cn(
+                        "relative focus-ring transition-all duration-200 hover:bg-cyan-500/10",
+                        active && "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40"
+                      )}
+                    >
+                      <Link to={item.path} className="flex items-center space-x-2">
+                        <Icon className="w-4 h-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </Button>
+                  );
+                })}
+              </>
+            )}
           </nav>
 
           {/* Right: Secondary Nav + Artist Studio + Login */}
           <div className="flex items-center space-x-2">
-            {/* Secondary nav items (desktop only) */}
-            <div className="hidden lg:flex items-center space-x-1">
-              {secondaryNavItems.map((item) => {
-                const Icon = item.icon;
-                const active = !item.external && isActive(item.path);
-                const isRSS = item.path === '/rss.xml';
+            {/* Secondary nav items (desktop only) - Hide in studio mode */}
+            {!isStudioMode && (
+              <div className="hidden lg:flex items-center space-x-1">
+                {secondaryNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = !item.external && isActive(item.path);
+                  const isRSS = item.path === '/rss.xml';
 
-                return (
-                  <Button
-                    key={item.path}
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                    className={cn(
-                      "focus-ring transition-all duration-200 hover:bg-cyan-500/10",
-                      active && "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40",
-                      isRSS && "text-orange-400 hover:text-orange-300"
-                    )}
-                  >
-                    {item.external ? (
-                      <a
-                        href={item.path}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center space-x-2"
-                      >
-                        <Icon className={cn("w-4 h-4", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
-                        <span className="hidden xl:inline">{item.label}</span>
-                      </a>
-                    ) : (
-                      <Link to={item.path} className="flex items-center space-x-2">
-                        <Icon className={cn("w-4 h-4", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
-                        <span className="hidden xl:inline">{item.label}</span>
-                      </Link>
-                    )}
-                  </Button>
-                );
-              })}
-            </div>
+                  return (
+                    <Button
+                      key={item.path}
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className={cn(
+                        "focus-ring transition-all duration-200 hover:bg-cyan-500/10",
+                        active && "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40",
+                        isRSS && "text-orange-400 hover:text-orange-300"
+                      )}
+                    >
+                      {item.external ? (
+                        <a
+                          href={item.path}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center space-x-2"
+                        >
+                          <Icon className={cn("w-4 h-4", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
+                          <span className="hidden xl:inline">{item.label}</span>
+                        </a>
+                      ) : (
+                        <Link to={item.path} className="flex items-center space-x-2">
+                          <Icon className={cn("w-4 h-4", isRSS && "drop-shadow-[0_0_6px_rgba(251,146,60,0.8)]")} />
+                          <span className="hidden xl:inline">{item.label}</span>
+                        </Link>
+                      )}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Login area */}
             <LoginArea className="max-w-60" />

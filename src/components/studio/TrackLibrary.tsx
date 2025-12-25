@@ -168,12 +168,12 @@ export function TrackLibrary({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-4">
+      {/* Simplified Header */}
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Track Library</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-foreground">Tracks</h1>
+          <p className="text-muted-foreground text-sm">
             {isLoading ? 'Loading...' : `${filteredTracks.length} track${filteredTracks.length !== 1 ? 's' : ''}`}
           </p>
         </div>
@@ -183,40 +183,38 @@ export function TrackLibrary({
         </Button>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* Simplified Search and Filters */}
+      <div className="flex gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
-            placeholder="Search tracks by title, artist, album, or genre..."
+            placeholder="Search tracks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
         </div>
         
-        <div className="flex gap-2">
-          <Select value={sortBy} onValueChange={(value: 'date' | 'title' | 'album') => setSortBy(value)}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date">Date</SelectItem>
-              <SelectItem value="title">Title</SelectItem>
-              <SelectItem value="album">Album</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={sortOrder} onValueChange={(value: 'asc' | 'desc') => setSortOrder(value)}>
-            <SelectTrigger className="w-24">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="desc">↓</SelectItem>
-              <SelectItem value="asc">↑</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={sortBy} onValueChange={(value: 'date' | 'title' | 'album') => setSortBy(value)}>
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="date">Date</SelectItem>
+            <SelectItem value="title">Title</SelectItem>
+            <SelectItem value="album">Album</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        <Select value={sortOrder} onValueChange={(value: 'asc' | 'desc') => setSortOrder(value)}>
+          <SelectTrigger className="w-24">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="desc">↓</SelectItem>
+            <SelectItem value="asc">↑</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Track Grid - Smaller Cards */}
