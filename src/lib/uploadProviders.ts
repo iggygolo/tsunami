@@ -89,7 +89,7 @@ export class VercelUploadProvider implements UploadProvider {
       // Map unsupported content types to supported ones for Vercel Blob
       let contentType = file.type;
       if (file.type === 'audio/wave' || file.type === 'audio/wav' || file.type === 'audio/x-wav') {
-        contentType = 'audio/mpeg'; // Map WAV variants to MP3 for Vercel compatibility
+        contentType = 'audio/x-wav'; // Use audio/x-wav for Vercel compatibility
         console.log(`Mapping ${file.type} to ${contentType} for Vercel compatibility`);
       }
       
