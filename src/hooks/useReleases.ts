@@ -10,7 +10,7 @@ import {
   eventToMusicPlaylist,
   playlistToRelease,
   trackToRelease,
-  eventToPodcastRelease,
+  eventToRelease,
   deduplicateEventsByIdentifier,
   getEventIdentifier
 } from '@/lib/eventConversions';
@@ -363,7 +363,7 @@ export function usePodcastRelease(playlistId: string) {
       // Handle any other supported event type
       try {
         console.log('🔄 usePodcastRelease - Attempting generic event conversion');
-        const release = eventToPodcastRelease(event);
+        const release = eventToRelease(event);
         
         console.log('🎉 usePodcastRelease - Generic release created:', {
           title: release.title,
@@ -420,4 +420,4 @@ export function useArtistStats() {
   });
 }
 // Re-export centralized conversion functions for backward compatibility
-export { playlistToRelease, trackToRelease, eventToPodcastRelease } from '@/lib/eventConversions';
+export { playlistToRelease, trackToRelease, eventToRelease } from '@/lib/eventConversions';

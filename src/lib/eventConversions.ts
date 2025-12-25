@@ -213,12 +213,13 @@ export function eventToMusicPlaylist(event: NostrEvent): MusicPlaylistData {
 }
 
 // ============================================================================
-// LEGACY COMPATIBILITY FUNCTIONS
+// UI CONVERSION FUNCTIONS
 // ============================================================================
 
 /**
- * Converts playlist and track data to legacy PodcastRelease format for backward compatibility
- * Improved with better error handling and data validation
+ * Converts playlist and track data to MusicRelease format for UI compatibility
+ * This function combines playlist metadata with resolved track data to create
+ * a unified release structure that the UI components can consume.
  */
 export function playlistToRelease(
   playlist: MusicPlaylistData, 
@@ -321,8 +322,9 @@ export function playlistToRelease(
 }
 
 /**
- * Legacy function for backward compatibility - converts single track to release format
- * Improved with better metadata handling and validation
+ * Converts single track data to MusicRelease format for UI compatibility
+ * This function creates a release structure from individual track data,
+ * allowing single tracks to be displayed using the same UI components as playlists.
  */
 export function trackToRelease(track: MusicTrackData): MusicRelease {
   // Create a comprehensive description from available metadata
@@ -384,10 +386,11 @@ export function trackToRelease(track: MusicTrackData): MusicRelease {
 }
 
 /**
- * Reworked function for converting events to release format
- * Only handles modern music event kinds (36787 tracks, 34139 playlists)
+ * Converts Nostr events to MusicRelease format for UI compatibility
+ * Handles both music track events (Kind 36787) and playlist events (Kind 34139)
+ * and converts them to a unified release structure for UI consumption.
  */
-export function eventToPodcastRelease(event: NostrEvent): MusicRelease {
+export function eventToRelease(event: NostrEvent): MusicRelease {
   // Handle music track events (Kind 36787)
   if (event.kind === MUSIC_KINDS.MUSIC_TRACK && validateMusicTrack(event)) {
     const track = eventToMusicTrack(event);

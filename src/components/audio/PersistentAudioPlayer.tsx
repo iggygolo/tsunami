@@ -17,7 +17,6 @@ import { ZapDialog } from '@/components/ZapDialog';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useGlassEffect } from '@/hooks/useBackdropSupport';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
-import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
 import { useNavigate } from 'react-router-dom';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -29,7 +28,6 @@ export function PersistentAudioPlayer() {
     stop,
     seekTo,
     setVolume,
-    setPlaybackRate,
     nextTrack,
     previousTrack
   } = useAudioPlayer();
@@ -45,6 +43,10 @@ export function PersistentAudioPlayer() {
   }
 
   const release = state.currentRelease;
+  const currentTrack = state.currentTrack;
+
+  // Determine the image to display with proper fallback hierarchy
+  const displayImage = currentTrack?.imageUrl || release.imageUrl;
 
   // Create NostrEvent for zap functionality
   const releaseEvent: NostrEvent = {
@@ -115,10 +117,6 @@ export function PersistentAudioPlayer() {
     seekTo(Math.min(state.duration, state.currentTime + 15));
   };
 
-  const handlePlaybackRateChange = (rate: number) => {
-    setPlaybackRate(rate);
-  };
-
   const handleNavigateToRelease = () => {
     if (release.eventId || release.id) {
       const eventId = release.eventId || release.id;
@@ -151,11 +149,11 @@ export function PersistentAudioPlayer() {
         <div className="sm:hidden">
           {/* Top Row: Track Info */}
           <div className="flex items-center space-x-3 mb-3">
-            {release.imageUrl && (
+            {displayImage && (
               <div className="relative">
                 <img
-                  src={release.imageUrl}
-                  alt={release.title}
+                  src={displayImage}
+                  alt={currentTrack?.title || release.title}
                   className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
                   onClick={handleNavigateToRelease}
                 />
@@ -168,7 +166,7 @@ export function PersistentAudioPlayer() {
             )}
             <div className="min-w-0 flex-1">
               <p className="font-medium text-sm line-clamp-1 text-white">
-                {release.tracks[state.currentTrackIndex]?.title || `Track ${state.currentTrackIndex + 1}`}
+                {currentTrack?.title || `Track ${state.currentTrackIndex + 1}`}
               </p>
               <p className="text-xs text-white/70 line-clamp-1">
                 <button 
@@ -279,11 +277,11 @@ export function PersistentAudioPlayer() {
         <div className="hidden sm:flex items-center">
           {/* Left: Album Art & Track Info */}
           <div className="flex items-center space-x-3 min-w-0 w-1/3">
-            {release.imageUrl && (
+            {displayImage && (
               <div className="relative">
                 <img
-                  src={release.imageUrl}
-                  alt={release.title}
+                  src={displayImage}
+                  alt={currentTrack?.title || release.title}
                   className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
                   onClick={handleNavigateToRelease}
                 />
@@ -296,7 +294,7 @@ export function PersistentAudioPlayer() {
             )}
             <div className="min-w-0 flex-1">
               <p className="font-medium text-xs sm:text-sm line-clamp-1 text-white">
-                {release.tracks[state.currentTrackIndex]?.title || `Track ${state.currentTrackIndex + 1}`}
+                {currentTrack?.title || `Track ${state.currentTrackIndex + 1}`}
               </p>
               <p className="text-xs text-white/70 line-clamp-1">
                 <button 

@@ -1,8 +1,9 @@
 import { createContext } from 'react';
-import type { MusicRelease, MusicTrackData } from '@/types/music';
+import type { MusicRelease, MusicTrackData, ReleaseTrack } from '@/types/music';
 
 interface AudioPlayerState {
   currentRelease: MusicRelease | null;
+  currentTrack: ReleaseTrack | null;
   currentTrackIndex: number;
   isPlaying: boolean;
   currentTime: number;

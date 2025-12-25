@@ -11,6 +11,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const [state, setState] = useState<AudioPlayerState>({
     currentRelease: null,
+    currentTrack: null,
     currentTrackIndex: 0,
     isPlaying: false,
     currentTime: 0,
@@ -133,6 +134,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
       setState(prev => ({
         ...prev,
         currentRelease: release,
+        currentTrack: track,
         currentTrackIndex: validTrackIndex,
         currentTime: 0,
         error: null
@@ -183,7 +185,8 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         audioUrl: track.audioUrl,
         duration: track.duration,
         explicit: track.explicit || false,
-        language: track.language || null
+        language: track.language || null,
+        imageUrl: track.imageUrl // Include individual track image
       }],
       publishDate: track.createdAt || new Date(),
       tags: track.genres || [],
@@ -230,6 +233,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     setState(prev => ({
       ...prev,
       currentRelease: null,
+      currentTrack: null,
       currentTime: 0,
       isPlaying: false
     }));
