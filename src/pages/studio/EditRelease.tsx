@@ -125,6 +125,7 @@ const EditRelease = () => {
       <ReleaseForm
         mode="edit"
         release={release}
+        releaseId={releaseId}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isSubmitting={isUpdating}

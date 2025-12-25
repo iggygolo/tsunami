@@ -51,6 +51,7 @@ type ReleaseFormValues = z.infer<typeof releaseSchema>;
 interface ReleaseFormProps {
   mode: 'create' | 'edit';
   release?: MusicRelease;
+  releaseId?: string; // Add releaseId prop
   onSubmit: (data: ReleaseFormData) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
@@ -61,6 +62,7 @@ interface ReleaseFormProps {
 export function ReleaseForm({
   mode,
   release,
+  releaseId,
   onSubmit,
   onCancel,
   isSubmitting,
@@ -109,13 +111,7 @@ export function ReleaseForm({
           duration: track.duration,
           explicit: track.explicit || false,
           language: track.language || null,
-        })) || [{
-          title: release.title,
-          audioUrl: '',
-          duration: undefined,
-          explicit: false,
-          language: null,
-        }],
+        })) || [],
       });
     }
   }, [release, reset, isEditMode]);
@@ -409,16 +405,18 @@ export function ReleaseForm({
               <div className="space-y-6 border-t pt-8">
                 <Label className="text-xl font-semibold">Audio Tracks *</Label>
                 <TrackList
-                  tracks={fields.map((field, index) => ({
-                    title: form.watch(`tracks.${index}.title`) || '',
-                    audioUrl: form.watch(`tracks.${index}.audioUrl`) || '',
-                    duration: form.watch(`tracks.${index}.duration`) || undefined,
-                    explicit: form.watch(`tracks.${index}.explicit`) || false,
-                    language: form.watch(`tracks.${index}.language`) || null,
+                  tracks={fields.map((field) => ({
+                    title: field.title || '',
+                    audioUrl: field.audioUrl || '',
+                    duration: field.duration || undefined,
+                    explicit: field.explicit || false,
+                    language: field.language || null,
                   }))}
                   onAddTrack={handleTrackAdd}
                   onEditTrack={handleTrackEdit}
                   onRemoveTrack={handleTrackRemove}
+                  releaseId={releaseId || release?.eventId || release?.id || 'new'}
+                  releaseTitle={form.watch('title') || release?.title || 'Untitled Release'}
                 />
               </div>
 

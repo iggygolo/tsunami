@@ -17,7 +17,8 @@ import {
   Providers as StudioProviders, 
   Analytics as StudioAnalytics,
   CreateRelease as StudioCreateRelease,
-  EditRelease as StudioEditRelease
+  EditRelease as StudioEditRelease,
+  TrackEdit as StudioTrackEdit
 } from "./pages/studio/index";
 
 export function AppRouter() {
@@ -38,6 +39,8 @@ export function AppRouter() {
           <Route path="releases" element={<StudioReleases />} />
           <Route path="releases/create" element={<StudioCreateRelease />} />
           <Route path="releases/edit/:releaseId" element={<StudioEditRelease />} />
+          <Route path="releases/:releaseId/tracks/add" element={<StudioTrackEdit />} />
+          <Route path="releases/:releaseId/tracks/edit/:trackIndex" element={<StudioTrackEdit />} />
           <Route path="providers" element={<StudioProviders />} />
           <Route path="analytics" element={<StudioAnalytics />} />
         </Route>
