@@ -39,7 +39,7 @@ Refactored release creation and editing to use dedicated pages with a shared for
 - **Proper Error Handling**: Form validation and submission errors handled consistently
 - **Navigation Integration**: Uses React Router for proper page navigation
 - **State Management**: Each page manages its own state independently
-- **Hook Integration**: Uses existing hooks (usePublishRelease, useUpdateRelease, usePodcastRelease)
+- **Hook Integration**: Uses existing hooks (usePublishRelease, useUpdateRelease)
 
 ## Form Features Maintained
 - Image upload with preview

@@ -104,9 +104,9 @@ Converts releases to RSS 2.0 format with Podcasting 2.0 enhancements:
 
 ```typescript
 const rssContent = generateRSSFeed(releases, {
-  title: "Tsunami Podcast",
-  description: "A Nostr-powered podcast",
-  // ... full podcast configuration
+  title: "Tsunami",
+  description: "A Nostr-powered",
+  // ... full configuration
 });
 ```
 
@@ -116,8 +116,8 @@ Generated RSS content is stored for fast delivery:
 
 ```typescript
 // Store in localStorage for fast access
-localStorage.setItem('podcast-rss-content', rssContent);
-localStorage.setItem('podcast-rss-updated', Date.now().toString());
+localStorage.setItem('rss-content', rssContent);
+localStorage.setItem('rss-updated', Date.now().toString());
 ```
 
 ## RSS Feed Features
@@ -201,8 +201,8 @@ console.log('RSS feed updated at:', new Date().toISOString());
 ### 2. **Cache Inspection**
 ```javascript
 // Check browser console
-localStorage.getItem('podcast-rss-content');
-localStorage.getItem('podcast-rss-updated');
+localStorage.getItem('rss-content');
+localStorage.getItem('rss-updated');
 ```
 
 ### 3. **Feed Validation**

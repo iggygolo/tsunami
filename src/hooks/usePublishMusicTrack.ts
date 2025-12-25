@@ -144,7 +144,7 @@ export function usePublishMusicTrack() {
       // Invalidate related queries to refresh the UI
       await queryClient.invalidateQueries({ queryKey: ['music-tracks'] });
       await queryClient.invalidateQueries({ queryKey: ['releases'] }); // For compatibility
-      await queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
+      await queryClient.invalidateQueries({ queryKey: ['music-stats'] });
       await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 
       return event.id;
@@ -195,7 +195,7 @@ export function useUpdateMusicTrack() {
       await queryClient.invalidateQueries({ queryKey: ['music-tracks'] });
       await queryClient.invalidateQueries({ queryKey: ['music-track', trackIdentifier] });
       await queryClient.invalidateQueries({ queryKey: ['releases'] }); // For compatibility
-      await queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
+      await queryClient.invalidateQueries({ queryKey: ['music-stats'] });
       await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 
       return event.id;
@@ -238,7 +238,7 @@ export function useDeleteMusicTrack() {
       await queryClient.invalidateQueries({ queryKey: ['music-tracks'] });
       await queryClient.invalidateQueries({ queryKey: ['music-track', trackEventId] });
       await queryClient.invalidateQueries({ queryKey: ['releases'] }); // For compatibility
-      await queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
+      await queryClient.invalidateQueries({ queryKey: ['music-stats'] });
       await queryClient.invalidateQueries({ queryKey: ['rss-feed-generator'] });
 
       return event.id;

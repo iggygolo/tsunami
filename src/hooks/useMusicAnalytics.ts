@@ -41,7 +41,7 @@ export function useMusicAnalytics() {
   const { data: releases } = useReleases();
 
   return useQuery<MusicAnalytics>({
-    queryKey: ['podcast-analytics', artistPubkeyHex],
+    queryKey: ['music-analytics', artistPubkeyHex],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
 

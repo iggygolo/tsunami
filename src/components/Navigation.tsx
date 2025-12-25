@@ -8,9 +8,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
-import { isArtist } from '@/lib/musicConfig';
 import { getMainNavItems, getSecondaryNavItems, getArtistNavItems } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 
@@ -20,9 +18,7 @@ interface NavigationProps {
 
 export function Navigation({ className }: NavigationProps) {
   const location = useLocation();
-  const { user } = useCurrentUser();
-  const podcastConfig = useMusicConfig();
-  const isArtist_user = user && isArtist(user.pubkey);
+  const musicConfig = useMusicConfig();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
@@ -34,7 +30,6 @@ export function Navigation({ className }: NavigationProps) {
 
   const mainNavItems = getMainNavItems();
   const secondaryNavItems = getSecondaryNavItems();
-  const artistItems = getArtistNavItems();
 
   return (
     <header className={cn(
@@ -62,7 +57,7 @@ export function Navigation({ className }: NavigationProps) {
                       className="flex items-center hover:opacity-80 transition-opacity"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <h1 className="text-xl font-bold gradient-text truncate">{podcastConfig.music.artistName}</h1>
+                      <h1 className="text-xl font-bold gradient-text truncate">{musicConfig.music.artistName}</h1>
                     </Link>
                   </div>
 
@@ -148,7 +143,7 @@ export function Navigation({ className }: NavigationProps) {
 
             {/* Logo */}
             <Link to="/" className="flex items-center hover:opacity-80 transition-opacity px-3 py-2 rounded-lg">
-              <h1 className="text-xl font-bold gradient-text">{podcastConfig.music.artistName}</h1>
+              <h1 className="text-xl font-bold gradient-text">{musicConfig.music.artistName}</h1>
             </Link>
           </div>
 

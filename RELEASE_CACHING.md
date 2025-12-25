@@ -57,7 +57,6 @@ For even better performance:
 
 ## Implementation Files
 
-- `src/hooks/usePodcastReleases.ts` - List-level caching
 - `src/hooks/useReleaseData.ts` - Individual release cache checking
 - `src/hooks/usePlaylistTrackResolution.ts` - Track resolution caching
 - `src/hooks/useReleasePrefetch.ts` - Hover prefetching

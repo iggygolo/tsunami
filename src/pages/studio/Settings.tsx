@@ -18,7 +18,7 @@ import { genRSSFeed } from '@/lib/rssGenerator';
 import { FileUploadWithProvider } from '@/components/ui/FileUploadWithProvider';
 import { useUploadFileWithOptions } from '@/hooks/useUploadFile';
 
-interface PodcastFormData {
+interface ArtistFormData {
   artistName: string;
   description: string;
   image: string;
@@ -62,8 +62,8 @@ const Settings = () => {
   const queryClient = useQueryClient();
   const { mutateAsync: createEvent } = useNostrPublish();
   const { toast } = useToast();
-  const { data: podcastMetadata, isLoading: isLoadingMetadata } = useArtistMetadata();
-  const podcastConfig = useMusicConfig();
+  const { data: artistMetadata, isLoading: isLoadingMetadata } = useArtistMetadata();
+  const musicConfig = useMusicConfig();
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
   const { mutateAsync: uploadFileWithOptions } = useUploadFileWithOptions();
   const { config } = useUploadConfig();
@@ -73,7 +73,7 @@ const Settings = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUploadProvider, setImageUploadProvider] = useState<'blossom' | 'vercel'>(config.defaultProvider);
 
-  const [formData, setFormData] = useState<PodcastFormData>({
+  const [formData, setFormData] = useState<ArtistFormData>({
     artistName: MUSIC_CONFIG.music.artistName,
     description: MUSIC_CONFIG.music.description,
     image: MUSIC_CONFIG.music.image,
@@ -102,38 +102,38 @@ const Settings = () => {
 
   // Update form data when metadata loads
   useEffect(() => {
-    if (podcastMetadata && !isLoadingMetadata) {
+    if (artistMetadata && !isLoadingMetadata) {
       setFormData({
-        artistName: podcastMetadata.artist,
-        description: podcastMetadata.description,
-        image: podcastMetadata.image,
-        website: podcastMetadata.website,
-        copyright: podcastMetadata.copyright,
-        value: podcastMetadata.value || {
+        artistName: artistMetadata.artist,
+        description: artistMetadata.description,
+        image: artistMetadata.image,
+        website: artistMetadata.website,
+        copyright: artistMetadata.copyright,
+        value: artistMetadata.value || {
           amount: MUSIC_CONFIG.music.value.amount,
           currency: MUSIC_CONFIG.music.value.currency,
           recipients: MUSIC_CONFIG.music.value.recipients || []
         },
-        guid: podcastMetadata.guid || MUSIC_CONFIG.artistNpub,
-        medium: podcastMetadata.medium || 'music',
-        publisher: podcastMetadata.publisher || podcastMetadata.artist,
-        location: podcastMetadata.location,
-        person: podcastMetadata.person || [
+        guid: artistMetadata.guid || MUSIC_CONFIG.artistNpub,
+        medium: artistMetadata.medium || 'music',
+        publisher: artistMetadata.publisher || artistMetadata.artist,
+        location: artistMetadata.location,
+        person: artistMetadata.person || [
           {
-            name: podcastMetadata.artist,
+            name: artistMetadata.artist,
             role: 'artist',
             group: 'cast'
           }
         ],
-        license: podcastMetadata.license || {
+        license: artistMetadata.license || {
           identifier: 'All Right Reserved',
           url: ''
         },
       });
     }
-  }, [podcastMetadata, isLoadingMetadata]);
+  }, [artistMetadata, isLoadingMetadata]);
 
-  const handleInputChange = (field: keyof PodcastFormData, value: PodcastFormData[keyof PodcastFormData]) => {
+  const handleInputChange = (field: keyof ArtistFormData, value: ArtistFormData[keyof ArtistFormData]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -169,7 +169,7 @@ const Settings = () => {
   };
 
   // Handle file uploads for podcast image
-  const uploadPodcastImage = async (file: File, provider?: 'blossom' | 'vercel') => {
+  const uploadCoverImage = async (file: File, provider?: 'blossom' | 'vercel') => {
     setIsUploading(true);
     try {
       const result = await uploadFileWithOptions({ 
@@ -179,13 +179,13 @@ const Settings = () => {
       handleInputChange('image', result.url);
       toast({
         title: 'Success',
-        description: `Podcast cover image uploaded successfully via ${result.provider}`,
+        description: `Cover image uploaded successfully via ${result.provider}`,
       });
     } catch (error) {
-      console.error('Failed to upload podcast image:', error);
+      console.error('Failed to upload cover image:', error);
       toast({
         title: 'Error',
-        description: 'Failed to upload podcast cover image. Please try again.',
+        description: 'Failed to upload cover image. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -196,7 +196,7 @@ const Settings = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const podcastMetadataEvent = {
+      const artistMetadataEvent = {
         kind: MUSIC_KINDS.ARTIST_METADATA,
         content: JSON.stringify({
           artist: formData.artistName,
@@ -220,7 +220,7 @@ const Settings = () => {
         created_at: Math.ceil(Date.now() / 1000)
       };
 
-      await createEvent(podcastMetadataEvent);
+      await createEvent(artistMetadataEvent);
 
       // Invalidate artist metadata cache to force refetch with new data
       queryClient.invalidateQueries({ queryKey: ['artist-metadata'] });
@@ -228,7 +228,7 @@ const Settings = () => {
       // Update RSS feed with the new configuration (non-blocking)
       try {
         await Promise.race([
-          genRSSFeed(undefined, [], podcastConfig),
+          genRSSFeed(undefined, [], musicConfig),
           new Promise((_, reject) => setTimeout(() => reject(new Error('RSS generation timeout')), 5000))
         ]);
         console.log('RSS feed updated successfully');
@@ -295,7 +295,7 @@ const Settings = () => {
                   onFileSelect={(file) => {
                     setImageFile(file);
                     if (file) {
-                      uploadPodcastImage(file, imageUploadProvider);
+                      uploadCoverImage(file, imageUploadProvider);
                     }
                   }}
                   onProviderChange={setImageUploadProvider}
@@ -324,7 +324,7 @@ const Settings = () => {
                   value={formData.copyright}
                   onChange={(e) => handleInputChange('copyright', e.target.value)}
                   disabled={false}
-                  placeholder="© 2025 Podcast Name"
+                  placeholder="© 2025 Artist Name"
                 />
               </div>
             </div>
@@ -338,7 +338,7 @@ const Settings = () => {
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               disabled={false}
-              placeholder="Enter podcast description"
+              placeholder="Enter artist description"
               rows={4}
             />
           </div>

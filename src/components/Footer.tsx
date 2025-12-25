@@ -2,12 +2,12 @@ import { Waves } from 'lucide-react';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 
 export default function Footer() {
-  const podcastConfig = useMusicConfig();
+  const musicConfig = useMusicConfig();
 
   return (
     <div className="text-center mt-8 pb-8">
       <p className="text-sm text-muted-foreground">
-        {podcastConfig.music.copyright}
+        {musicConfig.music.copyright}
       </p>
       <p className="text-sm mt-2 text-center">
         <span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent font-medium">

@@ -207,18 +207,18 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
 }
 
 /**
- * Hook to fetch a single podcast release by playlist ID
+ * Hook to fetch a single release by playlist ID
  * Improved to handle all event types properly with the reworked conversion functions
  */
-export function usePodcastRelease(playlistId: string) {
+export function usePlaylist(playlistId: string) {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['podcast-release', playlistId],
+    queryKey: ['playlist', playlistId],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
 
-      console.log('🔍 usePodcastRelease - Fetching release:', playlistId);
+      console.log('🔍 usePlaylist - Fetching release:', playlistId);
 
       // First try to fetch the event
       const events = await nostr.query([{
@@ -227,11 +227,11 @@ export function usePodcastRelease(playlistId: string) {
 
       const event = events[0];
       if (!event) {
-        console.log('❌ usePodcastRelease - No event found for ID:', playlistId);
+        console.log('❌ usePlaylist - No event found for ID:', playlistId);
         return null;
       }
 
-      console.log('📄 usePodcastRelease - Event found:', {
+      console.log('📄 usePlaylist - Event found:', {
         id: event.id,
         kind: event.kind,
         created_at: event.created_at,
@@ -241,10 +241,10 @@ export function usePodcastRelease(playlistId: string) {
 
       // Handle music playlist events (Kind 34139)
       if (event.kind === MUSIC_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)) {
-        console.log('🎵 usePodcastRelease - Processing playlist event');
+        console.log('🎵 usePlaylist - Processing playlist event');
         const playlist = eventToMusicPlaylist(event);
         
-        console.log('📋 usePodcastRelease - Playlist data:', {
+        console.log('📋 usePlaylist - Playlist data:', {
           title: playlist.title,
           identifier: playlist.identifier,
           trackReferences: playlist.tracks?.length || 0,
@@ -264,7 +264,7 @@ export function usePodcastRelease(playlistId: string) {
           referencedPubkeys.add(trackRef.pubkey);
         });
 
-        console.log('🔗 usePodcastRelease - Track references to resolve:', {
+        console.log('🔗 usePlaylist - Track references to resolve:', {
           totalReferences: trackReferences.size,
           uniquePubkeys: referencedPubkeys.size,
           references: Array.from(trackReferences).map(ref => {
@@ -294,7 +294,7 @@ export function usePodcastRelease(playlistId: string) {
             limit: identifiers.length * 2
           }));
 
-          console.log('🔍 usePodcastRelease - Fetching track events with queries:', trackQueries.length);
+          console.log('🔍 usePlaylist - Fetching track events with queries:', trackQueries.length);
           
           const allTrackEvents = await Promise.all(
             trackQueries.map(query => nostr.query([query], { signal }))
@@ -302,7 +302,7 @@ export function usePodcastRelease(playlistId: string) {
           
           trackEvents = allTrackEvents.flat();
           
-          console.log('📦 usePodcastRelease - Track events fetched:', {
+          console.log('📦 usePlaylist - Track events fetched:', {
             totalEvents: trackEvents.length,
             events: trackEvents.map(e => ({
               id: e.id?.slice(0, 8) + '...',
@@ -314,7 +314,7 @@ export function usePodcastRelease(playlistId: string) {
         }
 
         const validTracks = trackEvents.filter(validateMusicTrack);
-        console.log('✅ usePodcastRelease - Valid track events:', validTracks.length);
+        console.log('✅ usePlaylist - Valid track events:', validTracks.length);
         
         const tracksMap = new Map<string, MusicTrackData>();
         
@@ -325,7 +325,7 @@ export function usePodcastRelease(playlistId: string) {
           const existing = tracksMap.get(key);
           if (!existing || trackEvent.created_at > (existing as any).created_at) {
             tracksMap.set(key, track);
-            console.log('🎵 usePodcastRelease - Track added to map:', {
+            console.log('🎵 usePlaylist - Track added to map:', {
               key,
               title: track.title,
               audioUrl: track.audioUrl ? '✓' : '✗',
@@ -336,7 +336,7 @@ export function usePodcastRelease(playlistId: string) {
 
         const release = playlistToRelease(playlist, tracksMap);
         
-        console.log('🎉 usePodcastRelease - Final release created:', {
+        console.log('🎉 usePlaylist - Final release created:', {
           title: release.title,
           tracksInRelease: release.tracks?.length || 0,
           tracksWithAudio: release.tracks?.filter(t => t.audioUrl).length || 0,
@@ -348,11 +348,11 @@ export function usePodcastRelease(playlistId: string) {
 
       // Handle music track events (Kind 36787)
       if (event.kind === MUSIC_KINDS.MUSIC_TRACK && validateMusicTrack(event)) {
-        console.log('🎵 usePodcastRelease - Processing single track event');
+        console.log('🎵 usePlaylist - Processing single track event');
         const track = eventToMusicTrack(event);
         const release = trackToRelease(track);
         
-        console.log('🎉 usePodcastRelease - Single track release created:', {
+        console.log('🎉 usePlaylist - Single track release created:', {
           title: release.title,
           hasAudio: !!release.tracks?.[0]?.audioUrl
         });
@@ -362,17 +362,17 @@ export function usePodcastRelease(playlistId: string) {
 
       // Handle any other supported event type
       try {
-        console.log('🔄 usePodcastRelease - Attempting generic event conversion');
+        console.log('🔄 usePlaylist - Attempting generic event conversion');
         const release = eventToRelease(event);
         
-        console.log('🎉 usePodcastRelease - Generic release created:', {
+        console.log('🎉 usePlaylist - Generic release created:', {
           title: release.title,
           tracksCount: release.tracks?.length || 0
         });
         
         return release;
       } catch (error) {
-        console.error('❌ usePodcastRelease - Event conversion failed:', error);
+        console.error('❌ usePlaylist - Event conversion failed:', error);
         return null;
       }
     },
@@ -388,7 +388,7 @@ export function useArtistStats() {
   const { data: releases } = useReleases();
 
   return useQuery({
-    queryKey: ['podcast-stats', releases?.length],
+    queryKey: ['music-stats', releases?.length],
     queryFn: async () => {
       if (!releases) return null;
 

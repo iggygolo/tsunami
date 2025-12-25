@@ -350,9 +350,9 @@ ${channels}
 }
 
 /**
- * Convert PodcastConfig to RSSConfig format
+ * Convert MusicConfig to RSSConfig format
  */
-export function podcastConfigToRSSConfig(config: MusicConfig): RSSConfig {
+export function musicConfigToRSSConfig(config: MusicConfig): RSSConfig {
   return {
     artistNpub: config.artistNpub,
     music: {

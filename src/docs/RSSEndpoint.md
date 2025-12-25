@@ -195,27 +195,6 @@ echo $rssContent;
 ?>
 ```
 
-### **Podcast Directories**
-
-#### **Apple Podcasts**
-```bash
-# Submit to Apple Podcasts
-# The RSS feed at /rss.xml is fully compatible
-curl -I https://tsunami.example/rss.xml
-```
-
-#### **Spotify for Podcasters**
-```bash
-# Spotify can consume the RSS feed directly
-wget https://tsunami.example/rss.xml -O podcast-feed.xml
-```
-
-#### **Google Podcasts**
-```bash
-# Google Podcasts Manager
-curl -s https://tsunami.example/rss.xml | xmllint --format -
-```
-
 ## Server Implementation
 
 ### **Development Mode**

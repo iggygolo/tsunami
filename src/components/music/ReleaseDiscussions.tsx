@@ -31,7 +31,7 @@ export function ReleaseDiscussions({ limit = 20, className }: ReleaseDiscussions
   const { nostr } = useNostr();
   const { data: releases } = useReleases();
 
-  // Fetch all comments for podcast releases
+  // Fetch all comments for releases
   const { data: commentsData, isLoading, error } = useQuery({
     queryKey: ['release-discussions', limit],
     queryFn: async (c) => {

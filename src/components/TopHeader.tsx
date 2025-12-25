@@ -17,7 +17,7 @@ interface TopHeaderProps {
 }
 
 export function TopHeader({ className }: TopHeaderProps) {
-  const podcastConfig = useMusicConfig();
+  const musicConfig = useMusicConfig();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -44,7 +44,7 @@ export function TopHeader({ className }: TopHeaderProps) {
             <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <Headphones className="w-7 h-7 text-primary" />
               <h1 className="text-xl font-bold gradient-text truncate">
-                {podcastConfig.music.artistName}
+                {musicConfig.music.artistName}
               </h1>
             </Link>
           </div>

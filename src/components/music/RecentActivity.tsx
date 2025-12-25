@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useRecentZapActivity } from '@/hooks/useZapLeaderboard';
-import { usePodcastRelease } from '@/hooks/useReleases';
+import { usePlaylist } from '@/hooks/useReleases';
 import { genUserName } from '@/lib/genUserName';
 
 interface ActivityItemProps {
@@ -19,7 +19,7 @@ interface ActivityItemProps {
 
 function ActivityItem({ userPubkey, type, amount, releaseId, timestamp }: ActivityItemProps) {
   const { data: author } = useAuthor(userPubkey);
-  const { data: release } = usePodcastRelease(releaseId || '');
+  const { data: release } = usePlaylist(releaseId || '');
   const metadata = author?.metadata;
 
   const displayName = metadata?.name || metadata?.display_name || genUserName(userPubkey);
@@ -160,7 +160,7 @@ export function RecentActivity({
         <Clock className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
         <p className="text-sm text-muted-foreground">No recent activity</p>
         <p className="text-xs text-muted-foreground">
-          Activity will appear here as people engage with the podcast
+          Activity will appear here as people engage
         </p>
       </div>
     );

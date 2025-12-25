@@ -16,28 +16,28 @@ const About = () => {
   const { data: stats } = useArtistStats();
   const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { user } = useCurrentUser();
-  const podcastConfig = useMusicConfig();
+  const musicConfig = useMusicConfig();
 
   useSeoMeta({
-    title: `About - ${podcastConfig.music.artistName}`,
-    description: podcastConfig.music.description,
+    title: `About - ${musicConfig.music.artistName}`,
+    description: musicConfig.music.description,
   });
 
   return (
     <Layout>
       {/* Hero Section */}
       <div className="relative -mx-4 px-4 py-12">
-        <BlurredBackground image={podcastConfig.music.image} />
+        <BlurredBackground image={musicConfig.music.image} />
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
         <div className="relative">
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Artist Image */}
-            {podcastConfig.music.image && (
+            {musicConfig.music.image && (
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-500" />
                 <img
-                  src={podcastConfig.music.image}
-                  alt={podcastConfig.music.artistName}
+                  src={musicConfig.music.image}
+                  alt={musicConfig.music.artistName}
                   className="relative w-48 h-48 md:w-56 md:h-56 rounded-2xl object-cover shadow-2xl"
                 />
               </div>
@@ -51,12 +51,12 @@ const About = () => {
                   Value4Value Music
                 </Badge>
                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
-                  {podcastConfig.music.artistName}
+                  {musicConfig.music.artistName}
                 </h1>
               </div>
 
               <p className="text-lg text-white/90 leading-relaxed max-w-xl drop-shadow-md">
-                {podcastConfig.music.description}
+                {musicConfig.music.description}
               </p>
 
               {/* Action Buttons */}
@@ -71,7 +71,7 @@ const About = () => {
                 )}
 
                 <Button variant="outline" asChild className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 backdrop-blur-sm">
-                  <a href={`https://njump.me/${podcastConfig.artistNpub}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://njump.me/${musicConfig.artistNpub}`} target="_blank" rel="noopener noreferrer">
                     <Hash className="w-4 h-4 mr-2" />
                     Nostr
                   </a>

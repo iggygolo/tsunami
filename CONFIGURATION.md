@@ -138,7 +138,7 @@ After configuring your environment variables, you can validate the configuration
 
 1. Starting the development server (`npm run dev`)
 2. Checking the browser console for any parsing errors
-3. Visiting the podcast pages to see if your metadata appears correctly
+3. Visiting the pages to see if your metadata appears correctly
 4. Generating the RSS feed to ensure all fields are populated
 
 ## Tips
@@ -146,8 +146,7 @@ After configuring your environment variables, you can validate the configuration
 - **JSON fields**: Use online JSON validators to ensure your JSON arrays are properly formatted
 - **URLs**: Always use complete URLs starting with `https://`
 - **Lightning addresses**: Test your Lightning addresses before adding them to recipients
-- **Images**: Use high-quality square images (1400x1400px minimum) for best podcast directory compatibility
-- **Categories**: Check common podcast categories used by Apple Podcasts and Spotify for better discoverability
+- **Images**: Use high-quality square images (1400x1400px minimum) for best directory compatibility
 
 ## Troubleshooting
 

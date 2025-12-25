@@ -53,13 +53,13 @@ export function getArtistPubkeyHex(artistNpub?: string): string {
 }
 
 /**
- * Fetch podcast metadata from multiple Nostr relays
+ * Fetch metadata from multiple Nostr relays
  */
-async function fetchPodcastMetadataMultiRelay(
+async function fetchArtistMetadataMultiRelay(
   relays: Array<{url: string, relay: NRelay1}>, 
   artistPubkeyHex: string
 ): Promise<Record<string, unknown> | null> {
-  console.log('📡 Fetching podcast metadata from Nostr...');
+  console.log('📡 Fetching artist metadata from Nostr...');
 
   const relayPromises = relays.map(async ({url, relay}) => {
     try {
@@ -101,7 +101,7 @@ async function fetchPodcastMetadataMultiRelay(
     );
 
     const updatedAt = new Date(latestEvent.created_at * 1000);
-    console.log(`✅ Found podcast metadata from Nostr (updated: ${updatedAt.toISOString()})`);
+    console.log(`✅ Found artist metadata from Nostr (updated: ${updatedAt.toISOString()})`);
 
     try {
       const metadata = JSON.parse(latestEvent.content);
@@ -111,7 +111,7 @@ async function fetchPodcastMetadataMultiRelay(
       return null;
     }
   } else {
-    console.log('⚠️ No podcast metadata found from any relay');
+    console.log('⚠️ No artist metadata found from any relay');
     return null;
   }
 }
@@ -278,7 +278,7 @@ export async function fetchNostrDataBundle(
     // Fetch all data in parallel for efficiency
     console.log('📡 Fetching all data types in parallel...');
     const [fetchedMetadata, fetchedTracks, fetchedPlaylists] = await Promise.all([
-      fetchPodcastMetadataMultiRelay(relays, artistPubkeyHex),
+      fetchArtistMetadataMultiRelay(relays, artistPubkeyHex),
       fetchMusicTracksMultiRelay(relays, artistPubkeyHex),
       fetchMusicPlaylistsMultiRelay(relays, artistPubkeyHex)
     ]);

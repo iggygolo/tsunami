@@ -4,9 +4,9 @@ A Nostr-powered podcast platform for single artist accounts that combines decent
 
 ## ✨ Features
 
-### 🎙️ **Podcast Publishing**
+### 🎙️ **Publishing**
 - **Artist-only publishing** with hardcoded npub authentication
-- Upload audio files to Blossom servers or reference external URLs
+- Upload audio files to Blossom or Vercel servers or reference external URLs
 - Rich release metadata: title, description, cover art, transcripts
 - Podcasting 2.0 value tags for Lightning payments and funding
 - Release editing and management through intuitive Studio interface
@@ -81,13 +81,11 @@ npm run build:data
 
 ### Configuration
 
-Edit `.env` to customize your podcast:
+Edit `.env` to customize your artist:
 
 ```env
 # Artist Configuration
 VITE_ARTIST_NPUB=npub1...
-
-# Podcast Metadata  
 VITE_ARTIST_NAME=Your Artist Name
 VITE_MUSIC_DESCRIPTION=Your artist description
 VITE_ARTIST_IMAGE=https://image.example/avatar.png
@@ -116,7 +114,7 @@ src/
 │   ├── ui/             # shadcn/ui components (48+ available)
 │   ├── auth/           # Authentication components (LoginArea, AccountSwitcher)
 │   ├── audio/          # Audio player components (PersistentAudioPlayer)
-│   ├── podcast/        # Podcast-specific components (ReleaseCard, etc.)
+│   ├── music/          # Music-specific components (ReleaseCard, etc.)
 │   ├── social/         # Social interaction components (PostActions, NoteComposer)
 │   ├── comments/       # Threading comment system (CommentsSection)
 │   └── studio/         # Artist studio components (ReleaseManagement, etc.)

@@ -1,7 +1,7 @@
 import type { NostrEvent } from '@nostrify/nostrify';
 
 /**
- * Podcast release metadata based on NIP-54
+ * Music release metadata
  */
 export interface MusicRelease {
   id: string;
@@ -188,9 +188,9 @@ export interface MusicTrackFormData {
 }
 
 /**
- * Podcast statistics for dashboard/analytics
+ * Statistics for dashboard/analytics
  */
-export interface PodcastStats {
+export interface MusicStats {
   totalReleases: number;
   totalZaps: number;
   totalComments: number;
@@ -289,7 +289,7 @@ export interface AudioPlayerState {
 /**
  * Comment with Nostr event data
  */
-export interface PodcastComment {
+export interface SocialComment {
   id: string;
   content: string;
   artistPubkey: string;
@@ -299,7 +299,7 @@ export interface PodcastComment {
   parentCommentId?: string;
   createdAt: Date;
   zapCount?: number;
-  replies: PodcastComment[];
+  replies: SocialComment[];
   event: NostrEvent;
 }
 

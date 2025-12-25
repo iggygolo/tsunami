@@ -27,7 +27,7 @@ const Index = () => {
   const { data: allReleases } = useStaticReleaseCache();
   const { data: leaderboard } = useZapLeaderboard(100);
   const { data: postCount } = useArtistPostCount();
-  const podcastConfig = useMusicConfig();
+  const musicConfig = useMusicConfig();
   const { data: artist } = useAuthor(getArtistPubkeyHex());
   const { user } = useCurrentUser();
   const { toast } = useToast();
@@ -73,8 +73,8 @@ const Index = () => {
   const isLatestReleasePlayable = trackPlayback?.hasPlayableTracks || false;
 
   useSeoMeta({
-    title: podcastConfig.music.artistName,
-    description: podcastConfig.music.description,
+    title: musicConfig.music.artistName,
+    description: musicConfig.music.description,
   });
 
   return (
@@ -154,13 +154,13 @@ const Index = () => {
                     </h1>
                     <div className="flex flex-col lg:flex-row items-center gap-2 sm:gap-4">
                       <Link to="/about" className="inline-flex items-center gap-2 text-lg text-white/90 hover:text-white transition-colors drop-shadow-md">
-                        {podcastConfig.music.image && (
+                        {musicConfig.music.image && (
                           <img
-                            src={podcastConfig.music.image}
+                            src={musicConfig.music.image}
                             className="w-6 h-6 rounded-full object-cover"
                           />
                         )}
-                        <span className="font-medium">{podcastConfig.music.artistName}</span>
+                        <span className="font-medium">{musicConfig.music.artistName}</span>
                       </Link>
                       {latestRelease.tags && latestRelease.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 justify-center lg:justify-start">
@@ -219,10 +219,10 @@ const Index = () => {
             <div className="max-w-4xl mx-auto text-center space-y-6">
               <div className="space-y-2">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
-                  Welcome to {podcastConfig.music.artistName}
+                  Welcome to {musicConfig.music.artistName}
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  {podcastConfig.music.description}
+                  {musicConfig.music.description}
                 </p>
               </div>
               

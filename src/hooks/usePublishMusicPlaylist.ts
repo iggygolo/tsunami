@@ -70,7 +70,7 @@ export function usePublishMusicPlaylist() {
 
       // Invalidate related queries to refresh the UI
       await queryClient.invalidateQueries({ queryKey: ['music-playlists'] });
-      await queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
+      await queryClient.invalidateQueries({ queryKey: ['music-stats'] });
 
       return event.id;
     },

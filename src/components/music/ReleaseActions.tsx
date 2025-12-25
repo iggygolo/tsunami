@@ -21,7 +21,7 @@ interface ReleaseActionsProps {
   onToggleComments?: () => void;
 }
 
-// Create a NostrEvent-like object from PodcastRelease
+// Create a NostrEvent-like object from MusicRelease
 function createEventFromrelease(release: MusicRelease): NostrEvent {
   return {
     id: release.eventId,

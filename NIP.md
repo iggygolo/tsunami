@@ -1,184 +1,149 @@
-# NIP-XX: Podcast Episodes and Trailers
+Music Playlists
 
-`draft` `optional`
+This spec defines an addressable event kind for publishing music playlists on Nostr.
+Event Kind
 
-This NIP defines event kinds for podcast episodes and trailers on Nostr, enabling decentralized podcast publishing and RSS feed generation.
+    34139: Playlist (addressable)
 
-## Summary
+Playlist Event
 
-This specification describes the use of Nostr event kinds for music publishing:
-- `36787`: Music Track Events (individual tracks)
-- `34139`: Music Playlist Events (collections of tracks)
+A playlist is an addressable event containing an ordered list of music tracks.
+Format
 
-It also describes the use of existing `30078` events for artist metadata configuration.
+The .content field MAY contain a description of the playlist in plain text or Markdown.
+Tags
 
-## Event Kinds
+Required:
 
-### Kind 36787: Music Track
+    d - Unique identifier for this playlist
+    title - Playlist title
+    alt - Human-readable description (NIP-31)
 
-A `kind 36787` event represents an individual music track. These are addressable events that can be edited and replaced.
+Optional:
 
-#### Required Tags
+    description - Short description (can also use content field)
+    image - URL to playlist artwork
+    a - Track references in format 36787:<pubkey>:<d-tag> (multiple, ordered)
+    t - Category tags for discovery
+    public - Set to "true" for public playlists (default)
+    private - Set to "true" for private playlists
+    collaborative - Set to "true" to allow others to add tracks
 
-- `d` - A unique identifier for this episode (addressable event identifier)
-- `title` - The episode title
-- `audio` - The audio URL, with optional media type as second parameter (e.g., `["audio", "https://example.com/episode.mp3", "audio/mpeg"]`)
-- `pubdate` - Publication date in RFC2822 format (set once when first published, preserved during edits)
-- `alt` - A human-readable description of the event per NIP-31
+Example
 
-#### Optional Tags
-
-- `description` - Episode description/summary
-- `image` - Episode artwork URL
-- `duration` - Episode duration in seconds (integer)
-- `t` - Topic tags for categorization (multiple tags allowed)
-- `edit` - Reference to original event ID when updating an episode (for edit history)
-
-#### Content Field
-
-The content field MAY contain additional episode notes or description text.
-
-#### Example
-
-```json
 {
-  "kind": 30054,
-  "content": "In this episode, we discuss the latest developments in decentralized social media protocols.",
+  "kind": 34139,
+  "content": "My favorite summer vibes from 2024",
   "tags": [
-    ["d", "episode-1699123456-abc123def"],
-    ["title", "The Future of Decentralized Social Media"],
-    ["audio", "https://example.com/episodes/episode-001.mp3", "audio/mpeg"],
-    ["pubdate", "Thu, 04 Nov 2023 12:00:00 GMT"],
-    ["alt", "Podcast episode: The Future of Decentralized Social Media"],
-    ["description", "A deep dive into how protocols like Nostr are changing social media"],
-    ["image", "https://example.com/artwork/episode-001.jpg"],
-    ["duration", "3600"],
-    ["t", "technology"],
-    ["t", "decentralization"],
-    ["t", "social-media"]
-  ],
-  "created_at": 1699123456,
-  "pubkey": "...",
-  "id": "...",
-  "sig": "..."
+    ["d", "summer-vibes-2024"],
+    ["title", "Summer Vibes 2024"],
+    ["image", "https://cdn.blossom.example/img/playlist.jpg"],
+    ["description", "Chill electronic tracks for summer"],
+    ["a", "36787:abc123...:summer-nights-2024"],
+    ["a", "36787:def456...:sunset-dreams"],
+    ["a", "36787:abc123...:ocean-breeze"],
+    ["t", "playlist"],
+    ["t", "electronic"],
+    ["t", "summer"],
+    ["public", "true"],
+    ["alt", "Playlist: Summer Vibes 2024"]
+  ]
 }
-```
 
-### Kind 30055: Podcast Trailer
+Track References
 
-A `kind 30055` event represents a podcast trailer. These are addressable events following the Podcast 2.0 trailer specification.
+Playlists reference music tracks using a tags in the format:
 
-#### Required Tags
+["a", "36787:<pubkey>:<d-tag>"]
 
-- `d` - A unique identifier for this trailer (addressable event identifier)
-- `title` - The trailer title (maximum 128 characters recommended)
-- `url` - The trailer media URL
-- `pubdate` - Publication date in RFC2822 format
-- `alt` - A human-readable description of the event per NIP-31
+Where:
 
-#### Optional Tags
+    36787 is the Music Track event kind (see NIP-XX: Music Tracks)
+    <pubkey> is the track author's public key (hex)
+    <d-tag> is the track's unique identifier
 
-- `length` - File size in bytes
-- `type` - MIME type of the trailer media (audio/mpeg, video/mp4, etc.)
-- `season` - Season number this trailer represents
-- `edit` - Reference to original event ID when updating a trailer
+Implementation Notes
 
-#### Content Field
+    Playlists are updatable (addressable events)
+    Playlist a tags reference tracks in display order
+    Clients SHOULD preserve track order when displaying playlists
+    Clients SHOULD handle missing/deleted tracks gracefully
+    When a referenced track is not found, clients MAY show a placeholder or skip it
+    Playlists support NIP-25 reactions and NIP-22 comments
+    Use naddr identifiers to link to playlists
+    Collaborative playlist mechanics are client-defined (e.g., NIP-04/17 track suggestions)
+    Artwork images SHOULD be hosted on Blossom servers for permanence
 
-The content field SHOULD contain the trailer title.
 
-#### Example
+Music Tracks
+Event Kind
 
-```json
+    36787: Music Track (addressable)
+
+Music Track Event
+
+A music track is an addressable event containing metadata about an audio file.
+Format
+
+The .content field MAY contain lyrics and production credits in plain text or Markdown.
+Tags
+
+Required:
+
+    d - Unique identifier for this track
+    title - Track title
+    artist - Artist name
+    url - Direct URL to the audio file
+    t - At least one tag with value "music"
+
+Optional:
+
+    alt - Human-readable description (NIP-31)
+    image - URL to album artwork
+    video - URL to music video file
+    album - Album name
+    track_number - Position in album
+    released - ISO 8601 date (YYYY-MM-DD)
+    t - Additional genre/category tags
+    language - ISO 639-1 language code
+    explicit - Set to "true" for explicit content
+    duration - Track length in seconds
+    format - Audio format (mp3, flac, m4a, ogg)
+    bitrate - Audio bitrate (e.g., "320kbps")
+    sample_rate - Sample rate in Hz
+    zap - Lightning address for zap splits (multiple allowed, see Zap Splits)
+
+Example
+
 {
-  "kind": 30055,
-  "content": "Season 2 Preview",
+  "kind": 36787,
+  "content": "Lyrics:\n[Verse 1]\n...\n\nCredits:\nProducer: John Doe",
   "tags": [
-    ["d", "trailer-1699123456-xyz789abc"],
-    ["title", "Season 2 Preview"],
-    ["url", "https://example.com/trailers/season-2-preview.mp3"],
-    ["pubdate", "Thu, 04 Nov 2023 12:00:00 GMT"],
-    ["alt", "Podcast trailer: Season 2 Preview"],
-    ["length", "1024000"],
-    ["type", "audio/mpeg"],
-    ["season", "2"]
-  ],
-  "created_at": 1699123456,
-  "pubkey": "...",
-  "id": "...",
-  "sig": "..."
+    ["d", "summer-nights-2024"],
+    ["title", "Summer Nights"],
+    ["url", "https://cdn.blossom.example/audio/abc123.mp3"],
+    ["image", "https://cdn.blossom.example/img/artwork.jpg"],
+    ["video", "https://cdn.blossom.example/video/abc123.mp4"],
+    ["artist", "The Midnight Collective"],
+    ["album", "Endless Summer"],
+    ["track_number", "3"],
+    ["released", "2024-06-15"],
+    ["duration", "245"],
+    ["format", "mp3"],
+    ["t", "music"],
+    ["t", "electronic"],
+    ["alt", "Music track: Summer Nights by The Midnight Collective"]
+  ]
 }
-```
 
-## Artist Metadata (Kind 30078)
+Implementation Notes
 
-Podcast publishers SHOULD use `kind 30078` addressable events to store podcast-level metadata and configuration. While this kind is defined in other NIPs, this specification describes its usage in the podcasting context.
+    Audio files SHOULD be hosted on Blossom servers for permanence
+    Video files (music videos) MAY be hosted on Blossom servers or other permanent storage
+    Tracks are updatable (addressable events)
+    When no zap tag is present, use author's profile Lightning address
+    Clients MAY auto-detect technical metadata (duration, format, bitrate)
+    Clients MAY choose to display video when available, or default to audio-only playback
+    Tracks support NIP-25 reactions and NIP-22 comments
+    Use naddr identifiers to link to tracks
 
-#### Recommended Tags for Podcast Metadata
-
-- `d` - Should be set to `"artist-metadata"` for podcast configuration
-- `artist` - Artist name
-- `description` - Artist desciption
-
-#### Content Field
-
-The content field SHOULD contain a JSON object with podcast metadata including:
-
-```json
-{
-  "artist": "John Doe",
-  "description": "A podcast about interesting topics",
-  "image": "https://example.com/artwork.jpg",
-  "website": "https://example.com",
-  "copyright": "© 2023 John Doe",
-  "funding": ["https://example.com/donate"],
-  "value": {
-    "amount": 100000,
-    "currency": "sat",
-    "recipients": [
-      {
-        "name": "Host",
-        "type": "lnaddress",
-        "address": "host@example.com",
-        "split": 100
-      }
-    ]
-  }
-}
-```
-
-## Implementation Notes
-
-### Addressable Events
-
-Both episode (`30054`) and trailer (`30055`) events are addressable events. This means:
-- Only the latest event per `pubkey:kind:d-tag` combination is stored by relays
-- Episodes and trailers can be edited by publishing a new event with the same `d` tag
-- Comments and references should use `a` tags in the format `30054:pubkey:d-tag`
-
-### RSS Feed Generation
-
-These events can be used to generate RSS feeds compatible with podcast aggregators:
-- Episodes (`30054`) become `<item>` elements in the RSS feed
-- Trailers (`30055`) become `<podcast:trailer>` elements
-- Metadata (`30078`) provides the channel-level RSS information
-
-### Event Ordering
-
-Episodes should be ordered by `created_at` timestamp for RSS feed generation, with most recent episodes first.
-
-### File Storage
-
-Audio files referenced in `audio`, `url`, and `image` tags SHOULD be stored on reliable hosting or decentralized storage systems. Publishers MAY use Blossom servers (NIP-96) or other file storage solutions.
-
-## Security Considerations
-
-- Publishers should verify they have rights to publish audio content
-- File URLs should be served over HTTPS when possible
-- Large audio files should be hosted on appropriate infrastructure to handle bandwidth requirements
-
-## Rationale
-
-The choice of kinds `30054` and `30055` places these events in the addressable range (30000-39999), allowing episodes and trailers to be edited after publication. This is important for podcast publishing where metadata corrections or content updates may be necessary.
-
-The tag structure follows existing Nostr conventions while incorporating requirements from RSS/Podcast 2.0 specifications to ensure compatibility with existing podcast infrastructure.
