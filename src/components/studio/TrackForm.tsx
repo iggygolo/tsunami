@@ -21,17 +21,15 @@ import {
 import { GenreSelector } from '@/components/ui/genre-selector';
 import { useToast } from '@/hooks/useToast';
 import { validateLanguageCode, validateGenre } from '@/lib/musicMetadata';
+import { 
+  AUDIO_MIME_TYPES, 
+  AUDIO_EXTENSIONS, 
+  VIDEO_MIME_TYPES,
+  validateAudioFile 
+} from '@/lib/fileTypes';
 import type { MusicTrackFormData, MusicTrackData } from '@/types/music';
 
-// Audio format validation
-const SUPPORTED_AUDIO_FORMATS = ['mp3', 'flac', 'm4a', 'ogg', 'wav'];
-const SUPPORTED_AUDIO_MIMES = [
-  'audio/mpeg',
-  'audio/flac', 
-  'audio/mp4',
-  'audio/ogg',
-  'audio/wav'
-];
+// Use centralized file type configuration
 
 // Schema for track form
 const trackFormSchema = z.object({
@@ -151,21 +149,12 @@ export function TrackForm({
   const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
-      const fileExtension = file.name.split('.').pop()?.toLowerCase();
-      if (!fileExtension || !SUPPORTED_AUDIO_FORMATS.includes(fileExtension)) {
+      // Use centralized validation
+      const validation = validateAudioFile(file.name, file.type);
+      if (!validation.valid) {
         toast({
           title: 'Invalid file type',
-          description: `Please select an audio file. Supported formats: ${SUPPORTED_AUDIO_FORMATS.join(', ').toUpperCase()}`,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      if (!SUPPORTED_AUDIO_MIMES.includes(file.type)) {
-        toast({
-          title: 'Invalid file type',
-          description: `Please select an audio file. Supported formats: ${SUPPORTED_AUDIO_FORMATS.join(', ').toUpperCase()}`,
+          description: validation.error,
           variant: 'destructive',
         });
         return;
@@ -455,7 +444,7 @@ export function TrackForm({
                     <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 hover:border-muted-foreground/50 hover:bg-muted/30 transition-all duration-200">
                       <input
                         type="file"
-                        accept={SUPPORTED_AUDIO_MIMES.join(',')}
+                        accept={AUDIO_MIME_TYPES.join(',')}
                         onChange={handleAudioFileChange}
                         className="hidden"
                         id="audio-upload"
@@ -470,7 +459,7 @@ export function TrackForm({
                         <p className="text-sm text-muted-foreground">
                           {audioFile 
                             ? `${(audioFile.size / 1024 / 1024).toFixed(1)}MB`
-                            : `Supports: ${SUPPORTED_AUDIO_FORMATS.join(', ').toUpperCase()}`
+                            : `Supports: ${AUDIO_EXTENSIONS.join(', ').toUpperCase()}`
                           }
                         </p>
                       </label>
@@ -650,7 +639,7 @@ export function TrackForm({
                     <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-4 hover:border-muted-foreground/50 hover:bg-muted/30 transition-all duration-200">
                       <input
                         type="file"
-                        accept="video/*"
+                        accept={VIDEO_MIME_TYPES.join(',')}
                         onChange={handleVideoFileChange}
                         className="hidden"
                         id="video-upload"

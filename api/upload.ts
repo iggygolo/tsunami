@@ -3,6 +3,8 @@ import { verifyEvent } from 'nostr-tools';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // File validation constants
+// NOTE: These MIME types should be kept in sync with src/lib/fileTypes.ts
+// The frontend uses the centralized configuration in fileTypes.ts for validation
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 const ALLOWED_MIME_TYPES = [
   // Audio
@@ -11,6 +13,8 @@ const ALLOWED_MIME_TYPES = [
   'audio/aac',
   'audio/ogg',
   'audio/wav',
+  'audio/x-wav',    // Alternative WAV MIME type
+  'audio/wave',     // Another WAV MIME type variant
   'audio/flac',
   'audio/opus',
   'audio/webm',
