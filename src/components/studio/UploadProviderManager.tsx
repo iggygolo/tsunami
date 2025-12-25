@@ -93,10 +93,7 @@ export function UploadProviderManager() {
   };
 
   const handleProviderChange = (provider: 'blossom' | 'vercel') => {
-    console.log('🔄 Provider change requested:', provider);
-    console.log('Current config before change:', config);
     updateProvider(provider);
-    console.log('Provider update called');
     toast({
       title: "Upload provider changed",
       description: `Now using ${provider === 'vercel' ? 'Vercel Blob' : 'Blossom Servers'} for uploads.`,

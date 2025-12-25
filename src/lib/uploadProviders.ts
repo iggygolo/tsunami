@@ -40,30 +40,21 @@ export class UploadProviderError extends Error {
 }
 
 import { upload } from '@vercel/blob/client';
+import { 
+  AUDIO_MIME_TYPES, 
+  VIDEO_MIME_TYPES, 
+  IMAGE_MIME_TYPES 
+} from '@/lib/fileTypes';
 
 // File validation constants
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 const ALLOWED_MIME_TYPES = [
-  // Audio
-  'audio/mpeg',
-  'audio/mp4',
-  'audio/aac',
-  'audio/ogg',
-  'audio/wav',
-  'audio/flac',
-  'audio/opus',
-  'audio/webm',
-  // Video
-  'video/mp4',
-  'video/quicktime',
-  'video/x-msvideo',
-  'video/x-matroska',
-  // Images
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/svg+xml',
+  // Audio (from centralized config)
+  ...AUDIO_MIME_TYPES,
+  // Video (from centralized config)
+  ...VIDEO_MIME_TYPES,
+  // Images (from centralized config)
+  ...IMAGE_MIME_TYPES,
   // Documents
   'application/json',
   'text/srt',
@@ -169,21 +160,31 @@ export class VercelUploadProvider implements UploadProvider {
   }
 
   validateFile(file: File): boolean {
+    console.log('🔍 Vercel validateFile called for:', file.name);
+    console.log('File type:', file.type);
+    console.log('File size:', file.size);
+    console.log('Supported types:', this.getSupportedTypes());
+    console.log('Type supported:', this.getSupportedTypes().includes(file.type));
+    
     // Check file size
     if (file.size > this.getMaxFileSize() || file.size <= 0) {
+      console.log('❌ File size validation failed');
       return false;
     }
     
     // Check MIME type
     if (!this.getSupportedTypes().includes(file.type)) {
+      console.log('❌ MIME type validation failed');
       return false;
     }
     
     // Check filename
     if (!file.name || file.name.trim().length === 0) {
+      console.log('❌ Filename validation failed');
       return false;
     }
     
+    console.log('✅ File validation passed');
     return true;
   }
 
@@ -343,7 +344,7 @@ export class UploadProviderFactory {
       blossomEnabled: true,
       maxFileSize: MAX_FILE_SIZE,
       allowedTypes: [...ALLOWED_MIME_TYPES],
-      fallbackEnabled: true // Enable fallback by default
+      fallbackEnabled: false // Disable fallback to prevent uploads to wrong provider
     };
   }
 }

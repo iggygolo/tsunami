@@ -104,11 +104,15 @@ export function useUploadFile() {
       console.log('Starting file upload:', correctedFile.name, correctedFile.size, correctedFile.type);
       console.log('Upload config:', config);
       console.log('Default provider:', config.defaultProvider);
-      console.log('Vercel enabled:', config.vercelEnabled);
-      console.log('Blossom enabled:', config.blossomEnabled);
-      console.log('Environment VITE_DEFAULT_UPLOAD_PROVIDER:', import.meta.env.VITE_DEFAULT_UPLOAD_PROVIDER);
-      console.log('LocalStorage config key:', 'tsunami_upload_config');
-      console.log('LocalStorage raw value:', localStorage.getItem('tsunami_upload_config'));
+      
+      // Log file type for debugging
+      if (correctedFile.type.startsWith('audio/')) {
+        console.log('🎵 UPLOADING AUDIO FILE');
+      } else if (correctedFile.type.startsWith('image/')) {
+        console.log('🖼️ UPLOADING IMAGE FILE');
+      } else {
+        console.log('📄 UPLOADING OTHER FILE TYPE');
+      }
 
       // Use the configured default provider
       if (config.defaultProvider === 'vercel' && config.vercelEnabled) {
@@ -116,10 +120,10 @@ export function useUploadFile() {
         try {
           return await uploadWithVercel(correctedFile, user);
         } catch (vercelError) {
-          console.warn('Vercel upload failed, falling back to Blossom:', vercelError);
+          console.warn('Vercel upload failed:', vercelError);
           
-          // Fallback to Blossom if Vercel fails
-          if (config.blossomEnabled) {
+          // Only fallback if explicitly enabled
+          if (config.fallbackEnabled && config.blossomEnabled) {
             console.log('⚠️ FALLING BACK TO BLOSSOM - SIGNING REQUIRED');
             try {
               return await uploadWithBlossom(correctedFile, user, allServers);
@@ -139,8 +143,8 @@ export function useUploadFile() {
         } catch (blossomError) {
           console.warn('Blossom upload failed:', blossomError);
           
-          // Fallback to Vercel if enabled
-          if (config.vercelEnabled) {
+          // Only fallback if explicitly enabled
+          if (config.fallbackEnabled && config.vercelEnabled) {
             console.log('⚠️ FALLING BACK TO VERCEL - NO SIGNING REQUIRED');
             try {
               return await uploadWithVercel(correctedFile, user);
