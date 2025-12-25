@@ -149,8 +149,13 @@ const Index = () => {
                       <Sparkles className="w-3 h-3 mr-1" />
                       Latest Release
                     </Badge>
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
-                      {latestRelease.title}
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+                      <Link 
+                        to={`/releases/${latestRelease.eventId || latestRelease.id}`}
+                        className="text-white drop-shadow-lg hover:text-white/90 transition-colors"
+                      >
+                        {latestRelease.title}
+                      </Link>
                     </h1>
                     <div className="flex flex-col lg:flex-row items-center gap-2 sm:gap-4">
                       <Link to="/about" className="inline-flex items-center gap-2 text-lg text-white/90 hover:text-white transition-colors drop-shadow-md">
