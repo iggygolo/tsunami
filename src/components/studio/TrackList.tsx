@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Edit, Trash2, Music, Clock, Play, Pause } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,26 @@ export function TrackList({
 }: TrackListProps) {
   const navigate = useNavigate();
   const { playRelease, pause, state: playerState } = useAudioPlayer();
+
+  // Add logging when tracks data changes
+  useEffect(() => {
+    console.log('🎵 TrackList - Tracks data updated:', {
+      releaseId,
+      releaseTitle,
+      totalTracks: tracks.length,
+      tracksWithContent: tracks.filter(track => track.title || track.audioUrl).length,
+      trackDetails: tracks.map((track, index) => ({
+        index,
+        title: track.title || '(no title)',
+        hasAudio: !!track.audioUrl,
+        audioUrl: track.audioUrl ? track.audioUrl.slice(0, 50) + '...' : '(no audio)',
+        duration: track.duration,
+        explicit: track.explicit,
+        language: track.language,
+        isEmpty: !track.title && !track.audioUrl
+      }))
+    });
+  }, [tracks, releaseId, releaseTitle]);
 
   // Helper function to create a mock release for a track
   const createMockRelease = (track: TrackData, index: number): MusicRelease => ({
@@ -217,7 +238,7 @@ export function TrackList({
       )}
 
       {/* Add New Track Button */}
-      {tracks.length > 0 && (
+      {tracks.filter(track => track.title || track.audioUrl).length > 0 && (
         <div className="flex justify-center pt-4">
           <Button variant="outline" onClick={handleAddTrack}>
             <Music className="w-4 h-4 mr-2" />

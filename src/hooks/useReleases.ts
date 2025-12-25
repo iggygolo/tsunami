@@ -218,17 +218,42 @@ export function usePodcastRelease(playlistId: string) {
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
 
+      console.log('🔍 usePodcastRelease - Fetching release:', playlistId);
+
       // First try to fetch the event
       const events = await nostr.query([{
         ids: [playlistId]
       }], { signal });
 
       const event = events[0];
-      if (!event) return null;
+      if (!event) {
+        console.log('❌ usePodcastRelease - No event found for ID:', playlistId);
+        return null;
+      }
+
+      console.log('📄 usePodcastRelease - Event found:', {
+        id: event.id,
+        kind: event.kind,
+        created_at: event.created_at,
+        pubkey: event.pubkey?.slice(0, 8) + '...',
+        tags: event.tags?.length || 0
+      });
 
       // Handle music playlist events (Kind 34139)
       if (event.kind === MUSIC_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)) {
+        console.log('🎵 usePodcastRelease - Processing playlist event');
         const playlist = eventToMusicPlaylist(event);
+        
+        console.log('📋 usePodcastRelease - Playlist data:', {
+          title: playlist.title,
+          identifier: playlist.identifier,
+          trackReferences: playlist.tracks?.length || 0,
+          tracks: playlist.tracks?.map(ref => ({
+            pubkey: ref.pubkey?.slice(0, 8) + '...',
+            identifier: ref.identifier,
+            title: ref.title
+          })) || []
+        });
         
         // Extract track references and fetch tracks
         const trackReferences = new Set<string>();
@@ -237,6 +262,15 @@ export function usePodcastRelease(playlistId: string) {
         playlist.tracks.forEach(trackRef => {
           trackReferences.add(`${trackRef.pubkey}:${trackRef.identifier}`);
           referencedPubkeys.add(trackRef.pubkey);
+        });
+
+        console.log('🔗 usePodcastRelease - Track references to resolve:', {
+          totalReferences: trackReferences.size,
+          uniquePubkeys: referencedPubkeys.size,
+          references: Array.from(trackReferences).map(ref => {
+            const [pubkey, identifier] = ref.split(':');
+            return `${pubkey.slice(0, 8)}.../${identifier}`;
+          })
         });
 
         // Fetch all referenced tracks
@@ -259,15 +293,29 @@ export function usePodcastRelease(playlistId: string) {
             '#d': identifiers,
             limit: identifiers.length * 2
           }));
+
+          console.log('🔍 usePodcastRelease - Fetching track events with queries:', trackQueries.length);
           
           const allTrackEvents = await Promise.all(
             trackQueries.map(query => nostr.query([query], { signal }))
           );
           
           trackEvents = allTrackEvents.flat();
+          
+          console.log('📦 usePodcastRelease - Track events fetched:', {
+            totalEvents: trackEvents.length,
+            events: trackEvents.map(e => ({
+              id: e.id?.slice(0, 8) + '...',
+              kind: e.kind,
+              pubkey: e.pubkey?.slice(0, 8) + '...',
+              dTag: e.tags?.find(t => t[0] === 'd')?.[1]
+            }))
+          });
         }
 
         const validTracks = trackEvents.filter(validateMusicTrack);
+        console.log('✅ usePodcastRelease - Valid track events:', validTracks.length);
+        
         const tracksMap = new Map<string, MusicTrackData>();
         
         validTracks.forEach(trackEvent => {
@@ -277,23 +325,54 @@ export function usePodcastRelease(playlistId: string) {
           const existing = tracksMap.get(key);
           if (!existing || trackEvent.created_at > (existing as any).created_at) {
             tracksMap.set(key, track);
+            console.log('🎵 usePodcastRelease - Track added to map:', {
+              key,
+              title: track.title,
+              audioUrl: track.audioUrl ? '✓' : '✗',
+              duration: track.duration
+            });
           }
         });
 
-        return playlistToRelease(playlist, tracksMap);
+        const release = playlistToRelease(playlist, tracksMap);
+        
+        console.log('🎉 usePodcastRelease - Final release created:', {
+          title: release.title,
+          tracksInRelease: release.tracks?.length || 0,
+          tracksWithAudio: release.tracks?.filter(t => t.audioUrl).length || 0,
+          tracksWithTitle: release.tracks?.filter(t => t.title).length || 0
+        });
+
+        return release;
       }
 
       // Handle music track events (Kind 36787)
       if (event.kind === MUSIC_KINDS.MUSIC_TRACK && validateMusicTrack(event)) {
+        console.log('🎵 usePodcastRelease - Processing single track event');
         const track = eventToMusicTrack(event);
-        return trackToRelease(track);
+        const release = trackToRelease(track);
+        
+        console.log('🎉 usePodcastRelease - Single track release created:', {
+          title: release.title,
+          hasAudio: !!release.tracks?.[0]?.audioUrl
+        });
+        
+        return release;
       }
 
       // Handle any other supported event type
       try {
-        return eventToPodcastRelease(event);
+        console.log('🔄 usePodcastRelease - Attempting generic event conversion');
+        const release = eventToPodcastRelease(event);
+        
+        console.log('🎉 usePodcastRelease - Generic release created:', {
+          title: release.title,
+          tracksCount: release.tracks?.length || 0
+        });
+        
+        return release;
       } catch (error) {
-        console.error('usePodcastRelease - Event conversion failed:', error);
+        console.error('❌ usePodcastRelease - Event conversion failed:', error);
         return null;
       }
     },

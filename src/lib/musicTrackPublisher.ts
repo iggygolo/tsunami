@@ -184,7 +184,19 @@ export class MusicTrackPublisher {
     // Ensure identifier is set
     if (!trackData.identifier) {
       trackData.identifier = this.generateTrackIdentifier();
+      console.log('🆔 musicTrackPublisher - Generated track identifier:', trackData.identifier);
+    } else {
+      console.log('🆔 musicTrackPublisher - Using existing identifier:', trackData.identifier);
     }
+    
+    console.log('📝 musicTrackPublisher - Creating track event:', {
+      identifier: trackData.identifier,
+      title: trackData.title,
+      artist: trackData.artist,
+      audioUrl: trackData.audioUrl ? '✓' : '✗',
+      album: trackData.album,
+      trackNumber: trackData.trackNumber
+    });
     
     // Validate required fields
     this.validateRequiredFields(trackData);
@@ -192,6 +204,14 @@ export class MusicTrackPublisher {
     // Build event structure
     const tags = this.buildEventTags(trackData);
     const content = this.buildEventContent(trackData);
+    
+    console.log('🏷️ musicTrackPublisher - Event tags built:', {
+      totalTags: tags.length,
+      dTag: tags.find(t => t[0] === 'd')?.[1],
+      titleTag: tags.find(t => t[0] === 'title')?.[1],
+      artistTag: tags.find(t => t[0] === 'artist')?.[1],
+      urlTag: tags.find(t => t[0] === 'url')?.[1] ? '✓' : '✗'
+    });
     
     return {
       kind: MUSIC_KINDS.MUSIC_TRACK,

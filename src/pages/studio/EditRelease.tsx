@@ -21,6 +21,27 @@ const EditRelease = () => {
   const { data: release, isLoading: isLoadingRelease, error } = usePodcastRelease(releaseId!);
   const { mutateAsync: updateRelease, isPending: isUpdating } = useUpdateRelease();
 
+  // Add logging when release data is loaded
+  useEffect(() => {
+    if (release) {
+      console.log('🎵 EditRelease - Release data loaded:', {
+        releaseId,
+        title: release.title,
+        eventId: release.eventId,
+        identifier: release.identifier,
+        artistPubkey: release.artistPubkey?.slice(0, 8) + '...',
+        tracksCount: release.tracks?.length || 0,
+        tracks: release.tracks?.map((track, index) => ({
+          index,
+          title: track.title,
+          audioUrl: track.audioUrl ? '✓' : '✗',
+          duration: track.duration,
+          hasContent: !!(track.title && track.audioUrl)
+        })) || []
+      });
+    }
+  }, [release, releaseId]);
+
   // Check if user is the artist
   useEffect(() => {
     if (!user || !isArtist(user.pubkey)) {

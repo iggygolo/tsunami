@@ -133,7 +133,21 @@ export class MusicPlaylistPublisher {
     // Ensure identifier is set
     if (!playlistData.identifier) {
       playlistData.identifier = this.generatePlaylistIdentifier();
+      console.log('🆔 musicPlaylistPublisher - Generated playlist identifier:', playlistData.identifier);
+    } else {
+      console.log('🆔 musicPlaylistPublisher - Using existing identifier:', playlistData.identifier);
     }
+    
+    console.log('📝 musicPlaylistPublisher - Creating playlist event:', {
+      identifier: playlistData.identifier,
+      title: playlistData.title,
+      trackCount: playlistData.tracks.length,
+      tracks: playlistData.tracks.map(t => ({
+        pubkey: t.pubkey.slice(0, 8) + '...',
+        identifier: t.identifier,
+        title: t.title
+      }))
+    });
     
     // Validate required fields
     this.validateRequiredFields(playlistData);
@@ -144,6 +158,14 @@ export class MusicPlaylistPublisher {
     // Build event structure
     const tags = this.buildEventTags(playlistData);
     const content = this.buildEventContent(playlistData);
+    
+    console.log('🏷️ musicPlaylistPublisher - Event tags built:', {
+      totalTags: tags.length,
+      dTag: tags.find(t => t[0] === 'd')?.[1],
+      titleTag: tags.find(t => t[0] === 'title')?.[1],
+      aTags: tags.filter(t => t[0] === 'a').length,
+      trackReferences: tags.filter(t => t[0] === 'a').map(t => t[1])
+    });
     
     return {
       kind: MUSIC_KINDS.MUSIC_PLAYLIST,

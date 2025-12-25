@@ -26,7 +26,12 @@ import type { MusicRelease, ReleaseFormData } from '@/types/music';
 // Track schema for individual tracks
 const trackSchema = z.object({
   title: z.string().min(1, 'Track title is required').max(200, 'Track title too long'),
-  audioUrl: z.string().url().optional().or(z.literal('')),
+  audioUrl: z.string().optional().refine((val) => {
+    // Allow empty string only if it will be validated later (when audioFile is present)
+    return val === undefined || val === '' || z.string().url().safeParse(val).success;
+  }, {
+    message: 'Invalid audio URL format'
+  }),
   duration: z.number().positive().optional(),
   explicit: z.boolean().default(false),
   language: z.string().nullable().optional().refine(validateLanguageCode, {
@@ -99,6 +104,21 @@ export function ReleaseForm({
   // Load release data when available (for edit mode)
   useEffect(() => {
     if (isEditMode) {
+      console.log('📝 ReleaseForm - Loading release data for edit mode:', {
+        releaseTitle: release.title,
+        releaseId: release.eventId,
+        identifier: release.identifier,
+        originalTracks: release.tracks?.length || 0,
+        trackDetails: release.tracks?.map((track, index) => ({
+          index,
+          title: track.title,
+          audioUrl: track.audioUrl ? '✓' : '✗',
+          duration: track.duration,
+          explicit: track.explicit,
+          language: track.language
+        })) || []
+      });
+
       reset({
         title: release.title,
         imageUrl: release.imageUrl || '',
@@ -113,6 +133,8 @@ export function ReleaseForm({
           language: track.language || null,
         })) || [],
       });
+
+      console.log('✅ ReleaseForm - Form reset complete with tracks:', release.tracks?.length || 0);
     }
   }, [release, reset, isEditMode]);
 
