@@ -218,8 +218,8 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
               <GlassTabsContent value="releases" className="w-full max-w-full">
                 <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
                   {isLoadingPlaylists ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                      {[...Array(5)].map((_, i) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {[...Array(4)].map((_, i) => (
                         <div key={i} className="rounded-xl bg-card/30 border border-border/50 backdrop-blur-xl overflow-hidden animate-pulse">
                           <div className="w-full aspect-square bg-muted" />
                           <div className="p-2 space-y-1">
@@ -230,7 +230,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                       ))}
                     </div>
                   ) : playlists.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                       {playlists.map((playlist) => {
                         // Get resolved tracks for this playlist
                         const playlistTrackReferences = playlist.tracks;
@@ -293,7 +293,6 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                           <GlassReleaseCard
                             key={playlist.eventId || playlist.identifier}
                             release={releaseData}
-                            layout="vertical"
                           />
                         );
                       })}

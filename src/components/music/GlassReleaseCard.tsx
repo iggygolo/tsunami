@@ -1,5 +1,4 @@
-import { formatDistanceToNow } from 'date-fns';
-import { Play, Pause, Music, Clock, Calendar, Zap, Heart, Volume2, Share } from 'lucide-react';
+import { Play, Pause, Music, Zap, Heart, Volume2, Share } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -18,11 +17,9 @@ import type { Event } from 'nostr-tools';
 interface GlassReleaseCardProps {
   release: MusicRelease;
   className?: string;
-  layout?: 'vertical' | 'horizontal'; // Add layout option
-  size?: 'default' | 'compact'; // Add size option
 }
 
-export function GlassReleaseCard({ release, className, layout = 'vertical', size = 'compact' }: GlassReleaseCardProps) {
+export function GlassReleaseCard({ release, className}: GlassReleaseCardProps) {
   const trackPlayback = useUniversalTrackPlayback(release);
   const { prefetchRelease } = useReleasePrefetch();
   const musicConfig = useMusicConfig();
@@ -84,424 +81,144 @@ export function GlassReleaseCard({ release, className, layout = 'vertical', size
   };
 
   return (
-    <div 
-      className={cn(
-        "group relative overflow-hidden rounded-2xl bg-card/40 border border-border/60 backdrop-blur-xl hover:bg-card/50 hover:border-border/80 transition-all duration-300 shadow-lg hover:shadow-xl",
-        layout === 'horizontal' && "flex flex-row",
-        size === 'compact' && "rounded-xl", // Smaller border radius for compact
-        className
-      )}
-      onMouseEnter={handleMouseEnter}
-    >
-      {/* Cover Image */}
+    <div className={cn("group", className)}>
+      {/* Square Card Image */}
+      <div className="relative overflow-hidden rounded-2xl bg-card/40 border border-border/60 backdrop-blur-xl hover:bg-card/50 hover:border-border/80 transition-all duration-300 shadow-lg hover:shadow-xl aspect-square">
         <Link 
-        to={releaseUrl} 
-        className={cn(
-          "block relative overflow-hidden",
-          layout === 'horizontal' ? "w-24 h-24 flex-shrink-0 rounded-l-2xl" : "aspect-square rounded-t-2xl",
-          size === 'compact' && layout !== 'horizontal' && "rounded-t-xl" // Smaller radius for compact vertical
-        )}
-      >
-        {release.imageUrl ? (
-          <img
-            src={release.imageUrl}
-            alt={release.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-            <Music className="w-16 h-16 text-muted-foreground/50" />
-          </div>
-        )}
-        
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Play button overlay */}
+          to={releaseUrl} 
+          className="block relative w-full h-full"
+          onMouseEnter={handleMouseEnter}
+        >
+          {release.imageUrl ? (
+            <img
+              src={release.imageUrl}
+              alt={release.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+              <Music className="w-16 h-16 text-muted-foreground/50" />
+            </div>
+          )}
+          
+          {/* Gradient overlay for better button visibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </Link>
+
+        {/* Play button overlay - Center (Smaller) */}
         {trackPlayback?.hasPlayableTracks && (
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <Button
-              size={size === 'compact' ? 'default' : 'lg'}
+              size="default"
               onClick={handlePlayClick}
               disabled={trackPlayback?.isReleaseLoading}
-              className={cn(
-                "rounded-full p-0 bg-white/90 hover:bg-white text-black border-0 shadow-lg backdrop-blur-sm",
-                size === 'compact' ? "w-12 h-12" : "w-16 h-16"
-              )}
+              className="rounded-full w-12 h-12 p-0 bg-white/90 hover:bg-white text-black border-0 shadow-lg backdrop-blur-sm"
             >
               {trackPlayback?.isReleaseLoading ? (
-                <div className={cn(
-                  "border-2 border-black/30 border-t-black rounded-full animate-spin",
-                  size === 'compact' ? "w-4 h-4" : "w-6 h-6"
-                )} />
+                <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
               ) : trackPlayback?.isReleasePlaying ? (
-                <Pause className={cn(size === 'compact' ? "w-6 h-6" : "w-8 h-8")} fill="currentColor" />
+                <Pause className="w-6 h-6" fill="currentColor" />
               ) : (
-                <Play className={cn(size === 'compact' ? "w-6 h-6 ml-0.5" : "w-8 h-8 ml-1")} fill="currentColor" />
+                <Play className="w-6 h-6 ml-0.5" fill="currentColor" />
               )}
             </Button>
           </div>
         )}
 
-        {/* Social Actions Overlay - Always visible on card image */}
-        <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
-          <div className="flex items-center gap-3 px-4 py-2 bg-black/50 backdrop-blur-md rounded-full">
-            {/* Like Button */}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleLike();
-              }}
-              className={cn(
-                "w-8 h-8 p-0 rounded-full transition-all duration-200 hover:scale-110",
-                hasUserLiked 
-                  ? "text-red-500" 
-                  : "text-white/80 hover:text-red-500"
-              )}
-              title={hasUserLiked ? "Unlike this release" : "Like this release"}
-            >
-              <Heart className={cn(
-                "w-4 h-4 transition-all duration-200", 
-                hasUserLiked && "fill-current"
-              )} />
-            </Button>
+        {/* Social Actions - Bottom Right Corner (Horizontal Row) */}
+        <div className="absolute bottom-3 right-3 flex flex-row gap-2 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
+          {/* Like Button */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleLike();
+            }}
+            className="w-8 h-8 p-0 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white/90 hover:scale-105 transition-transform duration-200"
+            title={hasUserLiked ? "Unlike this release" : "Like this release"}
+          >
+            <Heart className={cn(
+              "w-3.5 h-3.5 transition-all duration-200", 
+              hasUserLiked && "fill-current"
+            )} />
+          </Button>
 
-            {/* Share Button */}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleShare();
-              }}
-              className="w-8 h-8 p-0 rounded-full text-white/80 hover:text-white hover:scale-110 transition-all duration-200"
-              title="Share this release"
-            >
-              <Share className="w-4 h-4" />
-            </Button>
+          {/* Share Button */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleShare();
+            }}
+            className="w-8 h-8 p-0 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white/90 hover:scale-105 transition-transform duration-200"
+            title="Share this release"
+          >
+            <Share className="w-3.5 h-3.5" />
+          </Button>
 
-            {/* Zap Button */}
-            {releaseEvent ? (
-              <ZapDialog target={releaseEvent}>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="w-8 h-8 p-0 rounded-full text-white/80 hover:text-yellow-400 hover:scale-110 transition-all duration-200"
-                  title="Zap this release"
-                >
-                  <Zap className="w-4 h-4" />
-                </Button>
-              </ZapDialog>
-            ) : (
+          {/* Zap Button */}
+          {releaseEvent ? (
+            <ZapDialog target={releaseEvent}>
               <Button
                 size="sm"
                 variant="ghost"
-                disabled
-                className="w-8 h-8 p-0 rounded-full text-white/40 cursor-not-allowed"
-                title="Zap not available"
+                className="w-8 h-8 p-0 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white/90 hover:scale-105 transition-transform duration-200"
+                title="Zap this release"
               >
-                <Zap className="w-4 h-4" />
+                <Zap className="w-3.5 h-3.5" />
               </Button>
-            )}
-          </div>
+            </ZapDialog>
+          ) : (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled
+              className="w-8 h-8 p-0 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white/40 cursor-not-allowed"
+              title="Zap not available"
+            >
+              <Zap className="w-3.5 h-3.5" />
+            </Button>
+          )}
         </div>
 
-        {/* Playing Status Indicator - Top Right */}
+        {/* Playing Status Indicator - Top Left */}
         {trackPlayback?.isReleasePlaying && (
-          <div className={cn(
-            "absolute top-2 right-2",
-            size === 'compact' && "top-1.5 right-1.5"
-          )}>
-            <div className={cn(
-              "flex items-center gap-2 bg-primary/90 text-white rounded-full font-medium backdrop-blur-sm shadow-lg",
-              size === 'compact' ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-xs"
-            )}>
-              <Volume2 className={cn(
-                "animate-pulse",
-                size === 'compact' ? "w-2.5 h-2.5" : "w-3 h-3"
-              )} />
+          <div className="absolute top-3 left-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/90 text-white rounded-full text-xs font-medium backdrop-blur-sm shadow-lg">
+              <Volume2 className="w-3 h-3 animate-pulse" />
               <span>Playing</span>
             </div>
           </div>
         )}
 
-        {/* Explicit Content Badge - Top Left */}
-        {firstTrack?.explicit && (
-          <div className={cn(
-            "absolute top-2 left-2",
-            size === 'compact' && "top-1.5 left-1.5"
-          )}>
-            <Badge variant="destructive" className={cn(
-              "bg-red-500/90 text-white border-0 backdrop-blur-sm",
-              size === 'compact' ? "text-xs px-1.5 py-0.5" : "text-xs px-2 py-1"
-            )}>
+        {/* Explicit Content Badge - Top Left (when not playing) */}
+        {firstTrack?.explicit && !trackPlayback?.isReleasePlaying && (
+          <div className="absolute top-3 left-3">
+            <Badge variant="destructive" className="text-xs px-2 py-1 bg-red-500/90 text-white border-0 backdrop-blur-sm">
               E
             </Badge>
           </div>
         )}
-      </Link>
+      </div>
 
-      {/* Content */}
-      <div className={cn(
-        "flex flex-col",
-        layout === 'horizontal' ? "p-3 flex-1 justify-center" : size === 'compact' ? "p-2" : "p-4"
-      )}>
-        {/* Title and Artist */}
-        <div className={cn(
-          size === 'compact' ? "mb-2" : "mb-3"
-        )}>
-          <Link 
-            to={releaseUrl} 
-            className="block group/title"
-            onMouseEnter={handleMouseEnter}
-          >
-            <h3 className={cn(
-              "font-bold text-foreground leading-tight line-clamp-2 group-hover/title:text-primary transition-colors mb-1",
-              size === 'compact' ? "text-sm" : "text-base"
-            )}>
-              {release.title}
-            </h3>
-          </Link>
-          <p className={cn(
-            "text-muted-foreground font-medium",
-            size === 'compact' ? "text-xs" : "text-sm"
-          )}>
-            {displayArtistName}
-          </p>
-          
-          {/* Track count and stats */}
-          <div className="flex items-center justify-between mt-1">
-            {/* Track count */}
-            {release.tracks && release.tracks.length > 0 && (
-              <p className="text-xs text-muted-foreground/70">
-                {release.tracks.length} track{release.tracks.length !== 1 ? 's' : ''}
-              </p>
-            )}
-            
-            {/* Stats */}
-            <div className="flex items-center gap-2">
-              {release.totalSats && (
-                <div className="flex items-center gap-1 text-xs">
-                  <Zap className="w-3 h-3 text-yellow-500" />
-                  <span className="text-muted-foreground font-medium">{release.totalSats.toLocaleString()}</span>
-                </div>
-              )}
-              
-              {release.zapCount && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <span className="font-medium">{release.zapCount}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Row */}
-        {layout === 'vertical' && size !== 'compact' && (
-          <div className="flex items-center justify-between pt-3 border-t border-border/50">
-            {/* Stats Display */}
-            <div className="flex items-center gap-4">
-              {release.totalSats && (
-                <div className="flex items-center gap-1.5 text-xs">
-                  <Zap className="w-3 h-3 text-yellow-500" />
-                  <span className="text-muted-foreground font-medium">{release.totalSats.toLocaleString()}</span>
-                  <span className="text-muted-foreground/70">sats</span>
-                </div>
-              )}
-              
-              {release.zapCount && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <span className="font-medium">{release.zapCount}</span>
-                  <span>zaps</span>
-                </div>
-              )}
-              
-              {release.commentCount && (
-                <div className="flex items-center gap-1.5 text-xs">
-                  <Heart className="w-3 h-3 text-red-400" />
-                  <span className="text-muted-foreground font-medium">{release.commentCount}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Social Action Buttons */}
-            <div 
-              className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                // Stop propagation to prevent card navigation when clicking social buttons
-                e.stopPropagation();
-              }}
-            >
-              {/* Like Button */}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleLike();
-                }}
-                className={cn(
-                  "w-8 h-8 p-0 rounded-full transition-all duration-200",
-                  hasUserLiked 
-                    ? "text-red-500 bg-red-500/20 hover:bg-red-500/30" 
-                    : "text-muted-foreground hover:text-red-500 hover:bg-red-500/20"
-                )}
-                title={hasUserLiked ? "Unlike this release" : "Like this release"}
-              >
-                <Heart className={cn(
-                  "w-3.5 h-3.5 transition-all duration-200", 
-                  hasUserLiked && "fill-current scale-110"
-                )} />
-              </Button>
-
-              {/* Zap Button */}
-              {releaseEvent ? (
-                <ZapDialog target={releaseEvent}>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="w-8 h-8 p-0 rounded-full text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/20 transition-colors"
-                    title="Zap this release"
-                  >
-                    <Zap className="w-3.5 h-3.5" />
-                  </Button>
-                </ZapDialog>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled
-                  className="w-8 h-8 p-0 rounded-full text-muted-foreground/50 cursor-not-allowed"
-                  title="Zap not available"
-                >
-                  <Zap className="w-3.5 h-3.5" />
-                </Button>
-              )}
-
-              {/* Share Button */}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleShare();
-                }}
-                className="w-8 h-8 p-0 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/20 transition-colors"
-                title="Share this release"
-              >
-                <Share className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Horizontal Layout Social Actions */}
-        {layout === 'horizontal' && (
-          <div className="flex items-center justify-between mt-2">
-            {/* Compact Stats */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {release.totalSats && (
-                <span className="flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-yellow-500" />
-                  {release.totalSats.toLocaleString()}
-                </span>
-              )}
-              {release.zapCount && <span>{release.zapCount} zaps</span>}
-              {release.commentCount && (
-                <span className="flex items-center gap-1">
-                  <Heart className="w-3 h-3 text-red-400" />
-                  {release.commentCount}
-                </span>
-              )}
-            </div>
-
-            {/* Social Actions */}
-            <div 
-              className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                // Stop propagation to prevent card navigation when clicking social buttons
-                e.stopPropagation();
-              }}
-            >
-              {/* Like Button */}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleLike();
-                }}
-                className={cn(
-                  "w-7 h-7 p-0 rounded-full transition-all duration-200",
-                  hasUserLiked 
-                    ? "text-red-500 bg-red-500/20 hover:bg-red-500/30 opacity-100" 
-                    : "text-muted-foreground hover:text-red-500 hover:bg-red-500/20"
-                )}
-                title={hasUserLiked ? "Unlike this release" : "Like this release"}
-              >
-                <Heart className={cn(
-                  "w-3 h-3 transition-all duration-200", 
-                  hasUserLiked && "fill-current scale-110"
-                )} />
-              </Button>
-
-              {/* Zap Button */}
-              {releaseEvent ? (
-                <ZapDialog target={releaseEvent}>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="w-7 h-7 p-0 rounded-full text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/20 transition-colors"
-                    title="Zap this release"
-                  >
-                    <Zap className="w-3 h-3" />
-                  </Button>
-                </ZapDialog>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled
-                  className="w-7 h-7 p-0 rounded-full text-muted-foreground/50 cursor-not-allowed"
-                  title="Zap not available"
-                >
-                  <Zap className="w-3 h-3" />
-                </Button>
-              )}
-
-              {/* Share Button */}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleShare();
-                }}
-                className="w-7 h-7 p-0 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/20 transition-colors"
-                title="Share this release"
-              >
-                <Share className="w-3 h-3" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Description - Only for vertical layout and non-compact size */}
-        {release.description && layout === 'vertical' && size !== 'compact' && (
-          <div className="mt-3 pt-3 border-t border-border/50">
-            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-              {release.description}
-            </p>
-          </div>
-        )}
+      {/* Footnote - No Background, Clean Text */}
+      <div className="mt-3 space-y-1">
+        <Link 
+          to={releaseUrl} 
+          className="block group/title"
+          onMouseEnter={handleMouseEnter}
+        >
+          <h3 className="font-bold text-foreground leading-tight line-clamp-2 group-hover/title:text-primary transition-colors text-sm">
+            {release.title}
+          </h3>
+        </Link>
+        <p className="text-xs text-muted-foreground font-medium">
+          {displayArtistName}
+        </p>
       </div>
     </div>
   );
