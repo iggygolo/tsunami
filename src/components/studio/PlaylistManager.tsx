@@ -276,17 +276,16 @@ export function PlaylistManager({
         </div>
       </div>
 
-      {/* Playlist Grid */}
+      {/* Playlist Grid - Smaller Cards */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
-              <CardContent className="p-4">
-                <div className="aspect-square bg-muted rounded-lg mb-4"></div>
+              <CardContent className="p-3">
+                <div className="aspect-square bg-muted rounded-lg mb-3"></div>
                 <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                  <div className="h-3 bg-muted rounded w-1/4"></div>
+                  <div className="h-3 bg-muted rounded w-3/4"></div>
+                  <div className="h-2 bg-muted rounded w-1/2"></div>
                 </div>
               </CardContent>
             </Card>
@@ -312,12 +311,12 @@ export function PlaylistManager({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredPlaylists.map((playlist) => (
             <Card key={playlist.identifier} className="group hover:shadow-lg transition-shadow duration-200">
-              <CardContent className="p-4">
-                {/* Cover Art */}
-                <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden relative">
+              <CardContent className="p-3">
+                {/* Cover Art - Fill top of card */}
+                <div className="aspect-square bg-muted rounded-t-lg -mx-3 -mt-3 mb-3 overflow-hidden relative">
                   {playlist.imageUrl ? (
                     <img
                       src={playlist.imageUrl}
@@ -326,17 +325,17 @@ export function PlaylistManager({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <ListMusic className="w-12 h-12 text-muted-foreground/50" />
+                      <ListMusic className="w-8 h-8 text-muted-foreground/50" />
                     </div>
                   )}
                   
-                  {/* Play Button Overlay */}
+                  {/* Play Button Overlay - Smaller */}
                   {playlist.tracks && playlist.tracks.length > 0 && (
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Button
-                        size="lg"
+                        size="sm"
                         variant="secondary"
-                        className="rounded-full w-12 h-12 p-0 bg-white hover:bg-white/90 text-black border-0"
+                        className="rounded-full w-8 h-8 p-0 bg-white hover:bg-white/90 text-black border-0"
                         onClick={(e) => {
                           e.stopPropagation();
                           handlePlay(playlist);
@@ -344,148 +343,96 @@ export function PlaylistManager({
                         disabled={isLoadingTracks || getPlaylistPlayableTracks(playlist).length === 0}
                       >
                         {isLoadingTracks ? (
-                          <div className="w-6 h-6 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                          <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                         ) : isPlaylistPlaying(playlist) ? (
-                          <Pause className="w-6 h-6" />
+                          <Pause className="w-4 h-4" />
                         ) : (
-                          <Play className="w-6 h-6 ml-1" />
+                          <Play className="w-4 h-4 ml-0.5" />
                         )}
                       </Button>
                     </div>
                   )}
                 </div>
 
-                {/* Playlist Info */}
-                <div className="space-y-2">
-                  <div className="flex items-start justify-between">
+                {/* Playlist Info - Compact */}
+                <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-1">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate" title={playlist.title}>
+                      <h3 className="font-medium text-foreground truncate text-sm" title={playlist.title}>
                         {playlist.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {playlist.tracks.length} track{playlist.tracks.length !== 1 ? 's' : ''}
-                        {!isLoadingTracks && resolvedTracks && (
-                          <>
-                            {' • '}
-                            {getPlaylistPlayableTracks(playlist).length} playable
-                          </>
-                        )}
                       </p>
                     </div>
                     
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditPlaylist(playlist)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleDeletePlaylist(playlist)}
-                          className="text-red-600"
-                          disabled={isDeleting}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  {/* Description */}
-                  {playlist.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2" title={playlist.description}>
-                      {playlist.description}
-                    </p>
-                  )}
-
-                  {/* Metadata */}
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {formatDate(playlist.createdAt)}
+                    {/* Always Visible Menu and Edit Button */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditPlaylist(playlist)}
+                        className="w-6 h-6 p-0 text-muted-foreground hover:text-foreground"
+                        title="Edit playlist"
+                      >
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="w-6 h-6 p-0 text-muted-foreground hover:text-foreground"
+                          >
+                            <MoreVertical className="w-3 h-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditPlaylist(playlist)}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDeletePlaylist(playlist)}
+                            className="text-red-600"
+                            disabled={isDeleting}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
 
-                  {/* Categories */}
+                  {/* Compact Track Count with Status */}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {!isLoadingTracks && resolvedTracks ? (
+                        `${getPlaylistPlayableTracks(playlist).length}/${playlist.tracks.length} playable`
+                      ) : isLoadingTracks ? (
+                        'Loading...'
+                      ) : (
+                        `${playlist.tracks.length} tracks`
+                      )}
+                    </span>
+                    <span>{formatDate(playlist.createdAt)}</span>
+                  </div>
+
+                  {/* Categories - More Muted */}
                   {playlist.categories && playlist.categories.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {playlist.categories.slice(0, 3).map((category) => (
-                        <Badge key={category} variant="secondary" className="text-xs">
+                      {playlist.categories.slice(0, 2).map((category) => (
+                        <Badge key={category} variant="outline" className="text-xs px-1 py-0 h-4 text-muted-foreground/70 border-muted-foreground/30">
                           {category}
                         </Badge>
                       ))}
-                      {playlist.categories.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{playlist.categories.length - 3}
+                      {playlist.categories.length > 2 && (
+                        <Badge variant="outline" className="text-xs px-1 py-0 h-4 text-muted-foreground/70 border-muted-foreground/30">
+                          +{playlist.categories.length - 2}
                         </Badge>
                       )}
-                    </div>
-                  )}
-
-                  {/* Stats */}
-                  {(playlist.zapCount || playlist.totalSats) && (
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-                      {playlist.zapCount && (
-                        <span>⚡ {playlist.zapCount} zaps</span>
-                      )}
-                      {playlist.totalSats && (
-                        <span>💰 {playlist.totalSats} sats</span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Track Preview with Resolution Status */}
-                  {playlist.tracks.length > 0 && (
-                    <div className="pt-2 border-t">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs text-muted-foreground">Tracks:</p>
-                        {isLoadingTracks ? (
-                          <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-pulse"></div>
-                            <span className="text-xs text-muted-foreground">Loading...</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            {getPlaylistPlayableTracks(playlist).length}/{playlist.tracks.length} playable
-                          </span>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        {playlist.tracks.slice(0, 2).map((trackRef, index) => {
-                          const resolved = resolvedTracks?.find(rt => 
-                            rt.reference.pubkey === trackRef.pubkey && 
-                            rt.reference.identifier === trackRef.identifier
-                          );
-                          
-                          return (
-                            <div key={`${trackRef.pubkey}-${trackRef.identifier}`} className="flex items-center gap-2 text-xs">
-                              <span className="text-muted-foreground/70">{index + 1}.</span>
-                              <span className="truncate flex-1" title={resolved?.trackData?.title || trackRef.title || 'Unknown Track'}>
-                                {resolved?.trackData?.title || trackRef.title || 'Unknown Track'}
-                              </span>
-                              {resolved?.error && (
-                                <span className="text-red-400 text-xs">✗</span>
-                              )}
-                              {resolved?.trackData && !resolved.trackData.audioUrl && (
-                                <span className="text-yellow-400 text-xs">⚠</span>
-                              )}
-                              {resolved?.trackData?.audioUrl && (
-                                <span className="text-green-400 text-xs">✓</span>
-                              )}
-                            </div>
-                          );
-                        })}
-                        {playlist.tracks.length > 2 && (
-                          <p className="text-xs text-muted-foreground/70">
-                            +{playlist.tracks.length - 2} more tracks
-                          </p>
-                        )}
-                      </div>
                     </div>
                   )}
                 </div>

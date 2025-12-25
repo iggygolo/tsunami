@@ -219,17 +219,16 @@ export function TrackLibrary({
         </div>
       </div>
 
-      {/* Track Grid */}
+      {/* Track Grid - Smaller Cards */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
-              <CardContent className="p-4">
-                <div className="aspect-square bg-muted rounded-lg mb-4"></div>
+              <CardContent className="p-3">
+                <div className="aspect-square bg-muted rounded-lg mb-3"></div>
                 <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                  <div className="h-3 bg-muted rounded w-1/4"></div>
+                  <div className="h-3 bg-muted rounded w-3/4"></div>
+                  <div className="h-2 bg-muted rounded w-1/2"></div>
                 </div>
               </CardContent>
             </Card>
@@ -255,12 +254,12 @@ export function TrackLibrary({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredTracks.map((track) => (
             <Card key={track.identifier} className="group hover:shadow-lg transition-shadow duration-200">
-              <CardContent className="p-4">
-                {/* Cover Art */}
-                <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden relative">
+              <CardContent className="p-3">
+                {/* Cover Art - Fill top of card */}
+                <div className="aspect-square bg-muted rounded-t-lg -mx-3 -mt-3 mb-3 overflow-hidden relative">
                   {track.imageUrl ? (
                     <img
                       src={track.imageUrl}
@@ -269,121 +268,113 @@ export function TrackLibrary({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Music className="w-12 h-12 text-muted-foreground/50" />
+                      <Music className="w-8 h-8 text-muted-foreground/50" />
                     </div>
                   )}
                   
-                  {/* Play Button Overlay */}
+                  {/* Play Button Overlay - Smaller */}
                   {track.audioUrl && (
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Button
-                        size="lg"
+                        size="sm"
                         variant="secondary"
-                        className="rounded-full w-12 h-12 p-0 bg-white hover:bg-white/90 text-black border-0"
+                        className="rounded-full w-8 h-8 p-0 bg-white hover:bg-white/90 text-black border-0"
                         onClick={(e) => {
                           e.stopPropagation();
                           handlePlay(track);
                         }}
                       >
                         {isTrackPlaying(track) ? (
-                          <Pause className="w-6 h-6" />
+                          <Pause className="w-4 h-4" />
                         ) : (
-                          <Play className="w-6 h-6 ml-1" />
+                          <Play className="w-4 h-4 ml-0.5" />
                         )}
                       </Button>
                     </div>
                   )}
                 </div>
 
-                {/* Track Info */}
-                <div className="space-y-2">
-                  <div className="flex items-start justify-between">
+                {/* Track Info - Compact */}
+                <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-1">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate" title={track.title}>
+                      <h3 className="font-medium text-foreground truncate text-sm" title={track.title}>
                         {track.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground truncate" title={track.artist}>
+                      <p className="text-xs text-muted-foreground truncate" title={track.artist}>
                         {track.artist}
                       </p>
                     </div>
                     
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditTrack(track)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleAddToPlaylist(track)}>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add to Playlist
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleDeleteTrack(track)}
-                          className="text-red-600"
-                          disabled={isDeleting}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {/* Always Visible Menu and Edit Button */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditTrack(track)}
+                        className="w-6 h-6 p-0 text-muted-foreground hover:text-foreground"
+                        title="Edit track"
+                      >
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="w-6 h-6 p-0 text-muted-foreground hover:text-foreground"
+                          >
+                            <MoreVertical className="w-3 h-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditTrack(track)}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleAddToPlaylist(track)}>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add to Playlist
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDeleteTrack(track)}
+                            className="text-red-600"
+                            disabled={isDeleting}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
 
-                  {/* Album */}
-                  {track.album && (
-                    <p className="text-xs text-muted-foreground truncate" title={track.album}>
-                      {track.album}
-                    </p>
-                  )}
-
-                  {/* Description */}
-                  {track.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2" title={track.description}>
-                      {track.description}
-                    </p>
-                  )}
-
-                  {/* Metadata */}
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  {/* Compact Metadata */}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                      <Clock className="w-2.5 h-2.5" />
                       {formatDuration(track.duration)}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {formatDate(track.createdAt)}
-                    </div>
+                    {track.explicit && (
+                      <Badge variant="destructive" className="text-xs px-1 py-0 h-4">
+                        E
+                      </Badge>
+                    )}
                   </div>
 
-                  {/* Genres */}
+                  {/* Genres - More Muted */}
                   {track.genres && track.genres.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {track.genres.slice(0, 3).map((genre) => (
-                        <Badge key={genre} variant="secondary" className="text-xs">
+                      {track.genres.slice(0, 2).map((genre) => (
+                        <Badge key={genre} variant="outline" className="text-xs px-1 py-0 h-4 text-muted-foreground/70 border-muted-foreground/30">
                           {genre}
                         </Badge>
                       ))}
-                      {track.genres.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{track.genres.length - 3}
+                      {track.genres.length > 2 && (
+                        <Badge variant="outline" className="text-xs px-1 py-0 h-4 text-muted-foreground/70 border-muted-foreground/30">
+                          +{track.genres.length - 2}
                         </Badge>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Stats */}
-                  {(track.zapCount || track.totalSats) && (
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-                      {track.zapCount && (
-                        <span>⚡ {track.zapCount} zaps</span>
-                      )}
-                      {track.totalSats && (
-                        <span>💰 {track.totalSats} sats</span>
                       )}
                     </div>
                   )}
