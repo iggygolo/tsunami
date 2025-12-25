@@ -154,7 +154,9 @@ export function validateAudioFile(filename: string, mimeType: string): {
     };
   }
 
-  const isValidMimeType = isAudioMimeType(mimeType);
+  // More flexible MIME type validation for WAV files and empty MIME types
+  const isValidMimeType = isAudioMimeType(mimeType) || 
+                         (extension === 'wav' && (mimeType === '' || mimeType === 'audio/wav' || mimeType === 'audio/x-wav'));
   
   if (!isValidMimeType) {
     return { 
