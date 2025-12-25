@@ -133,34 +133,6 @@ export function PlaylistManager({
       return;
     }
 
-    // Convert MusicPlaylistData to MusicRelease format for the audio player
-    // Note: TrackReference only contains basic info, full track resolution would be needed for complete playback
-    const releaseData = {
-      id: playlist.identifier,
-      title: playlist.title,
-      imageUrl: playlist.imageUrl,
-      description: playlist.description,
-      content: playlist.description,
-      tracks: playlist.tracks.map(trackRef => ({
-        title: trackRef.title || 'Unknown Track',
-        audioUrl: '', // TrackReference doesn't contain audioUrl - would need track resolution
-        duration: undefined, // TrackReference doesn't contain duration
-        explicit: false, // TrackReference doesn't contain explicit flag
-        language: null // TrackReference doesn't contain language
-      })),
-      publishDate: playlist.createdAt || new Date(),
-      tags: playlist.categories || [],
-      genre: playlist.categories?.[0] || null,
-      eventId: playlist.eventId || '',
-      artistPubkey: playlist.authorPubkey || '',
-      identifier: playlist.identifier,
-      createdAt: playlist.createdAt || new Date(),
-      zapCount: playlist.zapCount,
-      totalSats: playlist.totalSats,
-      commentCount: playlist.commentCount,
-      repostCount: playlist.repostCount
-    };
-
     // Show a warning that playlist playback needs track resolution
     toast({
       title: 'Playlist playback',
@@ -178,18 +150,6 @@ export function PlaylistManager({
   const formatDate = (date?: Date) => {
     if (!date) return 'Unknown';
     return date.toLocaleDateString();
-  };
-
-  const getPlaylistTypeIcon = (playlist: MusicPlaylistData) => {
-    if (playlist.isPrivate) return <Lock className="w-3 h-3 text-muted-foreground" />;
-    if (playlist.isCollaborative) return <Users className="w-3 h-3 text-blue-500" />;
-    return <Eye className="w-3 h-3 text-green-500" />;
-  };
-
-  const getPlaylistTypeLabel = (playlist: MusicPlaylistData) => {
-    if (playlist.isPrivate) return 'Private';
-    if (playlist.isCollaborative) return 'Collaborative';
-    return 'Public';
   };
 
   if (error) {
@@ -383,10 +343,6 @@ export function PlaylistManager({
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {formatDate(playlist.createdAt)}
-                    </div>
-                    <div className="flex items-center gap-1" title={getPlaylistTypeLabel(playlist)}>
-                      {getPlaylistTypeIcon(playlist)}
-                      <span>{getPlaylistTypeLabel(playlist)}</span>
                     </div>
                   </div>
 

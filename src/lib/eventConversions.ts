@@ -30,6 +30,10 @@ export function validateMusicTrack(event: NostrEvent): boolean {
   if (!tags.get('artist')?.[0]) return false; // artist required
   if (!tags.get('url')?.[0]) return false; // audio URL required
 
+  // Check for required music tag
+  const hasMusicTag = event.tags.some(([key, value]) => key === 't' && value === 'music');
+  if (!hasMusicTag) return false;
+
   // Validate audio URL format
   const audioUrl = tags.get('url')?.[0];
   if (audioUrl && !isValidUrl(audioUrl)) return false;
@@ -104,11 +108,46 @@ function isValidUrl(url: string): boolean {
 export function eventToMusicTrack(event: NostrEvent): MusicTrackData {
   const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
 
+  // Parse zap splits from zap tags
+  const zapSplits = event.tags
+    .filter(([key]) => key === 'zap')
+    .map(([, address, percentage]) => ({
+      address,
+      percentage: parseFloat(percentage || '0'),
+      type: address.includes('@') ? 'lnaddress' as const : 'node' as const
+    }))
+    .filter(split => split.address && split.percentage > 0);
+
+  // Parse content for description, lyrics and credits
+  const content = event.content || '';
+  let description: string | undefined;
+  let lyrics: string | undefined;
+  let credits: string | undefined;
+
+  if (content.trim()) {
+    const sections = content.split('\n\n');
+    for (const section of sections) {
+      const trimmed = section.trim();
+      if (trimmed.startsWith('Lyrics:')) {
+        lyrics = trimmed.replace(/^Lyrics:\s*/, '').trim();
+      } else if (trimmed.startsWith('Credits:')) {
+        credits = trimmed.replace(/^Credits:\s*/, '').trim();
+      } else if (!lyrics && !credits && !description) {
+        // First section without a label is treated as description
+        description = trimmed;
+      }
+    }
+  }
+
   return {
+    // Required fields
     identifier: tags.get('d')?.[0] || '',
     title: tags.get('title')?.[0] || '',
     artist: tags.get('artist')?.[0] || '',
     audioUrl: tags.get('url')?.[0] || '',
+
+    // Optional metadata
+    description,
     album: tags.get('album')?.[0],
     trackNumber: tags.get('track_number')?.[0] ? parseInt(tags.get('track_number')![0]) : undefined,
     releaseDate: tags.get('released')?.[0],
@@ -116,16 +155,25 @@ export function eventToMusicTrack(event: NostrEvent): MusicTrackData {
     format: tags.get('format')?.[0],
     bitrate: tags.get('bitrate')?.[0],
     sampleRate: tags.get('sample_rate')?.[0],
+
+    // Media files
     imageUrl: tags.get('image')?.[0],
     videoUrl: tags.get('video')?.[0],
+
+    // Content and metadata
+    lyrics,
+    credits,
     language: tags.get('language')?.[0],
     explicit: tags.get('explicit')?.[0] === 'true',
     genres: event.tags.filter(([key, value]) => key === 't' && value !== 'music').map(([, value]) => value),
+
+    // Lightning Network
+    zapSplits: zapSplits.length > 0 ? zapSplits : undefined,
+
+    // Nostr-specific fields
     eventId: event.id,
     artistPubkey: event.pubkey,
     createdAt: new Date(event.created_at * 1000),
-    lyrics: event.content.includes('Lyrics:') ? event.content.split('Lyrics:\n')[1]?.split('\n\nCredits:')[0] : undefined,
-    credits: event.content.includes('Credits:') ? event.content.split('Credits:\n')[1] : undefined,
   };
 }
 
@@ -215,6 +263,7 @@ export function playlistToRelease(
         duration: track.duration,
         explicit: track.explicit || false,
         language: track.language || null,
+        imageUrl: track.imageUrl, // Include individual track image
       };
       releaseTracks.push(releaseTrack);
       console.log(`✅ playlistToRelease - Track ${index + 1} added with full data`);
@@ -227,6 +276,7 @@ export function playlistToRelease(
         duration: undefined,
         explicit: false,
         language: null,
+        imageUrl: undefined, // No image for placeholder tracks
       };
       releaseTracks.push(releaseTrack);
       console.log(`⚠️ playlistToRelease - Track ${index + 1} added as placeholder (missing track data)`);
@@ -256,7 +306,6 @@ export function playlistToRelease(
     tags: playlist.categories || [],
     transcriptUrl: undefined,
     genre: playlist.categories?.[0] || null,
-    externalRefs: [],
     eventId: playlist.eventId || '',
     artistPubkey: playlist.authorPubkey || '',
     identifier: playlist.identifier,
@@ -313,7 +362,6 @@ export function trackToRelease(track: MusicTrackData): MusicRelease {
     tags: track.genres || [],
     transcriptUrl: undefined,
     genre: track.genres?.[0] || null,
-    externalRefs: [],
     eventId: track.eventId || '',
     artistPubkey: track.artistPubkey || '',
     identifier: track.identifier,
@@ -325,6 +373,7 @@ export function trackToRelease(track: MusicTrackData): MusicRelease {
       duration: track.duration,
       explicit: track.explicit || false,
       language: track.language || null,
+      imageUrl: track.imageUrl, // Include individual track image
     }],
     // Add computed fields from track data
     ...(track.zapCount && { zapCount: track.zapCount }),
@@ -359,7 +408,6 @@ export function eventToPodcastRelease(event: NostrEvent): MusicRelease {
       tags: playlist.categories || [],
       transcriptUrl: undefined,
       genre: playlist.categories?.[0] || null,
-      externalRefs: [],
       eventId: playlist.eventId || event.id,
       artistPubkey: playlist.authorPubkey || event.pubkey,
       identifier: playlist.identifier,

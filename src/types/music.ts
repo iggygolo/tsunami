@@ -34,6 +34,7 @@ export interface ReleaseTrack {
   duration?: number;
   explicit?: boolean;
   language?: string | null; // ISO 639-1 two-letter code (e.g., "en", "es") or null for instrumental
+  imageUrl?: string; // Individual track artwork URL
 }
 
 /**

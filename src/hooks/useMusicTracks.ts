@@ -2,114 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
+import { eventToMusicTrack, validateMusicTrack, getEventIdentifier, deduplicateEventsByIdentifier } from '@/lib/eventConversions';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicTrackData } from '@/types/music';
-
-/**
- * Validates if a Nostr event is a valid music track (Kind 36787)
- */
-function validateMusicTrack(event: NostrEvent): boolean {
-  if (event.kind !== MUSIC_KINDS.MUSIC_TRACK) return false;
-
-  // Check for required tags
-  const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
-  
-  const requiredTags = ['d', 'title', 'artist', 'url'];
-  for (const tagName of requiredTags) {
-    if (!tags.has(tagName) || !tags.get(tagName)?.[0]?.trim()) {
-      return false;
-    }
-  }
-
-  // Check for required music tag
-  const hasMusicTag = event.tags.some(([key, value]) => key === 't' && value === 'music');
-  if (!hasMusicTag) return false;
-
-  return true;
-}
-
-/**
- * Converts a validated Nostr event to a MusicTrackData object
- */
-export function eventToMusicTrack(event: NostrEvent): MusicTrackData {
-  const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
-
-  // Parse zap splits from zap tags
-  const zapSplits = event.tags
-    .filter(([key]) => key === 'zap')
-    .map(([, address, percentage]) => ({
-      address,
-      percentage: parseFloat(percentage || '0'),
-      type: address.includes('@') ? 'lnaddress' as const : 'node' as const
-    }))
-    .filter(split => split.address && split.percentage > 0);
-
-  // Parse genres from additional 't' tags (excluding the required 'music' tag)
-  const genres = event.tags
-    .filter(([key, value]) => key === 't' && value !== 'music')
-    .map(([, value]) => value)
-    .filter(Boolean);
-
-  // Parse content for description, lyrics and credits
-  const content = event.content || '';
-  let description: string | undefined;
-  let lyrics: string | undefined;
-  let credits: string | undefined;
-
-  if (content.trim()) {
-    const sections = content.split('\n\n');
-    for (const section of sections) {
-      const trimmed = section.trim();
-      if (trimmed.startsWith('Lyrics:')) {
-        lyrics = trimmed.replace(/^Lyrics:\s*/, '').trim();
-      } else if (trimmed.startsWith('Credits:')) {
-        credits = trimmed.replace(/^Credits:\s*/, '').trim();
-      } else if (!lyrics && !credits && !description) {
-        // First section without a label is treated as description
-        description = trimmed;
-      }
-    }
-  }
-
-  const trackData: MusicTrackData = {
-    // Required fields
-    identifier: tags.get('d')?.[0] || '',
-    title: tags.get('title')?.[0] || '',
-    artist: tags.get('artist')?.[0] || '',
-    audioUrl: tags.get('url')?.[0] || '',
-
-    // Optional metadata
-    description,
-    album: tags.get('album')?.[0],
-    trackNumber: tags.get('track_number')?.[0] ? parseInt(tags.get('track_number')![0]) : undefined,
-    releaseDate: tags.get('released')?.[0],
-    duration: tags.get('duration')?.[0] ? parseInt(tags.get('duration')![0]) : undefined,
-    format: tags.get('format')?.[0],
-    bitrate: tags.get('bitrate')?.[0],
-    sampleRate: tags.get('sample_rate')?.[0],
-
-    // Media files
-    imageUrl: tags.get('image')?.[0],
-    videoUrl: tags.get('video')?.[0],
-
-    // Content and metadata
-    lyrics,
-    credits,
-    language: tags.get('language')?.[0],
-    explicit: tags.get('explicit')?.[0] === 'true',
-    genres: genres.length > 0 ? genres : undefined,
-
-    // Lightning Network
-    zapSplits: zapSplits.length > 0 ? zapSplits : undefined,
-
-    // Nostr-specific fields
-    eventId: event.id,
-    artistPubkey: event.pubkey,
-    createdAt: new Date(event.created_at * 1000)
-  };
-
-  return trackData;
-}
 
 /**
  * Hook to fetch all music tracks by the artist
@@ -138,20 +33,10 @@ export function useMusicTracks(options: {
       const validEvents = events.filter(validateMusicTrack);
 
       // Deduplicate addressable events by 'd' tag identifier (keep only latest version)
-      const tracksByIdentifier = new Map<string, NostrEvent>();
-      
-      for (const event of validEvents) {
-        const identifier = event.tags.find(([key]) => key === 'd')?.[1];
-        if (!identifier) continue;
-
-        const existing = tracksByIdentifier.get(identifier);
-        if (!existing || event.created_at > existing.created_at) {
-          tracksByIdentifier.set(identifier, event);
-        }
-      }
+      const deduplicatedEvents = deduplicateEventsByIdentifier(validEvents, getEventIdentifier);
 
       // Convert to MusicTrackData format
-      const tracks = Array.from(tracksByIdentifier.values()).map(eventToMusicTrack);
+      const tracks = deduplicatedEvents.map(eventToMusicTrack);
 
       // Sort tracks
       const sortBy = options.sortBy || 'date';

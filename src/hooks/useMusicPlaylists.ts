@@ -2,83 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
-import type { NostrEvent } from '@nostrify/nostrify';
-import type { MusicPlaylistData, TrackReference } from '@/types/music';
-import { musicPlaylistPublisher } from '@/lib/musicPlaylistPublisher';
-
-/**
- * Validates if a Nostr event is a valid music playlist (Kind 34139)
- */
-function validateMusicPlaylist(event: NostrEvent): boolean {
-  if (event.kind !== MUSIC_KINDS.MUSIC_PLAYLIST) return false;
-
-  // Check for required tags
-  const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
-  
-  const requiredTags = ['d', 'title', 'alt'];
-  for (const tagName of requiredTags) {
-    if (!tags.has(tagName) || !tags.get(tagName)?.[0]?.trim()) {
-      return false;
-    }
-  }
-
-  // Check for at least one track reference
-  const trackRefs = event.tags.filter(([key]) => key === 'a');
-  if (trackRefs.length === 0) return false;
-
-  // Check for required playlist tag
-  const hasPlaylistTag = event.tags.some(([key, value]) => key === 't' && value === 'playlist');
-  if (!hasPlaylistTag) return false;
-
-  return true;
-}
-
-/**
- * Converts a validated Nostr event to a MusicPlaylistData object
- */
-export function eventToMusicPlaylist(event: NostrEvent): MusicPlaylistData {
-  const tags = new Map(event.tags.map(([key, ...values]) => [key, values]));
-
-  // Parse track references from 'a' tags
-  const trackReferences: TrackReference[] = [];
-  const aTags = event.tags.filter(([key]) => key === 'a');
-  
-  for (const [, refString] of aTags) {
-    if (refString) {
-      const trackRef = musicPlaylistPublisher.parseTrackReference(refString);
-      if (trackRef) {
-        trackReferences.push(trackRef);
-      }
-    }
-  }
-
-  // Parse categories from 't' tags (excluding the required 'playlist' tag)
-  const categories = event.tags
-    .filter(([key, value]) => key === 't' && value !== 'playlist')
-    .map(([, value]) => value)
-    .filter(Boolean);
-
-  const playlistData: MusicPlaylistData = {
-    // Required fields
-    identifier: tags.get('d')?.[0] || '',
-    title: tags.get('title')?.[0] || '',
-    
-    // Track references (ordered)
-    tracks: trackReferences,
-    
-    // Optional metadata
-    description: tags.get('description')?.[0] || event.content || undefined,
-    imageUrl: tags.get('image')?.[0],
-    categories: categories.length > 0 ? categories : undefined,
-    
-    // Nostr-specific fields
-    eventId: event.id,
-    authorPubkey: event.pubkey,
-    createdAt: new Date(event.created_at * 1000)
-  };
-
-  return playlistData;
-}
+import { validateMusicPlaylist, eventToMusicPlaylist, getEventIdentifier, deduplicateEventsByIdentifier } from '@/lib/eventConversions';
+import type { MusicPlaylistData } from '@/types/music';
 
 /**
  * Hook to fetch all music playlists by the artist
@@ -108,25 +33,16 @@ export function useMusicPlaylists(options: {
       const validEvents = events.filter(validateMusicPlaylist);
 
       // Deduplicate addressable events by 'd' tag identifier (keep only latest version)
-      const playlistsByIdentifier = new Map<string, NostrEvent>();
-      
-      for (const event of validEvents) {
-        const identifier = event.tags.find(([key]) => key === 'd')?.[1];
-        if (!identifier) continue;
-
-        const existing = playlistsByIdentifier.get(identifier);
-        if (!existing || event.created_at > existing.created_at) {
-          playlistsByIdentifier.set(identifier, event);
-        }
-      }
+      const deduplicatedEvents = deduplicateEventsByIdentifier(validEvents, getEventIdentifier);
 
       // Convert to MusicPlaylistData format
-      let playlists = Array.from(playlistsByIdentifier.values()).map(eventToMusicPlaylist);
+      let playlists = deduplicatedEvents.map(eventToMusicPlaylist);
 
-      // Filter out private playlists if not requested
-      if (!options.includePrivate) {
-        playlists = playlists.filter(playlist => !playlist.isPrivate);
-      }
+      // Filter out private playlists if not requested (note: isPrivate is not currently in MusicPlaylistData type)
+      // This would need to be implemented based on your privacy logic
+      // if (!options.includePrivate) {
+      //   playlists = playlists.filter(playlist => !playlist.isPrivate);
+      // }
 
       // Sort playlists
       const sortBy = options.sortBy || 'date';

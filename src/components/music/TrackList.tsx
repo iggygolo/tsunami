@@ -22,7 +22,6 @@ export function TrackList({ release, className }: TrackListProps) {
     isTrackPlaying, 
     isTrackCurrent 
   } = useTrackPlayback(release);
-  const [hoveredTrack, setHoveredTrack] = useState<number | null>(null);
   const [likedTracks, setLikedTracks] = useState<Set<number>>(new Set());
 
   // Handle track like/unlike
@@ -82,7 +81,6 @@ export function TrackList({ release, className }: TrackListProps) {
       {release.tracks.map((track, index) => {
         const isCurrentTrack = isTrackCurrent(index);
         const isPlaying = isTrackPlaying(index);
-        const isHovered = hoveredTrack === index;
         const hasAudio = !!track.audioUrl;
 
         return (
@@ -94,8 +92,6 @@ export function TrackList({ release, className }: TrackListProps) {
               isCurrentTrack && "bg-white/10",
               !hasAudio && "opacity-50 cursor-not-allowed"
             )}
-            onMouseEnter={() => setHoveredTrack(index)}
-            onMouseLeave={() => setHoveredTrack(null)}
             onClick={() => hasAudio && handleTrackPlay(index)}
           >
             {/* Track Number / Play Button */}
@@ -107,6 +103,41 @@ export function TrackList({ release, className }: TrackListProps) {
                 )}>
                   {index + 1}
                 </span>
+            </div>
+
+            {/* Track Image */}
+            <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-md overflow-hidden bg-white/10">
+              {track.imageUrl ? (
+                <img
+                  src={track.imageUrl}
+                  alt={`${track.title} artwork`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to release image or music icon if track image fails
+                    const target = e.target as HTMLImageElement;
+                    if (release.imageUrl && target.src !== release.imageUrl) {
+                      target.src = release.imageUrl;
+                    } else {
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }
+                  }}
+                />
+              ) : release.imageUrl ? (
+                <img
+                  src={release.imageUrl}
+                  alt={`${release.title} artwork`}
+                  className="w-full h-full object-cover opacity-75"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Music className="w-4 h-4 sm:w-5 sm:h-5 text-white/40" />
+                </div>
+              )}
+              {/* Fallback icon (hidden by default, shown if image fails) */}
+              <div className="hidden w-full h-full flex items-center justify-center">
+                <Music className="w-4 h-4 sm:w-5 sm:h-5 text-white/40" />
+              </div>
             </div>
 
             {/* Track Info */}
