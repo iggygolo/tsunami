@@ -2,13 +2,20 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Upload, Save, Loader2, Plus, X, Music, GripVertical } from 'lucide-react';
+import { Upload, Save, Loader2, Plus, X, Music, GripVertical, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Form,
   FormControl,
@@ -19,6 +26,7 @@ import {
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/useToast';
 import { useMusicTracks } from '@/hooks/useMusicTracks';
+import { getAllGenres, POPULAR_GENRES } from '@/lib/musicMetadata';
 import type { MusicPlaylistFormData, MusicPlaylistData, TrackReference, MusicTrackData } from '@/types/music';
 
 // Schema for playlist form
@@ -26,7 +34,7 @@ const playlistFormSchema = z.object({
   title: z.string().min(1, 'Playlist title is required').max(200, 'Playlist title too long'),
   description: z.string().max(1000, 'Description too long').optional(),
   imageUrl: z.string().url().optional().or(z.literal('')),
-  categories: z.array(z.string()).default([]),
+  genres: z.array(z.string()).default([]),
 });
 
 type PlaylistFormValues = z.infer<typeof playlistFormSchema>;
@@ -53,11 +61,14 @@ export function PlaylistForm({
   const { toast } = useToast();
   
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [currentCategory, setCurrentCategory] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedTracks, setSelectedTracks] = useState<TrackReference[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   const isEditMode = mode === 'edit' && playlist;
+
+  // Get all available genres (same as used for tracks)
+  const allGenres = getAllGenres();
 
   // Fetch available tracks
   const { data: availableTracks, isLoading: tracksLoading } = useMusicTracks();
@@ -68,12 +79,12 @@ export function PlaylistForm({
       title: '',
       description: '',
       imageUrl: '',
-      categories: []
+      genres: []
     },
   });
 
   const { watch, setValue, reset } = form;
-  const categories = watch('categories');
+  const genres = watch('genres');
 
   // Load playlist data when available (for edit mode)
   useEffect(() => {
@@ -82,7 +93,7 @@ export function PlaylistForm({
         title: playlist.title,
         description: playlist.description || '',
         imageUrl: playlist.imageUrl || '',
-        categories: playlist.categories || [],
+        genres: playlist.categories || [], // Map categories to genres for backward compatibility
       });
       setSelectedTracks(playlist.tracks || []);
     }
@@ -127,22 +138,15 @@ export function PlaylistForm({
     }
   };
 
-  const addCategory = () => {
-    if (currentCategory.trim() && !categories.includes(currentCategory.trim())) {
-      setValue('categories', [...categories, currentCategory.trim()]);
-      setCurrentCategory('');
+  const addGenre = () => {
+    if (selectedGenre && !genres.includes(selectedGenre)) {
+      setValue('genres', [...genres, selectedGenre]);
+      setSelectedGenre('');
     }
   };
 
-  const removeCategory = (categoryToRemove: string) => {
-    setValue('categories', categories.filter(category => category !== categoryToRemove));
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addCategory();
-    }
+  const removeGenre = (genreToRemove: string) => {
+    setValue('genres', genres.filter(genre => genre !== genreToRemove));
   };
 
   const addTrackToPlaylist = (track: MusicTrackData) => {
@@ -225,10 +229,7 @@ export function PlaylistForm({
         description: data.description,
         imageFile: imageFile || undefined,
         imageUrl: data.imageUrl || undefined,
-        categories: data.categories || undefined,
-        isPublic: data.isPublic,
-        isPrivate: data.isPrivate,
-        isCollaborative: data.isCollaborative,
+        categories: data.genres || undefined, // Map genres back to categories for API compatibility
       };
 
       await onSubmit(playlistData);
@@ -249,80 +250,9 @@ export function PlaylistForm({
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+
               {/* Basic Information */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Playlist Title *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter playlist title..." 
-                            className="h-12 text-lg"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Brief description of the playlist..."
-                            rows={4}
-                            className="resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Categories */}
-                  <div className="space-y-3">
-                    <Label className="text-base font-semibold">Categories</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={currentCategory}
-                        onChange={(e) => setCurrentCategory(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Add category..."
-                        className="flex-1"
-                      />
-                      <Button type="button" onClick={addCategory} variant="outline">
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    {categories.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {categories.map((category) => (
-                          <Badge key={category} variant="secondary" className="text-sm">
-                            {category}
-                            <button
-                              type="button"
-                              onClick={() => removeCategory(category)}
-                              className="ml-2 hover:text-red-500"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 {/* Cover Art */}
                 <div className="space-y-4">
                   <Label className="text-base font-semibold">Playlist Cover</Label>
@@ -387,6 +317,107 @@ export function PlaylistForm({
                       </FormItem>
                     )}
                   />
+                </div>
+
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Playlist Title *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter playlist title..." 
+                            className="h-12 text-lg"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Brief description of the playlist..."
+                            rows={4}
+                            className="resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Genres */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">Genres</Label>
+                    <div className="flex gap-2">
+                      <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Select a genre..." />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {/* Popular genres first */}
+                          {POPULAR_GENRES.filter(genre => !genres.includes(genre)).length > 0 && (
+                            <>
+                              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                Popular
+                              </div>
+                              {POPULAR_GENRES.filter(genre => !genres.includes(genre)).map((genre) => (
+                                <SelectItem key={genre} value={genre}>
+                                  {genre}
+                                </SelectItem>
+                              ))}
+                              <div className="border-t my-1" />
+                            </>
+                          )}
+                          
+                          {/* All other genres */}
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            All Genres
+                          </div>
+                          {allGenres.filter(genre => !genres.includes(genre) && !POPULAR_GENRES.includes(genre)).map((genre) => (
+                            <SelectItem key={genre} value={genre}>
+                              {genre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        type="button" 
+                        onClick={addGenre} 
+                        variant="outline"
+                        disabled={!selectedGenre || genres.includes(selectedGenre)}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {genres.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {genres.map((genre) => (
+                          <Badge key={genre} variant="secondary" className="text-sm">
+                            {genre}
+                            <button
+                              type="button"
+                              onClick={() => removeGenre(genre)}
+                              className="ml-2 hover:text-red-500"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
