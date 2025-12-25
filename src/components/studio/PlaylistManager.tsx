@@ -21,7 +21,8 @@ import {
 import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useDeletePlaylist } from '@/hooks/usePublishPlaylist';
 import { useToast } from '@/hooks/useToast';
-import { useUniversalAudioPlayer } from '@/contexts/UniversalAudioPlayerContext';
+import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
+import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import type { MusicPlaylistData } from '@/types/music';
 
 interface PlaylistManagerProps {
@@ -37,7 +38,7 @@ export function PlaylistManager({
 }: PlaylistManagerProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { pause, state } = useUniversalAudioPlayer();
+  const { playQueue, pause, state } = useUniversalAudioPlayer();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'tracks'>('date');
@@ -50,6 +51,12 @@ export function PlaylistManager({
   });
 
   const { mutate: deletePlaylist, isPending: isDeleting } = useDeletePlaylist();
+
+  // Get all track references from all playlists for batch resolution
+  const allTrackReferences = playlists?.flatMap(playlist => playlist.tracks) || [];
+  
+  // Resolve all track references at once for better performance
+  const { data: resolvedTracks, isLoading: isLoadingTracks } = usePlaylistTrackResolution(allTrackReferences);
 
   // Filter playlists based on search query
   const filteredPlaylists = useMemo(() => {
@@ -113,12 +120,52 @@ export function PlaylistManager({
     }
   };
 
+  // Helper function to get resolved tracks for a specific playlist
+  const getPlaylistResolvedTracks = (playlist: MusicPlaylistData) => {
+    if (!resolvedTracks) return [];
+    
+    return playlist.tracks.map(trackRef => {
+      return resolvedTracks.find(resolved => 
+        resolved.reference.pubkey === trackRef.pubkey && 
+        resolved.reference.identifier === trackRef.identifier
+      );
+    }).filter(Boolean);
+  };
+
+  // Helper function to get playable tracks for a playlist
+  const getPlaylistPlayableTracks = (playlist: MusicPlaylistData) => {
+    const resolved = getPlaylistResolvedTracks(playlist);
+    return resolved
+      .filter(rt => rt?.trackData && rt.trackData.audioUrl)
+      .map(rt => rt!.trackData!);
+  };
+
   const handlePlay = (playlist: MusicPlaylistData) => {
     // Check if playlist has tracks
     if (!playlist.tracks || playlist.tracks.length === 0) {
       toast({
         title: 'Cannot play playlist',
         description: 'This playlist is empty.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Get playable tracks
+    const playableTracks = getPlaylistPlayableTracks(playlist);
+    
+    if (playableTracks.length === 0) {
+      if (isLoadingTracks) {
+        toast({
+          title: 'Loading tracks',
+          description: 'Please wait while tracks are being loaded...',
+        });
+        return;
+      }
+      
+      toast({
+        title: 'Cannot play playlist',
+        description: 'No playable tracks found in this playlist.',
         variant: 'destructive',
       });
       return;
@@ -133,15 +180,23 @@ export function PlaylistManager({
       return;
     }
 
-    // Show a warning that playlist playback needs track resolution
-    toast({
-      title: 'Playlist playback',
-      description: 'Playlist playback requires track resolution. This feature is coming soon!',
-    });
+    // Convert tracks to universal format and play
+    const universalTracks = playableTracks.map(track => 
+      musicTrackToUniversal(track, {
+        type: 'playlist',
+        releaseId: playlist.eventId,
+        releaseTitle: playlist.title,
+        artistPubkey: playlist.authorPubkey
+      })
+    );
 
-    // TODO: Implement playlist track resolution and queue playing
-    // This would require resolving track references to actual track data
-    // then converting to UniversalTrack format and playing the queue
+    // Play the playlist queue
+    playQueue(universalTracks, 0, playlist.title);
+    
+    toast({
+      title: 'Playing playlist',
+      description: `Started playing "${playlist.title}" with ${playableTracks.length} track${playableTracks.length === 1 ? '' : 's'}.`,
+    });
   };
 
   const isPlaylistPlaying = (playlist: MusicPlaylistData) => {
@@ -286,8 +341,11 @@ export function PlaylistManager({
                           e.stopPropagation();
                           handlePlay(playlist);
                         }}
+                        disabled={isLoadingTracks || getPlaylistPlayableTracks(playlist).length === 0}
                       >
-                        {isPlaylistPlaying(playlist) ? (
+                        {isLoadingTracks ? (
+                          <div className="w-6 h-6 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        ) : isPlaylistPlaying(playlist) ? (
                           <Pause className="w-6 h-6" />
                         ) : (
                           <Play className="w-6 h-6 ml-1" />
@@ -306,6 +364,12 @@ export function PlaylistManager({
                       </h3>
                       <p className="text-sm text-muted-foreground">
                         {playlist.tracks.length} track{playlist.tracks.length !== 1 ? 's' : ''}
+                        {!isLoadingTracks && resolvedTracks && (
+                          <>
+                            {' • '}
+                            {getPlaylistPlayableTracks(playlist).length} playable
+                          </>
+                        )}
                       </p>
                     </div>
                     
@@ -375,19 +439,47 @@ export function PlaylistManager({
                     </div>
                   )}
 
-                  {/* Track Preview */}
+                  {/* Track Preview with Resolution Status */}
                   {playlist.tracks.length > 0 && (
                     <div className="pt-2 border-t">
-                      <p className="text-xs text-muted-foreground mb-1">Recent tracks:</p>
-                      <div className="space-y-1">
-                        {playlist.tracks.slice(0, 2).map((track, index) => (
-                          <div key={track.identifier} className="flex items-center gap-2 text-xs">
-                            <span className="text-muted-foreground/70">{index + 1}.</span>
-                            <span className="truncate" title={track.title}>
-                              {track.title || 'Unknown Track'}
-                            </span>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs text-muted-foreground">Tracks:</p>
+                        {isLoadingTracks ? (
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-pulse"></div>
+                            <span className="text-xs text-muted-foreground">Loading...</span>
                           </div>
-                        ))}
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            {getPlaylistPlayableTracks(playlist).length}/{playlist.tracks.length} playable
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        {playlist.tracks.slice(0, 2).map((trackRef, index) => {
+                          const resolved = resolvedTracks?.find(rt => 
+                            rt.reference.pubkey === trackRef.pubkey && 
+                            rt.reference.identifier === trackRef.identifier
+                          );
+                          
+                          return (
+                            <div key={`${trackRef.pubkey}-${trackRef.identifier}`} className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground/70">{index + 1}.</span>
+                              <span className="truncate flex-1" title={resolved?.trackData?.title || trackRef.title || 'Unknown Track'}>
+                                {resolved?.trackData?.title || trackRef.title || 'Unknown Track'}
+                              </span>
+                              {resolved?.error && (
+                                <span className="text-red-400 text-xs">✗</span>
+                              )}
+                              {resolved?.trackData && !resolved.trackData.audioUrl && (
+                                <span className="text-yellow-400 text-xs">⚠</span>
+                              )}
+                              {resolved?.trackData?.audioUrl && (
+                                <span className="text-green-400 text-xs">✓</span>
+                              )}
+                            </div>
+                          );
+                        })}
                         {playlist.tracks.length > 2 && (
                           <p className="text-xs text-muted-foreground/70">
                             +{playlist.tracks.length - 2} more tracks

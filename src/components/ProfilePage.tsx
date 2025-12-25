@@ -3,7 +3,8 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useMusicTracks } from '@/hooks/useMusicTracks';
 import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useUniversalAudioPlayer } from '@/contexts/UniversalAudioPlayerContext';
+import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
+import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import { Button } from '@/components/ui/button';
 import { GlassTabs, GlassTabsList, GlassTabsTrigger, GlassTabsContent } from '@/components/ui/GlassTabs';
 import { GlassList, GlassListItem, GlassListSkeleton } from '@/components/ui/GlassList';
@@ -47,7 +48,13 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const { data: tracks = [], isLoading: isLoadingTracks } = useMusicTracks();
   const { data: playlists = [], isLoading: isLoadingPlaylists } = useMusicPlaylists();
   const { user: currentUser } = useCurrentUser();
-  const { state: playerState, pause } = useUniversalAudioPlayer();
+  const { state: playerState, pause, playQueue } = useUniversalAudioPlayer();
+  
+  // Get all track references from all playlists for batch resolution
+  const allPlaylistTrackReferences = playlists?.flatMap(playlist => playlist.tracks) || [];
+  
+  // Resolve all track references at once for better performance
+  const { data: resolvedPlaylistTracks, isLoading: isLoadingPlaylistTracks } = usePlaylistTrackResolution(allPlaylistTrackReferences);
   
   const isOwnProfile = currentUser?.pubkey === pubkey;
   const metadata = authorData?.metadata;
@@ -73,18 +80,48 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
     };
   };
 
+  // Helper function to get playable tracks for a playlist
+  const getPlaylistPlayableTracks = (playlist: MusicPlaylistData) => {
+    if (!resolvedPlaylistTracks) return [];
+    
+    return playlist.tracks.map(trackRef => {
+      return resolvedPlaylistTracks.find(resolved => 
+        resolved.reference.pubkey === trackRef.pubkey && 
+        resolved.reference.identifier === trackRef.identifier
+      );
+    }).filter(rt => rt?.trackData && rt.trackData.audioUrl)
+      .map(rt => rt!.trackData!);
+  };
+
   const handlePlayPlaylist = (playlist: MusicPlaylistData) => {
     if (isPlaylistPlaying(playlist)) {
       pause();
     } else {
-      // TODO: Convert playlists to use universal audio player queue system
-      console.log('Playlist playing not yet implemented with universal audio player:', playlist.title);
+      // Get playable tracks
+      const playableTracks = getPlaylistPlayableTracks(playlist);
+      
+      if (playableTracks.length === 0) {
+        console.log('No playable tracks found in playlist:', playlist.title);
+        return;
+      }
+
+      // Convert tracks to universal format and play
+      const universalTracks = playableTracks.map(track => 
+        musicTrackToUniversal(track, {
+          type: 'playlist',
+          releaseId: playlist.eventId,
+          releaseTitle: playlist.title,
+          artistPubkey: playlist.authorPubkey
+        })
+      );
+
+      // Play the playlist queue
+      playQueue(universalTracks, 0, playlist.title);
     }
   };
 
   const isPlaylistPlaying = (playlist: MusicPlaylistData) => {
-    // TODO: Implement playlist playing with universal audio player
-    return false;
+    return playerState.currentTrack?.source?.releaseId === playlist.eventId && playerState.isPlaying;
   };
   
   if (isLoadingAuthor) {
@@ -266,7 +303,12 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="text-white font-medium truncate text-sm">{playlist.title}</h3>
-                            <p className="text-white/70 text-xs truncate">{playlist.tracks.length} tracks</p>
+                            <p className="text-white/70 text-xs truncate">
+                              {playlist.tracks.length} tracks
+                              {!isLoadingPlaylistTracks && resolvedPlaylistTracks && (
+                                <> • {getPlaylistPlayableTracks(playlist).length} playable</>
+                              )}
+                            </p>
                           </div>
                           <div className="flex items-center gap-1">
                             <ZapDialog target={createPlaylistEvent(playlist)}>
