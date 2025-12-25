@@ -109,7 +109,7 @@ export const MUSIC_CONFIG: MusicConfig = {
     website: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_WEBSITE) || "https://tsunami.example",
     copyright: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_COPYRIGHT) || "© 2025 Tsunami Artist",
     value: {
-      amount: parseInt((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_AMOUNT) || "1000", 10),
+      amount: parseInt((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_AMOUNT) || "100", 10),
       currency: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_CURRENCY) || "sats",
       recipients: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_RECIPIENTS), [])
     },

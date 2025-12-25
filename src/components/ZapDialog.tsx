@@ -41,12 +41,14 @@ interface ZapDialogProps {
   onZapSuccess?: (amount: number) => void;
 }
 
+const DEFAULT_ZAP_AMOUNT = 100
+
 const presetAmounts = [
-  { amount: 100, icon: Sparkle },
-  { amount: 500, icon: Sparkles },
-  { amount: 1000, icon: Zap },
-  { amount: 2100, icon: Star },
-  { amount: 10000, icon: Rocket },
+  { amount: 10, icon: Sparkle },
+  { amount: 21, icon: Sparkles },
+  { amount: 100, icon: Zap },
+  { amount: 210, icon: Star },
+  { amount: 1000, icon: Rocket },
 ];
 
 interface ZapContentProps {
@@ -88,7 +90,10 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
       <div className="flex flex-col h-full min-h-0">
         {/* Payment amount display */}
         <div className="text-center pt-4">
-          <div className="text-2xl font-bold">{amount} sats</div>
+          <div className="text-2xl font-bold text-yellow-500 flex items-center justify-center gap-2">
+            <Zap className="h-6 w-6 text-yellow-500" />
+            {amount} sats
+          </div>
         </div>
 
         <Separator className="my-4" />
@@ -126,10 +131,10 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
                 variant="outline"
                 size="icon"
                 onClick={handleCopy}
-                className="shrink-0"
+                className="shrink-0 border-yellow-500/30 hover:bg-yellow-500/10 hover:border-yellow-500/50"
               >
                 {copied ? (
-                  <Check className="h-4 w-4 text-green-600" />
+                  <Check className="h-4 w-4 text-yellow-500" />
                 ) : (
                   <Copy className="h-4 w-4" />
                 )}
@@ -146,10 +151,10 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
                   zap(finalAmount, comment);
                 }}
                 disabled={isZapping}
-                className="w-full"
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold"
                 size="lg"
               >
-                <Zap className="h-4 w-4 mr-2" />
+                <Zap className="h-4 w-4 mr-2 text-black" />
                 {isZapping ? "Processing..." : "Pay with WebLN"}
               </Button>
             )}
@@ -157,7 +162,7 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
             <Button
               variant="outline"
               onClick={openInWallet}
-              className="w-full"
+              className="w-full border-yellow-500/30 hover:bg-yellow-500/10 hover:border-yellow-500/50"
               size="lg"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
@@ -187,9 +192,12 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
               <ToggleGroupItem
                 key={presetAmount}
                 value={String(presetAmount)}
-                className="flex flex-col h-auto min-w-0 text-xs px-1 py-2"
+                className="flex flex-col h-auto min-w-0 text-xs px-1 py-2 data-[state=on]:bg-yellow-500/20 data-[state=on]:border-yellow-500/50 data-[state=on]:text-yellow-600 hover:bg-yellow-500/10"
               >
-                <Icon className="h-4 w-4 mb-1" />
+                <Icon className={cn(
+                  "h-4 w-4 mb-1",
+                  String(amount) === String(presetAmount) ? "text-yellow-500" : ""
+                )} />
                 <span className="truncate">{presetAmount}</span>
               </ToggleGroupItem>
             ))}
@@ -206,24 +214,29 @@ const ZapContent = forwardRef<HTMLDivElement, ZapContentProps>(({
             placeholder="Custom amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full text-sm"
+            className="w-full text-sm focus-visible:ring-yellow-500/30"
           />
           <Textarea
             id="custom-comment"
             placeholder="Add a comment (optional)"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="w-full resize-none text-sm"
+            className="w-full resize-none text-sm focus-visible:ring-yellow-500/30"
             rows={2}
           />
         </div>
         <div className="px-4 pb-4">
-          <Button onClick={handleZap} className="w-full" disabled={isZapping} size="default">
+          <Button 
+            onClick={handleZap} 
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold" 
+            disabled={isZapping} 
+            size="default"
+          >
             {isZapping ? (
               'Creating invoice...'
             ) : (
               <>
-                <Zap className="h-4 w-4 mr-2" />
+                <Zap className="h-4 w-4 mr-2 text-black" />
                 Zap {amount} sats
               </>
             )}
@@ -252,7 +265,7 @@ export function ZapDialog({ target, children, className, onZapSuccess }: ZapDial
   };
   
   const { zap, isZapping, invoice, setInvoice } = useZaps(target, webln, activeNWC, handleZapSuccess);
-  const [amount, setAmount] = useState<number | string>(1000);
+  const [amount, setAmount] = useState<number | string>(DEFAULT_ZAP_AMOUNT);
   const [comment, setComment] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
@@ -330,13 +343,13 @@ export function ZapDialog({ target, children, className, onZapSuccess }: ZapDial
 
   useEffect(() => {
     if (open) {
-      setAmount(1000);
+      setAmount(DEFAULT_ZAP_AMOUNT);
       setInvoice(null);
       setCopied(false);
       setQrCodeUrl('');
     } else {
       // Clean up state when dialog closes
-      setAmount(1000);
+      setAmount(DEFAULT_ZAP_AMOUNT);
       setInvoice(null);
       setCopied(false);
       setQrCodeUrl('');
@@ -430,8 +443,18 @@ export function ZapDialog({ target, children, className, onZapSuccess }: ZapDial
               </Button>
             </DrawerClose>
 
-            <DrawerTitle className="text-lg break-words pt-2">
-              {invoice ? 'Lightning Payment' : 'Send a Zap'}
+            <DrawerTitle className="text-lg break-words pt-2 flex items-center justify-center gap-2">
+              {invoice ? (
+                <>
+                  <Zap className="h-5 w-5 text-yellow-500" />
+                  Lightning Payment
+                </>
+              ) : (
+                <>
+                  <Zap className="h-5 w-5 text-yellow-500" />
+                  Send a Zap
+                </>
+              )}
             </DrawerTitle>
             <DrawerDescription className="text-sm break-words text-center">
               {invoice ? (
@@ -458,8 +481,18 @@ export function ZapDialog({ target, children, className, onZapSuccess }: ZapDial
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] max-h-[95vh] overflow-hidden" data-testid="zap-modal">
         <DialogHeader>
-          <DialogTitle className="text-lg break-words">
-            {invoice ? 'Lightning Payment' : 'Send a Zap'}
+          <DialogTitle className="text-lg break-words flex items-center justify-center gap-2">
+            {invoice ? (
+              <>
+                <Zap className="h-5 w-5 text-yellow-500" />
+                Lightning Payment
+              </>
+            ) : (
+              <>
+                <Zap className="h-5 w-5 text-yellow-500" />
+                Send a Zap
+              </>
+            )}
           </DialogTitle>
           <DialogDescription className="text-sm text-center break-words">
             {invoice ? (

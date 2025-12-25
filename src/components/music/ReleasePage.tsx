@@ -159,10 +159,10 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
       <div className="relative w-full max-w-full">
         <BlurredBackground image={release.imageUrl} />
         
-        <div className="relative py-8 w-full max-w-full overflow-hidden">
+        <div className="relative py-4 w-full max-w-full overflow-hidden">
           {/* Back Button */}
-          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 text-white/70 hover:text-white">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+          <Button variant="ghost" onClick={() => navigate(-1)} className="mb-2 text-white/70 hover:text-white">
+            <ArrowLeft className="w-4 h-2 mr-2" />
             Back
           </Button>
 
@@ -259,19 +259,6 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                   )}
                 </Button>
 
-                {/* Like Button */}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleLike}
-                  className={cn(
-                    "w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-black/40 hover:border-white/30 transition-all duration-200 shadow-lg",
-                    hasUserLiked && "text-red-500"
-                  )}
-                >
-                  <Heart className={cn("w-4 h-4", hasUserLiked && "fill-current")} />
-                </Button>
-
                 {/* Zap Button */}
                 {releaseEvent && (
                   <ZapDialog target={releaseEvent}>
@@ -285,6 +272,19 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                     </Button>
                   </ZapDialog>
                 )}
+
+                {/* Like Button */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleLike}
+                  className={cn(
+                    "w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-black/40 hover:border-white/30 transition-all duration-200 shadow-lg",
+                    hasUserLiked && "text-red-500"
+                  )}
+                >
+                  <Heart className={cn("w-4 h-4", hasUserLiked && "fill-current")} />
+                </Button>
 
                 {/* Share Button */}
                 <Button
@@ -320,20 +320,20 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                   Zaps
                 </GlassTabsTrigger>
                 <GlassTabsTrigger 
-                  value="comments"
-                  icon={<MessageCircle className="w-3 h-3" />}
-                  count={commentCount}
-                  className="text-xs sm:text-sm px-3 sm:px-4"
-                >
-                  Comments
-                </GlassTabsTrigger>
-                <GlassTabsTrigger 
                   value="reactions"
                   icon={<Heart className="w-3 h-3" />}
                   count={interactionCounts?.likes || 0}
                   className="text-xs sm:text-sm px-3 sm:px-4"
                 >
                   Likes
+                </GlassTabsTrigger>
+                <GlassTabsTrigger 
+                  value="comments"
+                  icon={<MessageCircle className="w-3 h-3" />}
+                  count={commentCount}
+                  className="text-xs sm:text-sm px-3 sm:px-4"
+                >
+                  Comments
                 </GlassTabsTrigger>
               </GlassTabsList>
 

@@ -127,7 +127,7 @@ VITE_ARTIST_FUNDING=lightning:your@address.com,https://donate.example.com,bitcoi
 | `VITE_ARTIST_IMAGE` | string | Cover art URL | Example image URL |
 | `VITE_ARTIST_WEBSITE` | string | Artist website | "https://tsunami.example" |
 | `VITE_ARTIST_COPYRIGHT` | string | Copyright notice | "© 2025 Tsunami Artist" |
-| `VITE_MUSIC_VALUE_AMOUNT` | number | Sats per minute | 1000 |
+| `VITE_MUSIC_VALUE_AMOUNT` | number | Sats per minute | 100 |
 | `VITE_MUSIC_VALUE_CURRENCY` | string | Payment currency | "sats" |
 | `VITE_MUSIC_VALUE_RECIPIENTS` | JSON array | Payment recipients | Example recipients |
 | `VITE_RSS_TTL` | number | RSS cache time (minutes) | 60 |

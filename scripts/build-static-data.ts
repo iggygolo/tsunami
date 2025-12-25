@@ -78,7 +78,7 @@ function createNodejsConfig(): RSSConfig {
       website: process.env.VITE_ARTIST_WEBSITE || "https://tsunami.example",
       copyright: process.env.VITE_ARTIST_COPYRIGHT || "© 2025 Tsunami",
       value: {
-        amount: parseInt(process.env.VITE_MUSIC_VALUE_AMOUNT || "1000", 10),
+        amount: parseInt(process.env.VITE_MUSIC_VALUE_AMOUNT || "100", 10),
         currency: process.env.VITE_MUSIC_VALUE_CURRENCY || "sats",
         recipients
       },
