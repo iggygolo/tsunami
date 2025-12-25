@@ -10,9 +10,7 @@ export const AUDIO_MIME_TYPES = [
   'audio/mp4',
   'audio/aac',
   'audio/ogg',
-  'audio/wave',  // Primary WAV MIME type
-  'audio/wav',   // Alternative WAV MIME type
-  'audio/x-wav', // Additional WAV variant for better browser compatibility
+  'audio/x-wav', // WAV variant for better browser compatibility
   'audio/flac',
   'audio/opus',
   'audio/webm'
@@ -39,7 +37,7 @@ export const AUDIO_EXTENSIONS = [
   'm4a',    // audio/mp4
   'aac',    // audio/aac
   'ogg',    // audio/ogg
-  'wav',    // audio/wav, audio/x-wav, audio/wave
+  'wav',    // audio/x-wav
   'flac',   // audio/flac
   'opus',   // audio/opus
   'webm'    // audio/webm
@@ -71,9 +69,7 @@ export function mimeTypeToExtension(mimeType: string): string {
     'audio/mp4': 'm4a',
     'audio/aac': 'aac',
     'audio/ogg': 'ogg',
-    'audio/wav': 'wav',
     'audio/x-wav': 'wav',
-    'audio/wave': 'wav',
     'audio/flac': 'flac',
     'audio/opus': 'opus',
     'audio/webm': 'webm',
@@ -103,7 +99,7 @@ export function extensionToMimeType(extension: string): string {
     'm4a': 'audio/mp4',
     'aac': 'audio/aac',
     'ogg': 'audio/ogg',
-    'wav': 'audio/wav',
+    'wav': 'audio/x-wav',
     'flac': 'audio/flac',
     'opus': 'audio/opus',
     'webm': 'audio/webm',
@@ -160,7 +156,7 @@ export function validateAudioFile(filename: string, mimeType: string): {
   
   // More flexible MIME type validation for WAV files and empty MIME types
   const isValidMimeType = isAudioMimeType(mimeType) || 
-                         (extension === 'wav' && (mimeType === '' || mimeType === 'audio/x-wav' || mimeType === 'audio/wave'));
+                         (extension === 'wav' && (mimeType === '' || mimeType === 'audio/x-wav'));
   
   if (!isValidMimeType) {
     return { 

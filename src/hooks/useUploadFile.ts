@@ -36,7 +36,7 @@ const MIME_TYPE_MAP: Record<string, string> = {
   '.aac': 'audio/aac',
   '.ogg': 'audio/ogg',
   '.oga': 'audio/ogg',
-  '.wav': 'audio/wav',
+  '.wav': 'audio/x-wav',
   '.flac': 'audio/flac',
   '.opus': 'audio/opus',
   '.webm': 'audio/webm',

@@ -19,7 +19,7 @@ export default function DebugAudio() {
     tracks: [{
       title: 'Test Track',
       audioUrl,
-      audioType: 'audio/wav',
+      audioType: 'audio/x-wav',
     }],
     publishDate: new Date(),
     tags: ['test'],
@@ -131,7 +131,7 @@ export default function DebugAudio() {
               </p>
               <ul className="text-sm space-y-1 ml-4">
                 <li>MP3: {document.createElement('audio').canPlayType('audio/mpeg') || 'No'}</li>
-                <li>WAV: {document.createElement('audio').canPlayType('audio/wav') || 'No'}</li>
+                <li>WAV: {document.createElement('audio').canPlayType('audio/x-wav') || 'No'}</li>
                 <li>OGG: {document.createElement('audio').canPlayType('audio/ogg') || 'No'}</li>
                 <li>AAC: {document.createElement('audio').canPlayType('audio/aac') || 'No'}</li>
               </ul>

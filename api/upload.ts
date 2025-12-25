@@ -12,9 +12,7 @@ const ALLOWED_MIME_TYPES = [
   'audio/mp4',
   'audio/aac',
   'audio/ogg',
-  'audio/wav',
   'audio/x-wav',    // Alternative WAV MIME type
-  'audio/wave',     // Another WAV MIME type variant
   'audio/flac',
   'audio/opus',
   'audio/webm',
