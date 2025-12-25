@@ -9,7 +9,7 @@ import { ZapLeaderboard } from './ZapLeaderboard';
 import { ZapDialog } from '@/components/ZapDialog';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { ReactionsSection } from './ReactionsSection';
-import { TrackList } from './TrackList';
+import { UniversalTrackList } from './UniversalTrackList';
 import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,7 +17,7 @@ import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { useReleaseData } from '@/hooks/useReleaseData';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
-import { useTrackPlayback } from '@/hooks/useTrackPlayback';
+import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -49,7 +49,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   } = useReleaseData({ eventId, addressableEvent });
 
   // Use custom hook for track playback
-  const trackPlayback = useTrackPlayback(release);
+  const trackPlayback = useUniversalTrackPlayback(release);
 
   // Use custom hook for interactions
   const {
@@ -339,7 +339,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
               <GlassTabsContent value="tracks" className="w-full max-w-full">
                 <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
-                  <TrackList release={release} className="text-white" />
+                  <UniversalTrackList release={release} className="text-white" />
                 </div>
               </GlassTabsContent>
 

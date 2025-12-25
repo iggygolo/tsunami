@@ -21,7 +21,7 @@ import {
 import { useMusicTracks } from '@/hooks/useMusicTracks';
 import { useDeleteTrack } from '@/hooks/usePublishTrack';
 import { useToast } from '@/hooks/useToast';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import type { MusicTrackData } from '@/types/music';
 
 interface TrackLibraryProps {
@@ -37,7 +37,7 @@ export function TrackLibrary({
 }: TrackLibraryProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { playTrackDirect, pause, state } = useAudioPlayer();
+  const { playTrack, pause, state } = useUniversalAudioPlayer();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'album'>('date');
@@ -120,19 +120,23 @@ export function TrackLibrary({
 
   const handlePlay = (track: MusicTrackData) => {
     // Check if this track is currently playing
-    const isCurrentTrack = state.currentRelease?.identifier === track.identifier;
+    const isCurrentTrack = state.currentTrack?.id === track.eventId;
     
     if (isCurrentTrack && state.isPlaying) {
       // If this track is playing, pause it
       pause();
     } else {
-      // Otherwise, play this track
-      playTrackDirect(track);
+      // Convert to universal track and play
+      const universalTrack = musicTrackToUniversal(track, {
+        type: 'profile',
+        artistPubkey: track.artistPubkey
+      });
+      playTrack(universalTrack, [universalTrack], track.title);
     }
   };
 
   const isTrackPlaying = (track: MusicTrackData) => {
-    return state.currentRelease?.identifier === track.identifier && state.isPlaying;
+    return state.currentTrack?.id === track.eventId && state.isPlaying;
   };
 
   const formatDuration = (seconds?: number) => {

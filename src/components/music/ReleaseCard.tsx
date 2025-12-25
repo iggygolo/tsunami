@@ -3,7 +3,7 @@ import { Play, Pause } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { useTrackPlayback } from '@/hooks/useTrackPlayback';
+import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { useReleasePrefetch } from '@/hooks/useReleasePrefetch';
 import { cn } from '@/lib/utils';
 import type { MusicRelease } from '@/types/music';
@@ -20,7 +20,7 @@ export function ReleaseCard({
   showPlayer: _showPlayer = false,
   className
 }: ReleaseCardProps) {
-  const trackPlayback = useTrackPlayback(release);
+  const trackPlayback = useUniversalTrackPlayback(release);
   const { prefetchRelease } = useReleasePrefetch();
   const formatDuration = (seconds?: number): string => {
     if (!seconds) return '';

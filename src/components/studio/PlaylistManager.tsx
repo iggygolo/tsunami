@@ -21,7 +21,7 @@ import {
 import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useDeletePlaylist } from '@/hooks/usePublishPlaylist';
 import { useToast } from '@/hooks/useToast';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useUniversalAudioPlayer } from '@/contexts/UniversalAudioPlayerContext';
 import type { MusicPlaylistData } from '@/types/music';
 
 interface PlaylistManagerProps {
@@ -37,7 +37,7 @@ export function PlaylistManager({
 }: PlaylistManagerProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { playRelease, pause, state } = useAudioPlayer();
+  const { pause, state } = useUniversalAudioPlayer();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'tracks'>('date');
@@ -125,7 +125,7 @@ export function PlaylistManager({
     }
 
     // Check if this playlist is currently playing
-    const isCurrentPlaylist = state.currentRelease?.identifier === playlist.identifier;
+    const isCurrentPlaylist = state.currentTrack?.source?.releaseId === playlist.eventId;
     
     if (isCurrentPlaylist && state.isPlaying) {
       // If this playlist is playing, pause it
@@ -139,12 +139,13 @@ export function PlaylistManager({
       description: 'Playlist playback requires track resolution. This feature is coming soon!',
     });
 
-    // For now, we can still call playRelease but it won't have audio URLs
-    // playRelease(releaseData);
+    // TODO: Implement playlist track resolution and queue playing
+    // This would require resolving track references to actual track data
+    // then converting to UniversalTrack format and playing the queue
   };
 
   const isPlaylistPlaying = (playlist: MusicPlaylistData) => {
-    return state.currentRelease?.identifier === playlist.identifier && state.isPlaying;
+    return state.currentTrack?.source?.releaseId === playlist.eventId && state.isPlaying;
   };
 
   const formatDate = (date?: Date) => {

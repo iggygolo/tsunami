@@ -3,40 +3,38 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Layout } from '@/components/Layout';
-import { AudioPlayer } from '@/components/music/AudioPlayer';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import type { MusicRelease } from '@/types/music';
+import { useUniversalAudioPlayer, type UniversalTrack } from '@/contexts/UniversalAudioPlayerContext';
 
 export default function DebugAudio() {
   const [testUrl, setTestUrl] = useState('https://www.soundjay.com/misc/sounds/fail-buzzer-02.wav');
-  const { playRelease, state: playerState } = useAudioPlayer();
+  const { playTrack, state: playerState } = useUniversalAudioPlayer();
 
-  // Create a mock release for testing
-  const createTestRelease = (audioUrl: string): MusicRelease => ({
-    id: 'test-release',
-    title: 'Test Audio Release',
-    description: 'Testing audio playback functionality',
-    tracks: [{
-      title: 'Test Track',
-      audioUrl,
-      audioType: 'audio/wav',
-    }],
-    publishDate: new Date(),
-    tags: ['test'],
+  // Create a mock universal track for testing
+  const createTestTrack = (audioUrl: string): UniversalTrack => ({
+    id: 'test-track',
+    title: 'Test Audio Track',
+    artist: 'Debug Test',
+    audioUrl,
+    duration: undefined,
+    imageUrl: undefined,
+    explicit: false,
+    language: 'en',
+    source: {
+      type: 'profile',
+      artistPubkey: 'test-pubkey'
+    },
     eventId: 'test-event',
-    artistPubkey: 'test-pubkey',
-    identifier: 'test-release-identifier',
-    createdAt: new Date(),
+    identifier: 'test-track-identifier',
   });
 
-  const [currentRelease, setCurrentRelease] = useState<MusicRelease | null>(null);
+  const [currentTrack, setCurrentTrack] = useState<UniversalTrack | null>(null);
 
   const handleTestAudio = () => {
     if (testUrl.trim()) {
-      const testRelease = createTestRelease(testUrl.trim());
-      setCurrentRelease(testRelease);
-      // Also test the persistent audio player
-      playRelease(testRelease);
+      const testTrack = createTestTrack(testUrl.trim());
+      setCurrentTrack(testTrack);
+      // Test the universal audio player
+      playTrack(testTrack, [testTrack], 'Debug Test');
     }
   };
 
@@ -99,9 +97,9 @@ export default function DebugAudio() {
                     variant="outline"
                     onClick={() => {
                       setTestUrl(preset.url);
-                      const testRelease = createTestRelease(preset.url);
-                      setCurrentRelease(testRelease);
-                      playRelease(testRelease);
+                      const testTrack = createTestTrack(preset.url);
+                      setCurrentTrack(testTrack);
+                      playTrack(testTrack, [testTrack], 'Debug Test');
                     }}
                   >
                     Test
@@ -111,11 +109,21 @@ export default function DebugAudio() {
             </div>
           </div>
 
-          {/* Audio Player */}
-          {currentRelease && (
+          {/* Current Track Info */}
+          {currentTrack && (
             <div className="space-y-3">
-              <h3 className="text-lg font-medium">Audio Player</h3>
-              <AudioPlayer release={currentRelease} />
+              <h3 className="text-lg font-medium">Current Test Track</h3>
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-sm"><strong>Title:</strong> {currentTrack.title}</p>
+                <p className="text-sm"><strong>Artist:</strong> {currentTrack.artist}</p>
+                <p className="text-sm"><strong>Audio URL:</strong> {currentTrack.audioUrl}</p>
+                <p className="text-sm"><strong>Playing:</strong> {playerState.isPlaying ? 'Yes' : 'No'}</p>
+                <p className="text-sm"><strong>Current Time:</strong> {playerState.currentTime.toFixed(2)}s</p>
+                <p className="text-sm"><strong>Duration:</strong> {playerState.duration.toFixed(2)}s</p>
+                {playerState.error && (
+                  <p className="text-sm text-red-600"><strong>Error:</strong> {playerState.error}</p>
+                )}
+              </div>
             </div>
           )}
 
@@ -139,14 +147,15 @@ export default function DebugAudio() {
           </div>
 
           {/* Instructions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-medium text-blue-900 mb-2">Debug Steps:</h4>
-            <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+          <div className="bg-muted/30 border border-border rounded-lg p-4">
+            <h4 className="font-medium text-foreground mb-2">Debug Steps:</h4>
+            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
               <li>Test with the preset URLs to verify basic audio playback works</li>
               <li>Check the browser console for detailed error messages</li>
               <li>Verify your uploaded audio files are accessible</li>
               <li>Check if CORS headers are properly set on your Blossom servers</li>
               <li>Try different audio formats (MP3, WAV, etc.)</li>
+              <li>Use the persistent audio player at the bottom to control playback</li>
             </ol>
           </div>
         </CardContent>

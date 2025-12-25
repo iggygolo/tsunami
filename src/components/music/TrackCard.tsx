@@ -2,7 +2,7 @@ import React from 'react';
 import { Play, Pause, Music } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import { formatDistanceToNow } from 'date-fns';
 import type { MusicTrackData } from '@/types/music';
 
@@ -12,36 +12,17 @@ interface TrackCardProps {
 }
 
 export function TrackCard({ track, className }: TrackCardProps) {
-  const { playRelease } = useAudioPlayer();
+  const { playTrack } = useUniversalAudioPlayer();
 
   const handlePlay = () => {
-    // Convert MusicTrackData to MusicRelease format for the audio player
-    const releaseData = {
-      id: track.identifier,
-      title: track.title,
-      imageUrl: track.imageUrl,
-      description: track.credits,
-      content: track.lyrics,
-      tracks: [{
-        title: track.title,
-        audioUrl: track.audioUrl,
-        duration: track.duration,
-        explicit: track.explicit,
-        language: track.language
-      }],
-      publishDate: track.createdAt || new Date(),
-      tags: track.genres || [],
-      genre: track.genres?.[0] || null,
-      eventId: track.eventId || '',
-      artistPubkey: track.artistPubkey || '',
-      identifier: track.identifier,
-      createdAt: track.createdAt || new Date(),
-      zapCount: track.zapCount,
-      totalSats: track.totalSats,
-      commentCount: track.commentCount,
-      repostCount: track.repostCount
-    };
-    playRelease(releaseData);
+    // Convert MusicTrackData to UniversalTrack format
+    const universalTrack = musicTrackToUniversal(track, {
+      type: 'profile',
+      artistPubkey: track.artistPubkey
+    });
+    
+    // Play the single track
+    playTrack(universalTrack, [universalTrack], track.title);
   };
 
   const formatDuration = (seconds?: number): string => {

@@ -3,20 +3,19 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useMusicTracks } from '@/hooks/useMusicTracks';
 import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useUniversalAudioPlayer } from '@/contexts/UniversalAudioPlayerContext';
 import { Button } from '@/components/ui/button';
 import { GlassTabs, GlassTabsList, GlassTabsTrigger, GlassTabsContent } from '@/components/ui/GlassTabs';
-import { GlassList, GlassListItem, GlassListEmptyState, GlassListSkeleton } from '@/components/ui/GlassList';
+import { GlassList, GlassListItem, GlassListSkeleton } from '@/components/ui/GlassList';
 import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { EditProfileForm } from '@/components/EditProfileForm';
 import { ZapDialog } from '@/components/ZapDialog';
 import { RepostDialog } from '@/components/RepostDialog';
+import { UniversalTrackList } from '@/components/music/UniversalTrackList';
 import { genUserName } from '@/lib/genUserName';
-import { playlistToRelease } from '@/lib/eventConversions';
-import { formatToAudioType } from '@/lib/audioUtils';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
-import type { MusicRelease, MusicTrackData, MusicPlaylistData } from '@/types/music';
+import type { MusicPlaylistData } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 import { 
   Edit, 
@@ -43,68 +42,16 @@ interface ProfilePageProps {
   pubkey: string;
 }
 
-// Helper function to convert a single track to MusicRelease format
-function trackToRelease(track: MusicTrackData): MusicRelease {
-  return {
-    id: track.eventId || '',
-    title: track.title,
-    description: track.album || track.title,
-    content: track.lyrics || track.credits,
-    imageUrl: track.imageUrl,
-    publishDate: track.createdAt || new Date(),
-    tags: track.genres || [],
-    transcriptUrl: undefined,
-    genre: track.genres?.[0] || null,
-    eventId: track.eventId || '',
-    artistPubkey: track.artistPubkey || '',
-    identifier: track.identifier,
-    createdAt: track.createdAt || new Date(),
-    tracks: [{
-      title: track.title,
-      audioUrl: track.audioUrl,
-      audioType: formatToAudioType(track.format || 'mp3'),
-      duration: track.duration,
-      explicit: track.explicit || false,
-      language: track.language || null,
-    }],
-    ...(track.zapCount && { zapCount: track.zapCount }),
-    ...(track.totalSats && { totalSats: track.totalSats }),
-    ...(track.commentCount && { commentCount: track.commentCount }),
-    ...(track.repostCount && { repostCount: track.repostCount }),
-  };
-}
-
 export function ProfilePage({ pubkey }: ProfilePageProps) {
   const { data: authorData, isLoading: isLoadingAuthor } = useAuthor(pubkey);
   const { data: tracks = [], isLoading: isLoadingTracks } = useMusicTracks();
   const { data: playlists = [], isLoading: isLoadingPlaylists } = useMusicPlaylists();
   const { user: currentUser } = useCurrentUser();
-  const { state: playerState, playRelease, pause } = useAudioPlayer();
+  const { state: playerState, pause } = useUniversalAudioPlayer();
   
   const isOwnProfile = currentUser?.pubkey === pubkey;
   const metadata = authorData?.metadata;
   const displayName = metadata?.name || genUserName(pubkey);
-
-  // Helper function to create NostrEvent from track data
-  const createTrackEvent = (track: MusicTrackData): NostrEvent => {
-    return {
-      id: track.eventId || '',
-      pubkey: track.artistPubkey || pubkey,
-      created_at: Math.floor((track.createdAt?.getTime() || Date.now()) / 1000),
-      kind: MUSIC_KINDS.MUSIC_TRACK,
-      tags: [
-        ['d', track.identifier],
-        ['title', track.title],
-        ['artist', track.artist],
-        ['audio', track.audioUrl],
-        ...(track.album ? [['album', track.album]] : []),
-        ...(track.imageUrl ? [['image', track.imageUrl]] : []),
-        ...(track.genres ? track.genres.map(genre => ['t', genre]) : []),
-      ],
-      content: track.lyrics || track.credits || '',
-      sig: ''
-    };
-  };
 
   // Helper function to create NostrEvent from playlist data
   const createPlaylistEvent = (playlist: MusicPlaylistData): NostrEvent => {
@@ -126,41 +73,18 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
     };
   };
 
-  // Helper functions for playing tracks and playlists
-  const handlePlayTrack = (track: MusicTrackData) => {
-    if (isTrackPlaying(track)) {
-      pause();
-    } else {
-      const release = trackToRelease(track);
-      playRelease(release, 0);
-    }
-  };
-
   const handlePlayPlaylist = (playlist: MusicPlaylistData) => {
     if (isPlaylistPlaying(playlist)) {
       pause();
     } else {
-      // Create a map of available tracks for conversion
-      const trackMap = new Map<string, MusicTrackData>();
-      tracks.forEach(track => {
-        if (track.artistPubkey && track.identifier) {
-          trackMap.set(`${track.artistPubkey}:${track.identifier}`, track);
-        }
-      });
-      
-      const release = playlistToRelease(playlist, trackMap);
-      playRelease(release, 0);
+      // TODO: Convert playlists to use universal audio player queue system
+      console.log('Playlist playing not yet implemented with universal audio player:', playlist.title);
     }
   };
 
-  const isTrackPlaying = (track: MusicTrackData) => {
-    return playerState.isPlaying && 
-           playerState.currentRelease?.eventId === track.eventId;
-  };
-
   const isPlaylistPlaying = (playlist: MusicPlaylistData) => {
-    return playerState.isPlaying && 
-           playerState.currentRelease?.eventId === playlist.eventId;
+    // TODO: Implement playlist playing with universal audio player
+    return false;
   };
   
   if (isLoadingAuthor) {
@@ -189,11 +113,11 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
         <BlurredBackground image={metadata?.banner || metadata?.picture} />
         
         <div className="relative py-8">
-          {/* Profile Header */}
-          <div className="flex flex-col lg:flex-row items-start gap-4 mb-6">
+          {/* Profile Header - Release Page Style */}
+          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 mb-6">
             {/* Large Profile Image */}
             <div className="flex-shrink-0">
-              <div className="w-48 h-48 rounded-2xl overflow-hidden shadow-2xl">
+              <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden shadow-2xl">
                 {metadata?.picture ? (
                   <img 
                     src={metadata.picture} 
@@ -202,22 +126,22 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <span className="text-6xl font-bold text-white">{displayName.charAt(0)}</span>
+                    <span className="text-4xl sm:text-6xl font-bold text-white">{displayName.charAt(0)}</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Profile Info */}
-            <div className="flex-1 space-y-3 relative z-10 max-w-lg">
+            <div className="flex-1 space-y-3 relative z-10 w-full max-w-lg text-center lg:text-left">
               <div className="flex flex-col sm:flex-row sm:items-start gap-3">
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-white drop-shadow-lg mb-2">{displayName}</h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg mb-2">{displayName}</h1>
                   {metadata?.about && (
                     <p className="text-white/90 text-sm drop-shadow-md mb-2">{metadata.about}</p>
                   )}
                   {metadata?.nip05 && (
-                    <p className="text-white/80 drop-shadow-md text-xs">@{metadata.nip05}</p>
+                    <p className="text-white/80 drop-shadow-md text-xs mb-2">@{metadata.nip05}</p>
                   )}
                 </div>
                 
@@ -246,7 +170,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
               </div>
 
               {/* Stats */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 justify-center lg:justify-start">
                 <div className="text-white">
                   <div className="text-xl font-bold drop-shadow-lg">0</div>
                   <div className="text-white/80 text-xs drop-shadow-md">sats</div>
@@ -256,7 +180,8 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 text-xs text-white/80">
+              {/* Links */}
+              <div className="flex flex-wrap gap-2 text-xs text-white/80 justify-center lg:justify-start">
                 {metadata?.website && (
                   <a 
                     href={metadata.website} 
@@ -275,147 +200,116 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                   {nip19.npubEncode(pubkey).slice(0, 12)}...
                 </div>
               </div>
-
-              {/* Tab Pills */}
-              <div className="flex gap-2">
-                <GlassTabs defaultValue="tracks">
-                  <GlassTabsList>
-                    <GlassTabsTrigger 
-                      value="tracks"
-                      icon={<Music className="w-3 h-3" />}
-                      count={tracks.length}
-                    >
-                      Tracks
-                    </GlassTabsTrigger>
-                    <GlassTabsTrigger 
-                      value="playlists"
-                      icon={<ListMusic className="w-3 h-3" />}
-                      count={playlists.length}
-                    >
-                      Playlists
-                    </GlassTabsTrigger>
-                  </GlassTabsList>
-
-                  <GlassTabsContent value="tracks">
-                    {isLoadingTracks ? (
-                      <GlassListSkeleton count={3} />
-                    ) : tracks.length > 0 ? (
-                      <GlassList>
-                        {tracks.map((track) => (
-                          <GlassListItem key={track.eventId}>
-                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
-                              {track.imageUrl ? (
-                                <img src={track.imageUrl} alt={track.title} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <Music className="w-4 h-4 text-white/50" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-white font-medium truncate text-sm">{track.title}</h3>
-                              <p className="text-white/70 text-xs truncate">{track.artist}</p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <ZapDialog target={createTrackEvent(track)}>
-                                <Button size="sm" variant="ghost" className="text-white/70 hover:text-yellow-400 p-1.5 rounded-full">
-                                  <Zap className="w-3 h-3" />
-                                </Button>
-                              </ZapDialog>
-                              <RepostDialog 
-                                target={createTrackEvent(track)} 
-                                item={track} 
-                                type="track"
-                              >
-                                <Button size="sm" variant="ghost" className="text-white/70 hover:text-green-400 p-1.5 rounded-full">
-                                  <Repeat2 className="w-3 h-3" />
-                                </Button>
-                              </RepostDialog>
-                              <Button 
-                                size="sm" 
-                                onClick={() => handlePlayTrack(track)}
-                                className="bg-white text-black hover:bg-white/90 rounded-full w-8 h-8 p-0"
-                              >
-                                {isTrackPlaying(track) ? (
-                                  <Pause className="w-3 h-3" />
-                                ) : (
-                                  <Play className="w-3 h-3 ml-0.5" />
-                                )}
-                              </Button>
-                            </div>
-                          </GlassListItem>
-                        ))}
-                      </GlassList>
-                    ) : (
-                      <GlassListEmptyState
-                        icon={<Music className="w-6 h-6" />}
-                        title="No tracks yet"
-                        description={isOwnProfile ? "Start creating music to see your tracks here." : "This artist hasn't published any tracks yet."}
-                      />
-                    )}
-                  </GlassTabsContent>
-
-                  <GlassTabsContent value="playlists">
-                    {isLoadingPlaylists ? (
-                      <GlassListSkeleton count={2} />
-                    ) : playlists.length > 0 ? (
-                      <GlassList>
-                        {playlists.map((playlist) => (
-                          <GlassListItem key={playlist.eventId}>
-                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
-                              {playlist.imageUrl ? (
-                                <img src={playlist.imageUrl} alt={playlist.title} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <ListMusic className="w-4 h-4 text-white/50" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-white font-medium truncate text-sm">{playlist.title}</h3>
-                              <p className="text-white/70 text-xs truncate">{playlist.tracks.length} tracks</p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <ZapDialog target={createPlaylistEvent(playlist)}>
-                                <Button size="sm" variant="ghost" className="text-white/70 hover:text-yellow-400 p-1.5 rounded-full">
-                                  <Zap className="w-3 h-3" />
-                                </Button>
-                              </ZapDialog>
-                              <RepostDialog 
-                                target={createPlaylistEvent(playlist)} 
-                                item={playlist} 
-                                type="playlist"
-                              >
-                                <Button size="sm" variant="ghost" className="text-white/70 hover:text-green-400 p-1.5 rounded-full">
-                                  <Repeat2 className="w-3 h-3" />
-                                </Button>
-                              </RepostDialog>
-                              <Button 
-                                size="sm" 
-                                onClick={() => handlePlayPlaylist(playlist)}
-                                className="bg-white text-black hover:bg-white/90 rounded-full w-8 h-8 p-0"
-                              >
-                                {isPlaylistPlaying(playlist) ? (
-                                  <Pause className="w-3 h-3" />
-                                ) : (
-                                  <Play className="w-3 h-3 ml-0.5" />
-                                )}
-                              </Button>
-                            </div>
-                          </GlassListItem>
-                        ))}
-                      </GlassList>
-                    ) : (
-                      <GlassListEmptyState
-                        icon={<ListMusic className="w-6 h-6" />}
-                        title="No playlists yet"
-                        description={isOwnProfile ? "Create your first playlist to see it here." : "This artist hasn't created any playlists yet."}
-                      />
-                    )}
-                  </GlassTabsContent>
-                </GlassTabs>
-              </div>
             </div>
+          </div>
+
+          {/* Tab Pills - Moved outside the header area */}
+          <div className="w-full max-w-full">
+            <GlassTabs defaultValue="tracks" className="w-full max-w-full">
+              <GlassTabsList className="flex-wrap justify-center lg:justify-start">
+                <GlassTabsTrigger 
+                  value="tracks"
+                  icon={<Music className="w-3 h-3" />}
+                  count={tracks.length}
+                  className="text-xs sm:text-sm px-3 sm:px-4"
+                >
+                  Tracks
+                </GlassTabsTrigger>
+                <GlassTabsTrigger 
+                  value="playlists"
+                  icon={<ListMusic className="w-3 h-3" />}
+                  count={playlists.length}
+                  className="text-xs sm:text-sm px-3 sm:px-4"
+                >
+                  Playlists
+                </GlassTabsTrigger>
+              </GlassTabsList>
+
+              <GlassTabsContent value="tracks" className="w-full max-w-full">
+                <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
+                  {isLoadingTracks ? (
+                    <GlassListSkeleton count={3} />
+                  ) : tracks.length > 0 ? (
+                    <UniversalTrackList 
+                      tracks={tracks}
+                      className="text-white"
+                      showTrackNumbers={true}
+                    />
+                  ) : (
+                    <div className="text-center py-8">
+                      <Music className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                      <h3 className="text-foreground font-medium mb-2">No tracks yet</h3>
+                      <p className="text-muted-foreground text-sm">
+                        {isOwnProfile ? "Start creating music to see your tracks here." : "This artist hasn't published any tracks yet."}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </GlassTabsContent>
+
+              <GlassTabsContent value="playlists" className="w-full max-w-full">
+                <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
+                  {isLoadingPlaylists ? (
+                    <GlassListSkeleton count={2} />
+                  ) : playlists.length > 0 ? (
+                    <GlassList>
+                      {playlists.map((playlist) => (
+                        <GlassListItem key={playlist.eventId}>
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
+                            {playlist.imageUrl ? (
+                              <img src={playlist.imageUrl} alt={playlist.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <ListMusic className="w-4 h-4 text-white/50" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-white font-medium truncate text-sm">{playlist.title}</h3>
+                            <p className="text-white/70 text-xs truncate">{playlist.tracks.length} tracks</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <ZapDialog target={createPlaylistEvent(playlist)}>
+                              <Button size="sm" variant="ghost" className="text-white/70 hover:text-yellow-400 p-1.5 rounded-full">
+                                <Zap className="w-3 h-3" />
+                              </Button>
+                            </ZapDialog>
+                            <RepostDialog 
+                              target={createPlaylistEvent(playlist)} 
+                              item={playlist} 
+                              type="playlist"
+                            >
+                              <Button size="sm" variant="ghost" className="text-white/70 hover:text-green-400 p-1.5 rounded-full">
+                                <Repeat2 className="w-3 h-3" />
+                              </Button>
+                            </RepostDialog>
+                            <Button 
+                              size="sm" 
+                              onClick={() => handlePlayPlaylist(playlist)}
+                              className="bg-white text-black hover:bg-white/90 rounded-full w-8 h-8 p-0"
+                            >
+                              {isPlaylistPlaying(playlist) ? (
+                                <Pause className="w-3 h-3" />
+                              ) : (
+                                <Play className="w-3 h-3 ml-0.5" />
+                              )}
+                            </Button>
+                          </div>
+                        </GlassListItem>
+                      ))}
+                    </GlassList>
+                  ) : (
+                    <div className="text-center py-8">
+                      <ListMusic className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                      <h3 className="text-foreground font-medium mb-2">No playlists yet</h3>
+                      <p className="text-muted-foreground text-sm">
+                        {isOwnProfile ? "Create your first playlist to see it here." : "This artist hasn't created any playlists yet."}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </GlassTabsContent>
+            </GlassTabs>
           </div>
         </div>
       </div>

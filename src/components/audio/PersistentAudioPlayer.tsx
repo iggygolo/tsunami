@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { ZapDialog } from '@/components/ZapDialog';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useUniversalAudioPlayer } from '@/contexts/UniversalAudioPlayerContext';
 import { useGlassEffect } from '@/hooks/useBackdropSupport';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { useNavigate } from 'react-router-dom';
@@ -30,38 +30,38 @@ export function PersistentAudioPlayer() {
     setVolume,
     nextTrack,
     previousTrack
-  } = useAudioPlayer();
+  } = useUniversalAudioPlayer();
 
   const navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(false);
   const [previousVolume, setPreviousVolume] = useState(1);
   const { getGlassClass } = useGlassEffect();
 
-  // Don't render if no release is loaded
-  if (!state.currentRelease) {
+  // Don't render if no track is loaded
+  if (!state.currentTrack) {
     return null;
   }
 
-  const release = state.currentRelease;
   const currentTrack = state.currentTrack;
+  const queueTitle = state.queueTitle || 'Unknown';
 
-  // Determine the image to display with proper fallback hierarchy
-  const displayImage = currentTrack?.imageUrl || release.imageUrl;
+  // Determine the image to display
+  const displayImage = currentTrack.imageUrl;
 
   // Create NostrEvent for zap functionality
-  const releaseEvent: NostrEvent = {
-    id: release.eventId,
-    pubkey: release.artistPubkey,
-    created_at: Math.floor(release.createdAt.getTime() / 1000),
-    kind: MUSIC_KINDS.MUSIC_PLAYLIST,
+  const trackEvent: NostrEvent = {
+    id: currentTrack.eventId || currentTrack.id,
+    pubkey: currentTrack.source?.artistPubkey || '',
+    created_at: Math.floor(Date.now() / 1000),
+    kind: MUSIC_KINDS.MUSIC_TRACK,
     tags: [
-      ['d', release.identifier || release.eventId],
-      ['title', release.title],
-      ...(release.description ? [['description', release.description]] : []),
-      ...(release.imageUrl ? [['image', release.imageUrl]] : []),
-      ...release.tags.map(tag => ['t', tag])
+      ['d', currentTrack.identifier || currentTrack.id],
+      ['title', currentTrack.title],
+      ...(currentTrack.artist ? [['artist', currentTrack.artist]] : []),
+      ...(currentTrack.audioUrl ? [['audio', currentTrack.audioUrl]] : []),
+      ...(currentTrack.imageUrl ? [['image', currentTrack.imageUrl]] : []),
     ],
-    content: JSON.stringify(release.tracks),
+    content: '',
     sig: ''
   };
 
@@ -118,9 +118,10 @@ export function PersistentAudioPlayer() {
   };
 
   const handleNavigateToRelease = () => {
-    if (release.eventId || release.id) {
-      const eventId = release.eventId || release.id;
-      navigate(`/releases/${eventId}`);
+    if (currentTrack.source?.releaseId) {
+      navigate(`/releases/${currentTrack.source.releaseId}`);
+    } else if (currentTrack.source?.type === 'profile' && currentTrack.source.artistPubkey) {
+      navigate(`/profile/${currentTrack.source.artistPubkey}`);
     }
   };
 
@@ -133,7 +134,7 @@ export function PersistentAudioPlayer() {
           max={state.duration || 100}
           step={1}
           onValueChange={handleSeek}
-          disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
+          disabled={state.queue.length === 0 || state.isLoading}
           className="absolute inset-0 flex w-full touch-none select-none items-center cursor-pointer"
         >
           <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden bg-white/20">
@@ -153,7 +154,7 @@ export function PersistentAudioPlayer() {
               <div className="relative">
                 <img
                   src={displayImage}
-                  alt={currentTrack?.title || release.title}
+                  alt={currentTrack.title}
                   className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
                   onClick={handleNavigateToRelease}
                 />
@@ -166,14 +167,14 @@ export function PersistentAudioPlayer() {
             )}
             <div className="min-w-0 flex-1">
               <p className="font-medium text-sm line-clamp-1 text-white">
-                {currentTrack?.title || `Track ${state.currentTrackIndex + 1}`}
+                {currentTrack.title}
               </p>
               <p className="text-xs text-white/70 line-clamp-1">
                 <button 
                   onClick={handleNavigateToRelease}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
-                  {release.title}
+                  {currentTrack.artist || queueTitle}
                 </button>
               </p>
               <div className="flex items-center justify-between mt-1">
@@ -182,12 +183,12 @@ export function PersistentAudioPlayer() {
                 </span>
                 <div className="flex items-center space-x-2">
                   {/* Zap Button */}
-                  <ZapDialog target={releaseEvent}>
+                  <ZapDialog target={trackEvent}>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-7 w-7 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-yellow-400 transition-colors"
-                      title="Zap this release"
+                      title="Zap this track"
                     >
                       <Zap className="h-3 w-3" />
                     </Button>
@@ -213,7 +214,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={previousTrack}
-              disabled={!release.tracks || release.tracks.length <= 1 || state.currentTrackIndex === 0}
+              disabled={state.queue.length <= 1 || state.currentTrackIndex === 0}
               className="h-10 w-10 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
               title="Previous track"
             >
@@ -225,7 +226,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handleSkipBack}
-              disabled={!release.tracks || release.tracks.length === 0}
+              disabled={state.queue.length === 0}
               className="h-10 w-10 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
               title="Rewind 15 seconds"
             >
@@ -237,7 +238,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handlePlayPause}
-              disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
+              disabled={state.queue.length === 0 || state.isLoading}
               className="h-12 w-12 p-0 rounded-full bg-white/95 backdrop-blur-sm text-black hover:text-black hover:bg-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 supports-[backdrop-filter]:bg-white/90"
             >
               {state.isPlaying ? (
@@ -252,7 +253,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handleSkipForward}
-              disabled={!release.tracks || release.tracks.length === 0}
+              disabled={state.queue.length === 0}
               className="h-10 w-10 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
               title="Forward 15 seconds"
             >
@@ -264,7 +265,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={nextTrack}
-              disabled={!release.tracks || release.tracks.length <= 1 || state.currentTrackIndex >= release.tracks.length - 1}
+              disabled={state.queue.length <= 1 || state.currentTrackIndex >= state.queue.length - 1}
               className="h-10 w-10 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
               title="Next track"
             >
@@ -281,7 +282,7 @@ export function PersistentAudioPlayer() {
               <div className="relative">
                 <img
                   src={displayImage}
-                  alt={currentTrack?.title || release.title}
+                  alt={currentTrack.title}
                   className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
                   onClick={handleNavigateToRelease}
                 />
@@ -294,14 +295,14 @@ export function PersistentAudioPlayer() {
             )}
             <div className="min-w-0 flex-1">
               <p className="font-medium text-xs sm:text-sm line-clamp-1 text-white">
-                {currentTrack?.title || `Track ${state.currentTrackIndex + 1}`}
+                {currentTrack.title}
               </p>
               <p className="text-xs text-white/70 line-clamp-1">
                 <button 
                   onClick={handleNavigateToRelease}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
-                  {release.title}
+                  {currentTrack.artist || queueTitle}
                 </button>
               </p>
               <div className="flex items-center space-x-2 text-xs text-white/50">
@@ -319,7 +320,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={previousTrack}
-              disabled={!release.tracks || release.tracks.length <= 1 || state.currentTrackIndex === 0}
+              disabled={state.queue.length <= 1 || state.currentTrackIndex === 0}
               className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
               title="Previous track"
             >
@@ -331,7 +332,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handleSkipBack}
-              disabled={!release.tracks || release.tracks.length === 0}
+              disabled={state.queue.length === 0}
               className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
               title="Rewind 15 seconds"
             >
@@ -343,7 +344,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handlePlayPause}
-              disabled={!release.tracks || release.tracks.length === 0 || state.isLoading}
+              disabled={state.queue.length === 0 || state.isLoading}
               className="h-10 w-10 sm:h-11 sm:w-11 p-0 rounded-full bg-white/95 backdrop-blur-sm text-black hover:text-black hover:bg-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 supports-[backdrop-filter]:bg-white/90"
             >
               {state.isPlaying ? (
@@ -358,7 +359,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={handleSkipForward}
-              disabled={!release.tracks || release.tracks.length === 0}
+              disabled={state.queue.length === 0}
               className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
               title="Forward 15 seconds"
             >
@@ -370,7 +371,7 @@ export function PersistentAudioPlayer() {
               variant="ghost"
               size="sm"
               onClick={nextTrack}
-              disabled={!release.tracks || release.tracks.length <= 1 || state.currentTrackIndex >= release.tracks.length - 1}
+              disabled={state.queue.length <= 1 || state.currentTrackIndex >= state.queue.length - 1}
               className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-white transition-colors"
               title="Next track"
             >
@@ -411,12 +412,12 @@ export function PersistentAudioPlayer() {
             </div>
 
             {/* Zap Button */}
-            <ZapDialog target={releaseEvent}>
+            <ZapDialog target={trackEvent}>
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 rounded-full hover:bg-white/10 text-white/80 hover:text-yellow-400 transition-colors"
-                title="Zap this release"
+                title="Zap this track"
               >
                 <Zap className="h-3 w-3" />
               </Button>

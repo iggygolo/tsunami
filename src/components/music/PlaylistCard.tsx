@@ -3,7 +3,7 @@ import { Play, Pause, ListMusic } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useUniversalAudioPlayer } from '@/contexts/UniversalAudioPlayerContext';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
@@ -16,36 +16,15 @@ interface PlaylistCardProps {
 }
 
 export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
-  const { playRelease } = useAudioPlayer();
+  const { playQueue } = useUniversalAudioPlayer();
 
   const handlePlay = () => {
-    // Convert MusicPlaylistData to MusicRelease format for the audio player
-    const releaseData = {
-      id: playlist.identifier,
-      title: playlist.title,
-      imageUrl: playlist.imageUrl,
-      description: playlist.description,
-      content: playlist.description,
-      tracks: playlist.tracks.map(trackRef => ({
-        title: trackRef.title || 'Unknown Track',
-        audioUrl: '', // Would need to resolve track references
-        duration: undefined,
-        explicit: false,
-        language: null
-      })),
-      publishDate: playlist.createdAt || new Date(),
-      tags: playlist.categories || [],
-      genre: playlist.categories?.[0] || null,
-      eventId: playlist.eventId || '',
-      artistPubkey: playlist.authorPubkey || '',
-      identifier: playlist.identifier,
-      createdAt: playlist.createdAt || new Date(),
-      zapCount: playlist.zapCount,
-      totalSats: playlist.totalSats,
-      commentCount: playlist.commentCount,
-      repostCount: playlist.repostCount
-    };
-    playRelease(releaseData);
+    // For now, we'll just log that playlist playing is not yet fully implemented
+    // TODO: Implement playlist track resolution and queue playing
+    console.log('Playlist playing not yet fully implemented with universal audio player:', playlist.title);
+    
+    // Could potentially create placeholder tracks or navigate to playlist page
+    // where the full playlist can be loaded and played
   };
 
   // Create naddr for playlist

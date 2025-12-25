@@ -17,7 +17,7 @@ import { useLatestReleaseCache, useStaticReleaseCache } from '@/hooks/useStaticR
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useTrackPlayback } from '@/hooks/useTrackPlayback';
+import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { useArtistPosts, useArtistPostCount } from '@/hooks/useArtistPosts';
 import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
 import { getArtistPubkeyHex } from '@/lib/musicConfig';
@@ -45,7 +45,7 @@ const Index = () => {
   const totalPostCount = postCount || 0;
 
   // Use track playback hook for latest release (always call hook, but pass null if no release)
-  const trackPlayback = useTrackPlayback(latestRelease || null);
+  const trackPlayback = useUniversalTrackPlayback(latestRelease || null);
 
   // Debug logging to understand the release data
   console.log('Index.tsx - Latest release debug:', {
