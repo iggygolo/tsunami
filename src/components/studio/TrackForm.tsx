@@ -322,62 +322,6 @@ export function TrackForm({
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
               {/* Basic Information */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Track Title *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter track title..." 
-                            className="h-12 text-lg"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="artist"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Artist *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter artist name..." 
-                            className="h-12 text-lg"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Brief description of the track..."
-                            rows={4}
-                            className="resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
                 {/* Cover Art */}
                 <div className="space-y-4">
@@ -436,6 +380,62 @@ export function TrackForm({
                           <Input
                             placeholder="Or paste image URL..."
                             disabled={!!imageFile}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Track Title *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter track title..." 
+                            className="h-12 text-lg"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="artist"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Artist *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter artist name..." 
+                            className="h-12 text-lg"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Brief description of the track..."
+                            rows={4}
+                            className="resize-none"
                             {...field}
                           />
                         </FormControl>
