@@ -310,7 +310,6 @@ export interface UploadConfig {
   blossomEnabled: boolean;
   maxFileSize: number;
   allowedTypes: string[];
-  fallbackEnabled: boolean;
 }
 
 export class UploadProviderFactory {
@@ -343,8 +342,7 @@ export class UploadProviderFactory {
       vercelEnabled: true,
       blossomEnabled: true,
       maxFileSize: MAX_FILE_SIZE,
-      allowedTypes: [...ALLOWED_MIME_TYPES],
-      fallbackEnabled: false // Disable fallback to prevent uploads to wrong provider
+      allowedTypes: [...ALLOWED_MIME_TYPES]
     };
   }
 }

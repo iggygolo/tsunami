@@ -121,19 +121,7 @@ export function useUploadFile() {
           return await uploadWithVercel(correctedFile, user);
         } catch (vercelError) {
           console.warn('Vercel upload failed:', vercelError);
-          
-          // Only fallback if explicitly enabled
-          if (config.fallbackEnabled && config.blossomEnabled) {
-            console.log('⚠️ FALLING BACK TO BLOSSOM - SIGNING REQUIRED');
-            try {
-              return await uploadWithBlossom(correctedFile, user, allServers);
-            } catch (blossomError) {
-              console.error('Both Vercel and Blossom uploads failed');
-              throw new Error(`Upload failed. Vercel: ${vercelError instanceof Error ? vercelError.message : 'Unknown error'}. Blossom: ${blossomError instanceof Error ? blossomError.message : 'Unknown error'}`);
-            }
-          } else {
-            throw vercelError;
-          }
+          throw vercelError;
         }
       } else {
         console.log('🌸 USING BLOSSOM - SIGNING REQUIRED');
@@ -142,19 +130,7 @@ export function useUploadFile() {
           return await uploadWithBlossom(correctedFile, user, allServers);
         } catch (blossomError) {
           console.warn('Blossom upload failed:', blossomError);
-          
-          // Only fallback if explicitly enabled
-          if (config.fallbackEnabled && config.vercelEnabled) {
-            console.log('⚠️ FALLING BACK TO VERCEL - NO SIGNING REQUIRED');
-            try {
-              return await uploadWithVercel(correctedFile, user);
-            } catch (vercelError) {
-              console.error('Both Blossom and Vercel uploads failed');
-              throw new Error(`Upload failed. Blossom: ${blossomError instanceof Error ? blossomError.message : 'Unknown error'}. Vercel: ${vercelError instanceof Error ? vercelError.message : 'Unknown error'}`);
-            }
-          } else {
-            throw blossomError;
-          }
+          throw blossomError;
         }
       }
     },
@@ -203,7 +179,6 @@ export function useUploadFileWithOptions() {
 
       // Determine which provider to use - default to blossom unless explicitly overridden
       const primaryProvider = options.provider || 'blossom';
-      const enableFallback = options.enableFallback ?? config.fallbackEnabled;
 
       console.log('Primary provider:', primaryProvider, 'Fallback enabled:', enableFallback);
 
@@ -219,16 +194,6 @@ export function useUploadFileWithOptions() {
           return { url, provider: 'vercel', tags };
         } catch (error) {
           console.warn('Vercel upload failed:', error);
-          if (!enableFallback) throw error;
-          
-          // Fallback to Blossom
-          try {
-            const tags = await uploadWithBlossom(correctedFile, user, allServers);
-            const url = tags.find(tag => tag[0] === 'url')?.[1] || '';
-            return { url, provider: 'blossom', tags };
-          } catch (fallbackError) {
-            throw new Error(`Both providers failed. Vercel: ${error instanceof Error ? error.message : 'Unknown'}. Blossom: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown'}`);
-          }
         }
       } else {
         // Primary provider is Blossom
@@ -238,18 +203,6 @@ export function useUploadFileWithOptions() {
           return { url, provider: 'blossom', tags };
         } catch (error) {
           console.warn('Blossom upload failed:', error);
-          if (!enableFallback || !config.vercelEnabled) {
-            throw error;
-          }
-          
-          // Fallback to Vercel if it's enabled
-          try {
-            const tags = await uploadWithVercel(correctedFile, user);
-            const url = tags.find(tag => tag[0] === 'url')?.[1] || '';
-            return { url, provider: 'vercel', tags };
-          } catch (fallbackError) {
-            throw new Error(`Both providers failed. Blossom: ${error instanceof Error ? error.message : 'Unknown'}. Vercel: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown'}`);
-          }
         }
       }
     },
