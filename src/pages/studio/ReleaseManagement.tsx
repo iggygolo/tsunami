@@ -15,7 +15,10 @@ import {
   Tags,
   AlertTriangle,
   Plus,
-  Share
+  Share,
+  Zap,
+  MessageCircle,
+  Repeat2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -44,7 +47,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useReleases } from '@/hooks/useReleases';
 import { useDeleteRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
-import { AudioPlayer } from '@/components/music/AudioPlayer';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
 import { ShareReleaseDialog } from '@/components/studio/ShareReleaseDialog';
 
@@ -64,9 +67,28 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
   });
   const [releaseToDelete, setReleaseToDelete] = useState<MusicRelease | null>(null);
   const [releaseToShare, setReleaseToShare] = useState<MusicRelease | null>(null);
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
 
   const { data: releases, isLoading, error } = useReleases(searchOptions);
+  const { playRelease, pause, state: playerState } = useAudioPlayer();
+
+  // Helper function to check if a release is currently playing
+  const isCurrentlyPlaying = (release: MusicRelease) => {
+    return playerState.currentRelease?.eventId === release.eventId || 
+           playerState.currentRelease?.id === release.id;
+  };
+
+  // Helper function to handle play/pause
+  const handlePlayPause = (release: MusicRelease) => {
+    if (isCurrentlyPlaying(release)) {
+      if (playerState.isPlaying) {
+        pause();
+      } else {
+        playRelease(release);
+      }
+    } else {
+      playRelease(release);
+    }
+  };
 
   const handleSearch = (query: string) => {
     setSearchOptions(prev => ({ ...prev, query: query || undefined }));
@@ -274,62 +296,67 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                             </div>
                           </div>
 
-                          {/* Actions Dropdown */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => setCurrentlyPlaying(
-                                  currentlyPlaying === release.id ? null : release.id
-                                )}
-                              >
-                                {currentlyPlaying === release.id ? (
-                                  <Pause className="w-4 h-4 mr-2" />
-                                ) : (
-                                  <Play className="w-4 h-4 mr-2" />
-                                )}
-                                {currentlyPlaying === release.id ? 'Hide Player' : 'Play release'}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => navigate(`/studio/releases/edit/${release.eventId || release.id}`)}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit release
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link to={`/releases/${release.eventId || release.id}`}>
-                                  <Eye className="w-4 h-4 mr-2" />
-                                  View Public Page
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setReleaseToShare(release)}>
-                                <Share className="w-4 h-4 mr-2" />
-                                Share release
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  const audioUrl = release.tracks?.[0]?.audioUrl;
-                                  if (audioUrl) {
-                                    window.open(audioUrl, '_blank');
-                                  }
-                                }}
-                                disabled={!release.tracks?.[0]?.audioUrl}
-                              >
-                                <ExternalLink className="w-4 h-4 mr-2" />
-                                Open Audio File
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => setReleaseToDelete(release)}
-                                className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete release
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          {/* Play/Pause Button and Actions */}
+                          <div className="flex items-center space-x-2">
+                            {/* Circular Play/Pause Button */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handlePlayPause(release)}
+                              className="w-10 h-10 rounded-full p-0 bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm transition-all duration-200"
+                            >
+                              {isCurrentlyPlaying(release) && playerState.isPlaying ? (
+                                <Pause className="w-5 h-5 text-white" />
+                              ) : (
+                                <Play className="w-5 h-5 text-white ml-0.5" />
+                              )}
+                            </Button>
+
+                            {/* Actions Dropdown */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => navigate(`/studio/releases/edit/${release.eventId || release.id}`)}>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit release
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link to={`/releases/${release.eventId || release.id}`}>
+                                    <Eye className="w-4 h-4 mr-2" />
+                                    View Public Page
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setReleaseToShare(release)}>
+                                  <Share className="w-4 h-4 mr-2" />
+                                  Share release
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    const audioUrl = release.tracks?.[0]?.audioUrl;
+                                    if (audioUrl) {
+                                      window.open(audioUrl, '_blank');
+                                    }
+                                  }}
+                                  disabled={!release.tracks?.[0]?.audioUrl}
+                                >
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  Open Audio File
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => setReleaseToDelete(release)}
+                                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete release
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
 
                         {/* release Description */}
@@ -363,34 +390,21 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                           </div>
 
                           {/* Stats */}
-                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                            {release.zapCount && release.zapCount > 0 && (
-                              <span className="flex items-center space-x-1">
-                                <span className="text-yellow-500">⚡</span>
-                                <span>{release.zapCount}</span>
-                              </span>
-                            )}
-                            {release.commentCount && release.commentCount > 0 && (
-                              <span className="flex items-center space-x-1">
-                                <span>💬</span>
-                                <span>{release.commentCount}</span>
-                              </span>
-                            )}
-                            {release.repostCount && release.repostCount > 0 && (
-                              <span className="flex items-center space-x-1">
-                                <span>🔄</span>
-                                <span>{release.repostCount}</span>
-                              </span>
-                            )}
+                          <div className="flex items-center space-x-6 text-sm">
+                            <div className="flex items-center space-x-1.5 text-muted-foreground">
+                              <Zap className="w-4 h-4 text-yellow-500" />
+                              <span className="font-medium">{release.zapCount || 0}</span>
+                            </div>
+                            <div className="flex items-center space-x-1.5 text-muted-foreground">
+                              <MessageCircle className="w-4 h-4" />
+                              <span className="font-medium">{release.commentCount || 0}</span>
+                            </div>
+                            <div className="flex items-center space-x-1.5 text-muted-foreground">
+                              <Repeat2 className="w-4 h-4" />
+                              <span className="font-medium">{release.repostCount || 0}</span>
+                            </div>
                           </div>
                         </div>
-
-                        {/* Audio Player */}
-                        {currentlyPlaying === release.id && (
-                          <div className="mt-4 pt-4 border-t">
-                            <AudioPlayer release={release} />
-                          </div>
-                        )}
                       </div>
                     </div>
                   </CardContent>
