@@ -502,6 +502,27 @@ export function TrackForm({
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="explicit"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Explicit Content</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Check if this track contains explicit content
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
               </div>
 
               {/* Additional Content */}
@@ -544,27 +565,6 @@ export function TrackForm({
                         />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="explicit"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Explicit Content</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Check if this track contains explicit content
-                        </p>
-                      </div>
                     </FormItem>
                   )}
                 />
