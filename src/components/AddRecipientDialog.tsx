@@ -189,7 +189,7 @@ export function AddRecipientDialog({
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>
           {children || (
-            <Button>
+            <Button variant="outline">
               <Plus className="w-4 h-4 mr-2" />
               Add New Recipient
             </Button>

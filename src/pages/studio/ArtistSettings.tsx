@@ -58,7 +58,7 @@ interface ArtistFormData {
   };
 }
 
-const Settings = () => {
+const ArtistSettings = () => {
   const queryClient = useQueryClient();
   const { mutateAsync: createEvent } = useNostrPublish();
   const { toast } = useToast();
@@ -275,7 +275,7 @@ const Settings = () => {
       </div>
 
       <Card>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 pt-4">
           {/* Basic Information */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -465,7 +465,7 @@ const Settings = () => {
             />
           </div>
 
-          <div>  
+          <div className="flex justify-end">  
             <Button onClick={handleSave} disabled={isSaving || isUploading}>
               {(isSaving || isUploading) ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -481,4 +481,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default ArtistSettings;

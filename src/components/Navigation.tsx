@@ -39,8 +39,8 @@ export function Navigation({ className }: NavigationProps) {
   const studioNavItems = [
     { path: '/studio/tracks', label: 'Tracks', icon: Music },
     { path: '/studio/playlists', label: 'Playlists', icon: ListMusic },
+    { path: '/studio/settings', label: 'Artist', icon: Settings },
     { path: '/studio/analytics', label: 'Analytics', icon: Zap },
-    { path: '/studio/settings', label: 'Settings', icon: Settings },
     { path: '/studio/providers', label: 'Providers', icon: Server },
   ];
 
