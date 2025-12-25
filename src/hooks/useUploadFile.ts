@@ -65,6 +65,12 @@ const MIME_TYPE_MAP: Record<string, string> = {
  * This creates a new File with the correct type if needed.
  */
 function ensureCorrectMimeType(file: File): File {
+  // Special case: Override audio/x-wav to audio/wav (standard MIME type)
+  if (file.type === 'audio/x-wav') {
+    console.log(`Overriding MIME type for ${file.name}: "audio/x-wav" -> "audio/wav"`);
+    return new File([file], file.name, { type: 'audio/wav' });
+  }
+
   // Get extension from filename
   const ext = file.name.toLowerCase().match(/\.[^.]+$/)?.[0];
   if (!ext) {
