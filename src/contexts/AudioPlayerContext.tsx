@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ReactNode } from 'react';
 import { AudioPlayerContext, type AudioPlayerState, type AudioPlayerContextType } from './AudioPlayerContext';
-import type { MusicRelease } from '@/types/music';
+import type { MusicRelease, MusicTrackData } from '@/types/music';
 
 interface AudioPlayerProviderProps {
   children: ReactNode;
@@ -157,6 +157,51 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     playRelease(release, trackIndex);
   };
 
+  const playTrackDirect = (track: MusicTrackData) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Validate track has audio URL
+    if (!track.audioUrl) {
+      console.error('Track has no audio URL:', track);
+      setState(prev => ({
+        ...prev,
+        error: 'Track audio URL is missing'
+      }));
+      return;
+    }
+
+    // Convert MusicTrackData to a minimal MusicRelease format for internal consistency
+    const releaseFromTrack: MusicRelease = {
+      id: track.identifier,
+      title: track.title,
+      imageUrl: track.imageUrl,
+      description: track.description,
+      content: track.lyrics,
+      tracks: [{
+        title: track.title,
+        audioUrl: track.audioUrl,
+        duration: track.duration,
+        explicit: track.explicit || false,
+        language: track.language || null
+      }],
+      publishDate: track.createdAt || new Date(),
+      tags: track.genres || [],
+      genre: track.genres?.[0] || null,
+      eventId: track.eventId || '',
+      artistPubkey: track.artistPubkey || '',
+      identifier: track.identifier,
+      createdAt: track.createdAt || new Date(),
+      zapCount: track.zapCount,
+      totalSats: track.totalSats,
+      commentCount: track.commentCount,
+      repostCount: 0
+    };
+
+    // Use the existing playRelease logic with the converted release
+    playRelease(releaseFromTrack, 0);
+  };
+
   const play = () => {
     const audio = audioRef.current;
     if (!audio || !state.currentRelease) return;
@@ -233,6 +278,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     state,
     playRelease,
     playTrack,
+    playTrackDirect,
     play,
     pause,
     stop,

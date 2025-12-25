@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { MusicRelease } from '@/types/music';
+import type { MusicRelease, MusicTrackData } from '@/types/music';
 
 interface AudioPlayerState {
   currentRelease: MusicRelease | null;
@@ -20,6 +20,7 @@ interface AudioPlayerContextType {
   // Actions
   playRelease: (release: MusicRelease, trackIndex?: number) => void;
   playTrack: (release: MusicRelease, trackIndex: number) => void;
+  playTrackDirect: (track: MusicTrackData) => void; // New method for direct track playback
   play: () => void;
   pause: () => void;
   stop: () => void;

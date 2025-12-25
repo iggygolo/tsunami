@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash2, ListMusic, Calendar, MoreVertical, Users, Lock, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, ListMusic, Calendar, MoreVertical, Users, Lock, Eye, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import {
 import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useDeletePlaylist } from '@/hooks/usePublishPlaylist';
 import { useToast } from '@/hooks/useToast';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import type { MusicPlaylistData } from '@/types/music';
 
 interface PlaylistManagerProps {
@@ -36,6 +37,7 @@ export function PlaylistManager({
 }: PlaylistManagerProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { playRelease, pause, state } = useAudioPlayer();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'tracks'>('date');
@@ -109,6 +111,68 @@ export function PlaylistManager({
     } else {
       navigate('/studio/playlists/new');
     }
+  };
+
+  const handlePlay = (playlist: MusicPlaylistData) => {
+    // Check if playlist has tracks
+    if (!playlist.tracks || playlist.tracks.length === 0) {
+      toast({
+        title: 'Cannot play playlist',
+        description: 'This playlist is empty.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Check if this playlist is currently playing
+    const isCurrentPlaylist = state.currentRelease?.identifier === playlist.identifier;
+    
+    if (isCurrentPlaylist && state.isPlaying) {
+      // If this playlist is playing, pause it
+      pause();
+      return;
+    }
+
+    // Convert MusicPlaylistData to MusicRelease format for the audio player
+    // Note: TrackReference only contains basic info, full track resolution would be needed for complete playback
+    const releaseData = {
+      id: playlist.identifier,
+      title: playlist.title,
+      imageUrl: playlist.imageUrl,
+      description: playlist.description,
+      content: playlist.description,
+      tracks: playlist.tracks.map(trackRef => ({
+        title: trackRef.title || 'Unknown Track',
+        audioUrl: '', // TrackReference doesn't contain audioUrl - would need track resolution
+        duration: undefined, // TrackReference doesn't contain duration
+        explicit: false, // TrackReference doesn't contain explicit flag
+        language: null // TrackReference doesn't contain language
+      })),
+      publishDate: playlist.createdAt || new Date(),
+      tags: playlist.categories || [],
+      genre: playlist.categories?.[0] || null,
+      eventId: playlist.eventId || '',
+      artistPubkey: playlist.authorPubkey || '',
+      identifier: playlist.identifier,
+      createdAt: playlist.createdAt || new Date(),
+      zapCount: playlist.zapCount,
+      totalSats: playlist.totalSats,
+      commentCount: playlist.commentCount,
+      repostCount: playlist.repostCount
+    };
+
+    // Show a warning that playlist playback needs track resolution
+    toast({
+      title: 'Playlist playback',
+      description: 'Playlist playback requires track resolution. This feature is coming soon!',
+    });
+
+    // For now, we can still call playRelease but it won't have audio URLs
+    // playRelease(releaseData);
+  };
+
+  const isPlaylistPlaying = (playlist: MusicPlaylistData) => {
+    return state.currentRelease?.identifier === playlist.identifier && state.isPlaying;
   };
 
   const formatDate = (date?: Date) => {
@@ -237,7 +301,7 @@ export function PlaylistManager({
             <Card key={playlist.identifier} className="group hover:shadow-lg transition-shadow duration-200">
               <CardContent className="p-4">
                 {/* Cover Art */}
-                <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden">
+                <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden relative">
                   {playlist.imageUrl ? (
                     <img
                       src={playlist.imageUrl}
@@ -247,6 +311,27 @@ export function PlaylistManager({
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <ListMusic className="w-12 h-12 text-muted-foreground/50" />
+                    </div>
+                  )}
+                  
+                  {/* Play Button Overlay */}
+                  {playlist.tracks && playlist.tracks.length > 0 && (
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button
+                        size="lg"
+                        variant="secondary"
+                        className="rounded-full w-12 h-12 p-0 bg-white hover:bg-white/90 text-black border-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlay(playlist);
+                        }}
+                      >
+                        {isPlaylistPlaying(playlist) ? (
+                          <Pause className="w-6 h-6" />
+                        ) : (
+                          <Play className="w-6 h-6 ml-1" />
+                        )}
+                      </Button>
                     </div>
                   )}
                 </div>

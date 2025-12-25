@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash2, Music, Clock, Calendar, MoreVertical } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Music, Clock, Calendar, MoreVertical, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import {
 import { useMusicTracks } from '@/hooks/useMusicTracks';
 import { useDeleteTrack } from '@/hooks/usePublishTrack';
 import { useToast } from '@/hooks/useToast';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import type { MusicTrackData } from '@/types/music';
 
 interface TrackLibraryProps {
@@ -36,6 +37,7 @@ export function TrackLibrary({
 }: TrackLibraryProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { playTrackDirect, pause, state } = useAudioPlayer();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'album'>('date');
@@ -116,6 +118,23 @@ export function TrackLibrary({
     }
   };
 
+  const handlePlay = (track: MusicTrackData) => {
+    // Check if this track is currently playing
+    const isCurrentTrack = state.currentRelease?.identifier === track.identifier;
+    
+    if (isCurrentTrack && state.isPlaying) {
+      // If this track is playing, pause it
+      pause();
+    } else {
+      // Otherwise, play this track
+      playTrackDirect(track);
+    }
+  };
+
+  const isTrackPlaying = (track: MusicTrackData) => {
+    return state.currentRelease?.identifier === track.identifier && state.isPlaying;
+  };
+
   const formatDuration = (seconds?: number) => {
     if (!seconds) return '--:--';
     const mins = Math.floor(seconds / 60);
@@ -149,7 +168,7 @@ export function TrackLibrary({
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Track Library</h1>
+          <h1 className="text-2xl font-bold text-foreground">Track Library</h1>
           <p className="text-muted-foreground">
             {isLoading ? 'Loading...' : `${filteredTracks.length} track${filteredTracks.length !== 1 ? 's' : ''}`}
           </p>
@@ -237,7 +256,7 @@ export function TrackLibrary({
             <Card key={track.identifier} className="group hover:shadow-lg transition-shadow duration-200">
               <CardContent className="p-4">
                 {/* Cover Art */}
-                <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden">
+                <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden relative">
                   {track.imageUrl ? (
                     <img
                       src={track.imageUrl}
@@ -247,6 +266,27 @@ export function TrackLibrary({
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Music className="w-12 h-12 text-muted-foreground/50" />
+                    </div>
+                  )}
+                  
+                  {/* Play Button Overlay */}
+                  {track.audioUrl && (
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button
+                        size="lg"
+                        variant="secondary"
+                        className="rounded-full w-12 h-12 p-0 bg-white hover:bg-white/90 text-black border-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlay(track);
+                        }}
+                      >
+                        {isTrackPlaying(track) ? (
+                          <Pause className="w-6 h-6" />
+                        ) : (
+                          <Play className="w-6 h-6 ml-1" />
+                        )}
+                      </Button>
                     </div>
                   )}
                 </div>
