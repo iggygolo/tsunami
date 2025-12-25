@@ -238,28 +238,46 @@ export function ReleaseForm({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Release Details</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-            {/* Main Release Info - Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left: Artwork */}
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Release Artwork</Label>
-                
-                <div className="aspect-square w-full max-w-sm">
-                  {(imageFile || (isEditMode && release?.imageUrl)) ? (
-                    <div className="relative w-full h-full group cursor-pointer">
-                      <img 
-                        src={imageFile ? URL.createObjectURL(imageFile) : release?.imageUrl} 
-                        alt="Release artwork" 
-                        className="w-full h-full rounded-lg object-cover border shadow-lg transition-all duration-200 group-hover:brightness-75"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-center justify-center">
+    <div className="max-w-4xl mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle>Release Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+              {/* Main Release Info - Two Column Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left: Artwork */}
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">Artwork</Label>
+                  
+                  <div className="aspect-square w-full max-w-sm">
+                    {(imageFile || (isEditMode && release?.imageUrl)) ? (
+                      <div className="relative w-full h-full group cursor-pointer">
+                        <img 
+                          src={imageFile ? URL.createObjectURL(imageFile) : release?.imageUrl} 
+                          alt="Release artwork" 
+                          className="w-full h-full rounded-lg object-cover border shadow-lg transition-all duration-200 group-hover:brightness-75"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-center justify-center">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageFileChange}
+                            className="hidden"
+                            id="image-upload"
+                          />
+                          <label htmlFor="image-upload" className="cursor-pointer">
+                            <div className="bg-white/90 hover:bg-white transition-colors duration-200 rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
+                              <Upload className="w-4 h-4 text-gray-700" />
+                              <span className="text-sm font-medium text-gray-700">Change Image</span>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 hover:bg-gray-50/30 transition-all duration-200 cursor-pointer group">
                         <input
                           type="file"
                           accept="image/*"
@@ -267,187 +285,171 @@ export function ReleaseForm({
                           className="hidden"
                           id="image-upload"
                         />
-                        <label htmlFor="image-upload" className="cursor-pointer">
-                          <div className="bg-white/90 hover:bg-white transition-colors duration-200 rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
-                            <Upload className="w-4 h-4 text-gray-700" />
-                            <span className="text-sm font-medium text-gray-700">Change Image</span>
+                        <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center justify-center w-full h-full">
+                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-gray-50 transition-colors duration-200">
+                            <Upload className="w-8 h-8 text-gray-600 group-hover:text-gray-700 transition-colors duration-200" />
                           </div>
+                          <p className="text-gray-400 font-medium mb-1 group-hover:text-gray-900 transition-colors duration-200">Upload Image</p>
+                          <p className="text-sm text-gray-500 group-hover:text-gray-800 transition-colors duration-200">Click to select artwork</p>
                         </label>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 hover:bg-gray-50/30 transition-all duration-200 cursor-pointer group">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageFileChange}
-                        className="hidden"
-                        id="image-upload"
-                      />
-                      <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center justify-center w-full h-full">
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-gray-200 transition-colors duration-200">
-                          <Upload className="w-8 h-8 text-gray-400 group-hover:text-gray-600 transition-colors duration-200" />
-                        </div>
-                        <p className="text-gray-600 font-medium mb-1 group-hover:text-gray-800 transition-colors duration-200">Upload Image</p>
-                        <p className="text-sm text-gray-500 group-hover:text-gray-600 transition-colors duration-200">Click to select artwork</p>
-                      </label>
-                    </div>
-                  )}
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="imageUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          placeholder="Or paste image URL..."
-                          disabled={!!imageFile}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Right: Title and Description */}
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold">Release Title *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter release title..." 
-                          className="h-12 text-lg"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold">Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Brief description of the release..."
-                          rows={6}
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="genre"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-semibold">Genre</FormLabel>
-                      <FormControl>
-                        <GenreSelector
-                          selectedGenre={field.value}
-                          onGenreChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Tags */}
-                <div className="space-y-3">
-                  <Label className="text-base font-semibold">Tags</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={currentTag}
-                      onChange={(e) => setCurrentTag(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Add tag..."
-                      className="flex-1"
-                    />
-                    <Button type="button" onClick={addTag} variant="outline">
-                      <Plus className="w-4 h-4" />
-                    </Button>
+                    )}
                   </div>
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-sm">
-                          #{tag}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(tag)}
-                            className="ml-2 hover:text-red-500"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
+                  
+                  <FormField
+                    control={form.control}
+                    name="imageUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            placeholder="Or paste image URL..."
+                            disabled={!!imageFile}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Right: Title and Description */}
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Title *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter release title..." 
+                            className="h-12 text-lg"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Brief description of the release..."
+                            rows={6}
+                            className="resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="genre"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Genre</FormLabel>
+                        <FormControl>
+                          <GenreSelector
+                            selectedGenre={field.value}
+                            onGenreChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Tags */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">Tags</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={currentTag}
+                        onChange={(e) => setCurrentTag(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Add tag..."
+                        className="flex-1"
+                      />
+                      <Button type="button" onClick={addTag} variant="outline">
+                        <Plus className="w-4 h-4" />
+                      </Button>
                     </div>
-                  )}
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {tags.map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-sm">
+                            #{tag}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="ml-2 hover:text-red-500"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Audio Tracks Section */}
-            <div className="space-y-6 border-t pt-8">
-              <Label className="text-xl font-semibold">Audio Tracks *</Label>
-              <TrackList
-                tracks={fields.map((field, index) => ({
-                  title: form.watch(`tracks.${index}.title`) || '',
-                  audioUrl: form.watch(`tracks.${index}.audioUrl`) || '',
-                  duration: form.watch(`tracks.${index}.duration`) || undefined,
-                  explicit: form.watch(`tracks.${index}.explicit`) || false,
-                  language: form.watch(`tracks.${index}.language`) || null,
-                }))}
-                onAddTrack={handleTrackAdd}
-                onEditTrack={handleTrackEdit}
-                onRemoveTrack={handleTrackRemove}
-              />
-            </div>
+              {/* Audio Tracks Section */}
+              <div className="space-y-6 border-t pt-8">
+                <Label className="text-xl font-semibold">Audio Tracks *</Label>
+                <TrackList
+                  tracks={fields.map((field, index) => ({
+                    title: form.watch(`tracks.${index}.title`) || '',
+                    audioUrl: form.watch(`tracks.${index}.audioUrl`) || '',
+                    duration: form.watch(`tracks.${index}.duration`) || undefined,
+                    explicit: form.watch(`tracks.${index}.explicit`) || false,
+                    language: form.watch(`tracks.${index}.language`) || null,
+                  }))}
+                  onAddTrack={handleTrackAdd}
+                  onEditTrack={handleTrackEdit}
+                  onRemoveTrack={handleTrackRemove}
+                />
+              </div>
 
-            {/* Form Actions */}
-            <div className="flex justify-end gap-4 pt-8 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting} size="lg">
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {submitButtonLoadingText || (isEditMode ? 'Updating...' : 'Publishing...')}
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    {submitButtonText || (isEditMode ? 'Update Release' : 'Publish Release')}
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+              {/* Form Actions */}
+              <div className="flex justify-end gap-4 pt-8 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting} size="lg">
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {submitButtonLoadingText || (isEditMode ? 'Updating...' : 'Publishing...')}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      {submitButtonText || (isEditMode ? 'Update Release' : 'Publish Release')}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
