@@ -7,13 +7,12 @@ import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/Unive
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import { Button } from '@/components/ui/button';
 import { GlassTabs, GlassTabsList, GlassTabsTrigger, GlassTabsContent } from '@/components/ui/GlassTabs';
-import { GlassList, GlassListItem, GlassListSkeleton } from '@/components/ui/GlassList';
+import { GlassListSkeleton } from '@/components/ui/GlassList';
 import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { EditProfileForm } from '@/components/EditProfileForm';
-import { ZapDialog } from '@/components/ZapDialog';
-import { RepostDialog } from '@/components/RepostDialog';
 import { UniversalTrackList } from '@/components/music/UniversalTrackList';
+import { GlassReleaseCard } from '@/components/music/GlassReleaseCard';
 import { genUserName } from '@/lib/genUserName';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import type { MusicPlaylistData } from '@/types/music';
@@ -22,13 +21,9 @@ import {
   Edit, 
   ExternalLink, 
   Music, 
-  ListMusic,
+  Album,
   Users,
-  Globe,
-  Play,
-  Pause,
-  Zap,
-  Repeat2
+  Globe
 } from 'lucide-react';
 import {
   Dialog,
@@ -54,75 +49,11 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const allPlaylistTrackReferences = playlists?.flatMap(playlist => playlist.tracks) || [];
   
   // Resolve all track references at once for better performance
-  const { data: resolvedPlaylistTracks, isLoading: isLoadingPlaylistTracks } = usePlaylistTrackResolution(allPlaylistTrackReferences);
+  const { data: resolvedPlaylistTracks } = usePlaylistTrackResolution(allPlaylistTrackReferences);
   
   const isOwnProfile = currentUser?.pubkey === pubkey;
   const metadata = authorData?.metadata;
   const displayName = metadata?.name || genUserName(pubkey);
-
-  // Helper function to create NostrEvent from playlist data
-  const createPlaylistEvent = (playlist: MusicPlaylistData): NostrEvent => {
-    return {
-      id: playlist.eventId || '',
-      pubkey: playlist.authorPubkey || pubkey,
-      created_at: Math.floor((playlist.createdAt?.getTime() || Date.now()) / 1000),
-      kind: MUSIC_KINDS.MUSIC_PLAYLIST,
-      tags: [
-        ['d', playlist.identifier],
-        ['title', playlist.title],
-        ...(playlist.description ? [['description', playlist.description]] : []),
-        ...(playlist.imageUrl ? [['image', playlist.imageUrl]] : []),
-        ...(playlist.categories ? playlist.categories.map(cat => ['t', cat]) : []),
-        ...playlist.tracks.map(track => ['a', `${track.kind}:${track.pubkey}:${track.identifier}`]),
-      ],
-      content: playlist.description || '',
-      sig: ''
-    };
-  };
-
-  // Helper function to get playable tracks for a playlist
-  const getPlaylistPlayableTracks = (playlist: MusicPlaylistData) => {
-    if (!resolvedPlaylistTracks) return [];
-    
-    return playlist.tracks.map(trackRef => {
-      return resolvedPlaylistTracks.find(resolved => 
-        resolved.reference.pubkey === trackRef.pubkey && 
-        resolved.reference.identifier === trackRef.identifier
-      );
-    }).filter(rt => rt?.trackData && rt.trackData.audioUrl)
-      .map(rt => rt!.trackData!);
-  };
-
-  const handlePlayPlaylist = (playlist: MusicPlaylistData) => {
-    if (isPlaylistPlaying(playlist)) {
-      pause();
-    } else {
-      // Get playable tracks
-      const playableTracks = getPlaylistPlayableTracks(playlist);
-      
-      if (playableTracks.length === 0) {
-        console.log('No playable tracks found in playlist:', playlist.title);
-        return;
-      }
-
-      // Convert tracks to universal format and play
-      const universalTracks = playableTracks.map(track => 
-        musicTrackToUniversal(track, {
-          type: 'playlist',
-          releaseId: playlist.eventId,
-          releaseTitle: playlist.title,
-          artistPubkey: playlist.authorPubkey
-        })
-      );
-
-      // Play the playlist queue
-      playQueue(universalTracks, 0, playlist.title);
-    }
-  };
-
-  const isPlaylistPlaying = (playlist: MusicPlaylistData) => {
-    return playerState.currentTrack?.source?.releaseId === playlist.eventId && playerState.isPlaying;
-  };
   
   if (isLoadingAuthor) {
     return (
@@ -253,12 +184,12 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                   Tracks
                 </GlassTabsTrigger>
                 <GlassTabsTrigger 
-                  value="playlists"
-                  icon={<ListMusic className="w-3 h-3" />}
+                  value="releases"
+                  icon={<Album className="w-3 h-3" />}
                   count={playlists.length}
                   className="text-xs sm:text-sm px-3 sm:px-4"
                 >
-                  Playlists
+                  Releases
                 </GlassTabsTrigger>
               </GlassTabsList>
 
@@ -284,68 +215,95 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                 </div>
               </GlassTabsContent>
 
-              <GlassTabsContent value="playlists" className="w-full max-w-full">
+              <GlassTabsContent value="releases" className="w-full max-w-full">
                 <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
                   {isLoadingPlaylists ? (
-                    <GlassListSkeleton count={2} />
-                  ) : playlists.length > 0 ? (
-                    <GlassList>
-                      {playlists.map((playlist) => (
-                        <GlassListItem key={playlist.eventId}>
-                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex-shrink-0">
-                            {playlist.imageUrl ? (
-                              <img src={playlist.imageUrl} alt={playlist.title} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <ListMusic className="w-4 h-4 text-white/50" />
-                              </div>
-                            )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="rounded-xl bg-card/30 border border-border/50 backdrop-blur-xl overflow-hidden animate-pulse">
+                          <div className="w-full aspect-square bg-muted" />
+                          <div className="p-2 space-y-1">
+                            <div className="h-3 bg-muted rounded w-3/4" />
+                            <div className="h-2 bg-muted rounded w-1/2" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-white font-medium truncate text-sm">{playlist.title}</h3>
-                            <p className="text-white/70 text-xs truncate">
-                              {playlist.tracks.length} tracks
-                              {!isLoadingPlaylistTracks && resolvedPlaylistTracks && (
-                                <> • {getPlaylistPlayableTracks(playlist).length} playable</>
-                              )}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <ZapDialog target={createPlaylistEvent(playlist)}>
-                              <Button size="sm" variant="ghost" className="text-white/70 hover:text-yellow-400 p-1.5 rounded-full">
-                                <Zap className="w-3 h-3" />
-                              </Button>
-                            </ZapDialog>
-                            <RepostDialog 
-                              target={createPlaylistEvent(playlist)} 
-                              item={playlist} 
-                              type="playlist"
-                            >
-                              <Button size="sm" variant="ghost" className="text-white/70 hover:text-green-400 p-1.5 rounded-full">
-                                <Repeat2 className="w-3 h-3" />
-                              </Button>
-                            </RepostDialog>
-                            <Button 
-                              size="sm" 
-                              onClick={() => handlePlayPlaylist(playlist)}
-                              className="bg-white text-black hover:bg-white/90 rounded-full w-8 h-8 p-0"
-                            >
-                              {isPlaylistPlaying(playlist) ? (
-                                <Pause className="w-3 h-3" />
-                              ) : (
-                                <Play className="w-3 h-3 ml-0.5" />
-                              )}
-                            </Button>
-                          </div>
-                        </GlassListItem>
+                        </div>
                       ))}
-                    </GlassList>
+                    </div>
+                  ) : playlists.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {playlists.map((playlist) => {
+                        // Get resolved tracks for this playlist
+                        const playlistTrackReferences = playlist.tracks;
+                        const playlistResolvedTracks = resolvedPlaylistTracks?.filter(resolved => 
+                          playlistTrackReferences.some(ref => 
+                            resolved.trackData && 
+                            resolved.reference.pubkey === ref.pubkey && 
+                            resolved.reference.identifier === ref.identifier
+                          )
+                        ) || [];
+
+                        // Convert playlist to release format for GlassReleaseCard with resolved track data
+                        const releaseData = {
+                          id: playlist.eventId || playlist.identifier,
+                          eventId: playlist.eventId || '',
+                          artistPubkey: playlist.authorPubkey || pubkey,
+                          identifier: playlist.identifier,
+                          title: playlist.title,
+                          imageUrl: playlist.imageUrl,
+                          description: playlist.description,
+                          tracks: playlistTrackReferences.map((trackRef, index) => {
+                            // Find the resolved track data
+                            const resolvedTrack = playlistResolvedTracks.find(resolved => 
+                              resolved.reference.pubkey === trackRef.pubkey && 
+                              resolved.reference.identifier === trackRef.identifier
+                            );
+
+                            if (resolvedTrack?.trackData) {
+                              // Use actual track data
+                              return {
+                                title: resolvedTrack.trackData.title,
+                                audioUrl: resolvedTrack.trackData.audioUrl,
+                                duration: resolvedTrack.trackData.duration || 0,
+                                explicit: resolvedTrack.trackData.explicit || false,
+                                language: resolvedTrack.trackData.language || null,
+                                imageUrl: resolvedTrack.trackData.imageUrl,
+                              };
+                            } else {
+                              // Create placeholder track
+                              return {
+                                title: trackRef.title || `Track ${index + 1}`,
+                                audioUrl: '', // Empty indicates missing track
+                                duration: 0,
+                                explicit: false,
+                                language: null,
+                                imageUrl: undefined,
+                              };
+                            }
+                          }),
+                          publishDate: playlist.createdAt || new Date(),
+                          createdAt: playlist.createdAt || new Date(),
+                          tags: playlist.categories || [],
+                          zapCount: playlist.zapCount,
+                          totalSats: playlist.totalSats,
+                          commentCount: playlist.commentCount,
+                          repostCount: playlist.repostCount,
+                        };
+
+                        return (
+                          <GlassReleaseCard
+                            key={playlist.eventId || playlist.identifier}
+                            release={releaseData}
+                            layout="vertical"
+                          />
+                        );
+                      })}
+                    </div>
                   ) : (
                     <div className="text-center py-8">
-                      <ListMusic className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-                      <h3 className="text-foreground font-medium mb-2">No playlists yet</h3>
+                      <Album className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+                      <h3 className="text-foreground font-medium mb-2">No releases yet</h3>
                       <p className="text-muted-foreground text-sm">
-                        {isOwnProfile ? "Create your first playlist to see it here." : "This artist hasn't created any playlists yet."}
+                        {isOwnProfile ? "Start creating releases to see them here." : "This artist hasn't published any releases yet."}
                       </p>
                     </div>
                   )}

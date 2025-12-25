@@ -7,8 +7,10 @@ import { ZapDialog } from '@/components/ZapDialog';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { useReleasePrefetch } from '@/hooks/useReleasePrefetch';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
+import { useAuthor } from '@/hooks/useAuthor';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
-import { MUSIC_KINDS } from '@/lib/musicConfig';
+import { genUserName } from '@/lib/genUserName';
+import { MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
 import type { MusicRelease } from '@/types/music';
 import type { Event } from 'nostr-tools';
@@ -17,12 +19,23 @@ interface GlassReleaseCardProps {
   release: MusicRelease;
   className?: string;
   layout?: 'vertical' | 'horizontal'; // Add layout option
+  size?: 'default' | 'compact'; // Add size option
 }
 
-export function GlassReleaseCard({ release, className, layout = 'vertical' }: GlassReleaseCardProps) {
+export function GlassReleaseCard({ release, className, layout = 'vertical', size = 'compact' }: GlassReleaseCardProps) {
   const trackPlayback = useUniversalTrackPlayback(release);
   const { prefetchRelease } = useReleasePrefetch();
   const musicConfig = useMusicConfig();
+  
+  // Resolve artist name from pubkey
+  const { data: artistData } = useAuthor(release.artistPubkey);
+  const artistName = artistData?.metadata?.name || genUserName(release.artistPubkey);
+  
+  // Fallback to config artist name if this is the configured artist
+  const configArtistPubkey = getArtistPubkeyHex();
+  const displayArtistName = release.artistPubkey === configArtistPubkey 
+    ? musicConfig.music.artistName 
+    : artistName;
 
   // Create NostrEvent for social interactions - only if we have required data
   const releaseEvent: Event | null = release.eventId && release.artistPubkey ? {
@@ -52,24 +65,8 @@ export function GlassReleaseCard({ release, className, layout = 'vertical' }: Gl
     commentEvent: releaseEvent 
   });
 
-  const formatDuration = (seconds?: number): string => {
-    if (!seconds) return '';
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
-  };
-
   // Get first track for explicit badge
   const firstTrack = release.tracks?.[0];
-  
-  // Calculate total duration from all tracks
-  const totalDuration = release.tracks?.reduce((sum, track) => sum + (track.duration || 0), 0) || 0;
 
   // Generate release URL
   const releaseId = release.eventId || release.id;
@@ -91,16 +88,18 @@ export function GlassReleaseCard({ release, className, layout = 'vertical' }: Gl
       className={cn(
         "group relative overflow-hidden rounded-2xl bg-card/40 border border-border/60 backdrop-blur-xl hover:bg-card/50 hover:border-border/80 transition-all duration-300 shadow-lg hover:shadow-xl",
         layout === 'horizontal' && "flex flex-row",
+        size === 'compact' && "rounded-xl", // Smaller border radius for compact
         className
       )}
       onMouseEnter={handleMouseEnter}
     >
       {/* Cover Image */}
-      <Link 
+        <Link 
         to={releaseUrl} 
         className={cn(
           "block relative overflow-hidden",
-          layout === 'horizontal' ? "w-24 h-24 flex-shrink-0 rounded-l-2xl" : "aspect-square rounded-t-2xl"
+          layout === 'horizontal' ? "w-24 h-24 flex-shrink-0 rounded-l-2xl" : "aspect-square rounded-t-2xl",
+          size === 'compact' && layout !== 'horizontal' && "rounded-t-xl" // Smaller radius for compact vertical
         )}
       >
         {release.imageUrl ? (
@@ -122,27 +121,109 @@ export function GlassReleaseCard({ release, className, layout = 'vertical' }: Gl
         {trackPlayback?.hasPlayableTracks && (
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <Button
-              size="lg"
+              size={size === 'compact' ? 'default' : 'lg'}
               onClick={handlePlayClick}
               disabled={trackPlayback?.isReleaseLoading}
-              className="rounded-full w-16 h-16 p-0 bg-white/90 hover:bg-white text-black border-0 shadow-lg backdrop-blur-sm"
+              className={cn(
+                "rounded-full p-0 bg-white/90 hover:bg-white text-black border-0 shadow-lg backdrop-blur-sm",
+                size === 'compact' ? "w-12 h-12" : "w-16 h-16"
+              )}
             >
               {trackPlayback?.isReleaseLoading ? (
-                <div className="w-6 h-6 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                <div className={cn(
+                  "border-2 border-black/30 border-t-black rounded-full animate-spin",
+                  size === 'compact' ? "w-4 h-4" : "w-6 h-6"
+                )} />
               ) : trackPlayback?.isReleasePlaying ? (
-                <Pause className="w-8 h-8" fill="currentColor" />
+                <Pause className={cn(size === 'compact' ? "w-6 h-6" : "w-8 h-8")} fill="currentColor" />
               ) : (
-                <Play className="w-8 h-8 ml-1" fill="currentColor" />
+                <Play className={cn(size === 'compact' ? "w-6 h-6 ml-0.5" : "w-8 h-8 ml-1")} fill="currentColor" />
               )}
             </Button>
           </div>
         )}
 
+        {/* Social Actions Overlay - Always visible on card image */}
+        <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
+          <div className="flex items-center gap-3 px-4 py-2 bg-black/50 backdrop-blur-md rounded-full">
+            {/* Like Button */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleLike();
+              }}
+              className={cn(
+                "w-8 h-8 p-0 rounded-full transition-all duration-200 hover:scale-110",
+                hasUserLiked 
+                  ? "text-red-500" 
+                  : "text-white/80 hover:text-red-500"
+              )}
+              title={hasUserLiked ? "Unlike this release" : "Like this release"}
+            >
+              <Heart className={cn(
+                "w-4 h-4 transition-all duration-200", 
+                hasUserLiked && "fill-current"
+              )} />
+            </Button>
+
+            {/* Share Button */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleShare();
+              }}
+              className="w-8 h-8 p-0 rounded-full text-white/80 hover:text-white hover:scale-110 transition-all duration-200"
+              title="Share this release"
+            >
+              <Share className="w-4 h-4" />
+            </Button>
+
+            {/* Zap Button */}
+            {releaseEvent ? (
+              <ZapDialog target={releaseEvent}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="w-8 h-8 p-0 rounded-full text-white/80 hover:text-yellow-400 hover:scale-110 transition-all duration-200"
+                  title="Zap this release"
+                >
+                  <Zap className="w-4 h-4" />
+                </Button>
+              </ZapDialog>
+            ) : (
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled
+                className="w-8 h-8 p-0 rounded-full text-white/40 cursor-not-allowed"
+                title="Zap not available"
+              >
+                <Zap className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
         {/* Playing Status Indicator - Top Right */}
         {trackPlayback?.isReleasePlaying && (
-          <div className="absolute top-3 right-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/90 text-white rounded-full text-xs font-medium backdrop-blur-sm shadow-lg">
-              <Volume2 className="w-3 h-3 animate-pulse" />
+          <div className={cn(
+            "absolute top-2 right-2",
+            size === 'compact' && "top-1.5 right-1.5"
+          )}>
+            <div className={cn(
+              "flex items-center gap-2 bg-primary/90 text-white rounded-full font-medium backdrop-blur-sm shadow-lg",
+              size === 'compact' ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-xs"
+            )}>
+              <Volume2 className={cn(
+                "animate-pulse",
+                size === 'compact' ? "w-2.5 h-2.5" : "w-3 h-3"
+              )} />
               <span>Playing</span>
             </div>
           </div>
@@ -150,8 +231,14 @@ export function GlassReleaseCard({ release, className, layout = 'vertical' }: Gl
 
         {/* Explicit Content Badge - Top Left */}
         {firstTrack?.explicit && (
-          <div className="absolute top-3 left-3">
-            <Badge variant="destructive" className="text-xs px-2 py-1 bg-red-500/90 text-white border-0 backdrop-blur-sm">
+          <div className={cn(
+            "absolute top-2 left-2",
+            size === 'compact' && "top-1.5 left-1.5"
+          )}>
+            <Badge variant="destructive" className={cn(
+              "bg-red-500/90 text-white border-0 backdrop-blur-sm",
+              size === 'compact' ? "text-xs px-1.5 py-0.5" : "text-xs px-2 py-1"
+            )}>
               E
             </Badge>
           </div>
@@ -161,26 +248,60 @@ export function GlassReleaseCard({ release, className, layout = 'vertical' }: Gl
       {/* Content */}
       <div className={cn(
         "flex flex-col",
-        layout === 'horizontal' ? "p-3 flex-1 justify-center" : "p-4"
+        layout === 'horizontal' ? "p-3 flex-1 justify-center" : size === 'compact' ? "p-2" : "p-4"
       )}>
         {/* Title and Artist */}
-        <div className="mb-3">
+        <div className={cn(
+          size === 'compact' ? "mb-2" : "mb-3"
+        )}>
           <Link 
             to={releaseUrl} 
             className="block group/title"
             onMouseEnter={handleMouseEnter}
           >
-            <h3 className="font-bold text-foreground leading-tight line-clamp-2 group-hover/title:text-primary transition-colors mb-1">
+            <h3 className={cn(
+              "font-bold text-foreground leading-tight line-clamp-2 group-hover/title:text-primary transition-colors mb-1",
+              size === 'compact' ? "text-sm" : "text-base"
+            )}>
               {release.title}
             </h3>
           </Link>
-          <p className="text-sm text-muted-foreground font-medium">
-            {musicConfig.music.artistName}
+          <p className={cn(
+            "text-muted-foreground font-medium",
+            size === 'compact' ? "text-xs" : "text-sm"
+          )}>
+            {displayArtistName}
           </p>
+          
+          {/* Track count and stats */}
+          <div className="flex items-center justify-between mt-1">
+            {/* Track count */}
+            {release.tracks && release.tracks.length > 0 && (
+              <p className="text-xs text-muted-foreground/70">
+                {release.tracks.length} track{release.tracks.length !== 1 ? 's' : ''}
+              </p>
+            )}
+            
+            {/* Stats */}
+            <div className="flex items-center gap-2">
+              {release.totalSats && (
+                <div className="flex items-center gap-1 text-xs">
+                  <Zap className="w-3 h-3 text-yellow-500" />
+                  <span className="text-muted-foreground font-medium">{release.totalSats.toLocaleString()}</span>
+                </div>
+              )}
+              
+              {release.zapCount && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span className="font-medium">{release.zapCount}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Stats Row */}
-        {layout === 'vertical' && (
+        {layout === 'vertical' && size !== 'compact' && (
           <div className="flex items-center justify-between pt-3 border-t border-border/50">
             {/* Stats Display */}
             <div className="flex items-center gap-4">
@@ -373,8 +494,8 @@ export function GlassReleaseCard({ release, className, layout = 'vertical' }: Gl
           </div>
         )}
 
-        {/* Description - Only for vertical layout */}
-        {release.description && layout === 'vertical' && (
+        {/* Description - Only for vertical layout and non-compact size */}
+        {release.description && layout === 'vertical' && size !== 'compact' && (
           <div className="mt-3 pt-3 border-t border-border/50">
             <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
               {release.description}

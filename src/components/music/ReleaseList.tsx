@@ -140,25 +140,25 @@ export function ReleaseList({
       )}
 
       {isLoading ? (
-        <div className={`grid gap-4 ${
+        <div className={`grid gap-3 ${
           viewMode === 'grid' 
-            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+            ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' 
             : 'grid-cols-1 md:grid-cols-2'
         }`}>
-          {[...Array(4)].map((_, i) => (
+          {[...Array(6)].map((_, i) => (
             <div key={i} className="rounded-xl bg-card/30 border border-border/50 backdrop-blur-xl overflow-hidden animate-pulse">
               <div className="w-full aspect-square bg-muted" />
-              <div className="p-3 space-y-2">
-                <div className="h-4 bg-muted rounded w-3/4" />
-                <div className="h-3 bg-muted rounded w-1/2" />
+              <div className="p-2 space-y-1">
+                <div className="h-3 bg-muted rounded w-3/4" />
+                <div className="h-2 bg-muted rounded w-1/2" />
               </div>
             </div>
           ))}
         </div>
       ) : releases && releases.length > 0 ? (
-        <div className={`grid gap-4 ${
+        <div className={`grid gap-3 ${
           viewMode === 'grid' 
-            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+            ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' 
             : 'grid-cols-1 md:grid-cols-2'
         }`}>
           {releases.map((release) => (
