@@ -1,5 +1,4 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
-import { verifyEvent } from 'nostr-tools';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // File validation constants
@@ -94,42 +93,6 @@ function validateFile(filename: string, contentType: string, size: number): { va
 }
 
 /**
- * Verify Nostr signature for authentication
- */
-function verifyNostrSignature(
-  userPubkey: string,
-  signature: string,
-  timestamp: number,
-  filename: string,
-  contentType: string,
-  size: number
-): boolean {
-  try {
-    // Create the event that should have been signed
-    const event = {
-      kind: 27235, // Custom kind for file upload authorization
-      pubkey: userPubkey,
-      created_at: timestamp,
-      tags: [
-        ['filename', filename],
-        ['content-type', contentType],
-        ['size', size.toString()],
-        ['action', 'upload']
-      ],
-      content: 'File upload authorization',
-      id: '', // Will be calculated by verifyEvent
-      sig: signature
-    };
-    
-    // Verify the event signature
-    return verifyEvent(event);
-  } catch (error) {
-    console.error('Signature verification failed:', error);
-    return false;
-  }
-}
-
-/**
  * Generate unique filename with timestamp
  */
 function generateUniqueFilename(originalFilename: string, userPubkey: string): string {
@@ -202,9 +165,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!fileValidation.valid) {
           throw new Error(fileValidation.error || 'File validation failed');
         }
-        
-        // Generate unique filename
-        const uniqueFilename = generateUniqueFilename(filename, userPubkey);
         
         return {
           allowedContentTypes: [contentType],

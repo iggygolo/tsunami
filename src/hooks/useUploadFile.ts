@@ -65,11 +65,6 @@ const MIME_TYPE_MAP: Record<string, string> = {
  * This creates a new File with the correct type if needed.
  */
 function ensureCorrectMimeType(file: File): File {
-  // If file already has a valid type, return as-is
-  if (file.type && file.type !== 'application/octet-stream') {
-    return file;
-  }
-
   // Get extension from filename
   const ext = file.name.toLowerCase().match(/\.[^.]+$/)?.[0];
   if (!ext) {
@@ -81,10 +76,14 @@ function ensureCorrectMimeType(file: File): File {
     return file;
   }
 
-  console.log(`Correcting MIME type for ${file.name}: "${file.type}" -> "${correctType}"`);
+  // Always use the correct MIME type from our mapping, especially for WAV files
+  // This ensures WAV files always use 'audio/x-wav' regardless of browser detection
+  if (file.type !== correctType) {
+    console.log(`Correcting MIME type for ${file.name}: "${file.type}" -> "${correctType}"`);
+    return new File([file], file.name, { type: correctType });
+  }
 
-  // Create new File with correct type
-  return new File([file], file.name, { type: correctType });
+  return file;
 }
 
 export function useUploadFile() {

@@ -86,21 +86,13 @@ export class VercelUploadProvider implements UploadProvider {
     try {
       console.log('Calling Vercel upload API directly...');
       
-      // Map unsupported content types to supported ones for Vercel Blob
-      let contentType = file.type;
-      if (file.type === 'audio/wave' || file.type === 'audio/wav' || file.type === 'audio/x-wav') {
-        contentType = 'audio/x-wav'; // Use audio/x-wav for Vercel compatibility
-        console.log(`Mapping ${file.type} to ${contentType} for Vercel compatibility`);
-      }
-      
       // Upload file using Vercel Blob client directly (no Nostr auth needed)
       const blob = await upload(file.name, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
         clientPayload: JSON.stringify({
           filename: file.name,
-          contentType: contentType, // Use mapped content type
-          originalContentType: file.type, // Keep original for reference
+          contentType: file.type, // This will now always be the corrected type (e.g., audio/x-wav for WAV files)
           size: file.size,
           userPubkey: this.userPubkey,
           // No signature needed for Vercel uploads
