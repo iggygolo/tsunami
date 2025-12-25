@@ -6,7 +6,6 @@ import { MUSIC_KINDS } from '@/lib/musicConfig';
  * Default relays to include in nevent encodings for better discoverability
  */
 const DEFAULT_RELAYS = [
-  'wss://relay.nostr.band',
   'wss://nos.lol',
   'wss://relay.damus.io'
 ];

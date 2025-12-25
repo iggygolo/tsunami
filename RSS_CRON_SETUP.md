@@ -28,7 +28,7 @@ The script can be configured with these environment variables:
 export BASE_URL="https://your-domain.com"
 
 # Comma-separated list of Nostr relay URLs
-export NOSTR_RELAYS="wss://relay.nostr.band,wss://relay.damus.io,wss://nos.lol,wss://relay.primal.net"
+export NOSTR_RELAYS="wss://relay.damus.io,wss://nos.lol,wss://relay.primal.net"
 ```
 
 ### Podcast Configuration
@@ -77,7 +77,7 @@ Create `/usr/local/bin/update-tsunami-data.sh`:
 
 # Set environment variables (should match your .env file)
 export BASE_URL="https://your-domain.com"
-export NOSTR_RELAYS="wss://relay.nostr.band,wss://relay.damus.io"
+export NOSTR_RELAYS="wss://relay.damus.io,wss://nos.lol"
 
 # Change to project directory
 cd /full/path/to/your/tsunami/project
@@ -233,7 +233,7 @@ Here's a complete example for a production deployment:
 ```bash
 #!/bin/bash
 export BASE_URL="https://mypodcast.com"
-export NOSTR_RELAYS="wss://relay.nostr.band,wss://relay.damus.io"
+export NOSTR_RELAYS="wss://relay.damus.io,wss://nos.lol"
 cd /var/www/tsunami
 npm run build:data >> /var/log/tsunami-data.log 2>&1
 

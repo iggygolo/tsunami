@@ -262,7 +262,6 @@ export async function fetchNostrDataBundle(
   // Default relay URLs
   const relayUrls = customRelayUrls || [
     'wss://relay.primal.net',
-    'wss://relay.nostr.band',
     'wss://relay.damus.io',
     'wss://nos.lol',
     'wss://relay.ditto.pub'
