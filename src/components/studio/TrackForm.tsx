@@ -408,23 +408,42 @@ export function TrackForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     {audioFile ? (
-                      <div className="p-4 border rounded-lg bg-muted">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                            <Upload className="w-5 h-5 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{audioFile.name}</p>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <span>{(audioFile.size / 1024 / 1024).toFixed(1)}MB</span>
-                              {form.watch('duration') && (
-                                <>
-                                  <span>•</span>
-                                  <span>{Math.floor(form.watch('duration')! / 60)}:{(form.watch('duration')! % 60).toString().padStart(2, '0')}</span>
-                                </>
-                              )}
+                      <div className="relative group">
+                        <div className="p-4 border rounded-lg bg-muted">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
+                              <Upload className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{audioFile.name}</p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span>{(audioFile.size / 1024 / 1024).toFixed(1)}MB</span>
+                                {form.watch('duration') && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{Math.floor(form.watch('duration')! / 60)}:{(form.watch('duration')! % 60).toString().padStart(2, '0')}</span>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
+                        </div>
+                        
+                        {/* Change Button Overlay */}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-center justify-center">
+                          <input
+                            type="file"
+                            accept={AUDIO_MIME_TYPES.join(',')}
+                            onChange={handleAudioFileChange}
+                            className="hidden"
+                            id="audio-change"
+                          />
+                          <label htmlFor="audio-change" className="cursor-pointer">
+                            <div className="bg-background/90 hover:bg-background transition-colors duration-200 rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
+                              <Upload className="w-4 h-4 text-foreground" />
+                              <span className="text-sm font-medium text-foreground">Change Audio</span>
+                            </div>
+                          </label>
                         </div>
                       </div>
                     ) : (
