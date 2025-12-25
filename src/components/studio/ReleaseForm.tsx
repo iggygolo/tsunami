@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrackList } from '@/components/TrackList';
+import { TrackList } from '@/components/studio/TrackList';
 import {
   Form,
   FormControl,
