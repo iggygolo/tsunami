@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Play, Pause, Clock, Music, Zap } from 'lucide-react';
+import { Play, Pause, Clock, Music, Zap, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ZapDialog } from '@/components/ZapDialog';
@@ -23,6 +23,20 @@ export function TrackList({ release, className }: TrackListProps) {
     isTrackCurrent 
   } = useTrackPlayback(release);
   const [hoveredTrack, setHoveredTrack] = useState<number | null>(null);
+  const [likedTracks, setLikedTracks] = useState<Set<number>>(new Set());
+
+  // Handle track like/unlike
+  const handleTrackLike = (trackIndex: number) => {
+    setLikedTracks(prev => {
+      const newLiked = new Set(prev);
+      if (newLiked.has(trackIndex)) {
+        newLiked.delete(trackIndex);
+      } else {
+        newLiked.add(trackIndex);
+      }
+      return newLiked;
+    });
+  };
 
   // Create NostrEvent for individual track zapping
   const createTrackEvent = (trackIndex: number): NostrEvent => {
@@ -86,31 +100,13 @@ export function TrackList({ release, className }: TrackListProps) {
           >
             {/* Track Number / Play Button */}
             <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center flex-shrink-0">
-              {hasAudio && (isHovered || isCurrentTrack) ? (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 text-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleTrackPlay(index);
-                  }}
-                >
-                  {isPlaying ? (
-                    <Pause className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" />
-                  ) : (
-                    <Play className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5" fill="currentColor" />
-                  )}
-                </Button>
-              ) : (
-                <span className={cn(
+              <span className={cn(
                   "text-xs sm:text-sm font-medium",
                   isCurrentTrack ? "text-white" : "text-white/60",
                   !hasAudio && "text-white/30"
                 )}>
                   {index + 1}
                 </span>
-              )}
             </div>
 
             {/* Track Info */}
@@ -164,22 +160,64 @@ export function TrackList({ release, className }: TrackListProps) {
                 <span className="text-xs">{formatDuration(track.duration || 0)}</span>
               </div>
               
-              {/* Zap Button for Track - Always visible when track has audio */}
+              {/* Like and Zap Buttons for Track - Always visible when track has audio */}
               {hasAudio && (
-                <div onClick={(e) => e.stopPropagation()}>
-                  <ZapDialog target={createTrackEvent(index)}>
+                <>
+                  {/* Like Button */}
+                  <div onClick={(e) => e.stopPropagation()}>
                     <Button
                       size="icon"
                       variant="ghost"
                       className={cn(
-                        "w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:bg-white/10 text-white/60 hover:text-yellow-400 flex-shrink-0",
+                        "w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:bg-white/10 flex-shrink-0 transition-colors",
+                        likedTracks.has(index) 
+                          ? "text-red-500 hover:text-red-400" 
+                          : "text-white/60 hover:text-red-400"
                       )}
-                      title={`Zap "${track.title}"`}
+                      onClick={() => handleTrackLike(index)}
+                      title={likedTracks.has(index) ? `Unlike "${track.title}"` : `Like "${track.title}"`}
                     >
-                      <Zap className="w-3 h-3" />
+                      <Heart 
+                        className="w-3 h-3" 
+                        fill={likedTracks.has(index) ? "currentColor" : "none"}
+                      />
                     </Button>
-                  </ZapDialog>
-                </div>
+                  </div>
+
+                  {/* Zap Button */}
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <ZapDialog target={createTrackEvent(index)}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className={cn(
+                          "w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:bg-white/10 text-white/60 hover:text-yellow-400 flex-shrink-0",
+                        )}
+                        title={`Zap "${track.title}"`}
+                      >
+                        <Zap className="w-3 h-3" />
+                      </Button>
+                    </ZapDialog>
+                  </div>
+                </>
+              )}
+
+              {hasAudio && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTrackPlay(index);
+                  }}
+                >
+                  {isPlaying ? (
+                    <Pause className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" />
+                  ) : (
+                    <Play className="w-3 h-3 sm:w-4 sm:h-4 ml-0.5" fill="currentColor" />
+                  )}
+                </Button>
               )}
             </div>
           </div>
