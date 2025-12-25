@@ -92,7 +92,7 @@ export class VercelUploadProvider implements UploadProvider {
         handleUploadUrl: '/api/upload',
         clientPayload: JSON.stringify({
           filename: file.name,
-          contentType: file.type, // This will now always be the corrected type (e.g., audio/x-wav for WAV files)
+          contentType: file.type === 'audio/x-wav' ? 'audio/mpeg' : file.type, // This will now always be the corrected type (e.g., audio/x-wav for WAV files)
           size: file.size,
           userPubkey: this.userPubkey,
           // No signature needed for Vercel uploads
