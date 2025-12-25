@@ -88,22 +88,12 @@ const StudioLayout = () => {
 
   return (
     <Layout>
-      <div className="py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Studio</h1>
-            <p className="text-muted-foreground">
-              Manage your profile and artist settings
-            </p>
-          </div>
-        </div>
-
+      <div className="py-4">
         {/* Navigation */}
-        <div className="flex flex-wrap gap-2 mb-6 border-b pb-4">
+        <div className="flex flex-wrap gap-2 mb-2 border-b pb-2">
           {navigationItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname.includes(item.path);
             
             return (
               <Button

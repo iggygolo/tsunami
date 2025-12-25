@@ -206,7 +206,6 @@ const Settings = () => {
           copyright: formData.copyright,
           value: formData.value,
           guid: formData.guid,
-          medium: formData.medium,
           publisher: formData.publisher,
           location: formData.location,
           person: formData.person,
@@ -367,25 +366,6 @@ const Settings = () => {
                   disabled={false}
                   placeholder="Publisher name"
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="medium">Medium</Label>
-                <select
-                  id="medium"
-                  value={formData.medium}
-                  onChange={(e) => handleInputChange('medium', e.target.value)}
-                  disabled={false}
-                  className="w-full p-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-ring disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="podcast">Podcast</option>
-                  <option value="music">Music</option>
-                  <option value="video">Video</option>
-                  <option value="film">Film</option>
-                  <option value="audiobook">Audiobook</option>
-                  <option value="newsletter">Newsletter</option>
-                  <option value="blog">Blog</option>
-                </select>
               </div>
 
               <div>
