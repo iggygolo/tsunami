@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Search, SortAsc, SortDesc } from 'lucide-react';
+import { Search, SortAsc, SortDesc, Grid, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ReleaseCard } from './ReleaseCard';
+import { GlassReleaseCard } from './GlassReleaseCard';
 import { useReleases } from '@/hooks/useReleases';
 import { useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
 import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
@@ -30,6 +30,7 @@ export function ReleaseList({
     sortBy: 'date',
     sortOrder: 'desc'
   });
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Use cache when enabled and no search/filtering is applied
   const shouldUseCache = useCache && !searchOptions.query && searchOptions.sortBy === 'date' && searchOptions.sortOrder === 'desc';
@@ -121,52 +122,70 @@ export function ReleaseList({
                   <SortAsc className="h-4 w-4" />
                 )}
               </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              >
+                {viewMode === 'grid' ? (
+                  <List className="h-4 w-4" />
+                ) : (
+                  <Grid className="h-4 w-4" />
+                )}
+              </Button>
             </div>
           </div>
         </div>
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className={`grid gap-4 ${
+          viewMode === 'grid' 
+            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+            : 'grid-cols-1 md:grid-cols-2'
+        }`}>
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <Skeleton className="w-full aspect-square" />
-              <CardContent className="p-3">
-                <Skeleton className="h-4 w-3/4 mb-2" />
-                <Skeleton className="h-3 w-1/2" />
-              </CardContent>
-            </Card>
+            <div key={i} className="rounded-xl bg-card/30 border border-border/50 backdrop-blur-xl overflow-hidden animate-pulse">
+              <div className="w-full aspect-square bg-muted" />
+              <div className="p-3 space-y-2">
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-3 bg-muted rounded w-1/2" />
+              </div>
+            </div>
           ))}
         </div>
       ) : releases && releases.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className={`grid gap-4 ${
+          viewMode === 'grid' 
+            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+            : 'grid-cols-1 md:grid-cols-2'
+        }`}>
           {releases.map((release) => (
-            <ReleaseCard
+            <GlassReleaseCard
               key={release.id}
               release={release}
-              onPlayRelease={handlePlayRelease}
+              layout={viewMode === 'list' ? 'horizontal' : 'vertical'}
             />
           ))}
         </div>
       ) : (
         <div className="col-span-full">
-          <Card className="border-dashed">
-            <CardContent className="py-12 px-8 text-center">
-              <div className="max-w-sm mx-auto space-y-6">
-                <p className="text-muted-foreground">
-                  {searchOptions.query
-                    ? `No releases found for "${searchOptions.query}"`
-                    : "No releases published yet"
-                  }
+          <div className="py-12 px-8 text-center rounded-xl bg-card/30 border border-border/50 backdrop-blur-xl">
+            <div className="max-w-sm mx-auto space-y-6">
+              <p className="text-muted-foreground">
+                {searchOptions.query
+                  ? `No releases found for "${searchOptions.query}"`
+                  : "No releases published yet"
+                }
+              </p>
+              {!searchOptions.query && (
+                <p className="text-sm text-muted-foreground">
+                  Releases will appear here once the artist publishes them.
                 </p>
-                {!searchOptions.query && (
-                  <p className="text-sm text-muted-foreground">
-                    Releases will appear here once the artist publishes them.
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

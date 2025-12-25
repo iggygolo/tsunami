@@ -33,14 +33,36 @@ export function useReactions(eventId: string): ReactionsData {
         limit: 100 // Limit to prevent too many results
       }], { signal });
 
+      // Query for deletion events (kind 5) that might delete likes
+      const deletionEvents = await nostr.query([{
+        kinds: [5],
+        '#k': ['7'], // Deletions of like events
+        limit: 100
+      }], { signal });
+
       console.log('useReactions debug:', {
         eventId,
         likeEvents: likeEvents.length,
+        deletionEvents: deletionEvents.length,
         events: likeEvents.map(e => ({ pubkey: e.pubkey, created_at: e.created_at, id: e.id }))
       });
 
+      // Create a set of deleted event IDs
+      const deletedEventIds = new Set<string>();
+      deletionEvents.forEach((delEvent: NostrEvent) => {
+        const deletedIds = delEvent.tags
+          .filter(([key]) => key === 'e')
+          .map(([, eventId]) => eventId);
+        deletedIds.forEach(id => deletedEventIds.add(id));
+      });
+
+      // Filter out deleted like events
+      const validLikeEvents = likeEvents.filter((event: NostrEvent) => 
+        !deletedEventIds.has(event.id)
+      );
+
       // Convert to reaction entries and sort by timestamp (newest first)
-      const reactionEntries: ReactionEntry[] = likeEvents
+      const reactionEntries: ReactionEntry[] = validLikeEvents
         .map((event: NostrEvent) => ({
           userPubkey: event.pubkey,
           timestamp: new Date(event.created_at * 1000),
@@ -60,9 +82,10 @@ export function useReactions(eventId: string): ReactionsData {
       const finalReactions = Array.from(uniqueReactions.values())
         .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
-      console.log('useReactions after deduplication:', {
+      console.log('useReactions after deduplication and deletion filtering:', {
         eventId,
         originalCount: reactionEntries.length,
+        deletedCount: deletedEventIds.size,
         uniqueCount: finalReactions.length,
         finalReactions: finalReactions.map(r => ({ 
           pubkey: r.userPubkey, 

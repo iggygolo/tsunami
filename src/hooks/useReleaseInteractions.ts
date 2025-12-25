@@ -51,52 +51,75 @@ export function useReleaseInteractions({ release, event, commentEvent }: UseRele
       return;
     }
 
-    if (hasUserLiked) {
-      toast({
-        title: "Already liked",
-        description: "You have already liked this release.",
-      });
-      return;
-    }
-
     try {
-      // Optimistically update reactions data
-      queryClient.setQueryData(['release-reactions', release.eventId], (old: any) => {
-        if (!old) return [];
-        // Add new reaction entry
-        const newReaction = {
-          userPubkey: user.pubkey,
-          timestamp: new Date(),
-          eventId: `temp-${Date.now()}`
-        };
-        return [newReaction, ...old];
-      });
+      if (hasUserLiked) {
+        // Unlike: Find the user's like event and delete it
+        const userReaction = reactionsCount > 0 ? 
+          queryClient.getQueryData<any[]>(['release-reactions', release.eventId])?.find(
+            (r: any) => r.userPubkey === user.pubkey
+          ) : null;
 
-      createEvent({
-        kind: 7,
-        content: '+',
-        tags: [
-          ['e', release.eventId],
-          ['p', release.artistPubkey],
-          ['k', release.tracks.length === 1 ? '36787' : '34139'] // Music track or playlist
-        ]
-      });
+        if (userReaction?.eventId) {
+          // Optimistically remove the like
+          queryClient.setQueryData(['release-reactions', release.eventId], (old: any) => {
+            if (!old) return [];
+            return old.filter((r: any) => r.userPubkey !== user.pubkey);
+          });
 
-      toast({
-        title: "Liked!",
-        description: "Your like has been published.",
-      });
+          // Publish deletion event
+          createEvent({
+            kind: 5, // Deletion event
+            content: 'Unlike',
+            tags: [
+              ['e', userReaction.eventId], // Reference to the like event to delete
+              ['k', '7'] // Kind of event being deleted (like)
+            ]
+          });
+
+          toast({
+            title: "Unliked",
+            description: "Your like has been removed.",
+          });
+        }
+      } else {
+        // Like: Create new like event
+        // Optimistically add the like
+        queryClient.setQueryData(['release-reactions', release.eventId], (old: any) => {
+          if (!old) return [];
+          const newReaction = {
+            userPubkey: user.pubkey,
+            timestamp: new Date(),
+            eventId: `temp-${Date.now()}`
+          };
+          return [newReaction, ...old];
+        });
+
+        createEvent({
+          kind: 7,
+          content: '+',
+          tags: [
+            ['e', release.eventId],
+            ['p', release.artistPubkey],
+            ['k', release.tracks.length === 1 ? '36787' : '34139'] // Music track or playlist
+          ]
+        });
+
+        toast({
+          title: "Liked!",
+          description: "Your like has been published.",
+        });
+      }
 
       // Delay invalidation to allow network propagation
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['release-reactions', release.eventId] });
       }, 2000);
-    } catch {
+    } catch (error) {
       // Revert optimistic updates on error
       queryClient.invalidateQueries({ queryKey: ['release-reactions', release.eventId] });
 
       toast({
-        title: "Failed to like",
+        title: hasUserLiked ? "Failed to unlike" : "Failed to like",
         description: "Please try again.",
         variant: "destructive",
       });
