@@ -10,13 +10,12 @@ export const AUDIO_MIME_TYPES = [
   'audio/mp4',
   'audio/aac',
   'audio/ogg',
-  'audio/wav',
+  'audio/wave',  // Primary WAV MIME type
+  'audio/wav',   // Alternative WAV MIME type
+  'audio/x-wav', // Additional WAV variant for better browser compatibility
   'audio/flac',
   'audio/opus',
-  'audio/webm',
-  // Additional WAV variants for better browser compatibility
-  'audio/x-wav',
-  'audio/wave'
+  'audio/webm'
 ] as const;
 
 export const VIDEO_MIME_TYPES = [
