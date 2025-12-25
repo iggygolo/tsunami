@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import {
   Edit,
   Trash2,
@@ -45,7 +46,6 @@ import { useDeleteRelease } from '@/hooks/usePublishRelease';
 import { useToast } from '@/hooks/useToast';
 import { AudioPlayer } from '@/components/music/AudioPlayer';
 import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
-import { ReleaseDialog } from '../ReleaseDialog';
 import { ShareReleaseDialog } from './ShareReleaseDialog';
 
 interface ReleaseManagementProps {
@@ -53,6 +53,7 @@ interface ReleaseManagementProps {
 }
 
 export function ReleaseManagement({ className }: ReleaseManagementProps) {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { mutateAsync: deleteRelease, isPending: isDeleting } = useDeleteRelease();
 
@@ -62,9 +63,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
     sortOrder: 'desc'
   });
   const [releaseToDelete, setReleaseToDelete] = useState<MusicRelease | null>(null);
-  const [releaseToEdit, setReleaseToEdit] = useState<MusicRelease | null>(null);
   const [releaseToShare, setReleaseToShare] = useState<MusicRelease | null>(null);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
 
   const { data: releases, isLoading, error } = useReleases(searchOptions);
@@ -114,40 +113,6 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
     }
   };
 
-  const handlereleaseUpdated = async () => {
-    console.log('handlereleaseUpdated called');
-    try {
-      // Note: genRSSFeed expects MusicTrackData[], but we have PodcastRelease[]
-      // For now, we'll skip RSS regeneration here and let it be handled elsewhere
-      // TODO: Convert PodcastRelease[] to MusicTrackData[] or use proper data source
-      
-      // Close the dialog but stay on studio page
-      setReleaseToEdit(null);
-      console.log('Release edit dialog should close now');
-      
-      // No navigation - stay on studio page
-    } catch (error) {
-      console.error('Error in handlereleaseUpdated:', error);
-      // Still close the dialog even if RSS generation fails
-      setReleaseToEdit(null);
-    }
-  };
-
-  const handleReleaseCreated = async (releaseId?: string) => {
-    console.log('handleReleaseCreated called with releaseId:', releaseId);
-    try {
-      // Close the dialog but stay on studio page
-      setShowCreateDialog(false);
-      console.log('Release create dialog should close now');
-      
-      // No navigation - stay on studio page
-    } catch (error) {
-      console.error('Error in handleReleaseCreated:', error);
-      // Still close the dialog even if RSS generation fails
-      setShowCreateDialog(false);
-    }
-  };
-
   const formatDuration = (seconds?: number): string => {
     if (!seconds) return '';
 
@@ -192,7 +157,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                 </Badge>
               )}
             </CardTitle>
-            <Button onClick={() => setShowCreateDialog(true)} size="sm" className="text-sm">
+            <Button onClick={() => navigate('/studio/releases/create')} size="sm" className="text-sm">
               <Plus className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">New Release</span>
               <span className="sm:hidden">New</span>
@@ -261,7 +226,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                   : 'Start by publishing your first release'
                 }
               </p>
-              <Button onClick={() => setShowCreateDialog(true)} size="sm" className="text-sm">
+              <Button onClick={() => navigate('/studio/releases/create')} size="sm" className="text-sm">
                 <Plus className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Publish First release</span>
                 <span className="sm:hidden">Publish release</span>
@@ -329,7 +294,7 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
                                 )}
                                 {currentlyPlaying === release.id ? 'Hide Player' : 'Play release'}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setReleaseToEdit(release)}>
+                              <DropdownMenuItem onClick={() => navigate(`/studio/releases/edit/${release.eventId || release.id}`)}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit release
                               </DropdownMenuItem>
@@ -461,27 +426,6 @@ export function ReleaseManagement({ className }: ReleaseManagementProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Create Release Dialog */}
-      {showCreateDialog && (
-        <ReleaseDialog
-          mode="create"
-          open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
-          onSuccess={handleReleaseCreated}
-        />
-      )}
-
-      {/* Edit Release Dialog */}
-      {releaseToEdit && (
-        <ReleaseDialog
-          mode="edit"
-          release={releaseToEdit}
-          open={!!releaseToEdit}
-          onOpenChange={() => setReleaseToEdit(null)}
-          onSuccess={handlereleaseUpdated}
-        />
-      )}
 
       {/* Share release Dialog */}
       <ShareReleaseDialog
