@@ -14,10 +14,16 @@ export function useUploadConfig() {
   );
 
   const updateProvider = (provider: 'blossom' | 'vercel') => {
-    setConfig(prev => ({
-      ...prev,
-      defaultProvider: provider
-    }));
+    console.log('📝 updateProvider called with:', provider);
+    console.log('Current config before update:', config);
+    setConfig(prev => {
+      const newConfig = {
+        ...prev,
+        defaultProvider: provider
+      };
+      console.log('New config being set:', newConfig);
+      return newConfig;
+    });
   };
 
   return {

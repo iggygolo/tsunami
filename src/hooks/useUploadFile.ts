@@ -106,6 +106,9 @@ export function useUploadFile() {
       console.log('Default provider:', config.defaultProvider);
       console.log('Vercel enabled:', config.vercelEnabled);
       console.log('Blossom enabled:', config.blossomEnabled);
+      console.log('Environment VITE_DEFAULT_UPLOAD_PROVIDER:', import.meta.env.VITE_DEFAULT_UPLOAD_PROVIDER);
+      console.log('LocalStorage config key:', 'tsunami_upload_config');
+      console.log('LocalStorage raw value:', localStorage.getItem('tsunami_upload_config'));
 
       // Use the configured default provider
       if (config.defaultProvider === 'vercel' && config.vercelEnabled) {

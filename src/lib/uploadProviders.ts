@@ -333,7 +333,7 @@ export class UploadProviderFactory {
   }
 
   static getDefaultConfig(): UploadConfig {
-    // Get default provider from environment variable, fallback to 'vercel'
+    // Get default provider from environment variable, fallback to 'blossom'
     const envProvider = import.meta.env.VITE_DEFAULT_UPLOAD_PROVIDER as 'blossom' | 'vercel' | undefined;
     const defaultProvider = (envProvider === 'blossom' || envProvider === 'vercel') ? envProvider : 'blossom';
     
