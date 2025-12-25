@@ -12,8 +12,6 @@ import { UploadProviderFactory } from '@/lib/uploadProviders';
 export interface UploadFileOptions {
   /** Override the default provider for this upload */
   provider?: 'blossom' | 'vercel';
-  /** Enable fallback to alternative provider on failure */
-  enableFallback?: boolean;
 }
 
 /**
@@ -185,7 +183,7 @@ export function useUploadFileWithOptions() {
       // Determine which provider to use - default to blossom unless explicitly overridden
       const primaryProvider = options.provider || 'blossom';
 
-      console.log('Primary provider:', primaryProvider, 'Fallback enabled:', enableFallback);
+      console.log('Primary provider:', primaryProvider);
 
       // Try primary provider first
       if (primaryProvider === 'vercel') {
