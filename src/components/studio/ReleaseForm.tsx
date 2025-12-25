@@ -83,13 +83,7 @@ export function ReleaseForm({
       tags: [],
       imageUrl: '',
       genre: null,
-      tracks: [{
-        title: '',
-        audioUrl: '',
-        duration: undefined,
-        explicit: false,
-        language: null,
-      }],
+      tracks: [],
     },
   });
 
