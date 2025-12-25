@@ -2,66 +2,71 @@ import {
   Zap, 
   Volume2, 
   MessageSquare, 
-  Repeat2, 
+  Heart, 
   Users 
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMusicAnalytics } from '@/hooks/useMusicAnalytics';
+import { useUsersMetadata } from '@/hooks/useUserMetadata';
 
 const Analytics = () => {
   const { data: analytics, isLoading: analyticsLoading } = useMusicAnalytics();
+  
+  // Extract unique pubkeys from recent activity for user metadata fetching
+  const activityPubkeys = analytics?.recentActivity?.map(activity => activity.authorPubkey) || [];
+  const { data: usersMetadata } = useUsersMetadata(activityPubkeys);
 
   return (
     <div className="space-y-6">
+      {/* Standardized Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
+          <p className="text-muted-foreground text-sm">
+            Social interactions from the Nostr network
+          </p>
+        </div>
+      </div>
       {/* Nostr Engagement Analytics */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Zap className="w-5 h-5" />
-            <span>Nostr Engagement</span>
-          </CardTitle>
-          <CardDescription>Social interactions from the Nostr network</CardDescription>
-        </CardHeader>
-      </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-6 text-center">
-            <Volume2 className="w-12 h-12 mx-auto mb-4 text-primary" />
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4 text-center">
+            <Volume2 className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <div className="text-xl font-bold">
               {analyticsLoading ? '...' : analytics?.totalReleases || 0}
             </div>
-            <div className="text-sm text-muted-foreground">Releases</div>
+            <div className="text-xs text-muted-foreground">Releases</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6 text-center">
-            <Zap className="w-12 h-12 mx-auto mb-4 text-yellow-500" />
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4 text-center">
+            <Zap className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
+            <div className="text-xl font-bold">
               {analyticsLoading ? '...' : analytics?.totalZaps || 0}
             </div>
-            <div className="text-sm text-muted-foreground">Total Zaps</div>
+            <div className="text-xs text-muted-foreground">Zaps</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6 text-center">
-            <MessageSquare className="w-12 h-12 mx-auto mb-4 text-blue-500" />
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4 text-center">
+            <MessageSquare className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+            <div className="text-xl font-bold">
               {analyticsLoading ? '...' : analytics?.totalComments || 0}
             </div>
-            <div className="text-sm text-muted-foreground">Comments</div>
+            <div className="text-xs text-muted-foreground">Comments</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6 text-center">
-            <Repeat2 className="w-12 h-12 mx-auto mb-4 text-green-500" />
-            <div className="text-2xl font-bold">
-              {analyticsLoading ? '...' : analytics?.totalReposts || 0}
+          <CardContent className="p-4 text-center">
+            <Heart className="w-8 h-8 mx-auto mb-2 text-red-500" />
+            <div className="text-xl font-bold">
+              {analyticsLoading ? '...' : analytics?.totalLikes || 0}
             </div>
-            <div className="text-sm text-muted-foreground">Reposts</div>
+            <div className="text-xs text-muted-foreground">Likes</div>
           </CardContent>
         </Card>
       </div>
@@ -83,30 +88,33 @@ const Analytics = () => {
                 ))}
               </div>
             ) : analytics?.topReleases && analytics.topReleases.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-1">
                 {analytics.topReleases.slice(0, 5).map((release, index) => (
-                  <div key={release.release.id} className="flex items-center space-x-3 p-3 rounded-lg bg-muted">
-                    <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium truncate">
+                  <div key={release.release.id} className="group flex items-center justify-between py-4 px-1 hover:bg-muted/30 rounded-lg transition-colors">
+                    {/* Left: Rank and Title */}
+                    <div className="flex items-center space-x-4 flex-1 min-w-0">
+                      <div className="w-6 h-6 flex items-center justify-center text-sm font-medium text-muted-foreground">
+                        {index + 1}
+                      </div>
+                      <h4 className="text-sm font-medium text-foreground truncate">
                         {release.release.title}
                       </h4>
-                      <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                        <span className="flex items-center">
-                          <Zap className="w-3 h-3 mr-1 text-yellow-500" />
-                          {release.zaps}
-                        </span>
-                        <span className="flex items-center">
-                          <MessageSquare className="w-3 h-3 mr-1 text-blue-500" />
-                          {release.comments}
-                        </span>
-                        <span className="flex items-center">
-                          <Repeat2 className="w-3 h-3 mr-1 text-green-500" />
-                          {release.reposts}
-                        </span>
-                      </div>
+                    </div>
+                    
+                    {/* Right: Metrics */}
+                    <div className="flex items-center space-x-6 text-xs text-muted-foreground">
+                      <span className="flex items-center space-x-1">
+                        <Zap className="w-3.5 h-3.5 text-yellow-500" />
+                        <span>{release.zaps}</span>
+                      </span>
+                      <span className="flex items-center space-x-1">
+                        <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+                        <span>{release.comments}</span>
+                      </span>
+                      <span className="flex items-center space-x-1">
+                        <Heart className="w-3.5 h-3.5 text-red-500" />
+                        <span>{release.likes}</span>
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -140,39 +148,66 @@ const Analytics = () => {
                 ))}
               </div>
             ) : analytics?.recentActivity && analytics.recentActivity.length > 0 ? (
-              <div className="space-y-4">
-                {analytics.recentActivity.slice(0, 8).map((activity, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      activity.type === 'zap' ? 'bg-yellow-100 text-yellow-700' :
-                      activity.type === 'comment' ? 'bg-blue-100 text-blue-700' :
-                      'bg-green-100 text-green-700'
-                    }`}>
-                      {activity.type === 'zap' ? (
-                        <Zap className="w-4 h-4" />
-                      ) : activity.type === 'comment' ? (
-                        <MessageSquare className="w-4 h-4" />
-                      ) : (
-                        <Repeat2 className="w-4 h-4" />
-                      )}
+              <div className="space-y-1">
+                {analytics.recentActivity.slice(0, 8).map((activity, index) => {
+                  const user = usersMetadata?.get(activity.authorPubkey);
+                  
+                  return (
+                    <div key={index} className="group flex items-center justify-between py-3 px-1 hover:bg-muted/30 rounded-lg transition-colors">
+                      {/* Left: Icon, Avatar and Action */}
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        {/* Activity Icon */}
+                        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                          {activity.type === 'zap' ? (
+                            <Zap className="w-4 h-4 text-yellow-500" />
+                          ) : activity.type === 'comment' ? (
+                            <MessageSquare className="w-4 h-4 text-blue-500" />
+                          ) : (
+                            <Heart className="w-4 h-4 text-red-500" />
+                          )}
+                        </div>
+
+                        {/* User Avatar */}
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {user?.picture ? (
+                            <img 
+                              src={user.picture} 
+                              alt={user.displayName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs font-medium text-muted-foreground">
+                              {user?.displayName?.charAt(0)?.toUpperCase() || activity.authorShort.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Activity Description */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-foreground">
+                            <span className="font-medium">{user?.displayName || activity.authorShort}</span>
+                            <span className="text-muted-foreground mx-1">
+                              {activity.type === 'zap' ? 'zapped' :
+                               activity.type === 'comment' ? 'commented on' :
+                               'liked'}
+                            </span>
+                            <span className="truncate">{activity.releaseTitle}</span>
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Right: Timestamp */}
+                      <div className="text-xs text-muted-foreground flex-shrink-0">
+                        {activity.timestamp.toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm">
-                        <span className="font-medium">
-                          {activity.type === 'zap' ? 'Zapped' :
-                           activity.type === 'comment' ? 'Commented on' :
-                           'Reposted'}
-                        </span>{' '}
-                        <span className="text-muted-foreground truncate">
-                          {activity.releaseTitle}
-                        </span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {activity.timestamp.toLocaleDateString()} at {activity.timestamp.toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">

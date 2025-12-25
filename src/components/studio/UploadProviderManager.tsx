@@ -11,6 +11,33 @@ import { useBlossomServers, DEFAULT_BLOSSOM_SERVERS, isValidBlossomServerUrl } f
 import { useUploadConfig } from '@/hooks/useUploadConfig';
 import { useToast } from '@/hooks/useToast';
 
+// Helper function to extract a readable name from a Blossom server URL
+function getServerDisplayName(url: string): string {
+  try {
+    const parsed = new URL(url);
+    let hostname = parsed.hostname;
+    
+    // Remove 'www.' prefix if present
+    if (hostname.startsWith('www.')) {
+      hostname = hostname.substring(4);
+    }
+    
+    // For common Blossom servers, provide friendly names
+    const friendlyNames: Record<string, string> = {
+      'nostr.download': 'Nostr Download',
+      'blossom.band': 'Blossom Band',
+      'cdn.satellite.earth': 'Satellite Earth',
+      'files.v0l.io': 'V0L Files',
+      'blossom.primal.net': 'Primal Blossom',
+      'media.nostr.band': 'Nostr Band Media',
+    };
+    
+    return friendlyNames[hostname] || hostname;
+  } catch {
+    return url;
+  }
+}
+
 export function UploadProviderManager() {
   const { userServers, allServers, isLoading: blossomLoading, updateServers, isUpdating } = useBlossomServers();
   const { config, updateProvider } = useUploadConfig();
@@ -103,6 +130,16 @@ export function UploadProviderManager() {
   if (blossomLoading) {
     return (
       <div className="space-y-6">
+        {/* Standardized Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Providers</h1>
+            <p className="text-muted-foreground text-sm">
+              Configure upload providers and storage settings
+            </p>
+          </div>
+        </div>
+        
         <Card>
           <CardHeader>
             <Skeleton className="h-6 w-48" />
@@ -119,6 +156,15 @@ export function UploadProviderManager() {
 
   return (
     <div className="space-y-6">
+      {/* Standardized Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Providers</h1>
+          <p className="text-muted-foreground text-sm">
+            Configure upload providers and storage settings
+          </p>
+        </div>
+      </div>
       {/* Provider Selection */}
       <Card>
         <CardHeader>
@@ -207,7 +253,10 @@ export function UploadProviderManager() {
                     <div key={serverUrl} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
                       <div className="flex items-center space-x-3">
                         <Server className="w-4 h-4 text-muted-foreground" />
-                        <span className="font-mono text-sm">{serverUrl}</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{getServerDisplayName(serverUrl)}</span>
+                          <span className="text-xs text-muted-foreground font-mono">{serverUrl}</span>
+                        </div>
                       </div>
                       {isEditingBlossom && (
                         <Button
@@ -257,11 +306,22 @@ export function UploadProviderManager() {
 
             {/* Default Servers Preview */}
             {!isEditingBlossom && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-sm font-medium">Default Servers</Label>
-                <div className="text-sm text-muted-foreground">
-                  Using {DEFAULT_BLOSSOM_SERVERS.length} default Blossom servers for reliable uploads
+                <div className="space-y-2">
+                  {DEFAULT_BLOSSOM_SERVERS.map((serverUrl) => (
+                    <div key={serverUrl} className="flex items-center space-x-3 p-3 border rounded-lg bg-muted/20">
+                      <Server className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{getServerDisplayName(serverUrl)}</span>
+                        <span className="text-xs text-muted-foreground font-mono">{serverUrl}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  These servers are used automatically for reliable uploads
+                </p>
               </div>
             )}
           </CardContent>

@@ -264,13 +264,17 @@ const Settings = () => {
 
   return (
     <div className="space-y-6">
+      {/* Standardized Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+          <p className="text-muted-foreground text-sm">
+            Manage your artist profile and configuration
+          </p>
+        </div>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Music className="w-5 h-5" />
-            <span>Artist Settings</span>
-          </CardTitle>
-        </CardHeader>
         <CardContent className="space-y-6">
           {/* Basic Information */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

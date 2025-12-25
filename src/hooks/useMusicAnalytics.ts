@@ -8,27 +8,28 @@ interface MusicAnalytics {
   totalReleases: number;
   totalZaps: number;
   totalComments: number;
-  totalReposts: number;
+  totalLikes: number;
   topReleases: Array<{
     release: MusicRelease;
     zaps: number;
     comments: number;
-    reposts: number;
+    likes: number;
     totalEngagement: number;
   }>;
   recentActivity: Array<{
-    type: 'zap' | 'comment' | 'repost';
+    type: 'zap' | 'comment' | 'like';
     releaseId: string;
     releaseTitle: string;
     timestamp: Date;
     amount?: number; // for zaps
-    author?: string; // for comments/reposts
+    authorPubkey: string; // full pubkey for user resolution
+    authorShort: string; // fallback short display
   }>;
   engagementOverTime: Array<{
     date: string;
     zaps: number;
     comments: number;
-    reposts: number;
+    likes: number;
   }>;
 }
 
@@ -38,20 +39,27 @@ interface MusicAnalytics {
 export function useMusicAnalytics() {
   const { nostr } = useNostr();
   const artistPubkeyHex = getArtistPubkeyHex();
-  const { data: releases } = useReleases();
+  const { data: releases, isLoading: isLoadingReleases } = useReleases();
 
   return useQuery<MusicAnalytics>({
-    queryKey: ['music-analytics', artistPubkeyHex],
+    queryKey: ['music-analytics', artistPubkeyHex, releases?.length],
     queryFn: async (context) => {
-      const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
+      const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
+
+      console.log('🔍 Analytics - Starting analytics fetch:', {
+        artistPubkey: artistPubkeyHex.slice(0, 8) + '...',
+        releasesCount: releases?.length || 0,
+        releases: releases?.map(r => ({ title: r.title, eventId: r.eventId })) || []
+      });
 
       if (!releases || releases.length === 0) {
+        console.log('📊 Analytics - No releases found, returning empty analytics');
         // Return empty analytics if no releases
         return {
           totalReleases: 0,
           totalZaps: 0,
           totalComments: 0,
-          totalReposts: 0,
+          totalLikes: 0,
           topReleases: [],
           recentActivity: [],
           engagementOverTime: [],
@@ -59,36 +67,84 @@ export function useMusicAnalytics() {
       }
 
       // Get all release event IDs for filtering
-      const releaseEventIds = releases.map(ep => ep.eventId);
+      const releaseEventIds = releases.map(ep => ep.eventId).filter(Boolean);
+      
+      console.log('🎯 Analytics - Release event IDs to query:', {
+        count: releaseEventIds.length,
+        ids: releaseEventIds.map(id => id.slice(0, 8) + '...')
+      });
+
+      if (releaseEventIds.length === 0) {
+        console.log('⚠️ Analytics - No valid event IDs found in releases');
+        return {
+          totalReleases: releases.length,
+          totalZaps: 0,
+          totalComments: 0,
+          totalLikes: 0,
+          topReleases: [],
+          recentActivity: [],
+          engagementOverTime: [],
+        };
+      }
 
       // Fetch all engagement events in parallel
-      const [zapEvents, commentEvents, repostEvents] = await Promise.all([
+      console.log('🔍 Analytics - Fetching engagement events...');
+      
+      const [zapEvents, commentEvents, likeEvents] = await Promise.all([
         // Zaps (kind 9735) targeting our releases
         nostr.query([{
           kinds: [9735],
           '#e': releaseEventIds,
           limit: 1000
-        }], { signal }).catch(() => []),
+        }], { signal }).catch((error) => {
+          console.warn('Failed to fetch zap events:', error);
+          return [];
+        }),
 
         // Comments (kind 1111) targeting our releases  
         nostr.query([{
           kinds: [MUSIC_KINDS.COMMENT],
           '#e': releaseEventIds,
           limit: 1000
-        }], { signal }).catch(() => []),
+        }], { signal }).catch((error) => {
+          console.warn('Failed to fetch comment events:', error);
+          return [];
+        }),
 
-        // Reposts (kind 6 and 16) targeting our releases
+        // Likes (kind 7 reactions with + or ❤️ content) targeting our releases
         nostr.query([{
-          kinds: [6, 16],
+          kinds: [7],
           '#e': releaseEventIds,
           limit: 1000
-        }], { signal }).catch(() => []),
+        }], { signal }).catch((error) => {
+          console.warn('Failed to fetch like events:', error);
+          return [];
+        }),
       ]);
+
+      console.log('📊 Analytics - Engagement events fetched:', {
+        zaps: zapEvents.length,
+        comments: commentEvents.length,
+        likes: likeEvents.length
+      });
+
+      // Filter like events to only include positive reactions
+      const filteredLikeEvents = likeEvents.filter(event => {
+        const content = event.content.trim();
+        return content === '+' || content === '❤️' || content === '🤍' || content === '💜' || content === '🧡' || content === '💛' || content === '💚' || content === '💙' || content === '🖤' || content === '🤎' || content === '💗' || content === '💓' || content === '💕' || content === '💖' || content === '💘' || content === '💝' || content === '💟' || content === '♥️' || content === '💯' || content === '👍' || content === '🔥' || content === '⭐' || content === '✨' || content === '🎵' || content === '🎶' || content === '🎼' || content === '🎤' || content === '🎧';
+      });
 
       // Calculate totals
       const totalZaps = zapEvents.length;
       const totalComments = commentEvents.length;
-      const totalReposts = repostEvents.length;
+      const totalLikes = filteredLikeEvents.length;
+
+      console.log('📈 Analytics - Calculated totals:', {
+        totalZaps,
+        totalComments,
+        totalLikes: totalLikes,
+        filteredFromLikes: likeEvents.length
+      });
 
       // Calculate per-release engagement
       const releaseEngagement = releases.map(release => {
@@ -98,7 +154,7 @@ export function useMusicAnalytics() {
         const releaseComments = commentEvents.filter(e =>
           e.tags.some(([name, value]) => name === 'e' && value === release.eventId)  
         );
-        const releaseReposts = repostEvents.filter(e =>
+        const releaseLikes = filteredLikeEvents.filter(e =>
           e.tags.some(([name, value]) => name === 'e' && value === release.eventId)
         );
 
@@ -106,8 +162,8 @@ export function useMusicAnalytics() {
           release,
           zaps: releaseZaps.length,
           comments: releaseComments.length,
-          reposts: releaseReposts.length,
-          totalEngagement: releaseZaps.length + releaseComments.length + releaseReposts.length
+          likes: releaseLikes.length,
+          totalEngagement: releaseZaps.length + releaseComments.length + releaseLikes.length
         };
       });
 
@@ -128,8 +184,8 @@ export function useMusicAnalytics() {
           event,
           timestamp: new Date(event.created_at * 1000),
         })),
-        ...repostEvents.map(event => ({
-          type: 'repost' as const, 
+        ...filteredLikeEvents.map(event => ({
+          type: 'like' as const, 
           event,
           timestamp: new Date(event.created_at * 1000),
         })),
@@ -148,23 +204,24 @@ export function useMusicAnalytics() {
             releaseId,
             releaseTitle: release?.title || 'Unknown Release',
             timestamp: activity.timestamp,
-            author: activity.event.pubkey.slice(0, 8) + '...',
+            authorPubkey: activity.event.pubkey,
+            authorShort: activity.event.pubkey.slice(0, 8) + '...',
           };
         });
 
       // Engagement over time (last 30 days)
       const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-      const dailyEngagement = new Map<string, {zaps: number, comments: number, reposts: number}>();
+      const dailyEngagement = new Map<string, {zaps: number, comments: number, likes: number}>();
 
       // Initialize last 30 days
       for (let i = 0; i < 30; i++) {
         const date = new Date(Date.now() - (i * 24 * 60 * 60 * 1000));
         const dateKey = date.toISOString().split('T')[0];
-        dailyEngagement.set(dateKey, { zaps: 0, comments: 0, reposts: 0 });
+        dailyEngagement.set(dateKey, { zaps: 0, comments: 0, likes: 0 });
       }
 
       // Count engagement by day
-      [...zapEvents, ...commentEvents, ...repostEvents].forEach(event => {
+      [...zapEvents, ...commentEvents, ...filteredLikeEvents].forEach(event => {
         if (event.created_at * 1000 >= thirtyDaysAgo) {
           const date = new Date(event.created_at * 1000);
           const dateKey = date.toISOString().split('T')[0];
@@ -173,7 +230,7 @@ export function useMusicAnalytics() {
           if (dayData) {
             if (event.kind === 9735) dayData.zaps++;
             else if (event.kind === 1111) dayData.comments++;
-            else if ([6, 16].includes(event.kind)) dayData.reposts++;
+            else if (event.kind === 7) dayData.likes++;
           }
         }
       });
@@ -182,11 +239,21 @@ export function useMusicAnalytics() {
         .map(([date, data]) => ({ date, ...data }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
+      console.log('🎉 Analytics - Final analytics data:', {
+        totalReleases: releases.length,
+        totalZaps,
+        totalComments,
+        totalLikes,
+        topReleasesCount: topReleases.length,
+        recentActivityCount: recentActivity.length,
+        engagementDays: engagementOverTime.length
+      });
+
       return {
         totalReleases: releases.length,
         totalZaps,
         totalComments,
-        totalReposts,
+        totalLikes,
         topReleases,
         recentActivity,
         engagementOverTime,
@@ -194,6 +261,6 @@ export function useMusicAnalytics() {
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
-    enabled: !!releases, // Only run when releases are loaded
+    enabled: !!releases && !isLoadingReleases, // Only run when releases are loaded and not loading
   });
 }
