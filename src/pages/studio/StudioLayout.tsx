@@ -1,11 +1,11 @@
 import { useSeoMeta } from '@unhead/react';
-import { useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Layout } from '@/components/Layout';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { isArtist } from '@/lib/musicConfig';
-import { Settings, Volume2, Server, Zap } from 'lucide-react';
+import { Settings, Server, Zap, Music, ListMusic } from 'lucide-react';
 
 const StudioLayout = () => {
   const navigate = useNavigate();
@@ -15,13 +15,8 @@ const StudioLayout = () => {
 
   useSeoMeta({
     title: 'Studio',
-    description: 'Manage your artist profile and publish new releases',
+    description: 'Manage your tracks, playlists, and artist profile',
   });
-
-  // Redirect /studio to /studio/settings
-  if (location.pathname === '/studio') {
-    return <Navigate to="/studio/settings" replace />;
-  }
 
   if (!user) {
     return (
@@ -65,24 +60,29 @@ const StudioLayout = () => {
 
   const navigationItems = [
     {
-      path: '/studio/settings',
-      label: 'Artist Settings',
-      icon: Settings,
+      path: '/studio/tracks',
+      label: 'Tracks',
+      icon: Music,
     },
     {
-      path: '/studio/releases',
-      label: 'Releases',
-      icon: Volume2,
-    },
-    {
-      path: '/studio/providers',
-      label: 'Upload Providers',
-      icon: Server,
+      path: '/studio/playlists',
+      label: 'Playlists',
+      icon: ListMusic,
     },
     {
       path: '/studio/analytics',
       label: 'Analytics',
       icon: Zap,
+    },
+    {
+      path: '/studio/settings',
+      label: 'Settings',
+      icon: Settings,
+    },
+    {
+      path: '/studio/providers',
+      label: 'Upload Providers',
+      icon: Server,
     },
   ];
 

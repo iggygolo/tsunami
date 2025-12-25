@@ -166,6 +166,10 @@ export class MusicTrackPublisher {
   private buildEventContent(trackData: MusicTrackData): string {
     const contentParts: string[] = [];
     
+    if (trackData.description?.trim()) {
+      contentParts.push(trackData.description.trim());
+    }
+    
     if (trackData.lyrics?.trim()) {
       contentParts.push(`Lyrics:\n${trackData.lyrics.trim()}`);
     }

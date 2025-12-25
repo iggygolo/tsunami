@@ -48,6 +48,7 @@ export interface MusicTrackData {
   audioUrl: string;            // Direct URL to audio file
   
   // Optional metadata
+  description?: string;        // Track description
   album?: string;              // Album name
   trackNumber?: number;        // Position in album
   releaseDate?: string;        // ISO 8601 date (YYYY-MM-DD)
@@ -156,32 +157,6 @@ export interface MusicPlaylistFormData {
 }
 
 /**
- * Podcast release form data for publishing
- */
-export interface ReleaseFormData {
-  title: string;
-  description: string;
-  tags: string[];
-  imageFile?: File;
-  imageUrl?: string;
-  tracks: TrackFormData[];
-  genre?: string | null; // Custom genre string
-}
-
-/**
- * Track information
- */
-export interface TrackFormData {
-  title: string;
-  audioFile?: File;
-  audioUrl?: string;
-  audioType?: string;
-  duration?: number;
-  explicit?: boolean;
-  language?: string | null; // ISO 639-1 two-letter code or null for instrumental
-}
-
-/**
  * Music Track form data for publishing individual tracks
  */
 export interface MusicTrackFormData {
@@ -195,6 +170,7 @@ export interface MusicTrackFormData {
   audioType?: string;
   
   // Optional metadata
+  description?: string;        // Track description
   album?: string;
   trackNumber?: number;
   releaseDate?: string;        // ISO 8601 date (YYYY-MM-DD)

@@ -13,13 +13,15 @@ import { PersistentAudioPlayer } from "./components/audio/PersistentAudioPlayer"
 import { 
   StudioLayout, 
   Settings as StudioSettings, 
-  ReleaseManagement as StudioReleases, 
   Providers as StudioProviders, 
-  Analytics as StudioAnalytics,
-  CreateRelease as StudioCreateRelease,
-  EditRelease as StudioEditRelease,
-  TrackEdit as StudioTrackEdit
+  Analytics as StudioAnalytics
 } from "./pages/studio/index";
+import { TracksPage } from "./pages/studio/TracksPage";
+import { CreateTrackPage } from "./pages/studio/CreateTrackPage";
+import { EditTrackPage } from "./pages/studio/EditTrackPage";
+import { PlaylistsPage } from "./pages/studio/PlaylistsPage";
+import { CreatePlaylistPage } from "./pages/studio/CreatePlaylistPage";
+import { EditPlaylistPage } from "./pages/studio/EditPlaylistPage";
 
 export function AppRouter() {
   return (
@@ -34,13 +36,14 @@ export function AppRouter() {
         
         {/* Studio nested routes */}
         <Route path="/studio" element={<StudioLayout />}>
-          <Route index element={<StudioSettings />} />
+          <Route index element={<TracksPage />} />
+          <Route path="tracks" element={<TracksPage />} />
+          <Route path="tracks/new" element={<CreateTrackPage />} />
+          <Route path="tracks/edit/:trackId" element={<EditTrackPage />} />
+          <Route path="playlists" element={<PlaylistsPage />} />
+          <Route path="playlists/new" element={<CreatePlaylistPage />} />
+          <Route path="playlists/edit/:playlistId" element={<EditPlaylistPage />} />
           <Route path="settings" element={<StudioSettings />} />
-          <Route path="releases" element={<StudioReleases />} />
-          <Route path="releases/create" element={<StudioCreateRelease />} />
-          <Route path="releases/edit/:releaseId" element={<StudioEditRelease />} />
-          <Route path="releases/:releaseId/tracks/add" element={<StudioTrackEdit />} />
-          <Route path="releases/:releaseId/tracks/edit/:trackIndex" element={<StudioTrackEdit />} />
           <Route path="providers" element={<StudioProviders />} />
           <Route path="analytics" element={<StudioAnalytics />} />
         </Route>

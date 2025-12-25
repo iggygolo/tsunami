@@ -50,8 +50,9 @@ export function eventToMusicTrack(event: NostrEvent): MusicTrackData {
     .map(([, value]) => value)
     .filter(Boolean);
 
-  // Parse content for lyrics and credits
+  // Parse content for description, lyrics and credits
   const content = event.content || '';
+  let description: string | undefined;
   let lyrics: string | undefined;
   let credits: string | undefined;
 
@@ -63,6 +64,9 @@ export function eventToMusicTrack(event: NostrEvent): MusicTrackData {
         lyrics = trimmed.replace(/^Lyrics:\s*/, '').trim();
       } else if (trimmed.startsWith('Credits:')) {
         credits = trimmed.replace(/^Credits:\s*/, '').trim();
+      } else if (!lyrics && !credits && !description) {
+        // First section without a label is treated as description
+        description = trimmed;
       }
     }
   }
@@ -75,6 +79,7 @@ export function eventToMusicTrack(event: NostrEvent): MusicTrackData {
     audioUrl: tags.get('url')?.[0] || '',
 
     // Optional metadata
+    description,
     album: tags.get('album')?.[0],
     trackNumber: tags.get('track_number')?.[0] ? parseInt(tags.get('track_number')![0]) : undefined,
     releaseDate: tags.get('released')?.[0],

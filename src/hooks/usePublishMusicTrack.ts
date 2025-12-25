@@ -91,6 +91,7 @@ async function processTrackFormData(
     title: formData.title,
     artist: formData.artist,
     audioUrl,
+    description: formData.description,
     album: formData.album,
     trackNumber: formData.trackNumber,
     releaseDate: formData.releaseDate,
