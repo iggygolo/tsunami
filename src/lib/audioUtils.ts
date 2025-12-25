@@ -7,7 +7,7 @@ import { mimeTypeToExtension, extensionToMimeType } from './fileTypes';
 
 /**
  * Convert audio MIME type to file format string
- * @param audioType - MIME type (e.g., 'audio/mpeg', 'audio/x-wav')
+ * @param audioType - MIME type (e.g., 'audio/mpeg', 'audio/wav')
  * @returns File format string (e.g., 'mp3', 'wav')
  */
 export function audioTypeToFormat(audioType: string): string {
@@ -17,7 +17,7 @@ export function audioTypeToFormat(audioType: string): string {
 /**
  * Convert file format string to audio MIME type
  * @param format - File format string (e.g., 'mp3', 'wav')
- * @returns MIME type (e.g., 'audio/mpeg', 'audio/x-wav')
+ * @returns MIME type (e.g., 'audio/mpeg', 'audio/wav')
  */
 export function formatToAudioType(format: string): string {
   return extensionToMimeType(format);

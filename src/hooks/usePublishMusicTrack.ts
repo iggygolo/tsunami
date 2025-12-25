@@ -18,7 +18,7 @@ function inferAudioType(urlString: string, fileType?: string): string {
     if (pathname.endsWith('.mp3')) {
       return 'audio/mpeg';
     } else if (pathname.endsWith('.wav')) {
-      return 'audio/x-wav';
+      return 'audio/wav';
     } else if (pathname.endsWith('.m4a')) {
       return 'audio/mp4';
     } else if (pathname.endsWith('.ogg')) {

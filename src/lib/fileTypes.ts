@@ -10,7 +10,7 @@ export const AUDIO_MIME_TYPES = [
   'audio/mp4',
   'audio/aac',
   'audio/ogg',
-  'audio/x-wav', // WAV variant for better browser compatibility
+  'audio/wav',
   'audio/flac',
   'audio/opus',
   'audio/webm'
@@ -37,7 +37,7 @@ export const AUDIO_EXTENSIONS = [
   'm4a',    // audio/mp4
   'aac',    // audio/aac
   'ogg',    // audio/ogg
-  'wav',    // audio/x-wav
+  'wav',    // audio/wav
   'flac',   // audio/flac
   'opus',   // audio/opus
   'webm'    // audio/webm
@@ -69,7 +69,7 @@ export function mimeTypeToExtension(mimeType: string): string {
     'audio/mp4': 'm4a',
     'audio/aac': 'aac',
     'audio/ogg': 'ogg',
-    'audio/x-wav': 'wav',
+    'audio/wav': 'wav',
     'audio/flac': 'flac',
     'audio/opus': 'opus',
     'audio/webm': 'webm',
@@ -99,7 +99,7 @@ export function extensionToMimeType(extension: string): string {
     'm4a': 'audio/mp4',
     'aac': 'audio/aac',
     'ogg': 'audio/ogg',
-    'wav': 'audio/x-wav',
+    'wav': 'audio/wav',
     'flac': 'audio/flac',
     'opus': 'audio/opus',
     'webm': 'audio/webm',
@@ -153,10 +153,8 @@ export function validateAudioFile(filename: string, mimeType: string): {
       error: `Unsupported file extension: .${extension}. Supported formats: ${AUDIO_EXTENSIONS.join(', ').toUpperCase()}` 
     };
   }
-  
-  // More flexible MIME type validation for WAV files and empty MIME types
-  const isValidMimeType = isAudioMimeType(mimeType) || 
-                         (extension === 'wav' && (mimeType === '' || mimeType === 'audio/x-wav'));
+
+  const isValidMimeType = isAudioMimeType(mimeType);
   
   if (!isValidMimeType) {
     return { 

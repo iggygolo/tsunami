@@ -36,7 +36,7 @@ const MIME_TYPE_MAP: Record<string, string> = {
   '.aac': 'audio/aac',
   '.ogg': 'audio/ogg',
   '.oga': 'audio/ogg',
-  '.wav': 'audio/x-wav',
+  '.wav': 'audio/wav',
   '.flac': 'audio/flac',
   '.opus': 'audio/opus',
   '.webm': 'audio/webm',
@@ -77,7 +77,7 @@ function ensureCorrectMimeType(file: File): File {
   }
 
   // Always use the correct MIME type from our mapping, especially for WAV files
-  // This ensures WAV files always use 'audio/x-wav' regardless of browser detection
+  // This ensures WAV files always use 'audio/wav' regardless of browser detection
   if (file.type !== correctType) {
     console.log(`Correcting MIME type for ${file.name}: "${file.type}" -> "${correctType}"`);
     return new File([file], file.name, { type: correctType });
