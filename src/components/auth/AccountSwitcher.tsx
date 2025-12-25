@@ -60,7 +60,7 @@ export function AccountSwitcher({ onAddAccountClick }: AccountSwitcherProps) {
           <>
             <DropdownMenuItem asChild>
               <Link
-                to="/studio/settings"
+                to="/studio"
                 className='flex items-center gap-3 cursor-pointer p-2.5 rounded-lg hover:bg-cyan-500/10 focus:bg-cyan-500/10 hover:text-foreground focus:text-foreground transition-all duration-200'
               >
                 <Settings className='w-4 h-4 text-cyan-500' />
