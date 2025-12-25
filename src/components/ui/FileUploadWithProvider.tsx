@@ -111,8 +111,8 @@ export function FileUploadWithProvider({
               ${file || imageUrl ? 'border-green-300 bg-green-50' : ''}
             `}
           >
-            <Upload className={`w-6 h-6 mx-auto mb-2 ${disabled ? 'text-gray-300' : 'text-gray-400'}`} />
-            <p className="text-sm text-gray-500">
+            <Upload className={`w-6 h-6 mx-auto mb-2 ${disabled ? 'text-muted-foreground/30' : 'text-muted-foreground'}`} />
+            <p className="text-sm text-muted-foreground">
               {file ? (
                 <span className="text-green-600 font-medium">
                   ✓ {file.name}
@@ -126,7 +126,7 @@ export function FileUploadWithProvider({
               )}
             </p>
             {file && (
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground/70 mt-1">
                 {(file.size / 1024 / 1024).toFixed(2)} MB
               </p>
             )}

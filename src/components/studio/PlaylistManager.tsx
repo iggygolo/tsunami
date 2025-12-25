@@ -117,7 +117,7 @@ export function PlaylistManager({
   };
 
   const getPlaylistTypeIcon = (playlist: MusicPlaylistData) => {
-    if (playlist.isPrivate) return <Lock className="w-3 h-3 text-gray-500" />;
+    if (playlist.isPrivate) return <Lock className="w-3 h-3 text-muted-foreground" />;
     if (playlist.isCollaborative) return <Users className="w-3 h-3 text-blue-500" />;
     return <Eye className="w-3 h-3 text-green-500" />;
   };
@@ -132,8 +132,8 @@ export function PlaylistManager({
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load playlists</h3>
-          <p className="text-gray-600 mb-4">
+          <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load playlists</h3>
+          <p className="text-muted-foreground mb-4">
             {error instanceof Error ? error.message : 'An error occurred while loading your playlists.'}
           </p>
           <Button onClick={() => window.location.reload()}>
@@ -149,8 +149,8 @@ export function PlaylistManager({
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Playlists</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-foreground">Playlists</h1>
+          <p className="text-muted-foreground">
             {isLoading ? 'Loading...' : `${filteredPlaylists.length} playlist${filteredPlaylists.length !== 1 ? 's' : ''}`}
           </p>
         </div>
@@ -163,7 +163,7 @@ export function PlaylistManager({
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             placeholder="Search playlists by title, description, or category..."
             value={searchQuery}
@@ -202,36 +202,34 @@ export function PlaylistManager({
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-4">
-                <div className="aspect-square bg-gray-200 rounded-lg mb-4"></div>
+                <div className="aspect-square bg-muted rounded-lg mb-4"></div>
                 <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                  <div className="h-3 bg-muted rounded w-1/4"></div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       ) : filteredPlaylists.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="text-center">
-            <ListMusic className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {searchQuery ? 'No playlists found' : 'No playlists yet'}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {searchQuery 
-                ? 'Try adjusting your search terms or filters.'
-                : 'Start organizing your tracks by creating your first playlist.'
-              }
-            </p>
-            {!searchQuery && (
-              <Button onClick={handleCreatePlaylist} className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Create Your First Playlist
-              </Button>
-            )}
-          </div>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <ListMusic className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            {searchQuery ? 'No playlists found' : 'No playlists yet'}
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            {searchQuery 
+              ? 'Try adjusting your search terms or filters.'
+              : 'Start organizing your tracks by creating your first playlist.'
+            }
+          </p>
+          {!searchQuery && (
+            <Button onClick={handleCreatePlaylist} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Create Your First Playlist
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -239,7 +237,7 @@ export function PlaylistManager({
             <Card key={playlist.identifier} className="group hover:shadow-lg transition-shadow duration-200">
               <CardContent className="p-4">
                 {/* Cover Art */}
-                <div className="aspect-square bg-gray-100 rounded-lg mb-4 overflow-hidden">
+                <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden">
                   {playlist.imageUrl ? (
                     <img
                       src={playlist.imageUrl}
@@ -248,7 +246,7 @@ export function PlaylistManager({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <ListMusic className="w-12 h-12 text-gray-300" />
+                      <ListMusic className="w-12 h-12 text-muted-foreground/50" />
                     </div>
                   )}
                 </div>
@@ -257,10 +255,10 @@ export function PlaylistManager({
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate" title={playlist.title}>
+                      <h3 className="font-semibold text-foreground truncate" title={playlist.title}>
                         {playlist.title}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         {playlist.tracks.length} track{playlist.tracks.length !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -290,13 +288,13 @@ export function PlaylistManager({
 
                   {/* Description */}
                   {playlist.description && (
-                    <p className="text-xs text-gray-600 line-clamp-2" title={playlist.description}>
+                    <p className="text-xs text-muted-foreground line-clamp-2" title={playlist.description}>
                       {playlist.description}
                     </p>
                   )}
 
                   {/* Metadata */}
-                  <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {formatDate(playlist.createdAt)}
@@ -325,7 +323,7 @@ export function PlaylistManager({
 
                   {/* Stats */}
                   {(playlist.zapCount || playlist.totalSats) && (
-                    <div className="flex items-center gap-4 text-xs text-gray-500 pt-2 border-t">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
                       {playlist.zapCount && (
                         <span>⚡ {playlist.zapCount} zaps</span>
                       )}
@@ -338,18 +336,18 @@ export function PlaylistManager({
                   {/* Track Preview */}
                   {playlist.tracks.length > 0 && (
                     <div className="pt-2 border-t">
-                      <p className="text-xs text-gray-500 mb-1">Recent tracks:</p>
+                      <p className="text-xs text-muted-foreground mb-1">Recent tracks:</p>
                       <div className="space-y-1">
                         {playlist.tracks.slice(0, 2).map((track, index) => (
                           <div key={track.identifier} className="flex items-center gap-2 text-xs">
-                            <span className="text-gray-400">{index + 1}.</span>
+                            <span className="text-muted-foreground/70">{index + 1}.</span>
                             <span className="truncate" title={track.title}>
                               {track.title || 'Unknown Track'}
                             </span>
                           </div>
                         ))}
                         {playlist.tracks.length > 2 && (
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-muted-foreground/70">
                             +{playlist.tracks.length - 2} more tracks
                           </p>
                         )}

@@ -354,15 +354,15 @@ export function PlaylistForm({
                             id="image-upload"
                           />
                           <label htmlFor="image-upload" className="cursor-pointer">
-                            <div className="bg-white/90 hover:bg-white transition-colors duration-200 rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
-                              <Upload className="w-4 h-4 text-gray-700" />
-                              <span className="text-sm font-medium text-gray-700">Change Image</span>
+                            <div className="bg-background/90 hover:bg-background transition-colors duration-200 rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
+                              <Upload className="w-4 h-4 text-foreground" />
+                              <span className="text-sm font-medium text-foreground">Change Image</span>
                             </div>
                           </label>
                         </div>
                       </div>
                     ) : (
-                      <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 hover:bg-gray-50/30 transition-all duration-200 cursor-pointer group">
+                      <div className="w-full h-full border-2 border-dashed border-muted-foreground/30 rounded-lg flex flex-col items-center justify-center hover:border-muted-foreground/50 hover:bg-muted/30 transition-all duration-200 cursor-pointer group">
                         <input
                           type="file"
                           accept="image/*"
@@ -371,11 +371,11 @@ export function PlaylistForm({
                           id="image-upload"
                         />
                         <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center justify-center w-full h-full">
-                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-gray-50 transition-colors duration-200">
-                            <Upload className="w-8 h-8 text-gray-600 group-hover:text-gray-700 transition-colors duration-200" />
+                          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4 group-hover:bg-muted/80 transition-colors duration-200">
+                            <Upload className="w-8 h-8 text-muted-foreground group-hover:text-foreground transition-colors duration-200" />
                           </div>
-                          <p className="text-gray-400 font-medium mb-1 group-hover:text-gray-900 transition-colors duration-200">Upload Cover</p>
-                          <p className="text-sm text-gray-500 group-hover:text-gray-800 transition-colors duration-200">Click to select image</p>
+                          <p className="text-muted-foreground font-medium mb-1 group-hover:text-foreground transition-colors duration-200">Upload Cover</p>
+                          <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-200">Click to select image</p>
                         </label>
                       </div>
                     )}
@@ -483,14 +483,14 @@ export function PlaylistForm({
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10"
                       />
-                      <Music className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Music className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     </div>
 
                     <div className="border rounded-lg max-h-96 overflow-y-auto">
                       {tracksLoading ? (
-                        <div className="p-4 text-center text-gray-500">Loading tracks...</div>
+                        <div className="p-4 text-center text-muted-foreground">Loading tracks...</div>
                       ) : filteredTracks.length === 0 ? (
-                        <div className="p-4 text-center text-gray-500">
+                        <div className="p-4 text-center text-muted-foreground">
                           {searchQuery ? 'No tracks found' : 'No tracks available'}
                         </div>
                       ) : (
@@ -498,11 +498,11 @@ export function PlaylistForm({
                           {filteredTracks.map((track) => (
                             <div
                               key={track.identifier}
-                              className="p-3 hover:bg-gray-50 cursor-pointer flex items-center justify-between"
+                              className="p-3 hover:bg-muted cursor-pointer flex items-center justify-between"
                               onClick={() => addTrackToPlaylist(track)}
                             >
                               <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                                <div className="w-10 h-10 bg-muted rounded flex items-center justify-center flex-shrink-0">
                                   {track.imageUrl ? (
                                     <img
                                       src={track.imageUrl}
@@ -510,14 +510,14 @@ export function PlaylistForm({
                                       className="w-full h-full object-cover rounded"
                                     />
                                   ) : (
-                                    <Music className="w-4 h-4 text-gray-400" />
+                                    <Music className="w-4 h-4 text-muted-foreground" />
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-sm truncate">{track.title}</p>
-                                  <p className="text-xs text-gray-500 truncate">{track.artist}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
                                   {track.album && (
-                                    <p className="text-xs text-gray-400 truncate">{track.album}</p>
+                                    <p className="text-xs text-muted-foreground/70 truncate">{track.album}</p>
                                   )}
                                 </div>
                               </div>
@@ -544,7 +544,7 @@ export function PlaylistForm({
 
                     <div className="border rounded-lg max-h-96 overflow-y-auto">
                       {selectedTracks.length === 0 ? (
-                        <div className="p-4 text-center text-gray-500">
+                        <div className="p-4 text-center text-muted-foreground">
                           No tracks added yet. Select tracks from the left to add them to your playlist.
                         </div>
                       ) : (
@@ -555,7 +555,7 @@ export function PlaylistForm({
                               className={`p-3 flex items-center gap-3 transition-colors ${
                                 draggedIndex === index ? 'opacity-50' : ''
                               } ${
-                                dragOverIndex === index ? 'bg-blue-50 border-blue-200' : ''
+                                dragOverIndex === index ? 'bg-primary/10 border-primary/20' : ''
                               }`}
                               draggable
                               onDragStart={(e) => handleDragStart(e, index)}
@@ -565,14 +565,14 @@ export function PlaylistForm({
                               onDragEnd={handleDragEnd}
                             >
                               <div className="cursor-move" title="Drag to reorder">
-                                <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                                <GripVertical className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                               </div>
-                              <div className="text-sm text-gray-500 w-6">
+                              <div className="text-sm text-muted-foreground w-6">
                                 {index + 1}.
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-sm truncate">{track.title}</p>
-                                <p className="text-xs text-gray-500 truncate">{track.artist}</p>
+                                <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
                               </div>
                               <Button
                                 type="button"

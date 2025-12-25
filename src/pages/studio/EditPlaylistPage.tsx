@@ -77,7 +77,7 @@ export function EditPlaylistPage() {
           <div className="flex items-center justify-center py-12">
             <div className="flex items-center gap-3">
               <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="text-gray-600">Loading playlist...</span>
+              <span className="text-muted-foreground">Loading playlist...</span>
             </div>
           </div>
         </div>
@@ -104,8 +104,8 @@ export function EditPlaylistPage() {
 
           <div className="flex flex-col items-center justify-center py-12">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Playlist not found</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="text-lg font-semibold text-foreground mb-2">Playlist not found</h3>
+              <p className="text-muted-foreground mb-4">
                 {error instanceof Error ? error.message : 'The playlist you\'re looking for doesn\'t exist or couldn\'t be loaded.'}
               </p>
               <Button onClick={() => navigate('/studio/playlists')}>
@@ -147,8 +147,8 @@ export function EditPlaylistPage() {
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Playlist</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Edit Playlist</h1>
+          <p className="text-muted-foreground">
             Update your playlist details and track selection.
           </p>
         </div>

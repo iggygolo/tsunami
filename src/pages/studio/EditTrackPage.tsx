@@ -50,7 +50,7 @@ export function EditTrackPage() {
         <Card>
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-semibold mb-4">Invalid Track ID</h2>
-            <p className="text-gray-600 mb-4">The track ID is missing from the URL.</p>
+            <p className="text-muted-foreground mb-4">The track ID is missing from the URL.</p>
             <Button onClick={() => navigate('/studio/tracks')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Tracks
@@ -68,7 +68,7 @@ export function EditTrackPage() {
           <CardContent className="p-6 text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Loading Track</h2>
-            <p className="text-gray-600">Please wait while we load your track...</p>
+            <p className="text-muted-foreground">Please wait while we load your track...</p>
           </CardContent>
         </Card>
       </div>
@@ -81,7 +81,7 @@ export function EditTrackPage() {
         <Card>
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-semibold mb-4">Track Not Found</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               {error instanceof Error ? error.message : 'The requested track could not be found.'}
             </p>
             <Button onClick={() => navigate('/studio/tracks')}>

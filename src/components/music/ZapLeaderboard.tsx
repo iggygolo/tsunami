@@ -31,7 +31,7 @@ function LeaderboardEntry({ entry, rank }: LeaderboardEntryProps) {
       case 1:
         return <Crown className="w-5 h-5 text-yellow-400" />;
       case 2:
-        return <Crown className="w-5 h-5 text-gray-300" />;
+        return <Crown className="w-5 h-5 text-muted-foreground" />;
       case 3:
         return <Crown className="w-5 h-5 text-amber-600" />;
       default:

@@ -132,8 +132,8 @@ export function TrackLibrary({
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load tracks</h3>
-          <p className="text-gray-600 mb-4">
+          <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load tracks</h3>
+          <p className="text-muted-foreground mb-4">
             {error instanceof Error ? error.message : 'An error occurred while loading your tracks.'}
           </p>
           <Button onClick={() => window.location.reload()}>
@@ -150,7 +150,7 @@ export function TrackLibrary({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Track Library</h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             {isLoading ? 'Loading...' : `${filteredTracks.length} track${filteredTracks.length !== 1 ? 's' : ''}`}
           </p>
         </div>
@@ -163,7 +163,7 @@ export function TrackLibrary({
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             placeholder="Search tracks by title, artist, album, or genre..."
             value={searchQuery}
@@ -202,11 +202,11 @@ export function TrackLibrary({
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-4">
-                <div className="aspect-square bg-gray-200 rounded-lg mb-4"></div>
+                <div className="aspect-square bg-muted rounded-lg mb-4"></div>
                 <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                  <div className="h-3 bg-muted rounded w-1/4"></div>
                 </div>
               </CardContent>
             </Card>
@@ -214,11 +214,11 @@ export function TrackLibrary({
         </div>
       ) : filteredTracks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Music className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">
+          <Music className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">
             {searchQuery ? 'No tracks found' : 'No tracks yet'}
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             {searchQuery 
               ? 'Try adjusting your search terms or filters.'
               : 'Start building your music library by creating your first track.'
@@ -237,7 +237,7 @@ export function TrackLibrary({
             <Card key={track.identifier} className="group hover:shadow-lg transition-shadow duration-200">
               <CardContent className="p-4">
                 {/* Cover Art */}
-                <div className="aspect-square bg-gray-100 rounded-lg mb-4 overflow-hidden">
+                <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden">
                   {track.imageUrl ? (
                     <img
                       src={track.imageUrl}
@@ -246,7 +246,7 @@ export function TrackLibrary({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Music className="w-12 h-12 text-gray-300" />
+                      <Music className="w-12 h-12 text-muted-foreground/50" />
                     </div>
                   )}
                 </div>
@@ -255,10 +255,10 @@ export function TrackLibrary({
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate" title={track.title}>
+                      <h3 className="font-semibold text-foreground truncate" title={track.title}>
                         {track.title}
                       </h3>
-                      <p className="text-sm text-gray-600 truncate" title={track.artist}>
+                      <p className="text-sm text-muted-foreground truncate" title={track.artist}>
                         {track.artist}
                       </p>
                     </div>
@@ -292,20 +292,20 @@ export function TrackLibrary({
 
                   {/* Album */}
                   {track.album && (
-                    <p className="text-xs text-gray-500 truncate" title={track.album}>
+                    <p className="text-xs text-muted-foreground truncate" title={track.album}>
                       {track.album}
                     </p>
                   )}
 
                   {/* Description */}
                   {track.description && (
-                    <p className="text-xs text-gray-600 line-clamp-2" title={track.description}>
+                    <p className="text-xs text-muted-foreground line-clamp-2" title={track.description}>
                       {track.description}
                     </p>
                   )}
 
                   {/* Metadata */}
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {formatDuration(track.duration)}
@@ -334,7 +334,7 @@ export function TrackLibrary({
 
                   {/* Stats */}
                   {(track.zapCount || track.totalSats) && (
-                    <div className="flex items-center gap-4 text-xs text-gray-500 pt-2 border-t">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
                       {track.zapCount && (
                         <span>⚡ {track.zapCount} zaps</span>
                       )}

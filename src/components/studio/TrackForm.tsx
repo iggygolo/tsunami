@@ -400,15 +400,15 @@ export function TrackForm({
                             id="image-upload"
                           />
                           <label htmlFor="image-upload" className="cursor-pointer">
-                            <div className="bg-white/90 hover:bg-white transition-colors duration-200 rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
-                              <Upload className="w-4 h-4 text-gray-700" />
-                              <span className="text-sm font-medium text-gray-700">Change Image</span>
+                            <div className="bg-background/90 hover:bg-background transition-colors duration-200 rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
+                              <Upload className="w-4 h-4 text-foreground" />
+                              <span className="text-sm font-medium text-foreground">Change Image</span>
                             </div>
                           </label>
                         </div>
                       </div>
                     ) : (
-                      <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 hover:bg-gray-50/30 transition-all duration-200 cursor-pointer group">
+                      <div className="w-full h-full border-2 border-dashed border-muted-foreground/30 rounded-lg flex flex-col items-center justify-center hover:border-muted-foreground/50 hover:bg-muted/30 transition-all duration-200 cursor-pointer group">
                         <input
                           type="file"
                           accept="image/*"
@@ -417,11 +417,11 @@ export function TrackForm({
                           id="image-upload"
                         />
                         <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center justify-center w-full h-full">
-                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-gray-50 transition-colors duration-200">
-                            <Upload className="w-8 h-8 text-gray-600 group-hover:text-gray-700 transition-colors duration-200" />
+                          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4 group-hover:bg-muted/80 transition-colors duration-200">
+                            <Upload className="w-8 h-8 text-muted-foreground group-hover:text-foreground transition-colors duration-200" />
                           </div>
-                          <p className="text-gray-400 font-medium mb-1 group-hover:text-gray-900 transition-colors duration-200">Upload Cover Art</p>
-                          <p className="text-sm text-gray-500 group-hover:text-gray-800 transition-colors duration-200">Click to select image</p>
+                          <p className="text-muted-foreground font-medium mb-1 group-hover:text-foreground transition-colors duration-200">Upload Cover Art</p>
+                          <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-200">Click to select image</p>
                         </label>
                       </div>
                     )}
@@ -452,7 +452,7 @@ export function TrackForm({
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 hover:bg-gray-50/30 transition-all duration-200">
+                    <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 hover:border-muted-foreground/50 hover:bg-muted/30 transition-all duration-200">
                       <input
                         type="file"
                         accept={SUPPORTED_AUDIO_MIMES.join(',')}
@@ -461,13 +461,13 @@ export function TrackForm({
                         id="audio-upload"
                       />
                       <label htmlFor="audio-upload" className="cursor-pointer flex flex-col items-center">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-                          <Upload className="w-6 h-6 text-gray-600" />
+                        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center mb-3">
+                          <Upload className="w-6 h-6 text-muted-foreground" />
                         </div>
-                        <p className="text-gray-700 font-medium mb-1">
+                        <p className="text-foreground font-medium mb-1">
                           {audioFile ? audioFile.name : 'Upload Audio File'}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           {audioFile 
                             ? `${(audioFile.size / 1024 / 1024).toFixed(1)}MB`
                             : `Supports: ${SUPPORTED_AUDIO_FORMATS.join(', ').toUpperCase()}`
@@ -647,7 +647,7 @@ export function TrackForm({
                   />
 
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-gray-400 hover:bg-gray-50/30 transition-all duration-200">
+                    <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-4 hover:border-muted-foreground/50 hover:bg-muted/30 transition-all duration-200">
                       <input
                         type="file"
                         accept="video/*"
@@ -656,14 +656,14 @@ export function TrackForm({
                         id="video-upload"
                       />
                       <label htmlFor="video-upload" className="cursor-pointer flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-                          <Upload className="w-4 h-4 text-gray-600" />
+                        <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                          <Upload className="w-4 h-4 text-muted-foreground" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-700">
+                          <p className="text-sm font-medium text-foreground">
                             {videoFile ? videoFile.name : 'Upload Video File'}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             {videoFile 
                               ? `${(videoFile.size / 1024 / 1024).toFixed(1)}MB`
                               : 'Optional music video'
