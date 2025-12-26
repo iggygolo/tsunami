@@ -5,6 +5,7 @@ import { fetchNostrDataBundle } from './shared/nostr-data-fetcher.js';
 import { generateRSSFeed, type RSSConfig } from '../src/lib/rssCore.js';
 import { playlistToRelease } from '../src/lib/eventConversions.js';
 import type { MusicRelease, MusicTrackData, MusicPlaylistData } from '../src/types/music.js';
+import type { SimpleArtistInfo } from '../src/lib/artistUtils.js';
 
 // Load environment variables
 config();
@@ -188,10 +189,19 @@ async function generateIndividualReleaseCaches(
 async function generateRSSFile(
   tracks: MusicTrackData[], 
   playlists: MusicPlaylistData[], 
+  artists: SimpleArtistInfo[],
   config: RSSConfig, 
   distDir: string
 ): Promise<void> {
   console.log('📝 Generating RSS feed...');
+  console.log(`🎨 RSS will include content from ${artists.length} artists:`);
+  
+  // Log artist information for transparency
+  artists.forEach(artist => {
+    const artistTracks = tracks.filter(t => t.artistPubkey === artist.pubkey);
+    const artistPlaylists = playlists.filter(p => p.authorPubkey === artist.pubkey);
+    console.log(`   • ${artist.name || artist.npub.slice(0, 12) + '...'}: ${artistTracks.length} tracks, ${artistPlaylists.length} playlists`);
+  });
 
   try {
     const rssContent = generateRSSFeed(
@@ -205,6 +215,7 @@ async function generateRSSFile(
 
     console.log(`✅ RSS feed generated: ${rssPath}`);
     console.log(`📊 Feed size: ${(rssContent.length / 1024).toFixed(2)} KB`);
+    console.log(`🎵 Total content: ${tracks.length} tracks, ${playlists.length} releases from ${artists.length} artists`);
   } catch (error) {
     console.error('❌ Failed to generate RSS feed:', error);
     throw error;
@@ -340,6 +351,12 @@ async function generateHealthChecks(
   console.log('📝 Generating health check files...');
 
   try {
+    // Get unique artist count
+    const uniqueArtists = new Set([
+      ...tracks.map(t => t.artistPubkey),
+      ...playlists.map(p => p.authorPubkey)
+    ]).size;
+
     // RSS health check
     const rssHealthData = {
       status: 'ok',
@@ -347,6 +364,7 @@ async function generateHealthChecks(
       generatedAt: new Date().toISOString(),
       trackCount: tracks.length,
       releaseCount: playlists.length,
+      artistCount: uniqueArtists,
       environment: 'production',
       accessible: true,
       dataSource: {
@@ -355,7 +373,7 @@ async function generateHealthChecks(
         releases: playlists.length > 0 ? 'nostr' : 'none',
         relays: relayUrls
       },
-      artist: process.env.VITE_ARTIST_NPUB
+      configuredArtist: process.env.VITE_ARTIST_NPUB
     };
 
     const rssHealthPath = path.join(distDir, 'rss-health.json');
@@ -370,13 +388,14 @@ async function generateHealthChecks(
       },
       generatedAt: new Date().toISOString(),
       cacheCount: releases.length,
+      artistCount: uniqueArtists,
       environment: 'production',
       accessible: true,
       dataSource: {
         releases: releases.length > 0 ? 'nostr' : 'fallback',
         relays: relayUrls
       },
-      artist: process.env.VITE_ARTIST_NPUB
+      configuredArtist: process.env.VITE_ARTIST_NPUB
     };
 
     const cacheHealthPath = path.join(distDir, 'cache-health.json');
@@ -434,7 +453,7 @@ export async function buildStaticData(): Promise<void> {
     // Generate all outputs in parallel
     console.log('📝 Generating all outputs...');
     await Promise.all([
-      generateRSSFile(dataBundle.tracks, dataBundle.playlists, finalConfig, distDir),
+      generateRSSFile(dataBundle.tracks, dataBundle.playlists, dataBundle.artists, finalConfig, distDir),
       generateReleaseCache(releases, dataBundle.relaysUsed, distDir),
       generateLatestReleaseCache(releases, dataBundle.relaysUsed, distDir),
       generateIndividualReleaseCaches(releases, {
@@ -457,16 +476,26 @@ export async function buildStaticData(): Promise<void> {
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`\n🎉 Static data build completed successfully in ${totalTime}s!`);
     console.log(`📊 Generated:`);
-    console.log(`   • RSS feed with ${dataBundle.tracks.length} tracks and ${dataBundle.playlists.length} releases`);
+    console.log(`   • RSS feed with ${dataBundle.tracks.length} tracks and ${dataBundle.playlists.length} releases from ${dataBundle.artists.length} artists`);
     console.log(`   • Release cache with ${releases.length} releases`);
     console.log(`   • Latest release cache`);
     console.log(`   • Individual release caches (top 20)`);
     console.log(`   • Health check files`);
-    console.log(`� Files a vailable in: dist/`);
+    console.log(`📁 Files available in: dist/`);
     console.log(`📡 RSS feed: /rss.xml`);
     console.log(`🗂️  Cache files: /data/releases.json, /data/latest-release.json`);
     console.log(`📄 Individual caches: /data/releases/[id].json`);
     console.log(`🏥 Health checks: /rss-health.json, /cache-health.json`);
+    
+    // Log artist summary
+    if (dataBundle.artists.length > 0) {
+      console.log(`\n🎨 Artists included in RSS feed:`);
+      dataBundle.artists.forEach(artist => {
+        const artistTracks = dataBundle.tracks.filter(t => t.artistPubkey === artist.pubkey);
+        const artistPlaylists = dataBundle.playlists.filter(p => p.authorPubkey === artist.pubkey);
+        console.log(`   • ${artist.name || artist.npub.slice(0, 12) + '...'}: ${artistTracks.length} tracks, ${artistPlaylists.length} playlists`);
+      });
+    }
 
   } catch (error) {
     console.error('❌ Error building static data:', error);

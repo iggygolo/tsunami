@@ -8,6 +8,12 @@ import {
   eventToMusicTrack, 
   eventToMusicPlaylist 
 } from '../../src/lib/eventConversions.js';
+import { 
+  updateArtistCache, 
+  batchUpdateArtistCache, 
+  extractArtistPubkeys,
+  type SimpleArtistInfo 
+} from '../../src/lib/artistUtils.js';
 
 // Load environment variables
 config();
@@ -26,6 +32,7 @@ export interface NostrDataBundle {
   tracks: MusicTrackData[];
   playlists: MusicPlaylistData[];
   metadata: Record<string, unknown> | null;
+  artists: SimpleArtistInfo[]; // Add artist information
   relaysUsed: string[];
   fetchedAt: Date;
   artistPubkey: string;
@@ -52,6 +59,101 @@ export function getArtistPubkeyHex(artistNpub?: string): string {
   }
 }
 
+/**
+ * Fetch artist profiles from multiple Nostr relays
+ */
+async function fetchArtistProfilesMultiRelay(
+  relays: Array<{url: string, relay: NRelay1}>, 
+  artistPubkeys: string[]
+): Promise<SimpleArtistInfo[]> {
+  if (artistPubkeys.length === 0) {
+    console.log('📡 No artist pubkeys to fetch profiles for');
+    return [];
+  }
+
+  console.log(`📡 Fetching profiles for ${artistPubkeys.length} artists from Nostr...`);
+
+  const relayPromises = relays.map(async ({url, relay}) => {
+    try {
+      const events = await Promise.race([
+        relay.query([{
+          kinds: [0], // Profile metadata events
+          authors: artistPubkeys,
+          limit: artistPubkeys.length * 2 // Allow for multiple versions per artist
+        }]),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`Profiles query timeout for ${url}`)), 8000)
+        )
+      ]) as NostrEvent[];
+
+      if (events.length > 0) {
+        console.log(`✅ Found ${events.length} profile events from ${url}`);
+        return events;
+      }
+      return [];
+    } catch (error) {
+      console.log(`⚠️ Failed to fetch profiles from ${url}:`, (error as Error).message);
+      return [];
+    }
+  });
+
+  const allResults = await Promise.allSettled(relayPromises);
+  const allEvents: NostrEvent[] = [];
+
+  allResults.forEach((result) => {
+    if (result.status === 'fulfilled') {
+      allEvents.push(...result.value);
+    }
+  });
+
+  // Deduplicate by pubkey (keep latest)
+  const profilesByPubkey = new Map<string, NostrEvent>();
+  
+  allEvents.forEach(event => {
+    const existing = profilesByPubkey.get(event.pubkey);
+    if (!existing || event.created_at > existing.created_at) {
+      profilesByPubkey.set(event.pubkey, event);
+    }
+  });
+
+  const uniqueEvents = Array.from(profilesByPubkey.values());
+  console.log(`✅ Found ${uniqueEvents.length} unique artist profiles`);
+
+  // Convert to artist info and update cache
+  const artistProfiles: Array<{ pubkey: string; profile: any }> = [];
+  
+  uniqueEvents.forEach(event => {
+    try {
+      const profile = JSON.parse(event.content);
+      artistProfiles.push({ pubkey: event.pubkey, profile });
+    } catch (error) {
+      console.warn(`⚠️ Failed to parse profile for ${event.pubkey}:`, error);
+      // Create basic info for artists without valid profiles
+      artistProfiles.push({ 
+        pubkey: event.pubkey, 
+        profile: { name: `Artist ${event.pubkey.slice(0, 8)}...` } 
+      });
+    }
+  });
+
+  // Update artist cache and return info
+  const artistInfos = batchUpdateArtistCache(artistProfiles);
+  
+  // Add any missing artists (those without profiles)
+  const foundPubkeys = new Set(artistInfos.map(info => info.pubkey));
+  artistPubkeys.forEach(pubkey => {
+    if (!foundPubkeys.has(pubkey)) {
+      // Create basic info for artists without profiles
+      const basicInfo = updateArtistCache(pubkey, { 
+        name: `Artist ${pubkey.slice(0, 8)}...` 
+      });
+      artistInfos.push(basicInfo);
+    }
+  });
+
+  console.log(`✅ Processed ${artistInfos.length} artist profiles`);
+  return artistInfos;
+}
 /**
  * Fetch metadata from multiple Nostr relays
  */
@@ -259,7 +361,7 @@ export async function fetchNostrDataBundle(
 
   // Get artist configuration
   const artistPubkeyHex = getArtistPubkeyHex(customArtistNpub);
-  console.log(`👤 Artist: ${customArtistNpub || process.env.VITE_ARTIST_NPUB}`);
+  console.log(`👤 Configured Artist: ${customArtistNpub || process.env.VITE_ARTIST_NPUB}`);
 
   // Default relay URLs
   const relayUrls = customRelayUrls || [
@@ -275,19 +377,32 @@ export async function fetchNostrDataBundle(
   let metadata: Record<string, unknown> | null = null;
   let tracks: MusicTrackData[] = [];
   let playlists: MusicPlaylistData[] = [];
+  let artists: SimpleArtistInfo[] = [];
 
   try {
-    // Fetch all data in parallel for efficiency
-    console.log('📡 Fetching all data types in parallel...');
-    const [fetchedMetadata, fetchedTracks, fetchedPlaylists] = await Promise.all([
-      fetchArtistMetadataMultiRelay(relays, artistPubkeyHex), // Still need artist for metadata
+    // Fetch tracks and playlists first
+    console.log('📡 Fetching tracks and playlists from all artists...');
+    const [fetchedTracks, fetchedPlaylists] = await Promise.all([
       fetchMusicTracksMultiRelay(relays), // No artist filter
       fetchMusicPlaylistsMultiRelay(relays) // No artist filter
     ]);
 
-    metadata = fetchedMetadata;
     tracks = fetchedTracks;
     playlists = fetchedPlaylists;
+
+    // Extract unique artist pubkeys from all content
+    const allEvents = [...tracks, ...playlists];
+    const uniqueArtistPubkeys = extractArtistPubkeys(allEvents);
+    console.log(`🎨 Found ${uniqueArtistPubkeys.length} unique artists in content`);
+
+    // Fetch artist profiles and configured artist metadata in parallel
+    const [fetchedArtists, fetchedMetadata] = await Promise.all([
+      fetchArtistProfilesMultiRelay(relays, uniqueArtistPubkeys),
+      fetchArtistMetadataMultiRelay(relays, artistPubkeyHex) // Still need configured artist metadata
+    ]);
+
+    artists = fetchedArtists;
+    metadata = fetchedMetadata;
 
   } finally {
     // Close relay connections
@@ -303,12 +418,17 @@ export async function fetchNostrDataBundle(
 
   const fetchTime = ((Date.now() - startTime) / 1000).toFixed(2);
   console.log(`\n✅ Multi-artist Nostr data fetch completed in ${fetchTime}s`);
-  console.log(`📊 Results: ${tracks.length} tracks, ${playlists.length} playlists from multiple artists, ${metadata ? 'metadata found' : 'no metadata'}`);
+  console.log(`📊 Results:`);
+  console.log(`   • ${tracks.length} tracks from ${artists.length} artists`);
+  console.log(`   • ${playlists.length} playlists from multiple artists`);
+  console.log(`   • ${artists.length} artist profiles fetched`);
+  console.log(`   • ${metadata ? 'Configured artist metadata found' : 'No configured artist metadata'}`);
 
   return {
     tracks,
     playlists,
     metadata,
+    artists,
     relaysUsed: relayUrls,
     fetchedAt: new Date(),
     artistPubkey: artistPubkeyHex,

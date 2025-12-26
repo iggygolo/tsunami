@@ -128,6 +128,9 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig): RSSIte
     ? `${baseUrl}/track/${encodeMusicTrackAsNaddr(track.artistPubkey, track.identifier)}`
     : `${baseUrl}/track/${track.identifier}`;
 
+  // Use the actual track artist name, not the configured artist
+  const trackArtist = track.artist || track.artistName || config.music.artistName;
+
   // Generate a meaningful description with fallbacks
   let description = '';
   if (track.lyrics && track.lyrics.trim()) {
@@ -137,8 +140,8 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig): RSSIte
   } else {
     // Create a default description with available metadata
     const parts = [] as string[];
-    if (track.artist && track.artist !== config.music.artistName) {
-      parts.push(`Performed by ${track.artist}`);
+    if (trackArtist && trackArtist !== config.music.artistName) {
+      parts.push(`Performed by ${trackArtist}`);
     }
     if (track.genres && track.genres.length > 0) {
       parts.push(`Genre: ${track.genres.join(', ')}`);
@@ -151,7 +154,7 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig): RSSIte
     
     description = parts.length > 0 
       ? `${track.title} - ${parts.join(' • ')}` 
-      : `${track.title} by ${config.music.artistName}`;
+      : `${track.title} by ${trackArtist}`;
   }
 
   return {
@@ -160,7 +163,7 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig): RSSIte
     link,
     guid: link, // Use the track link as GUID - it's a proper URI
     pubDate: track.createdAt ? track.createdAt.toUTCString() : new Date().toUTCString(),
-    author: track.artist,
+    author: trackArtist, // Use actual track artist
     category: track.genres || [],
     enclosure: {
       url: track.audioUrl,
@@ -195,7 +198,8 @@ export function releaseToRSSItems(
     if (!trackData) {
       // Create a placeholder item if track data is not found
       const trackTitle = trackRef.title || `Track ${index + 1}`;
-      const description = `${trackTitle} from the release "${release.title}" by ${trackRef.artist || config.music.artistName}. This track is part of a ${release.tracks.length}-track release.`;
+      const trackArtist = trackRef.artist || config.music.artistName;
+      const description = `${trackTitle} from the release "${release.title}" by ${trackArtist}. This track is part of a ${release.tracks.length}-track release.`;
       const placeholderLink = `${baseUrl}/release/${release.identifier}`;
       
       return {
@@ -204,7 +208,7 @@ export function releaseToRSSItems(
         link: placeholderLink,
         guid: placeholderLink, // Use the link as GUID
         pubDate: release.createdAt ? release.createdAt.toUTCString() : new Date().toUTCString(),
-        author: trackRef.artist || config.music.artistName,
+        author: trackArtist, // Use actual track artist from reference
         category: release.categories || [],
         enclosure: {
           url: '',
