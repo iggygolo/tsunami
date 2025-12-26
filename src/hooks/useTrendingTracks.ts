@@ -46,9 +46,9 @@ function getRecencyScore(createdAt?: Date): number {
  * Hook to fetch trending tracks with calculated scores and filtering
  */
 export function useTrendingTracks(options: TrendingTracksOptions = {}) {
-  const { data: tracksWithStats, isLoading, error } = useMusicTracksWithStats();
+  const { data: tracksWithStats, isLoading: isLoadingTracks, error: tracksError } = useMusicTracksWithStats();
 
-  return useQuery({
+  const trendingQuery = useQuery({
     queryKey: ['trending-tracks', options, tracksWithStats?.length],
     queryFn: async () => {
       if (!tracksWithStats || tracksWithStats.length === 0) {
@@ -81,4 +81,14 @@ export function useTrendingTracks(options: TrendingTracksOptions = {}) {
     staleTime: 1000 * 60 * 10, // 10 minutes (as per requirement 5.2)
     gcTime: 1000 * 60 * 30, // 30 minutes
   });
+
+  // Combine loading states - show loading if either query is loading
+  const isLoading = isLoadingTracks || trendingQuery.isLoading;
+  const error = tracksError || trendingQuery.error;
+
+  return {
+    data: trendingQuery.data,
+    isLoading,
+    error
+  };
 }

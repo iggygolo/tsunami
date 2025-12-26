@@ -25,9 +25,7 @@ interface TrendingTrackCardProps {
 }
 
 function TrendingTrackCard({ 
-  track, 
-  index, 
-  allTracks, 
+  track,
   isCurrentTrack, 
   isPlaying, 
   isLoading, 
@@ -196,13 +194,8 @@ export function TrendingTracksSection({
 
   const { playQueue, play, pause, state } = useUniversalAudioPlayer();
 
-  // Don't render section if no tracks and not loading (Requirement 8.3)
-  if (!isLoading && (!trendingTracks || trendingTracks.length === 0)) {
-    return null;
-  }
-
-  // Show section even with fewer than 4 tracks (Requirement 8.4)
-  const hasMinimumTracks = trendingTracks && trendingTracks.length > 0;
+  // Don't render section if no tracks and not loading - but show empty state instead
+  const hasData = trendingTracks && trendingTracks.length > 0;
 
   // Convert trending tracks to universal format for playback
   const universalTracks = trendingTracks?.map(trendingTrack => 
@@ -250,8 +243,9 @@ export function TrendingTracksSection({
         </Button>
       </div>
 
-      {/* Tracks Grid */}
+      {/* Content - Clear state separation */}
       {isLoading ? (
+        /* Loading State - Show skeletons */
         /* Loading Skeleton - Responsive */
         <div>
           {/* Mobile skeleton */}
@@ -304,12 +298,15 @@ export function TrendingTracksSection({
         <div className="py-12 px-8 text-center rounded-xl bg-card/30 border border-border/50 backdrop-blur-xl">
           <div className="max-w-sm mx-auto space-y-4">
             <Music className="w-12 h-12 text-muted-foreground/50 mx-auto" />
-            <p className="text-muted-foreground">
-              Unable to load trending tracks. Please try again later.
-            </p>
+            <div className="space-y-2">
+              <h3 className="text-foreground font-semibold">Unable to Load Trending Tracks</h3>
+              <p className="text-muted-foreground text-sm">
+                There was an error loading trending tracks. Please try again later.
+              </p>
+            </div>
           </div>
         </div>
-      ) : hasMinimumTracks ? (
+      ) : hasData ? (
         /* Tracks Grid - Responsive Layout (Requirements 6.1, 6.2, 6.3, 6.4) */
         <div className="relative">
           {/* Mobile: 2 tracks per row with horizontal scroll */}
@@ -375,7 +372,20 @@ export function TrendingTracksSection({
             </div>
           </div>
         </div>
-      ) : null}
+      ) : (
+        /* Empty State - No Trending Tracks */
+        <div className="py-12 px-8 text-center rounded-xl bg-card/30 border border-border/50 backdrop-blur-xl">
+          <div className="max-w-sm mx-auto space-y-4">
+            <Music className="w-12 h-12 text-muted-foreground/50 mx-auto" />
+            <div className="space-y-2">
+              <h3 className="text-foreground font-semibold">No Trending Tracks Yet</h3>
+              <p className="text-muted-foreground text-sm">
+                Check back soon as artists share new music and tracks start trending.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
