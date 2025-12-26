@@ -49,8 +49,8 @@ export function Navigation({ className }: NavigationProps) {
     )}>
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Left: Hamburger Menu (mobile/tablet) + Logo */}
-          <div className="flex items-center space-x-3">
+          {/* Left: Hamburger Menu (mobile/tablet) + Logo + Main Navigation */}
+          <div className="flex items-center space-x-6">
             {/* Hamburger Menu Button - Only on mobile/tablet */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
@@ -249,64 +249,64 @@ export function Navigation({ className }: NavigationProps) {
                 )}
               </div>
             </Link>
+
+            {/* Main Navigation (desktop only) - Now positioned next to logo */}
+            <nav className="hidden lg:flex items-center space-x-1">
+              {isStudioMode ? (
+                // Studio Navigation
+                <>
+                  {studioNavItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.path);
+
+                    return (
+                      <Button
+                        key={item.path}
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className={cn(
+                          "relative focus-ring transition-all duration-200 hover:bg-primary/10",
+                          active && "bg-primary/20 text-primary border border-primary/30 shadow-sm"
+                        )}
+                      >
+                        <Link to={item.path} className="flex items-center space-x-2">
+                          <Icon className="w-4 h-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </Button>
+                    );
+                  })}
+                </>
+              ) : (
+                // Regular Navigation
+                <>
+                  {mainNavItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.path);
+
+                    return (
+                      <Button
+                        key={item.path}
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className={cn(
+                          "relative focus-ring transition-all duration-200 hover:bg-cyan-500/10",
+                          active && "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40"
+                        )}
+                      >
+                        <Link to={item.path} className="flex items-center space-x-2">
+                          <Icon className="w-4 h-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </Button>
+                    );
+                  })}
+                </>
+              )}
+            </nav>
           </div>
-
-          {/* Center: Main Navigation or Studio Navigation (desktop only) */}
-          <nav className="hidden lg:flex items-center space-x-1">
-            {isStudioMode ? (
-              // Studio Navigation
-              <>
-                {studioNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.path);
-
-                  return (
-                    <Button
-                      key={item.path}
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                      className={cn(
-                        "relative focus-ring transition-all duration-200 hover:bg-primary/10",
-                        active && "bg-primary/20 text-primary border border-primary/30 shadow-sm"
-                      )}
-                    >
-                      <Link to={item.path} className="flex items-center space-x-2">
-                        <Icon className="w-4 h-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </Button>
-                  );
-                })}
-              </>
-            ) : (
-              // Regular Navigation
-              <>
-                {mainNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.path);
-
-                  return (
-                    <Button
-                      key={item.path}
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                      className={cn(
-                        "relative focus-ring transition-all duration-200 hover:bg-cyan-500/10",
-                        active && "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 backdrop-blur-sm border border-cyan-500/30 text-cyan-100 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40"
-                      )}
-                    >
-                      <Link to={item.path} className="flex items-center space-x-2">
-                        <Icon className="w-4 h-4" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </Button>
-                  );
-                })}
-              </>
-            )}
-          </nav>
 
           {/* Right: Secondary Nav + Artist Studio + Login */}
           <div className="flex items-center space-x-2">
