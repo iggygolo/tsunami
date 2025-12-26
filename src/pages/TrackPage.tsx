@@ -1,18 +1,25 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
-import { ArrowLeft, Music } from 'lucide-react';
+import { ArrowLeft, Music, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { NostrNavigationError } from '@/components/NostrNavigationError';
+import { MusicItemHeader } from '@/components/music/MusicItemHeader';
 import { useTrackResolver } from '@/hooks/useEventResolver';
 import { usePlaylistResolution } from '@/hooks/usePlaylistResolution';
+import { useFormatDuration } from '@/hooks/useFormatDuration';
+import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import { eventToMusicTrack } from '@/lib/eventConversions';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import NotFound from './NotFound';
+import type { NostrEvent } from '@nostrify/nostrify';
 
 export function TrackPage() {
   const params = useParams<{ naddr: string }>();
   const navigate = useNavigate();
+  const { formatDuration } = useFormatDuration();
+  const { playQueue } = useUniversalAudioPlayer();
 
   // Only handle naddr format
   if (!params.naddr) {
@@ -49,6 +56,54 @@ export function TrackPage() {
   });
 
   const isLoading = isLoadingTrack || isLoadingPlaylists;
+
+  // Create NostrEvent for interactions
+  const trackEvent: NostrEvent | null = track ? {
+    id: track.eventId || `track-${Date.now()}`,
+    pubkey: track.artistPubkey || pubkey,
+    created_at: Math.floor((track.createdAt?.getTime() || Date.now()) / 1000),
+    kind: MUSIC_KINDS.MUSIC_TRACK,
+    tags: [
+      ['d', track.identifier],
+      ['title', track.title],
+      ['artist', track.artist],
+      ['audio', track.audioUrl],
+      ...(track.album ? [['album', track.album]] : []),
+      ...(track.imageUrl ? [['image', track.imageUrl]] : []),
+      ...(track.genres ? track.genres.map(genre => ['t', genre]) : []),
+    ],
+    content: track.lyrics || track.credits || '',
+    sig: ''
+  } : null;
+
+  // Handle track playback
+  const handleTrackPlay = () => {
+    if (!track || !track.audioUrl) return;
+    
+    const universalTrack = musicTrackToUniversal(track, {
+      type: 'profile',
+      artistPubkey: track.artistPubkey
+    });
+    
+    playQueue([universalTrack], 0, track.title);
+  };
+
+  // Placeholder interaction handlers
+  const handleLike = () => {
+    console.log('Like track:', track?.title);
+  };
+
+  const handleShare = () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({
+        title: track?.title,
+        text: `Check out "${track?.title}" by ${track?.artist}`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -168,62 +223,36 @@ export function TrackPage() {
           </Button>
 
           {/* Track Header */}
-          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 mb-6">
-            {/* Track Artwork */}
-            <div className="flex-shrink-0">
-              <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden shadow-2xl">
-                {track.imageUrl ? (
-                  <img 
-                    src={track.imageUrl} 
-                    alt={track.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <Music className="text-4xl sm:text-6xl text-white" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Track Info */}
-            <div className="flex-1 space-y-3 relative z-10 w-full max-w-lg text-center lg:text-left">
-              <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg mb-2">
-                  {track.title}
-                </h1>
-                <p className="text-white/90 text-sm drop-shadow-md mb-2">
-                  {track.artist}
-                </p>
-                {track.description && (
-                  <p className="text-white/80 drop-shadow-md text-xs mb-2">
-                    {track.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Track Metadata */}
-              <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center lg:justify-start">
-                {track.album && (
-                  <span className="text-white/70 text-xs">
-                    Album: {track.album}
-                  </span>
-                )}
-                {track.duration && (
-                  <span className="text-white/70 text-xs">
-                    {Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}
-                  </span>
-                )}
-              </div>
-
-              {/* Playlist Count */}
-              {playlists.length > 0 && (
-                <div className="text-white/60 text-xs">
-                  Appears in {playlists.length} playlist{playlists.length !== 1 ? 's' : ''}
-                </div>
-              )}
-            </div>
-          </div>
+          <MusicItemHeader
+            title={track.title}
+            artistName={track.artist}
+            artistPubkey={track.artistPubkey}
+            description={track.description}
+            imageUrl={track.imageUrl}
+            genres={track.genres}
+            metadata={[
+              ...(track.album ? [{ text: `Album: ${track.album}` }] : []),
+              ...(track.duration ? [{ 
+                icon: <Clock className="w-3 h-3" />, 
+                text: formatDuration(track.duration) 
+              }] : []),
+              ...(playlists.length > 0 ? [{ 
+                text: `Appears in ${playlists.length} playlist${playlists.length !== 1 ? 's' : ''}` 
+              }] : [])
+            ]}
+            playback={track.audioUrl ? {
+              isPlaying: false, // TODO: Connect to actual playback state
+              isLoading: false,
+              hasPlayableTracks: true,
+              onPlay: handleTrackPlay
+            } : undefined}
+            interactions={trackEvent ? {
+              event: trackEvent,
+              hasUserLiked: false, // TODO: Connect to actual like state
+              onLike: handleLike,
+              onShare: handleShare
+            } : undefined}
+          />
 
           {/* Playlists Section */}
           {playlists.length > 0 && (

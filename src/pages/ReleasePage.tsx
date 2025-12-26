@@ -1,20 +1,18 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSeoMeta } from '@unhead/react';
-import { ArrowLeft, Play, Pause, Heart, Share, MessageCircle, Music, Zap } from 'lucide-react';
+import { ArrowLeft, Music, Zap, Heart, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { GlassTabs, GlassTabsList, GlassTabsTrigger, GlassTabsContent } from '@/components/ui/GlassTabs';
 import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { NostrNavigationError } from '@/components/NostrNavigationError';
+import { MusicItemHeader } from '@/components/music/MusicItemHeader';
 import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
-import { ZapDialog } from '@/components/ZapDialog';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { ReactionsSection } from '@/components/music/ReactionsSection';
 import { UniversalTrackList } from '@/components/music/UniversalTrackList';
-import { ArtistLinkWithImage } from '@/components/music/ArtistLink';
 import { useReleaseResolver } from '@/hooks/useEventResolver';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
@@ -23,10 +21,8 @@ import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { eventToMusicPlaylist, playlistToRelease } from '@/lib/eventConversions';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
-import { cn } from '@/lib/utils';
 import NotFound from './NotFound';
 import type { NostrEvent } from '@nostrify/nostrify';
-import type { MusicPlaylistData } from '@/types/music';
 
 export function ReleasePage() {
   const params = useParams<{ pubkey: string; identifier: string }>();
@@ -260,147 +256,40 @@ export function ReleasePage() {
             Back
           </Button>
 
-          {/* Release Header - ProfilePage Style */}
-          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 mb-6">
-            {/* Large Release Artwork */}
-            <div className="flex-shrink-0">
-              <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden shadow-2xl relative group">
-                {release.imageUrl ? (
-                  <img 
-                    src={release.imageUrl} 
-                    alt={release.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <Music className="text-4xl sm:text-6xl text-white" />
-                  </div>
-                )}
-                
-                {/* Play/Pause Overlay */}
-                {trackPlayback?.hasPlayableTracks && (
-                  <button
-                    onClick={() => trackPlayback?.handleReleasePlay()}
-                    disabled={trackPlayback?.isReleaseLoading}
-                    className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 disabled:cursor-not-allowed"
-                  >
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
-                      {trackPlayback?.isReleasePlaying ? (
-                        <Pause className="w-6 h-6 sm:w-8 sm:h-8 text-black" fill="currentColor" />
-                      ) : (
-                        <Play className="w-6 h-6 sm:w-8 sm:h-8 text-black ml-1" fill="currentColor" />
-                      )}
-                    </div>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Release Info */}
-            <div className="flex-1 space-y-3 relative z-10 w-full max-w-lg text-center lg:text-left">
-              <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg mb-2">{release.title}</h1>
-                {release.artistPubkey ? (
-                  <div className="mb-2">
-                    <ArtistLinkWithImage 
-                      pubkey={release.artistPubkey}
-                      className="text-white/90 hover:text-white transition-colors drop-shadow-md text-sm"
-                    />
-                  </div>
-                ) : (
-                  <p className="text-white/90 text-sm drop-shadow-md mb-2">{musicConfig.music.artistName}</p>
-                )}
-                {release.description && (
-                  <p className="text-white/80 drop-shadow-md text-xs mb-2">{release.description}</p>
-                )}
-              </div>
-
-              {/* Genre, Duration, and Track Count */}
-              <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center lg:justify-start">
-                {release.tags && release.tags.length > 0 && (
-                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs">
-                    {release.tags[0]}
-                  </Badge>
-                )}
-                {release.tracks && release.tracks.length > 0 && (
-                  <span className="text-white/70 flex items-center gap-1 text-xs">
-                    <Music className="w-3 h-3" />
-                    {release.tracks.length} track{release.tracks.length !== 1 ? 's' : ''}
-                  </span>
-                )}
-                {totalDuration > 0 && (
-                  <span className="text-white/70 text-xs">
-                    {formatDuration(totalDuration)}
-                  </span>
-                )}
-              </div>
-
-              {/* Stats */}
-              <div className="flex items-center gap-4 justify-center lg:justify-start">
-                <div className="text-white">
-                  <div className="text-xl font-bold drop-shadow-lg">{interactionCounts?.totalSats || 0}</div>
-                  <div className="text-white/80 text-xs drop-shadow-md">sats</div>
-                </div>
-                <div className="text-white/60 text-xs drop-shadow-md">
-                  {interactionCounts?.zaps || 0} zaps
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2 justify-center lg:justify-start">
-                {/* Play/Pause Button */}
-                <Button
-                  size="sm"
-                  onClick={() => trackPlayback?.handleReleasePlay()}
-                  disabled={!trackPlayback?.hasPlayableTracks || trackPlayback?.isReleaseLoading}
-                  className="bg-white text-black hover:bg-white/90 rounded-full w-10 h-10 p-0"
-                >
-                  {trackPlayback?.isReleasePlaying ? (
-                    <Pause className="w-4 h-4" fill="currentColor" />
-                  ) : (
-                    <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
-                  )}
-                </Button>
-
-                {/* Zap Button */}
-                {releaseEvent && (
-                  <ZapDialog target={releaseEvent}>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-black/40 hover:border-white/30 hover:text-yellow-400 transition-all duration-200 shadow-lg"
-                      title="Zap this release"
-                    >
-                      <Zap className="w-4 h-4" />
-                    </Button>
-                  </ZapDialog>
-                )}
-
-                {/* Like Button */}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleLike}
-                  className={cn(
-                    "w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-black/40 hover:border-white/30 transition-all duration-200 shadow-lg",
-                    hasUserLiked && "text-red-500"
-                  )}
-                >
-                  <Heart className={cn("w-4 h-4", hasUserLiked && "fill-current")} />
-                </Button>
-
-                {/* Share Button */}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleShare}
-                  className="w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-black/40 hover:border-white/30 transition-all duration-200 shadow-lg"
-                >
-                  <Share className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
+          {/* Release Header */}
+          <MusicItemHeader
+            title={release.title}
+            artistPubkey={release.artistPubkey}
+            artistName={musicConfig.music.artistName}
+            description={release.description}
+            imageUrl={release.imageUrl}
+            genres={release.tags}
+            metadata={[
+              ...(release.tracks && release.tracks.length > 0 ? [{
+                icon: <Music className="w-3 h-3" />,
+                text: `${release.tracks.length} track${release.tracks.length !== 1 ? 's' : ''}`
+              }] : []),
+              ...(totalDuration > 0 ? [{
+                text: formatDuration(totalDuration)
+              }] : [])
+            ]}
+            stats={{
+              sats: interactionCounts?.totalSats || 0,
+              zaps: interactionCounts?.zaps || 0
+            }}
+            playback={trackPlayback?.hasPlayableTracks ? {
+              isPlaying: trackPlayback.isReleasePlaying,
+              isLoading: trackPlayback.isReleaseLoading,
+              hasPlayableTracks: trackPlayback.hasPlayableTracks,
+              onPlay: trackPlayback.handleReleasePlay
+            } : undefined}
+            interactions={releaseEvent ? {
+              event: releaseEvent,
+              hasUserLiked: hasUserLiked,
+              onLike: handleLike,
+              onShare: handleShare
+            } : undefined}
+          />
 
           {/* Tab Pills - Moved outside the flex container */}
           <div className="w-full max-w-full">
