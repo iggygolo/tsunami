@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/useToast';
 import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { ReleaseList } from '@/components/music/ReleaseList';
+import { TrendingTracksSection } from '@/components/music/TrendingTracksSection';
 import { FeaturedArtistsSection } from '@/components/community/FeaturedArtists';
 import { TsunamiStats } from '@/components/community/TsunamiStats';
 import { useLatestReleaseCache, useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
@@ -56,6 +57,11 @@ const Index = () => {
 
   // Check if the latest release is playable
   const isLatestReleasePlayable = trackPlayback?.hasPlayableTracks || false;
+
+  // Extract track IDs from latest release to exclude from trending (Requirement 3.5)
+  const excludeTrackIds = latestRelease?.tracks
+    ?.map(track => track.eventId)
+    .filter(Boolean) as string[] || [];
 
   useSeoMeta({
     title: 'Tsunami - Decentralized Music Discovery',
@@ -248,6 +254,12 @@ const Index = () => {
 
       <div className="container mx-auto px-4 py-4">
         <div className="max-w-6xl mx-auto space-y-12">
+          {/* Trending Tracks Section - Positioned between hero and recent releases (Requirement 8.1) */}
+          <TrendingTracksSection 
+            excludeTrackIds={excludeTrackIds}
+            limit={6}
+          />
+
           {/* Recent Releases */}
           <section>
             <div className="flex items-center justify-between mb-6">
