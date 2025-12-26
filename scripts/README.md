@@ -56,16 +56,16 @@ dist/
 4. **Error Resilience**: Fallback mechanisms for failed requests
 5. **Health Monitoring**: Built-in health checks for all endpoints
 
-### Environment Variables
+### Configuration
 
-The build script reads configuration from environment variables:
+The build script now works as a multi-artist platform without requiring environment variables:
 
-- `VITE_ARTIST_NPUB` - Artist's Nostr public key (required)
-- `VITE_ARTIST_NAME` - Artist display name
-- `VITE_MUSIC_DESCRIPTION` - Podcast/feed description
-- `VITE_ARTIST_IMAGE` - Artist image URL
-- `VITE_ARTIST_WEBSITE` - Artist website URL
-- And many more (see `.env.example`)
+- **No Environment Variables Required**: The system works with sensible defaults
+- **Multi-Artist Support**: Fetches data for all artists found on the configured relays
+- **Automatic Discovery**: Discovers artists and their content dynamically from Nostr
+- **Fallback Handling**: Graceful degradation when specific artist data is unavailable
+
+For development, you can optionally override the artist filter by setting `VITE_ARTIST_NPUB`, but this is not required for production builds.
 
 ### Legacy Scripts
 

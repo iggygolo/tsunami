@@ -39,7 +39,6 @@ export function Navigation({ className }: NavigationProps) {
     { path: '/studio/playlists', label: 'Playlists', icon: ListMusic },
     { path: '/studio/settings', label: 'Artist', icon: Settings },
     { path: '/studio/analytics', label: 'Analytics', icon: Zap },
-    { path: '/studio/providers', label: 'Providers', icon: Server },
   ];
 
   return (

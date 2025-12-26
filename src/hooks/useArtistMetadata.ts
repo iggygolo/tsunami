@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { MUSIC_CONFIG, MUSIC_KINDS } from '@/lib/musicConfig';
+import { MUSIC_CONFIG, MUSIC_KINDS, PLATFORM_CONFIG, getDefaultArtistConfig } from '@/lib/musicConfig';
 
 interface ArtistMetadata {
   artist: string;
@@ -9,6 +9,7 @@ interface ArtistMetadata {
   website: string;
   copyright: string;
   rssEnabled?: boolean; // Optional for backward compatibility
+  blossomServers?: string[]; // Custom Blossom servers for this artist
   value: {
     amount: number;
     currency: string;
@@ -92,8 +93,9 @@ export function useArtistMetadata(artistPubkey?: string) {
 
           return {
             ...metadata,
-            artist: metadata.artist || MUSIC_CONFIG.music.artistName,
+            artist: metadata.artist || PLATFORM_CONFIG.defaults.artistName,
             rssEnabled: metadata.rssEnabled || false, // Default to false if not present
+            blossomServers: metadata.blossomServers || PLATFORM_CONFIG.upload.blossomServers, // Use platform defaults if not configured
             updated_at: latestEvent.created_at
           };
         }
@@ -101,25 +103,33 @@ export function useArtistMetadata(artistPubkey?: string) {
         console.warn('Failed to fetch podcast metadata from Nostr, using fallback:', error);
       }
 
-      // Fallback to config (includes environment variables)
+      // Fallback to platform defaults
+      const defaultConfig = getDefaultArtistConfig();
       return {
-        description: MUSIC_CONFIG.music.description,
-        artist: MUSIC_CONFIG.music.artistName,
-        image: MUSIC_CONFIG.music.image,
-        website: MUSIC_CONFIG.music.website,
-        copyright: MUSIC_CONFIG.music.copyright,
-        rssEnabled: false, // Default to disabled
+        description: defaultConfig.description,
+        artist: defaultConfig.artistName,
+        image: defaultConfig.image,
+        website: defaultConfig.website,
+        copyright: defaultConfig.copyright,
+        rssEnabled: defaultConfig.rssEnabled,
+        blossomServers: defaultConfig.blossomServers,
         value: {
-          amount: MUSIC_CONFIG.music.value.amount,
-          currency: MUSIC_CONFIG.music.value.currency,
-          recipients: MUSIC_CONFIG.music.value.recipients || []
+          amount: defaultConfig.value.amount,
+          currency: defaultConfig.value.currency,
+          recipients: defaultConfig.value.recipients
         },
-        guid: MUSIC_CONFIG.music.guid,
-        medium: MUSIC_CONFIG.music.medium,
-        publisher: MUSIC_CONFIG.music.publisher,
-        location: MUSIC_CONFIG.music.location,
-        person: MUSIC_CONFIG.music.person,
-        license: MUSIC_CONFIG.music.license,
+        guid: MUSIC_CONFIG.music.guid, // Keep for backward compatibility
+        medium: defaultConfig.medium,
+        publisher: defaultConfig.artistName,
+        location: undefined,
+        person: [
+          {
+            name: defaultConfig.artistName,
+            role: "artist",
+            group: "cast"
+          }
+        ],
+        license: defaultConfig.license,
         updated_at: 0
       };
     },

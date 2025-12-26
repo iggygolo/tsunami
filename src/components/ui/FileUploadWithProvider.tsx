@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 import { Upload } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useUploadConfig } from '@/hooks/useUploadConfig';
@@ -14,8 +14,6 @@ interface FileUploadWithProviderProps {
   file?: File | null;
   /** Callback when file is selected */
   onFileSelect: (file: File | null) => void;
-  /** Callback when provider is changed */
-  onProviderChange?: (provider: 'blossom' | 'vercel') => void;
   /** Disabled state */
   disabled?: boolean;
   /** Additional CSS classes */
@@ -35,7 +33,6 @@ export function FileUploadWithProvider({
   imageUrl
 }: FileUploadWithProviderProps) {
   const { config } = useUploadConfig();
-  const [selectedProvider] = useState<'blossom' | 'vercel'>(config.defaultProvider);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,15 +40,9 @@ export function FileUploadWithProvider({
     
     // Basic file validation
     if (selectedFile) {
-      // Check file size (100MB limit)
-      if (selectedFile.size > 100 * 1024 * 1024) {
+      // Check file size
+      if (selectedFile.size > config.maxFileSize) {
         console.error('File too large:', selectedFile.size);
-        return;
-      }
-      
-      // Check if provider is enabled
-      if (!isProviderEnabled(selectedProvider)) {
-        console.error('Selected provider is disabled:', selectedProvider);
         return;
       }
     }
@@ -61,31 +52,16 @@ export function FileUploadWithProvider({
 
   const handleUploadClick = () => {
     if (disabled) return;
-    
-    // Check if any provider is enabled
-    if (!config.vercelEnabled && !config.blossomEnabled) {
-      console.error('No upload providers are enabled');
-      return;
-    }
-    
     fileInputRef.current?.click();
-  };
-
-  const getProviderName = (provider: 'blossom' | 'vercel') => {
-    return provider === 'vercel' ? 'Vercel Blob' : 'Blossom Servers';
-  };
-
-  const isProviderEnabled = (provider: 'blossom' | 'vercel') => {
-    return provider === 'vercel' ? config.vercelEnabled : config.blossomEnabled;
   };
 
   return (
     <div className={`space-y-3 ${className}`}>
       {/* Label with Provider Reference */}
       <div className="flex items-center space-x-2">
-        <Label className="text-sm text-white">{label}</Label>
-        <span className="text-xs text-muted-foreground/70">
-          via {getProviderName(selectedProvider)}
+        <Label className="text-sm text-foreground">{label}</Label>
+        <span className="text-xs text-muted-foreground">
+          via Blossom Servers
         </span>
       </div>
 
@@ -108,17 +84,17 @@ export function FileUploadWithProvider({
                 ? 'border-border bg-muted/30 cursor-not-allowed' 
                 : 'border-muted-foreground/30 hover:border-muted-foreground/50 hover:bg-muted/30'
               }
-              ${file || imageUrl ? 'border-green-300 bg-green-50' : ''}
+              ${file || imageUrl ? 'border-green-300 bg-green-50/10' : ''}
             `}
           >
             <Upload className={`w-6 h-6 mx-auto mb-2 ${disabled ? 'text-muted-foreground/30' : 'text-muted-foreground'}`} />
             <p className="text-sm text-muted-foreground">
               {file ? (
-                <span className="text-green-600 font-medium">
+                <span className="text-green-400 font-medium">
                   ✓ {file.name}
                 </span>
               ) : imageUrl ? (
-                <span className="text-green-600 font-medium">
+                <span className="text-green-400 font-medium">
                   ✓ File uploaded
                 </span>
               ) : (
@@ -140,15 +116,20 @@ export function FileUploadWithProvider({
               <img 
                 src={imageUrl || (file ? URL.createObjectURL(file) : '')} 
                 alt="Preview" 
-                className="w-full h-full rounded object-cover border"
+                className="w-full h-full rounded object-cover border border-border"
               />
             ) : (
-              <div className="w-full h-full rounded border bg-muted flex items-center justify-center">
+              <div className="w-full h-full rounded border border-border bg-muted flex items-center justify-center">
                 <Upload className="w-6 h-6 text-muted-foreground" />
               </div>
             )}
           </div>
         )}
+      </div>
+      
+      {/* Server Info */}
+      <div className="text-xs text-muted-foreground">
+        Using servers: {config.blossomServers.join(', ')}
       </div>
     </div>
   );

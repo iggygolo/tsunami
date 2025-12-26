@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Save, Loader2, Music, Rss, Copy, Check } from 'lucide-react';
+import { Save, Loader2, Music, Rss, Copy, Check, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,12 +13,9 @@ import { useToast } from '@/hooks/useToast';
 import { useArtistMetadata } from '@/hooks/useArtistMetadata';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { useRSSFeedGenerator } from '@/hooks/useRSSFeedGenerator';
-import { useUploadConfig } from '@/hooks/useUploadConfig';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { MUSIC_CONFIG, MUSIC_KINDS } from '@/lib/musicConfig';
+import { MUSIC_KINDS, PLATFORM_CONFIG } from '@/lib/musicConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
-import { FileUploadWithProvider } from '@/components/ui/FileUploadWithProvider';
-import { useUploadFileWithOptions } from '@/hooks/useUploadFile';
 
 interface ArtistFormData {
   artistName: string;
@@ -27,6 +24,7 @@ interface ArtistFormData {
   website: string;
   copyright: string;
   rssEnabled: boolean;
+  blossomServers: string[]; // Custom Blossom servers
   value: {
     amount: number;
     currency: string;
@@ -69,8 +67,6 @@ const ArtistSettings = () => {
   const { data: artistMetadata, isLoading: isLoadingMetadata } = useArtistMetadata(user?.pubkey);
   const musicConfig = useMusicConfig();
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
-  const { mutateAsync: uploadFileWithOptions } = useUploadFileWithOptions();
-  const { config } = useUploadConfig();
 
   // Redirect if not authenticated
   if (!user) {
@@ -86,9 +82,6 @@ const ArtistSettings = () => {
   }
 
   const [isSaving, setIsSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUploadProvider, setImageUploadProvider] = useState<'blossom' | 'vercel'>(config.defaultProvider);
   const [copied, setCopied] = useState(false);
 
   const [formData, setFormData] = useState<ArtistFormData>({
@@ -98,6 +91,7 @@ const ArtistSettings = () => {
     website: website || '',
     copyright: `© ${new Date().getFullYear()} ${name || 'Artist'}`,
     rssEnabled: false, // Default to disabled as per requirements
+    blossomServers: PLATFORM_CONFIG.upload.blossomServers, // Use platform defaults
     value: {
       amount: 100,
       currency: 'sats',
@@ -129,6 +123,7 @@ const ArtistSettings = () => {
         website: artistMetadata.website,
         copyright: artistMetadata.copyright,
         rssEnabled: artistMetadata.rssEnabled || false, // Default to false if not present
+        blossomServers: artistMetadata.blossomServers || PLATFORM_CONFIG.upload.blossomServers,
         value: artistMetadata.value || {
           amount: 100,
           currency: 'sats',
@@ -188,29 +183,34 @@ const ArtistSettings = () => {
     });
   };
 
-  // Handle file uploads for podcast image
-  const uploadCoverImage = async (file: File, provider?: 'blossom' | 'vercel') => {
-    setIsUploading(true);
+  // Blossom server management functions
+  const validateBlossomServerUrl = (url: string): boolean => {
     try {
-      const result = await uploadFileWithOptions({ 
-        file, 
-        options: { provider: provider || imageUploadProvider } 
-      });
-      handleInputChange('image', result.url);
-      toast({
-        title: 'Success',
-        description: `Cover image uploaded successfully via ${result.provider}`,
-      });
-    } catch (error) {
-      console.error('Failed to upload cover image:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to upload cover image. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
+      const parsedUrl = new URL(url);
+      return parsedUrl.protocol === 'https:' && parsedUrl.hostname.length > 0;
+    } catch {
+      return false;
     }
+  };
+
+  const handleBlossomServerAdd = () => {
+    const newServer = '';
+    handleInputChange('blossomServers', [...formData.blossomServers, newServer]);
+  };
+
+  const handleBlossomServerUpdate = (index: number, url: string) => {
+    const updatedServers = [...formData.blossomServers];
+    updatedServers[index] = url;
+    handleInputChange('blossomServers', updatedServers);
+  };
+
+  const handleBlossomServerRemove = (index: number) => {
+    const updatedServers = formData.blossomServers.filter((_, i) => i !== index);
+    handleInputChange('blossomServers', updatedServers);
+  };
+
+  const resetToDefaultServers = () => {
+    handleInputChange('blossomServers', PLATFORM_CONFIG.upload.blossomServers);
   };
 
   // Handle copy to clipboard
@@ -236,6 +236,23 @@ const ArtistSettings = () => {
   };
 
   const handleSave = async () => {
+    // Validate Blossom servers before saving
+    const invalidServers = formData.blossomServers.filter(server => 
+      server.trim() !== '' && !validateBlossomServerUrl(server)
+    );
+    
+    if (invalidServers.length > 0) {
+      toast({
+        title: "Invalid Blossom servers",
+        description: "Please ensure all Blossom server URLs are valid HTTPS URLs.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Filter out empty server URLs
+    const validServers = formData.blossomServers.filter(server => server.trim() !== '');
+    
     setIsSaving(true);
     try {
       const artistMetadataEvent = {
@@ -247,6 +264,7 @@ const ArtistSettings = () => {
           website: formData.website,
           copyright: formData.copyright,
           rssEnabled: formData.rssEnabled,
+          blossomServers: validServers.length > 0 ? validServers : PLATFORM_CONFIG.upload.blossomServers,
           value: formData.value,
           guid: formData.guid,
           publisher: formData.publisher,
@@ -334,21 +352,18 @@ const ArtistSettings = () => {
               </div>
 
               <div>
-                <FileUploadWithProvider
-                  accept="image/*"
-                  label="Artist Image"
-                  placeholder="Click to select an artist image"
-                  file={imageFile}
-                  onFileSelect={(file) => {
-                    setImageFile(file);
-                    if (file) {
-                      uploadCoverImage(file, imageUploadProvider);
-                    }
-                  }}
-                  onProviderChange={setImageUploadProvider}
-                  disabled={isUploading}
-                  imageUrl={formData.image}
-                />
+                <Label htmlFor="artist-image">Artist Image</Label>
+                <div className="space-y-2">
+                  <Input
+                    id="artist-image"
+                    value={formData.image}
+                    onChange={(e) => handleInputChange('image', e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter a direct URL to your artist image, or upload files using your configured Blossom servers.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -428,6 +443,62 @@ const ArtistSettings = () => {
                 </Button>
               </div>
             )}
+          </div>
+
+          {/* Blossom Server Configuration */}
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <Label className="text-base font-semibold">Blossom Servers</Label>
+              <p className="text-sm text-muted-foreground">
+                Configure your preferred Blossom servers for file uploads. These servers will be used for storing your music files and images.
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+              {formData.blossomServers.map((server, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input
+                    value={server}
+                    onChange={(e) => handleBlossomServerUpdate(index, e.target.value)}
+                    placeholder="https://blossom.example.com"
+                    className={`flex-1 ${server.trim() !== '' && !validateBlossomServerUrl(server) ? 'border-destructive' : ''}`}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleBlossomServerRemove(index)}
+                    className="h-10 w-10 p-0 text-muted-foreground hover:text-destructive"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBlossomServerAdd}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Server
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetToDefaultServers}
+                  className="text-muted-foreground"
+                >
+                  Reset to Defaults
+                </Button>
+              </div>
+              
+              <div className="text-xs text-muted-foreground">
+                Default servers: {PLATFORM_CONFIG.upload.blossomServers.join(', ')}
+              </div>
+            </div>
           </div>
 
           {/* Podcast 2.0 Advanced Settings */}
@@ -549,8 +620,8 @@ const ArtistSettings = () => {
           </div>
 
           <div className="flex justify-end">  
-            <Button onClick={handleSave} disabled={isSaving || isUploading}>
-              {(isSaving || isUploading) ? (
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Save className="w-4 h-4 mr-2" />

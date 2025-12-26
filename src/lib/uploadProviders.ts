@@ -1,9 +1,10 @@
 /**
  * Upload provider interfaces and implementations
+ * Simplified for Blossom-only uploads
  */
 
 export interface UploadProvider {
-  name: 'blossom' | 'vercel';
+  name: 'blossom';
   uploadFile(file: File): Promise<string>;
   validateFile(file: File): boolean;
   getMaxFileSize(): number;
@@ -12,7 +13,7 @@ export interface UploadProvider {
 
 export interface UploadResponse {
   url: string;
-  provider: 'blossom' | 'vercel';
+  provider: 'blossom';
   size: number;
   type: string;
   filename: string;
@@ -39,164 +40,6 @@ export class UploadProviderError extends Error {
   }
 }
 
-import { upload } from '@vercel/blob/client';
-import { 
-  AUDIO_MIME_TYPES, 
-  VIDEO_MIME_TYPES, 
-  IMAGE_MIME_TYPES 
-} from '@/lib/fileTypes';
-
-// File validation constants
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
-const ALLOWED_MIME_TYPES = [
-  // Audio (from centralized config)
-  ...AUDIO_MIME_TYPES,
-  // Video (from centralized config)
-  ...VIDEO_MIME_TYPES,
-  // Images (from centralized config)
-  ...IMAGE_MIME_TYPES,
-  // Documents
-  'application/json',
-  'text/srt',
-  'text/vtt',
-];
-
-export class VercelUploadProvider implements UploadProvider {
-  name: 'vercel' = 'vercel';
-  
-  constructor(
-    private userPubkey: string,
-    private _signer: any // Prefix with underscore to indicate intentionally unused
-  ) {}
-
-  async uploadFile(file: File): Promise<string> {
-    console.log('🚀 VercelUploadProvider.uploadFile called - NO SIGNING SHOULD HAPPEN');
-    
-    // Validate file first
-    if (!this.validateFile(file)) {
-      throw new UploadProviderError(
-        'INVALID_FILE',
-        `File validation failed for ${file.name}`,
-        'vercel',
-        { filename: file.name, size: file.size, type: file.type },
-        false
-      );
-    }
-
-    try {
-      console.log('Calling Vercel upload API directly...');
-      
-      // Upload file using Vercel Blob client directly (no Nostr auth needed)
-      const blob = await upload(file.name, file, {
-        access: 'public',
-        handleUploadUrl: '/api/upload',
-        clientPayload: JSON.stringify({
-          filename: file.name,
-          contentType: file.type,
-          size: file.size,
-          userPubkey: this.userPubkey,
-          // No signature needed for Vercel uploads
-          timestamp: Date.now()
-        })
-      });
-
-      console.log('Vercel upload completed:', blob.url);
-      return blob.url;
-    } catch (error) {
-      console.error('Vercel upload failed:', error);
-      
-      if (error instanceof Error) {
-        // Check for specific error types
-        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-          throw new UploadProviderError(
-            'AUTHENTICATION_FAILED',
-            'Authentication failed - check Vercel token',
-            'vercel',
-            { originalError: error.message },
-            false
-          );
-        }
-        
-        if (error.message.includes('400') || error.message.includes('Bad Request')) {
-          throw new UploadProviderError(
-            'INVALID_REQUEST',
-            'Invalid request - check file parameters',
-            'vercel',
-            { originalError: error.message },
-            false
-          );
-        }
-        
-        if (error.message.includes('413') || error.message.includes('too large')) {
-          throw new UploadProviderError(
-            'FILE_TOO_LARGE',
-            'File size exceeds maximum allowed size',
-            'vercel',
-            { fileSize: file.size, maxSize: this.getMaxFileSize() },
-            false
-          );
-        }
-        
-        // Network or temporary errors
-        if (error.message.includes('timeout') || error.message.includes('network')) {
-          throw new UploadProviderError(
-            'NETWORK_ERROR',
-            'Network error during upload',
-            'vercel',
-            { originalError: error.message },
-            true
-          );
-        }
-      }
-      
-      // Generic upload error
-      throw new UploadProviderError(
-        'UPLOAD_FAILED',
-        `Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'vercel',
-        { originalError: error },
-        true
-      );
-    }
-  }
-
-  validateFile(file: File): boolean {
-    console.log('🔍 Vercel validateFile called for:', file.name);
-    console.log('File type:', file.type);
-    console.log('File size:', file.size);
-    console.log('Supported types:', this.getSupportedTypes());
-    console.log('Type supported:', this.getSupportedTypes().includes(file.type));
-    
-    // Check file size
-    if (file.size > this.getMaxFileSize() || file.size <= 0) {
-      console.log('❌ File size validation failed');
-      return false;
-    }
-    
-    // Check MIME type
-    if (!this.getSupportedTypes().includes(file.type)) {
-      console.log('❌ MIME type validation failed');
-      return false;
-    }
-    
-    // Check filename
-    if (!file.name || file.name.trim().length === 0) {
-      console.log('❌ Filename validation failed');
-      return false;
-    }
-    
-    console.log('✅ File validation passed');
-    return true;
-  }
-
-  getMaxFileSize(): number {
-    return MAX_FILE_SIZE;
-  }
-
-  getSupportedTypes(): string[] {
-    return [...ALLOWED_MIME_TYPES];
-  }
-}
 import { BlossomUploader } from '@nostrify/nostrify/uploaders';
 
 export class BlossomUploadProvider implements UploadProvider {
@@ -305,9 +148,10 @@ export class BlossomUploadProvider implements UploadProvider {
     return ['*/*'];
   }
 }
+
 export interface UploadConfig {
-  defaultProvider: 'blossom' | 'vercel';
-  vercelEnabled: boolean;
+  defaultProvider: 'blossom';
+  blossomServers: string[];
   blossomEnabled: boolean;
   maxFileSize: number;
   allowedTypes: string[];
@@ -315,35 +159,26 @@ export interface UploadConfig {
 
 export class UploadProviderFactory {
   static createProvider(
-    providerType: 'blossom' | 'vercel',
     userPubkey: string,
     signer: any, // Use any for now to avoid strict typing issues
-    blossomServers?: string[]
+    blossomServers: string[]
   ): UploadProvider {
-    switch (providerType) {
-      case 'vercel':
-        return new VercelUploadProvider(userPubkey, signer);
-      case 'blossom':
-        if (!blossomServers || blossomServers.length === 0) {
-          throw new Error('Blossom servers are required for Blossom provider');
-        }
-        return new BlossomUploadProvider(blossomServers, signer);
-      default:
-        throw new Error(`Unknown provider type: ${providerType}`);
+    if (!blossomServers || blossomServers.length === 0) {
+      throw new Error('Blossom servers are required');
     }
+    return new BlossomUploadProvider(blossomServers, signer);
   }
 
   static getDefaultConfig(): UploadConfig {
-    // Get default provider from environment variable, fallback to 'blossom'
-    const envProvider = import.meta.env.VITE_DEFAULT_UPLOAD_PROVIDER as 'blossom' | 'vercel' | undefined;
-    const defaultProvider = (envProvider === 'blossom' || envProvider === 'vercel') ? envProvider : 'blossom';
-    
     return {
-      defaultProvider,
-      vercelEnabled: true,
+      defaultProvider: 'blossom',
+      blossomServers: [
+        'https://blossom.primal.net',
+        'https://blossom.nostr.band'
+      ],
       blossomEnabled: true,
-      maxFileSize: MAX_FILE_SIZE,
-      allowedTypes: [...ALLOWED_MIME_TYPES]
+      maxFileSize: 500 * 1024 * 1024, // 500MB for Blossom
+      allowedTypes: ['*/*'] // Blossom supports all file types
     };
   }
 }

@@ -43,10 +43,8 @@ export interface NostrDataBundle {
  * Get artist pubkey in hex format
  */
 export function getArtistPubkeyHex(artistNpub?: string): string {
-  const npub = artistNpub || process.env.VITE_ARTIST_NPUB;
-  if (!npub) {
-    throw new Error('VITE_ARTIST_NPUB environment variable is required');
-  }
+  // Use provided npub or fallback to default
+  const npub = artistNpub || "";
 
   try {
     const decoded = nip19.decode(npub);
@@ -360,7 +358,7 @@ export async function fetchNostrDataBundle(
 
   // Get artist configuration
   const artistPubkeyHex = getArtistPubkeyHex(customArtistNpub);
-  console.log(`👤 Configured Artist: ${customArtistNpub || process.env.VITE_ARTIST_NPUB}`);
+  console.log(`👤 Multi-artist platform - no single configured artist`);
 
   // Default relay URLs
   const relayUrls = customRelayUrls || [

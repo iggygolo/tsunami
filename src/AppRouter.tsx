@@ -13,7 +13,6 @@ import { PersistentAudioPlayer } from "./components/audio/PersistentAudioPlayer"
 import { 
   StudioLayout, 
   ArtistSettings, 
-  Providers as StudioProviders, 
   Analytics as StudioAnalytics
 } from "./pages/studio/index";
 import { TracksPage } from "./pages/studio/TracksPage";
@@ -47,7 +46,6 @@ export function AppRouter() {
           <Route path="playlists/new" element={<CreatePlaylistPage />} />
           <Route path="playlists/edit/:playlistId" element={<EditPlaylistPage />} />
           <Route path="settings" element={<ArtistSettings />} />
-          <Route path="providers" element={<StudioProviders />} />
           <Route path="analytics" element={<StudioAnalytics />} />
         </Route>
         

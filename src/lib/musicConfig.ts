@@ -1,38 +1,26 @@
 import { nip19 } from 'nostr-tools';
 
 /**
- * Music configuration for Tsunami
- * This defines the music metadata and artist information
- * Values are loaded from environment variables with fallbacks
+ * Platform configuration for Tsunami multi-artist platform
+ * This defines default values and constants used across the platform
+ * All artist-specific configuration is now handled through Artist Settings UI
  */
 
 /**
- * Safely parse JSON from environment variable
+ * Default Blossom servers for file uploads
  */
-function parseJsonEnv<T>(envValue: string | undefined, fallback: T): T {
-  if (!envValue || envValue.trim() === '') return fallback;
-  try {
-    return JSON.parse(envValue) as T;
-  } catch (error) {
-    console.warn(`Failed to parse JSON from env var, using fallback:`, error);
-    return fallback;
-  }
-}
+export const DEFAULT_BLOSSOM_SERVERS = [
+  'https://blossom.primal.net',
+  'https://blossom.nostr.band'
+];
 
 /**
- * Parse comma-separated string to array
+ * Platform configuration interface
+ * This is now minimal since all artist-specific config is handled per-artist
  */
-function parseArrayEnv(envValue: string | undefined, fallback: string[]): string[] {
-  if (!envValue || envValue.trim() === '') return fallback;
-  return envValue.split(',').map(s => s.trim()).filter(s => s.length > 0);
-}
-
-export interface MusicConfig {
-  /** The hardcoded npub of the music artist */
-  artistNpub: string;
-
-  /** Podcast metadata */
-  music: {
+export interface PlatformConfig {
+  /** Default values for new artists */
+  defaults: {
     artistName: string;
     description: string;
     image: string;
@@ -41,7 +29,7 @@ export interface MusicConfig {
     value: {
       amount: number;
       currency: string;
-      recipients?: Array<{
+      recipients: Array<{
         name: string;
         type: 'node' | 'lnaddress';
         address: string;
@@ -51,100 +39,98 @@ export interface MusicConfig {
         fee?: boolean;
       }>;
     };
-    // New Podcasting 2.0 fields
-    guid?: string; // Unique podcast identifier
-    medium?: 'podcast' | 'music' | 'video' | 'film' | 'audiobook' | 'newsletter' | 'blog';
-    publisher?: string; // Publisher name
-    locked?: {
-      owner: string;
-      locked: boolean;
-    };
-    location?: {
-      name: string;
-      geo?: string; // latitude,longitude
-      osm?: string; // OpenStreetMap identifier
-    };
-    person?: Array<{
-      name: string;
-      role: string;
-      group?: string;
-      img?: string;
-      href?: string;
-    }>;
-    license?: {
+    medium: 'music';
+    license: {
       identifier: string;
       url?: string;
     };
-    txt?: Array<{
-      purpose: string;
-      content: string;
-    }>;
-    remoteItem?: Array<{
-      feedGuid: string;
-      feedUrl?: string;
-      itemGuid?: string;
-      medium?: string;
-    }>;
-    block?: {
-      id: string;
-      reason?: string;
-    };
-    newFeedUrl?: string;
+  };
+  
+  /** Upload configuration */
+  upload: {
+    blossomServers: string[];
+    maxFileSize: number;
   };
 
   /** RSS feed configuration */
   rss: {
-    ttl: number; // Cache time in minutes - RSS specific setting
+    ttl: number; // Cache time in minutes
   };
 }
 
-export const MUSIC_CONFIG: MusicConfig = {
-  // Artist npub - loaded from environment
-  artistNpub: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NPUB) || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
-
-  music: {
-    artistName: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NAME) || "Tsunami Artist",
-    description: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_DESCRIPTION) || "A Nostr-powered artist exploring decentralized music",
-    image: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_IMAGE) || "",
-    website: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_WEBSITE) || "https://tsunami.example",
-    copyright: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_COPYRIGHT) || "© 2025 Tsunami Artist",
+/**
+ * Platform configuration with sensible defaults
+ * No environment variables needed - everything is hardcoded or configured per-artist
+ */
+export const PLATFORM_CONFIG: PlatformConfig = {
+  defaults: {
+    artistName: 'Unknown Artist',
+    description: 'A Nostr-powered artist exploring decentralized music',
+    image: '',
+    website: '',
+    copyright: `© ${new Date().getFullYear()} Unknown Artist`,
     value: {
-      amount: parseInt((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_AMOUNT) || "100", 10),
-      currency: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_CURRENCY) || "sats",
-      recipients: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_VALUE_RECIPIENTS), [])
+      amount: 100,
+      currency: 'sats',
+      recipients: []
     },
-    // Podcasting 2.0 fields from environment
-    guid: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_GUID) || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NPUB) || "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
-    medium: ((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_MEDIUM) as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
-    publisher: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_PUBLISHER) || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NAME) || "Tsunami Artist",
-    locked: {
-      owner: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_LOCKED_OWNER) || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NAME) || "Tsunami Artist",
-      locked: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_LOCKED) !== 'false'
-    },
-    location: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_LOCATION_NAME) ? {
-      name: import.meta.env.VITE_ARTIST_LOCATION_NAME,
-      geo: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_LOCATION_GEO) || undefined,
-      osm: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_LOCATION_OSM) || undefined
-    } : undefined,
-    person: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_PERSON), [
-      {
-        name: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ARTIST_NAME) || "Tsunami Artist",
-        role: "artist",
-        group: "cast"
-      }
-    ]),
+    medium: 'music',
     license: {
-      identifier: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_LICENSE_IDENTIFIER) || "All Right Reserved",
-      url: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_LICENSE_URL) || ""
-    },
-    txt: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_TXT), undefined),
-    remoteItem: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_REMOTE_ITEM), undefined),
-    block: parseJsonEnv((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_BLOCK), undefined),
-    newFeedUrl: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_NEW_FEED_URL) || undefined,
+      identifier: 'All Rights Reserved',
+      url: ''
+    }
+  },
+  
+  upload: {
+    blossomServers: DEFAULT_BLOSSOM_SERVERS,
+    maxFileSize: 100 * 1024 * 1024 // 100MB
   },
 
   rss: {
-    ttl: parseInt((typeof import.meta !== 'undefined' && import.meta.env?.VITE_MUSIC_RSS_TTL) || "60", 10)
+    ttl: 60 // 60 minutes
+  }
+};
+
+/**
+ * Legacy MUSIC_CONFIG for backward compatibility
+ * This maintains the same interface but uses hardcoded defaults
+ * @deprecated Use PLATFORM_CONFIG instead for new code
+ */
+export const MUSIC_CONFIG = {
+  // No longer uses environment variables - this is just for backward compatibility
+  artistNpub: "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
+
+  music: {
+    artistName: PLATFORM_CONFIG.defaults.artistName,
+    description: PLATFORM_CONFIG.defaults.description,
+    image: PLATFORM_CONFIG.defaults.image,
+    website: PLATFORM_CONFIG.defaults.website,
+    copyright: PLATFORM_CONFIG.defaults.copyright,
+    value: PLATFORM_CONFIG.defaults.value,
+    guid: "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
+    medium: PLATFORM_CONFIG.defaults.medium,
+    publisher: PLATFORM_CONFIG.defaults.artistName,
+    locked: {
+      owner: PLATFORM_CONFIG.defaults.artistName,
+      locked: true
+    },
+    location: undefined,
+    person: [
+      {
+        name: PLATFORM_CONFIG.defaults.artistName,
+        role: "artist",
+        group: "cast"
+      }
+    ],
+    license: PLATFORM_CONFIG.defaults.license,
+    txt: undefined,
+    remoteItem: undefined,
+    block: undefined,
+    newFeedUrl: undefined,
+  },
+
+  rss: {
+    ttl: PLATFORM_CONFIG.rss.ttl
   }
 };
 
@@ -168,6 +154,8 @@ export const MUSIC_KINDS = {
 
 /**
  * Get the artist's pubkey in hex format (for Nostr queries)
+ * @deprecated This function is for backward compatibility only
+ * In multi-artist platform, use the specific artist's pubkey instead
  */
 export function getArtistPubkeyHex(): string {
   try {
@@ -185,8 +173,22 @@ export function getArtistPubkeyHex(): string {
 
 /**
  * Check if a pubkey is the music artist
+ * @deprecated This function is for backward compatibility only
+ * In multi-artist platform, any logged-in user can be an artist
  */
 export function isArtist(pubkey: string): boolean {
-  const artistHex = getArtistPubkeyHex();
-  return pubkey === artistHex;
+  // In multi-artist platform, any user with a valid pubkey can be an artist
+  return Boolean(pubkey && pubkey.length > 0);
+}
+
+/**
+ * Get default configuration for a new artist
+ */
+export function getDefaultArtistConfig() {
+  return {
+    ...PLATFORM_CONFIG.defaults,
+    blossomServers: PLATFORM_CONFIG.upload.blossomServers,
+    rssEnabled: false,
+    updated_at: Math.floor(Date.now() / 1000)
+  };
 }

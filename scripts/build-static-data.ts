@@ -44,63 +44,39 @@ interface SingleReleaseCache {
 }
 
 /**
- * Create a Node.js compatible config that reads from actual env vars
+ * Create a Node.js compatible config using platform defaults
+ * No longer depends on environment variables
  */
 function createNodejsConfig(): RSSConfig {
-  const artistNpub = process.env.VITE_ARTIST_NPUB;
-
-  // Parse recipients safely
-  let recipients: Array<{
-    name: string;
-    type: string;
-    address: string;
-    split: number;
-    fee?: boolean;
-    customKey?: string;
-    customValue?: string;
-  }> = [];
-  
-  try {
-    if (process.env.VITE_MUSIC_VALUE_RECIPIENTS) {
-      recipients = JSON.parse(process.env.VITE_MUSIC_VALUE_RECIPIENTS);
-    }
-  } catch {
-    console.warn('Failed to parse VITE_MUSIC_VALUE_RECIPIENTS, using defaults');
-    recipients = [];
-  }
+  // Use hardcoded platform defaults since we no longer use environment variables
+  const artistNpub = "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h"; // Default fallback
 
   return {
-    artistNpub: artistNpub || "",
+    artistNpub,
     music: {
-      description: process.env.VITE_MUSIC_DESCRIPTION || "A Nostr-powered artist exploring decentralized music",
-      artistName: process.env.VITE_ARTIST_NAME || "Tsunami Artist",
-      image: process.env.VITE_ARTIST_IMAGE || "",
-      website: process.env.VITE_ARTIST_WEBSITE || "https://tsunami.example",
-      copyright: process.env.VITE_ARTIST_COPYRIGHT || "© 2025 Tsunami",
+      description: "A Nostr-powered artist exploring decentralized music",
+      artistName: "Unknown Artist",
+      image: "",
+      website: "",
+      copyright: `© ${new Date().getFullYear()} Unknown Artist`,
       value: {
-        amount: parseInt(process.env.VITE_MUSIC_VALUE_AMOUNT || "100", 10),
-        currency: process.env.VITE_MUSIC_VALUE_CURRENCY || "sats",
-        recipients
+        amount: 100,
+        currency: "sats",
+        recipients: []
       },
       // Podcasting 2.0 fields
-      guid: process.env.VITE_MUSIC_GUID || artistNpub,
-      medium: (process.env.VITE_MUSIC_MEDIUM as "podcast" | "music" | "video" | "film" | "audiobook" | "newsletter" | "blog") || "podcast",
-      publisher: process.env.VITE_ARTIST_PUBLISHER || process.env.VITE_ARTIST_NAME || "Tsunami Artist",
-      location: process.env.VITE_ARTIST_LOCATION_NAME ? {
-        name: process.env.VITE_ARTIST_LOCATION_NAME,
-        geo: process.env.VITE_ARTIST_LOCATION_GEO || undefined,
-        osm: process.env.VITE_ARTIST_LOCATION_OSM || undefined
-      } : undefined,
-      person: process.env.VITE_MUSIC_PERSON ?
-        JSON.parse(process.env.VITE_MUSIC_PERSON) :
-        [{ name: process.env.VITE_ARTIST_NAME || "Tsunami Artist", role: "artist", group: "cast" }],
+      guid: artistNpub,
+      medium: "music",
+      publisher: "Unknown Artist",
+      location: undefined,
+      person: [{ name: "Unknown Artist", role: "artist", group: "cast" }],
       license: {
-        identifier: process.env.VITE_MUSIC_LICENSE_IDENTIFIER || "All Right Reserved",
-        url: process.env.VITE_MUSIC_LICENSE_URL || ""
+        identifier: "All Rights Reserved",
+        url: ""
       }
     },
     rss: {
-      ttl: parseInt(process.env.VITE_MUSIC_RSS_TTL || "60", 10)
+      ttl: 60
     }
   };
 }
@@ -491,7 +467,7 @@ async function generateHealthChecks(
         releases: playlists.length > 0 ? 'nostr' : 'none',
         relays: relayUrls
       },
-      configuredArtist: process.env.VITE_ARTIST_NPUB
+      configuredArtist: undefined // No longer using environment variables
     };
 
     const rssHealthPath = path.join(distDir, 'rss-health.json');
@@ -513,7 +489,7 @@ async function generateHealthChecks(
         releases: releases.length > 0 ? 'nostr' : 'fallback',
         relays: relayUrls
       },
-      configuredArtist: process.env.VITE_ARTIST_NPUB
+      configuredArtist: undefined // No longer using environment variables
     };
 
     const cacheHealthPath = path.join(distDir, 'cache-health.json');

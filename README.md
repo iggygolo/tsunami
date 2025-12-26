@@ -81,18 +81,13 @@ npm run build:data
 
 ### Configuration
 
-Edit `.env` to customize your artist:
+Tsunami is now a multi-artist platform that requires no environment variables. All configuration is handled through the Artist Settings in the studio interface:
 
-```env
-# Artist Configuration
-VITE_ARTIST_NPUB=npub1...
-VITE_ARTIST_NAME=Your Artist Name
-VITE_MUSIC_DESCRIPTION=Your artist description
-VITE_ARTIST_IMAGE=https://image.example/avatar.png
+1. Start the development server: `npm run dev`
+2. Log in with your Nostr account
+3. Go to Studio → Settings to configure your artist profile
 
-# Podcasting 2.0 Value
-VITE_MUSIC_VALUE_RECIPIENTS=[{"name":"Host","type":"lightning-address","address":"you@domain.com","split":100}]
-```
+See [CONFIGURATION.md](./CONFIGURATION.md) for detailed setup instructions.
 
 ## 🛠️ Technology Stack
 

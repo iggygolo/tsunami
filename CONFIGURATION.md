@@ -1,157 +1,84 @@
 # Tsunami Configuration Guide
 
-Tsunami uses environment variables to configure your artist and music metadata and settings. This makes it easy to customize your presence without modifying code.
+Tsunami is now a multi-artist platform where each artist manages their own settings through the studio interface. No environment variables are required for basic functionality.
 
 ## Quick Start
 
-1. **Copy the example configuration:**
-   ```bash
-   cp .env.example .env
-   ```
-
-2. **Edit the `.env` file** with your artist and music details:
-   ```bash
-   # Required: Your Nostr public key
-   VITE_ARTIST_NPUB=npub1your_public_key_here
-   
-   # Basic artist info
-   VITE_ARTIST_NAME=Your Name
-   VITE_MUSIC_DESCRIPTION=A music collection about amazing things
-   ```
-
-3. **Start the development server:**
+1. **Start the development server:**
    ```bash
    npm run dev
    ```
 
-## Configuration Categories
+2. **Configure your artist profile:**
+   - Log in with your Nostr account
+   - Go to Studio → Settings
+   - Configure your artist profile, upload preferences, and other settings
 
-### 🎙️ Essential Settings
+That's it! No environment variables needed.
 
-These are the minimum settings you should configure:
+## Artist Configuration
 
-- `VITE_ARTIST_NPUB` - Your Nostr public key (npub format)
-- `VITE_ARTIST_NAME` - Your name as the artist
-- `VITE_MUSIC_DESCRIPTION` - Brief description of your music
+All configuration is now handled per-artist through the **Artist Settings** page in the studio:
 
-### 🎨 Branding & Media
+### 🎙️ Artist Profile
+- Artist name and description
+- Cover art image
+- Website URL
+- Copyright notice
 
-- `VITE_ARTIST_IMAGE` - URL to your artist cover art (1400x1400px minimum)
-- `VITE_ARTIST_WEBSITE` - Your artist website URL
-- `VITE_ARTIST_COPYRIGHT` - Copyright notice
+### 📡 Upload Settings
+- Blossom server configuration
+- Custom server preferences per artist
 
 ### ⚡ Lightning Value-for-Value
+- Payment amount and currency
+- Lightning payment recipients
+- Value splits configuration
 
-Configure Lightning payments for listener support:
+### 📍 Optional Metadata
+- Location information
+- License details
+- RSS feed preferences
 
-- `VITE_MUSIC_VALUE_AMOUNT` - Suggested payment amount in sats per minute
-- `VITE_MUSIC_VALUE_CURRENCY` - Currency type ("sats", "USD", "BTC", etc.)
-- `VITE_MUSIC_VALUE_RECIPIENTS` - JSON array of payment recipients
+## How It Works
 
-### 📍 Location & Metadata
+1. **No Environment Variables**: The system works without any environment variables
+2. **Per-Artist Settings**: Each artist configures their own preferences
+3. **Sensible Defaults**: The system provides reasonable defaults for all settings
+4. **Blossom-Only Uploads**: Simplified to use only Blossom servers for decentralized file storage
 
-- `VITE_ARTIST_LOCATION_NAME` - Artist location name
-- `VITE_ARTIST_LOCATION_GEO` - GPS coordinates (latitude,longitude)
-- `VITE_MUSIC_GUID` - Unique music identifier (defaults to your npub)
+## Migration from Single-Artist Setup
 
-## Advanced Configuration
+If you're migrating from a single-artist Tsunami setup:
 
-### Lightning Recipients
+1. Remove all `VITE_*` environment variables from your `.env` file
+2. Start the application
+3. Log in as your artist account
+4. Go to Studio → Settings
+5. Configure your artist profile with your previous settings
 
-The `VITE_MUSIC_VALUE_RECIPIENTS` field accepts a JSON array defining how Lightning payments are split:
+## Default Blossom Servers
 
-```json
-[
-  {
-    "name": "Host",
-    "type": "node",
-    "address": "your_lightning_address_or_pubkey",
-    "split": 60,
-    "fee": false
-  },
-  {
-    "name": "Producer", 
-    "type": "keysend",
-    "address": "producer_pubkey",
-    "split": 30,
-    "customKey": "podcast",
-    "customValue": "producer-fee"
-  },
-  {
-    "name": "Platform",
-    "type": "node", 
-    "address": "platform_pubkey",
-    "split": 10,
-    "fee": true
-  }
-]
-```
+The system uses these default Blossom servers when artists haven't configured custom ones:
 
-**Split percentages should total 100%.**
+- `https://blossom.primal.net`
+- `https://blossom.nostr.band`
 
-### Person Metadata
-
-Define who's involved in the music with `VITE_MUSIC_PERSON`:
-
-```json
-[
-  {
-    "name": "Your Name",
-    "role": "host",
-    "group": "cast",
-    "img": "https://example.com/your-photo.jpg",
-    "href": "https://yourwebsite.com"
-  },
-  {
-    "name": "Producer Name", 
-    "role": "producer",
-    "group": "crew"
-  }
-]
-```
-
-### Funding Links
-
-Add support links with `VITE_ARTIST_FUNDING` (comma-separated):
-```
-VITE_ARTIST_FUNDING=lightning:your@address.com,https://donate.example.com,bitcoin:bc1address
-```
-
-## Environment Variables Reference
-
-| Variable | Type | Description | Default |
-|----------|------|-------------|---------|
-| `VITE_ARTIST_NPUB` | string | Your Nostr public key | Example npub |
-| `VITE_ARTIST_NAME` | string | Artist name | "Tsunami Artist" |
-| `VITE_MUSIC_DESCRIPTION` | string | Music description | Example description |
-| `VITE_ARTIST_IMAGE` | string | Cover art URL | Example image URL |
-| `VITE_ARTIST_WEBSITE` | string | Artist website | "https://tsunami.example" |
-| `VITE_ARTIST_COPYRIGHT` | string | Copyright notice | "© 2025 Tsunami Artist" |
-| `VITE_MUSIC_VALUE_AMOUNT` | number | Sats per minute | 100 |
-| `VITE_MUSIC_VALUE_CURRENCY` | string | Payment currency | "sats" |
-| `VITE_MUSIC_VALUE_RECIPIENTS` | JSON array | Payment recipients | Example recipients |
-| `VITE_RSS_TTL` | number | RSS cache time (minutes) | 60 |
-
-## Validation
-
-After configuring your environment variables, you can validate the configuration by:
-
-1. Starting the development server (`npm run dev`)
-2. Checking the browser console for any parsing errors
-3. Visiting the pages to see if your metadata appears correctly
-4. Generating the RSS feed to ensure all fields are populated
-
-## Tips
-
-- **JSON fields**: Use online JSON validators to ensure your JSON arrays are properly formatted
-- **URLs**: Always use complete URLs starting with `https://`
-- **Lightning addresses**: Test your Lightning addresses before adding them to recipients
-- **Images**: Use high-quality square images (1400x1400px minimum) for best directory compatibility
+Artists can override these defaults in their Artist Settings.
 
 ## Troubleshooting
 
-**JSON parsing errors**: Check the browser console for detailed error messages about malformed JSON in environment variables.
+**No configuration needed**: If you're used to configuring environment variables, don't worry - the system now works without any configuration files.
 
-**Missing metadata**: Ensure all required `VITE_` prefixed variables are set in your `.env` file.
+**Artist settings not saving**: Ensure you're logged in with your Nostr account and have a stable internet connection.
 
-**Lightning recipients not working**: Verify that split percentages total 100% and all addresses are valid Lightning addresses or node public keys.
+**Upload issues**: Check your Blossom server configuration in Artist Settings, or use the default servers.
+
+## Development
+
+For developers working on Tsunami:
+
+- The system no longer depends on environment variables
+- All configuration is stored in Nostr artist metadata events
+- Default values are hardcoded in the application
+- Upload system uses only Blossom servers for decentralized storage
