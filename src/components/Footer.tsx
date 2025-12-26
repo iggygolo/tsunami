@@ -1,5 +1,4 @@
 import { Waves } from 'lucide-react';
-import { useMusicConfig } from '@/hooks/useMusicConfig';
 
 export default function Footer() {
   return (

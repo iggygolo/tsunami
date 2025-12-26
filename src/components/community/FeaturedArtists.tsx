@@ -1,11 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Music, Users, ChevronRight, Play, Pause } from 'lucide-react';
-import { ArtistLinkWithImage } from '@/components/music/ArtistLink';
+import { Users, ChevronRight } from 'lucide-react';
 import { useFeaturedArtists } from '@/hooks/useCommunityPosts';
 import { useReleases } from '@/hooks/useReleases';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
@@ -46,54 +43,35 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
     return counts;
   }, [releases]);
 
-  // Find latest track for each artist
-  const artistLatestTracks = React.useMemo(() => {
-    if (!releases) return new Map<string, ReleaseTrack>();
+  // Get all tracks for each artist
+  const artistTracks = React.useMemo(() => {
+    if (!releases) return new Map<string, ReleaseTrack[]>();
     
-    const latestTracks = new Map<string, ReleaseTrack>();
-    
+    const tracks = new Map<string, ReleaseTrack[]>();
     releases.forEach(release => {
       if (release.artistPubkey) {
-        // Find artist-created tracks in this release
-        const artistTracks = release.tracks?.filter(track => 
+        // Only include tracks where the track's artistPubkey matches the release artist
+        const artistCreatedTracks = release.tracks?.filter(track => 
           track.artistPubkey === release.artistPubkey
         ) || [];
         
-        artistTracks.forEach(track => {
-          const existing = latestTracks.get(release.artistPubkey);
-          
-          // Compare by release date first, then by track creation if available
-          const trackDate = release.publishDate;
-          const existingDate = existing ? 
-            releases.find(r => r.tracks?.some(t => t === existing))?.publishDate : 
-            null;
-          
-          if (!existing || !existingDate || trackDate > existingDate) {
-            latestTracks.set(release.artistPubkey, track);
-          }
-        });
+        const currentTracks = tracks.get(release.artistPubkey) || [];
+        tracks.set(release.artistPubkey, [...currentTracks, ...artistCreatedTracks]);
       }
     });
     
-    return latestTracks;
+    return tracks;
   }, [releases]);
 
   if (isLoadingFeatured) {
     return (
-      <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
+      <div className={cn('grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6', className)}>
         {[...Array(limit)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <Skeleton className="w-12 h-12 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-16" />
-                </div>
-                <Skeleton className="h-5 w-12" />
-              </div>
-            </CardContent>
-          </Card>
+          <div key={i} className="flex flex-col items-center text-center">
+            <Skeleton className="w-32 h-32 rounded-full mb-4" />
+            <Skeleton className="h-5 w-24 mb-1" />
+            <Skeleton className="h-4 w-16" />
+          </div>
         ))}
       </div>
     );
@@ -101,25 +79,25 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
 
   if (!featuredArtists || featuredArtists.length === 0) {
     return (
-      <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
-        <Card className="border-dashed">
-          <CardContent className="py-8 text-center">
-            <Users className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">Discover Artists</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Explore the growing community of musicians on Nostr
-            </p>
-          </CardContent>
-        </Card>
+      <div className={cn('grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6', className)}>
+        <div className="flex flex-col items-center text-center">
+          <div className="w-32 h-32 rounded-full bg-muted/30 flex items-center justify-center mb-4">
+            <Users className="w-12 h-12 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-1">Discover Artists</h3>
+          <p className="text-sm text-muted-foreground">
+            Explore musicians on Nostr
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
+    <div className={cn('grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6', className)}>
       {featuredArtists.map((artist) => {
         const trackCount = artistTrackCounts.get(artist.pubkey) || 0;
-        const latestTrack = artistLatestTracks.get(artist.pubkey);
+        const tracks = artistTracks.get(artist.pubkey) || [];
         const npub = artist.npub || pubkeyToNpub(artist.pubkey);
         const profileUrl = `/${npub}`;
 
@@ -128,7 +106,7 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
             key={artist.pubkey}
             artist={artist}
             trackCount={trackCount}
-            latestTrack={latestTrack}
+            tracks={tracks}
             profileUrl={profileUrl}
           />
         );
@@ -140,27 +118,33 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
 interface ArtistCardProps {
   artist: any;
   trackCount: number;
-  latestTrack?: ReleaseTrack;
+  tracks: ReleaseTrack[];
   profileUrl: string;
 }
 
-function ArtistCard({ artist, trackCount, latestTrack, profileUrl }: ArtistCardProps) {
-  const trackPlayback = useUniversalTrackPlayback(
-    latestTrack ? {
-      id: `artist-${artist.pubkey}`,
-      title: `${artist.name || 'Artist'} - Latest`,
-      tracks: [latestTrack],
+function ArtistCard({ artist, trackCount, tracks, profileUrl }: ArtistCardProps) {
+  // Create a virtual release for playback
+  const artistRelease = React.useMemo(() => {
+    if (!tracks.length) return null;
+    
+    const releaseId = `artist-${artist.pubkey}`;
+    return {
+      id: releaseId,
+      title: `${artist.name || 'Artist'} - All Tracks`,
+      tracks,
       artistPubkey: artist.pubkey,
       publishDate: new Date(),
       createdAt: new Date(),
-      eventId: '',
-      identifier: '',
+      eventId: releaseId, // Use the same ID for eventId so the comparison works
+      identifier: releaseId,
       tags: [],
-      imageUrl: latestTrack.imageUrl || artist.image
-    } : null
-  );
+      imageUrl: artist.image
+    };
+  }, [artist, tracks]);
 
-  const handleTrackPlay = (e: React.MouseEvent) => {
+  const trackPlayback = useUniversalTrackPlayback(artistRelease);
+
+  const handleProfileClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -170,69 +154,47 @@ function ArtistCard({ artist, trackCount, latestTrack, profileUrl }: ArtistCardP
   };
 
   return (
-    <Link to={profileUrl} className="group">
-      <Card className="h-full hover:border-primary/50 transition-all duration-200 hover:shadow-md">
-        <CardContent className="p-4">
-          <div className="flex items-start space-x-3">
-            {/* Artist Image and Name */}
-            <div className="flex-1">
-              <ArtistLinkWithImage
-                pubkey={artist.pubkey}
-                artistInfo={artist}
-                disabled={true} // Disable the internal link since the card is clickable
-                className="group-hover:text-primary transition-colors"
-                textSize="text-sm font-medium"
-                imageSize="w-12 h-12"
+    <div className="flex flex-col items-center text-center group">
+      {/* Circular Profile Image with Play Button */}
+      <div className="relative mb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="p-0 h-auto hover:bg-transparent relative"
+          onClick={handleProfileClick}
+        >
+          <div className="w-32 h-32 rounded-full overflow-hidden bg-muted/30 hover:scale-105 transition-transform duration-200">
+            {artist.image ? (
+              <img 
+                src={artist.image} 
+                alt={artist.name || 'Artist'} 
+                className="w-full h-full object-cover"
               />
-              
-              {/* Track Count */}
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Music className="w-3 h-3" />
-                  <span>{trackCount} track{trackCount !== 1 ? 's' : ''}</span>
-                </div>
-                
-                {/* Activity Score Badge */}
-                {artist.activityScore && artist.activityScore > 0 && (
-                  <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
-                    Active
-                  </Badge>
-                )}
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Users className="w-12 h-12 text-muted-foreground" />
               </div>
-
-              {/* Latest Track Preview */}
-              {latestTrack && latestTrack.audioUrl && (
-                <div className="mt-3 p-2 bg-muted/30 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="w-6 h-6 p-0 rounded-full bg-primary/10 hover:bg-primary/20"
-                      onClick={handleTrackPlay}
-                    >
-                      {trackPlayback?.isReleasePlaying ? (
-                        <Pause className="w-3 h-3" fill="currentColor" />
-                      ) : (
-                        <Play className="w-3 h-3 ml-0.5" fill="currentColor" />
-                      )}
-                    </Button>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">
-                        {latestTrack.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Latest track</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Arrow indicator */}
-            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 mt-1" />
+            )}
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+          
+          {/* Play Button Overlay */}
+          {trackPlayback?.hasPlayableTracks && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-0 h-0 border-l-[8px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1" />
+              </div>
+            </div>
+          )}
+        </Button>
+      </div>
+
+      {/* Artist Info */}
+      <Link to={profileUrl} className="group-link hover:text-primary transition-colors">
+        <h3 className="text-lg font-semibold text-foreground mb-1">
+          {artist.name || 'Unknown Artist'}
+        </h3>
+      </Link>
+    </div>
   );
 }
 
@@ -247,7 +209,7 @@ export function FeaturedArtistsSection({ className }: FeaturedArtistsSectionProp
   return (
     <section className={className}>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Featured Artists</h2>
+        <h2 className="text-2xl font-bold">Artists</h2>
         <Link 
           to="/community" 
           className="group text-muted-foreground hover:text-foreground transition-colors"
