@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { useStaticReleaseCache, useLatestReleaseCache } from '@/hooks/useStaticReleaseCache';
 import { useReleases } from '@/hooks/useReleases';
 import type { MusicRelease } from '@/types/music';
@@ -11,7 +12,7 @@ interface RecentReleasesOptions {
 
 /**
  * Hook to fetch recent releases with intelligent filtering
- * Fetches extra releases to account for filtering, ensuring the component gets enough items
+ * Overfetches significantly and applies filtering outside the query for better caching
  */
 export function useRecentReleases(options: RecentReleasesOptions = {}) {
   const {
@@ -24,57 +25,45 @@ export function useRecentReleases(options: RecentReleasesOptions = {}) {
   const { data: cachedReleases, isLoading: isCacheLoading } = useStaticReleaseCache();
   const { data: latestRelease } = useLatestReleaseCache();
 
-  // Calculate how many extra releases to fetch to account for filtering
-  // Assume ~20% of releases might not have images, so fetch 25% more
-  const fetchLimit = Math.ceil(limit * 1.5);
+  // Overfetch significantly to account for filtering
+  const fetchLimit = requireImages ? limit * 5 : limit * 3;
 
-  // Fallback to live data with increased limit
+  // Always fetch live data from all artists with high limit
   const { data: liveReleases, isLoading: isLiveLoading } = useReleases({
     limit: fetchLimit,
     sortBy: 'date',
     sortOrder: 'desc'
   });
 
-  return useQuery({
-    queryKey: ['recent-releases', limit, excludeLatest, requireImages],
-    queryFn: async () => {
-      // Use cached data if available, otherwise use live data
-      let releases = cachedReleases || liveReleases || [];
+  // Get raw releases data (no filtering in query for better caching)
+  const rawReleases = (cachedReleases && cachedReleases.length > 0) ? cachedReleases : (liveReleases || []);
+  const isLoading = isCacheLoading || isLiveLoading;
 
-      console.log('🔍 useRecentReleases - Processing releases:', {
-        totalReleases: releases.length,
-        excludeLatest,
-        requireImages,
-        targetLimit: limit
-      });
+  // Apply filtering outside the query using useMemo
+  const filteredReleases = useMemo(() => {
+    if (!rawReleases || rawReleases.length === 0) {
+      return [];
+    }
 
-      // Apply filters in order
-      let filteredReleases = [...releases];
+    let filtered = [...rawReleases];
 
-      // 1. Exclude latest release if requested
-      if (excludeLatest && latestRelease) {
-        filteredReleases = filteredReleases.filter(release => release.id !== latestRelease.id);
-        console.log('📋 After excluding latest:', filteredReleases.length);
-      }
+    // 1. Exclude latest release if requested
+    if (excludeLatest && latestRelease) {
+      filtered = filtered.filter(release => release.id !== latestRelease.id);
+    }
 
-      // 2. Filter out releases without images if required
-      if (requireImages) {
-        filteredReleases = filteredReleases.filter(release => release.imageUrl);
-        console.log('🖼️ After requiring images:', filteredReleases.length);
-      }
+    // 2. Filter out releases without images if required
+    if (requireImages) {
+      filtered = filtered.filter(release => release.imageUrl);
+    }
 
-      // 3. Apply limit
-      const finalReleases = filteredReleases.slice(0, limit);
+    // 3. Apply limit
+    return filtered.slice(0, limit);
+  }, [rawReleases, excludeLatest, latestRelease, requireImages, limit]);
 
-      console.log('✅ useRecentReleases - Final result:', {
-        finalCount: finalReleases.length,
-        withImages: finalReleases.filter(r => r.imageUrl).length,
-        targetLimit: limit
-      });
-
-      return finalReleases;
-    },
-    enabled: !!(cachedReleases || liveReleases),
-    staleTime: 300000, // 5 minutes
-  });
+  return {
+    data: filteredReleases,
+    isLoading,
+    error: null
+  };
 }

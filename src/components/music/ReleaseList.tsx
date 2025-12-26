@@ -45,7 +45,7 @@ export function ReleaseList({
   const { data: recentReleases, isLoading: isRecentLoading } = useRecentReleases({
     limit,
     excludeLatest: true,
-    requireImages: true // Filter out releases without images for recent releases
+    requireImages: true // Now we overfetch enough to handle image filtering
   });
 
   // Use cache when enabled and no search/filtering is applied (but not for recent releases)

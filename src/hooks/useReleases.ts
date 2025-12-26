@@ -105,12 +105,6 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
           // Cache individual release data for instant loading when navigating to release page
           const releaseKey = `${release.artistPubkey}:${MUSIC_KINDS.MUSIC_PLAYLIST}:${release.identifier}`;
           
-          console.log('useReleases - Caching release data for instant navigation:', {
-            title: release.title,
-            releaseKey,
-            eventId: event.id
-          });
-          
           // Cache the release event
           queryClient.setQueryData(
             ['release-event', releaseKey],

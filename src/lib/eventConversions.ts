@@ -233,35 +233,12 @@ export function playlistToRelease(
   playlist: MusicPlaylistData, 
   tracks: Map<string, MusicTrackData>
 ): MusicRelease {
-  console.log('🔄 playlistToRelease - Converting playlist to release:', {
-    playlistTitle: playlist.title,
-    playlistIdentifier: playlist.identifier,
-    trackReferences: playlist.tracks?.length || 0,
-    availableTracks: tracks.size,
-    trackMap: Array.from(tracks.keys())
-  });
-
   // Convert tracks to legacy format with better error handling
   const releaseTracks: ReleaseTrack[] = [];
   
   playlist.tracks.forEach((trackRef, index) => {
     const trackKey = `${trackRef.pubkey}:${trackRef.identifier}`;
     const track = tracks.get(trackKey);
-    
-    console.log(`🎵 playlistToRelease - Processing track ${index + 1}:`, {
-      trackRef: {
-        pubkey: trackRef.pubkey?.slice(0, 8) + '...',
-        identifier: trackRef.identifier,
-        title: trackRef.title
-      },
-      trackKey,
-      foundTrack: !!track,
-      trackData: track ? {
-        title: track.title,
-        hasAudio: !!track.audioUrl,
-        duration: track.duration
-      } : null
-    });
     
     if (track) {
       // Use actual track data
@@ -279,7 +256,6 @@ export function playlistToRelease(
         artistPubkey: track.artistPubkey,
       };
       releaseTracks.push(releaseTrack);
-      console.log(`✅ playlistToRelease - Track ${index + 1} added with full data`);
     } else {
       // Create placeholder track with reference data
       const releaseTrack: ReleaseTrack = {
@@ -295,7 +271,6 @@ export function playlistToRelease(
         artistPubkey: trackRef.pubkey,
       };
       releaseTracks.push(releaseTrack);
-      console.log(`⚠️ playlistToRelease - Track ${index + 1} added as placeholder (missing track data)`);
     }
   });
 
@@ -307,19 +282,6 @@ export function playlistToRelease(
   // Get artist information from cache or create basic info
   const artistPubkey = playlist.authorPubkey || '';
   const artistInfo = getArtistDisplayInfo(artistPubkey);
-
-  console.log('🎉 playlistToRelease - Conversion complete:', {
-    title: playlist.title,
-    totalTracks: releaseTracks.length,
-    tracksWithAudio: releaseTracks.filter(t => t.audioUrl).length,
-    tracksWithoutAudio: releaseTracks.filter(t => !t.audioUrl).length,
-    totalDuration,
-    artistInfo: {
-      pubkey: artistPubkey.slice(0, 8) + '...',
-      name: artistInfo.name,
-      hasImage: !!artistInfo.image
-    }
-  });
 
   return {
     id: playlist.eventId || '',
