@@ -275,7 +275,7 @@ const Index = () => {
             <ReleaseList
               showSearch={false}
               showArtistFilter={false}
-              limit={6}
+              limit={5}
               useCache={true}
               excludeLatest={true}
             />

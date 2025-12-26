@@ -9,6 +9,7 @@ import { GlassReleaseCard } from './GlassReleaseCard';
 import { ArtistFilter } from './ArtistFilter';
 import { useReleases } from '@/hooks/useReleases';
 import { useStaticReleaseCache, useLatestReleaseCache } from '@/hooks/useStaticReleaseCache';
+import { useRecentReleases } from '@/hooks/useRecentReleases';
 import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
 
 interface ReleaseListProps {
@@ -38,29 +39,54 @@ export function ReleaseList({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedArtist, setSelectedArtist] = useState<string | undefined>();
 
-  // Use cache when enabled and no search/filtering is applied
-  const shouldUseCache = useCache && !searchOptions.query && !selectedArtist && searchOptions.sortBy === 'date' && searchOptions.sortOrder === 'desc';
+  // Use specialized hook for recent releases (homepage) that handles filtering intelligently
+  const shouldUseRecentReleasesHook = excludeLatest && useCache;
+  
+  const { data: recentReleases, isLoading: isRecentLoading } = useRecentReleases({
+    limit,
+    excludeLatest: true,
+    requireImages: true // Filter out releases without images for recent releases
+  });
+
+  // Use cache when enabled and no search/filtering is applied (but not for recent releases)
+  const shouldUseCache = useCache && !excludeLatest && !searchOptions.query && !selectedArtist && searchOptions.sortBy === 'date' && searchOptions.sortOrder === 'desc';
   
   const { data: cachedReleases, isLoading: isCacheLoading } = useStaticReleaseCache();
   const { data: latestRelease } = useLatestReleaseCache();
   const { data: liveReleases, isLoading: isLiveLoading, error } = useReleases(
-    shouldUseCache ? { limit: 0 } : searchOptions // Skip live query if using cache
+    (shouldUseCache || shouldUseRecentReleasesHook) ? { limit: 0 } : searchOptions // Skip live query if using cache or recent releases hook
   );
 
-  // Determine final data source and apply artist filtering
-  let releases = shouldUseCache ? cachedReleases?.slice(0, limit) : liveReleases;
-  
-  // Exclude latest release if requested (to avoid duplication on homepage)
-  if (releases && excludeLatest && latestRelease) {
-    releases = releases.filter(release => release.id !== latestRelease.id);
+  // Determine final data source and apply filtering
+  let releases: MusicRelease[] | undefined;
+  let isLoading: boolean;
+
+  if (shouldUseRecentReleasesHook) {
+    // Use recent releases hook (already filtered)
+    releases = recentReleases;
+    isLoading = isRecentLoading;
+  } else if (shouldUseCache) {
+    // Use cached releases
+    releases = cachedReleases?.slice(0, limit);
+    isLoading = isCacheLoading;
+  } else {
+    // Use live releases
+    releases = liveReleases;
+    isLoading = isLiveLoading;
   }
-  
-  // Apply artist filtering if selected
-  if (releases && selectedArtist) {
-    releases = releases.filter(release => release.artistPubkey === selectedArtist);
+
+  // Apply additional filtering only for non-recent releases
+  if (releases && !shouldUseRecentReleasesHook) {
+    // Exclude latest release if requested (for non-recent releases hook usage)
+    if (excludeLatest && latestRelease) {
+      releases = releases.filter(release => release.id !== latestRelease.id);
+    }
+    
+    // Apply artist filtering if selected
+    if (selectedArtist) {
+      releases = releases.filter(release => release.artistPubkey === selectedArtist);
+    }
   }
-  
-  const isLoading = shouldUseCache ? isCacheLoading : isLiveLoading;
 
   const handleSearch = (query: string) => {
     setSearchOptions(prev => ({ ...prev, query: query || undefined }));
