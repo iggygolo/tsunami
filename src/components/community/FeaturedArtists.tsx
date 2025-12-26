@@ -182,8 +182,8 @@ function ArtistCard({ artist, trackCount, tracks, profileUrl }: ArtistCardProps)
           {/* Play Button Overlay */}
           {trackPlayback?.hasPlayableTracks && (
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-lg">
-                <div className="w-0 h-0 border-l-[8px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1" />
+              <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg backdrop-blur-sm">
+                <div className="w-0 h-0 border-l-[8px] border-l-black border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1" />
               </div>
             </div>
           )}
