@@ -20,6 +20,7 @@ import {
 import { GenreSelector } from '@/components/ui/genre-selector';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { useToast } from '@/hooks/useToast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { validateLanguageCode } from '@/lib/musicMetadata';
 import { 
   AUDIO_MIME_TYPES, 
@@ -85,6 +86,7 @@ export function TrackForm({
   submitButtonLoadingText,
 }: TrackFormProps) {
   const { toast } = useToast();
+  const { user, name } = useCurrentUser();
   
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -95,7 +97,7 @@ export function TrackForm({
     resolver: zodResolver(trackFormSchema),
     defaultValues: {
       title: '',
-      artist: '',
+      artist: name || 'Artist',
       description: '',
       audioUrl: '',
       releaseDate: '',
@@ -112,7 +114,7 @@ export function TrackForm({
   const { watch, setValue, reset } = form;
   const genres = watch('genres');
 
-  // Load track data when available (for edit mode)
+  // Load track data when available (for edit mode) or set default artist name
   useEffect(() => {
     if (isEditMode) {
       reset({
@@ -129,8 +131,11 @@ export function TrackForm({
         explicit: track.explicit || false,
         genres: track.genres || [],
       });
+    } else if (name && !form.getValues('artist')) {
+      // Set default artist name for new tracks
+      setValue('artist', name);
     }
-  }, [track, reset, isEditMode]);
+  }, [track, reset, isEditMode, name, form, setValue]);
 
   const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

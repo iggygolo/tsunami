@@ -43,6 +43,10 @@ export function useCurrentUser() {
   return {
     user,
     users,
+    // Expose author metadata for easy access
+    name: author.data?.metadata?.name || author.data?.metadata?.display_name,
+    picture: author.data?.metadata?.picture,
+    website: author.data?.metadata?.website,
     ...author.data,
   };
 }

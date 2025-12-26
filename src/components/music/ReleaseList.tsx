@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { GlassReleaseCard } from './GlassReleaseCard';
 import { ArtistFilter } from './ArtistFilter';
 import { useReleases } from '@/hooks/useReleases';
-import { useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
+import { useStaticReleaseCache, useLatestReleaseCache } from '@/hooks/useStaticReleaseCache';
 import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
 
 interface ReleaseListProps {
@@ -18,6 +18,7 @@ interface ReleaseListProps {
   className?: string;
   onPlayRelease?: (release: MusicRelease) => void;
   useCache?: boolean; // Enable cache usage for better performance
+  excludeLatest?: boolean; // Exclude the latest release to avoid duplication
 }
 
 export function ReleaseList({
@@ -26,7 +27,8 @@ export function ReleaseList({
   limit = 50,
   className,
   onPlayRelease,
-  useCache = false
+  useCache = false,
+  excludeLatest = false
 }: ReleaseListProps) {
   const [searchOptions, setSearchOptions] = useState<ReleaseSearchOptions>({
     limit,
@@ -40,12 +42,18 @@ export function ReleaseList({
   const shouldUseCache = useCache && !searchOptions.query && !selectedArtist && searchOptions.sortBy === 'date' && searchOptions.sortOrder === 'desc';
   
   const { data: cachedReleases, isLoading: isCacheLoading } = useStaticReleaseCache();
+  const { data: latestRelease } = useLatestReleaseCache();
   const { data: liveReleases, isLoading: isLiveLoading, error } = useReleases(
     shouldUseCache ? { limit: 0 } : searchOptions // Skip live query if using cache
   );
 
   // Determine final data source and apply artist filtering
   let releases = shouldUseCache ? cachedReleases?.slice(0, limit) : liveReleases;
+  
+  // Exclude latest release if requested (to avoid duplication on homepage)
+  if (releases && excludeLatest && latestRelease) {
+    releases = releases.filter(release => release.id !== latestRelease.id);
+  }
   
   // Apply artist filtering if selected
   if (releases && selectedArtist) {

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { MUSIC_CONFIG, MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
+import { MUSIC_CONFIG, MUSIC_KINDS } from '@/lib/musicConfig';
 
 interface ArtistMetadata {
   artist: string;
@@ -44,12 +44,29 @@ interface ArtistMetadata {
   updated_at: number;
 }
 
-export function useArtistMetadata() {
+export function useArtistMetadata(artistPubkey?: string) {
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['artist-metadata'],
+    queryKey: ['artist-metadata', artistPubkey],
     queryFn: async (context): Promise<ArtistMetadata> => {
+      // Use provided pubkey or fall back to config
+      const pubkey = artistPubkey || MUSIC_CONFIG.artistNpub;
+      
+      // Convert npub to hex if needed
+      let hexPubkey = pubkey;
+      if (pubkey.startsWith('npub')) {
+        try {
+          const { nip19 } = await import('nostr-tools');
+          const decoded = nip19.decode(pubkey);
+          if (decoded.type === 'npub') {
+            hexPubkey = decoded.data;
+          }
+        } catch (error) {
+          console.warn('Failed to decode npub, using as-is:', error);
+        }
+      }
+
       try {
         // Query for podcast metadata events with shorter timeout for speed
         // NPool will query all configured relays and return results from fastest responders
@@ -58,7 +75,7 @@ export function useArtistMetadata() {
         const events = await nostr.query([
           {
             kinds: [MUSIC_KINDS.ARTIST_METADATA], // Addressable podcast metadata event
-            authors: [getArtistPubkeyHex()],
+            authors: [hexPubkey],
             '#d': ['artist-metadata'],
             limit: 10 // Only need the most recent event
           }
@@ -107,5 +124,6 @@ export function useArtistMetadata() {
     gcTime: 60 * 60 * 1000, // 1 hour
     retry: 1, // Only retry once for faster failure
     retryDelay: 500, // Quick retry
+    enabled: !!artistPubkey || !!MUSIC_CONFIG.artistNpub, // Only run if we have a pubkey
   });
 }

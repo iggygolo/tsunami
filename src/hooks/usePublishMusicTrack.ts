@@ -3,7 +3,6 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useUploadFile } from '@/hooks/useUploadFile';
 import type { MusicTrackFormData, MusicTrackData } from '@/types/music';
-import { isArtist } from '@/lib/musicConfig';
 import { musicTrackPublisher } from '@/lib/musicTrackPublisher';
 
 // Helper function to infer audio type from URL
@@ -113,7 +112,7 @@ async function processTrackFormData(
 }
 
 /**
- * Hook for publishing individual music tracks (artist only)
+ * Hook for publishing individual music tracks (any authenticated user)
  */
 export function usePublishMusicTrack() {
   const { user } = useCurrentUser();
@@ -123,13 +122,9 @@ export function usePublishMusicTrack() {
 
   return useMutation({
     mutationFn: async (formData: MusicTrackFormData): Promise<string> => {
-      // Verify user is logged in and is the artist
+      // Verify user is logged in
       if (!user) {
         throw new Error('You must be logged in to publish music tracks');
-      }
-
-      if (!isArtist(user.pubkey)) {
-        throw new Error('Only the music artist can publish tracks');
       }
 
       // Process form data and upload files
@@ -173,13 +168,9 @@ export function useUpdateMusicTrack() {
       trackIdentifier: string;
       formData: MusicTrackFormData;
     }): Promise<string> => {
-      // Verify user is logged in and is the artist
+      // Verify user is logged in
       if (!user) {
         throw new Error('You must be logged in to update music tracks');
-      }
-
-      if (!isArtist(user.pubkey)) {
-        throw new Error('Only the music artist can update tracks');
       }
 
       // Process form data and upload files
@@ -219,10 +210,6 @@ export function useDeleteMusicTrack() {
     mutationFn: async (trackEventId: string): Promise<string> => {
       if (!user) {
         throw new Error('You must be logged in to delete music tracks');
-      }
-
-      if (!isArtist(user.pubkey)) {
-        throw new Error('Only the music artist can delete tracks');
       }
 
       // Create a deletion event (NIP-09)

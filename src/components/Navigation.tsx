@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { Headphones, Menu, Settings, Music, ListMusic, Zap, Server } from 'lucide-react';
+import { Headphones, Menu, Settings, Music, ListMusic, Zap, Server, Waves } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoginArea } from '@/components/auth/LoginArea';
@@ -9,7 +9,6 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { getMainNavItems, getSecondaryNavItems, getArtistNavItems } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +18,6 @@ interface NavigationProps {
 
 export function Navigation({ className }: NavigationProps) {
   const location = useLocation();
-  const musicConfig = useMusicConfig();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
@@ -71,7 +69,8 @@ export function Navigation({ className }: NavigationProps) {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <div className="flex items-center space-x-2">
-                        <h1 className="text-xl font-bold gradient-text truncate">{musicConfig.music.artistName}</h1>
+                        <Waves className="w-6 h-6 text-primary" />
+                        <h1 className="text-xl font-bold gradient-text truncate">Tsunami</h1>
                         {isStudioMode && (
                           <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/20 text-primary border-primary/30 hover:bg-primary/30 transition-colors">
                             Studio
@@ -241,7 +240,8 @@ export function Navigation({ className }: NavigationProps) {
             {/* Logo with Studio Badge */}
             <Link to="/" className="flex items-center hover:opacity-80 transition-opacity px-3 py-2 rounded-lg">
               <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-bold gradient-text">{musicConfig.music.artistName}</h1>
+                <Waves className="w-6 h-6 text-primary" />
+                <h1 className="text-xl font-bold gradient-text">Tsunami</h1>
                 {isStudioMode && (
                   <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/20 text-primary border-primary/30 hover:bg-primary/30 transition-colors">
                     Studio

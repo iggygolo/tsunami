@@ -13,6 +13,7 @@ import { useArtistMetadata } from '@/hooks/useArtistMetadata';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { useRSSFeedGenerator } from '@/hooks/useRSSFeedGenerator';
 import { useUploadConfig } from '@/hooks/useUploadConfig';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { MUSIC_CONFIG, MUSIC_KINDS } from '@/lib/musicConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
 import { FileUploadWithProvider } from '@/components/ui/FileUploadWithProvider';
@@ -62,11 +63,25 @@ const ArtistSettings = () => {
   const queryClient = useQueryClient();
   const { mutateAsync: createEvent } = useNostrPublish();
   const { toast } = useToast();
-  const { data: artistMetadata, isLoading: isLoadingMetadata } = useArtistMetadata();
+  const { user, name, picture, website } = useCurrentUser();
+  const { data: artistMetadata, isLoading: isLoadingMetadata } = useArtistMetadata(user?.pubkey);
   const musicConfig = useMusicConfig();
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
   const { mutateAsync: uploadFileWithOptions } = useUploadFileWithOptions();
   const { config } = useUploadConfig();
+
+  // Redirect if not authenticated
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Music className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">Authentication Required</h2>
+          <p className="text-muted-foreground">Please log in to access artist settings.</p>
+        </div>
+      </div>
+    );
+  }
 
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -74,28 +89,28 @@ const ArtistSettings = () => {
   const [imageUploadProvider, setImageUploadProvider] = useState<'blossom' | 'vercel'>(config.defaultProvider);
 
   const [formData, setFormData] = useState<ArtistFormData>({
-    artistName: MUSIC_CONFIG.music.artistName,
-    description: MUSIC_CONFIG.music.description,
-    image: MUSIC_CONFIG.music.image,
-    website: MUSIC_CONFIG.music.website,
-    copyright: MUSIC_CONFIG.music.copyright,
+    artistName: name || 'Artist',
+    description: '',
+    image: picture || '',
+    website: website || '',
+    copyright: `© ${new Date().getFullYear()} ${name || 'Artist'}`,
     value: {
-      amount: MUSIC_CONFIG.music.value.amount,
-      currency: MUSIC_CONFIG.music.value.currency,
-      recipients: MUSIC_CONFIG.music.value.recipients || []
+      amount: 100,
+      currency: 'sats',
+      recipients: []
     },
-    guid: MUSIC_CONFIG.music.guid || MUSIC_CONFIG.artistNpub,
-    medium: MUSIC_CONFIG.music.medium || 'music',
-    publisher: MUSIC_CONFIG.music.publisher || MUSIC_CONFIG.music.artistName,
-    person: MUSIC_CONFIG.music.person || [
+    guid: user?.pubkey || '',
+    medium: 'music',
+    publisher: name || 'Artist',
+    person: [
       {
-        name: MUSIC_CONFIG.music.artistName,
+        name: name || 'Artist',
         role: 'artist',
         group: 'cast'
       }
     ],
-    license: MUSIC_CONFIG.music.license || {
-      identifier: 'All Right Reserved',
+    license: {
+      identifier: 'All Rights Reserved',
       url: ''
     },
   });
@@ -110,11 +125,11 @@ const ArtistSettings = () => {
         website: artistMetadata.website,
         copyright: artistMetadata.copyright,
         value: artistMetadata.value || {
-          amount: MUSIC_CONFIG.music.value.amount,
-          currency: MUSIC_CONFIG.music.value.currency,
-          recipients: MUSIC_CONFIG.music.value.recipients || []
+          amount: 100,
+          currency: 'sats',
+          recipients: []
         },
-        guid: artistMetadata.guid || MUSIC_CONFIG.artistNpub,
+        guid: artistMetadata.guid || user?.pubkey || '',
         medium: artistMetadata.medium || 'music',
         publisher: artistMetadata.publisher || artistMetadata.artist,
         location: artistMetadata.location,
@@ -126,12 +141,12 @@ const ArtistSettings = () => {
           }
         ],
         license: artistMetadata.license || {
-          identifier: 'All Right Reserved',
+          identifier: 'All Rights Reserved',
           url: ''
         },
       });
     }
-  }, [artistMetadata, isLoadingMetadata]);
+  }, [artistMetadata, isLoadingMetadata, user?.pubkey, name]);
 
   const handleInputChange = (field: keyof ArtistFormData, value: ArtistFormData[keyof ArtistFormData]) => {
     setFormData(prev => ({

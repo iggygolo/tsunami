@@ -28,7 +28,6 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useDeleteNote } from '@/hooks/useDeleteNote';
 import { genUserName } from '@/lib/genUserName';
-import { isArtist } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -59,10 +58,8 @@ export function PostCard({ event, isCompact = false, previewMode = false, classN
     return <RepostCard event={event} className={className} />;
   }
 
-  // Check if current user can delete this note (must be the artist and the author)
-  const canDelete = user && 
-    isArtist(user.pubkey) && 
-    event.pubkey === user.pubkey;
+  // Check if current user can delete this note (must be the author)
+  const canDelete = user && event.pubkey === user.pubkey;
 
   const handleDelete = () => {
     deleteNote(event);

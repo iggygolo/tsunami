@@ -4,7 +4,6 @@ import { ScrollToTop } from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Releases from "./pages/Releases";
 import Community from "./pages/Community";
-import SocialFeed from "./pages/SocialFeed";
 import DebugAudio from "./pages/DebugAudio";
 import { NIP19Page } from "./pages/NIP19Page";
 import { TrackPage } from "./pages/TrackPage";
@@ -33,7 +32,6 @@ export function AppRouter() {
         <Route path="/releases" element={<Releases />} />
         <Route path="/releases/:releaseId" element={<NIP19Page />} />
         <Route path="/community" element={<Community />} />
-        <Route path="/social" element={<SocialFeed />} />
         
         {/* Nostr navigation routes */}
         <Route path="/track/:naddr" element={<TrackPage />} />

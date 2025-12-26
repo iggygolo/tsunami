@@ -35,13 +35,6 @@ export const navigationItems: NavigationItem[] = [
     group: 'main'
   },
   {
-    path: '/social',
-    icon: MessageSquare,
-    label: 'Social',
-    description: 'Artist updates & posts',
-    group: 'main'
-  },
-  {
     path: '/community',
     icon: Users,
     label: 'Community',
