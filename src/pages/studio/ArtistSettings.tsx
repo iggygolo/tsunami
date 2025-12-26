@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Save, Loader2, Music } from 'lucide-react';
+import { Save, Loader2, Music, Rss, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { RecipientList } from '@/components/RecipientList';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
@@ -25,6 +26,7 @@ interface ArtistFormData {
   image: string;
   website: string;
   copyright: string;
+  rssEnabled: boolean;
   value: {
     amount: number;
     currency: string;
@@ -87,6 +89,7 @@ const ArtistSettings = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUploadProvider, setImageUploadProvider] = useState<'blossom' | 'vercel'>(config.defaultProvider);
+  const [copied, setCopied] = useState(false);
 
   const [formData, setFormData] = useState<ArtistFormData>({
     artistName: name || 'Artist',
@@ -94,6 +97,7 @@ const ArtistSettings = () => {
     image: picture || '',
     website: website || '',
     copyright: `© ${new Date().getFullYear()} ${name || 'Artist'}`,
+    rssEnabled: false, // Default to disabled as per requirements
     value: {
       amount: 100,
       currency: 'sats',
@@ -124,6 +128,7 @@ const ArtistSettings = () => {
         image: artistMetadata.image,
         website: artistMetadata.website,
         copyright: artistMetadata.copyright,
+        rssEnabled: artistMetadata.rssEnabled || false, // Default to false if not present
         value: artistMetadata.value || {
           amount: 100,
           currency: 'sats',
@@ -208,6 +213,28 @@ const ArtistSettings = () => {
     }
   };
 
+  // Handle copy to clipboard
+  const handleCopyRSSUrl = async () => {
+    const baseUrl = window.location.origin;
+    const rssUrl = `${baseUrl}/rss/${user?.pubkey || 'your-pubkey'}.xml`;
+    try {
+      await navigator.clipboard.writeText(rssUrl);
+      setCopied(true);
+      toast({
+        title: 'Copied!',
+        description: 'RSS feed URL copied to clipboard',
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      toast({
+        title: 'Copy failed',
+        description: 'Could not copy to clipboard',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -219,6 +246,7 @@ const ArtistSettings = () => {
           image: formData.image,
           website: formData.website,
           copyright: formData.copyright,
+          rssEnabled: formData.rssEnabled,
           value: formData.value,
           guid: formData.guid,
           publisher: formData.publisher,
@@ -360,6 +388,46 @@ const ArtistSettings = () => {
               placeholder="Enter artist description"
               rows={4}
             />
+          </div>
+
+          {/* RSS Settings */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="rss-enabled" className="text-base font-semibold">RSS Feed</Label>
+                <p className="text-sm text-muted-foreground">
+                  Enable RSS feed generation for your music releases. When enabled, your music will be available via RSS at a unique feed URL.
+                </p>
+              </div>
+              <Switch
+                id="rss-enabled"
+                checked={formData.rssEnabled}
+                onCheckedChange={(checked) => handleInputChange('rssEnabled', checked)}
+                className="data-[state=checked]:bg-orange-500"
+              />
+            </div>
+            {formData.rssEnabled && (
+              <div className="flex items-center justify-between gap-2 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Rss className="w-4 h-4 text-orange-500" />
+                  <p className="text-sm text-foreground">
+                    Your RSS feed will be available at: <code className="text-xs px-1 py-0.5 rounded text-orange-600">/rss/{user?.pubkey || 'your-pubkey'}.xml</code>
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopyRSSUrl}
+                  className="h-8 px-2 text-orange-600 hover:text-orange-700 hover:bg-orange-500/10"
+                >
+                  {copied ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Podcast 2.0 Advanced Settings */}

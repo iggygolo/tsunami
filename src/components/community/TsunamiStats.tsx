@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Music, Users, Activity, Globe, Headphones, Rss } from 'lucide-react';
+import { Music, Users, Activity, Globe, Headphones } from 'lucide-react';
 import { useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
 import { useCommunityStats } from '@/hooks/useCommunityPosts';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -198,20 +198,6 @@ export function TsunamiStats({ className }: TsunamiStatsProps) {
             </CardContent>
           </Card>
         </Link>
-
-        <a href="/rss.xml" target="_blank" rel="noopener noreferrer" className="group">
-          <Card className="h-full hover:border-orange-500/50 transition-colors">
-            <CardContent className="p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
-                <Rss className="w-6 h-6 text-orange-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold group-hover:text-orange-500 transition-colors">RSS Feed</h3>
-                <p className="text-sm text-muted-foreground">Subscribe</p>
-              </div>
-            </CardContent>
-          </Card>
-        </a>
       </div>
     </section>
   );

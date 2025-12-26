@@ -31,7 +31,8 @@ const MUSIC_KINDS = {
 export interface NostrDataBundle {
   tracks: MusicTrackData[];
   playlists: MusicPlaylistData[];
-  metadata: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null; // Keep for backward compatibility (configured artist)
+  allArtistMetadata: Map<string, Record<string, unknown>>; // All artist metadata
   artists: SimpleArtistInfo[]; // Add artist information
   relaysUsed: string[];
   fetchedAt: Date;
@@ -155,67 +156,65 @@ async function fetchArtistProfilesMultiRelay(
   return artistInfos;
 }
 /**
- * Fetch metadata from multiple Nostr relays
+ * Fetch artist metadata for multiple artists from multiple Nostr relays
  */
-async function fetchArtistMetadataMultiRelay(
+async function fetchAllArtistMetadataMultiRelay(
   relays: Array<{url: string, relay: NRelay1}>, 
-  artistPubkeyHex: string
-): Promise<Record<string, unknown> | null> {
-  console.log('📡 Fetching artist metadata from Nostr...');
+  artistPubkeys: string[]
+): Promise<Map<string, Record<string, unknown>>> {
+  console.log(`📡 Fetching metadata for ${artistPubkeys.length} artists from Nostr...`);
 
-  const relayPromises = relays.map(async ({url, relay}) => {
-    try {
-      const events = await Promise.race([
-        relay.query([{
-          kinds: [MUSIC_KINDS.ARTIST_METADATA],
-          authors: [artistPubkeyHex],
-          '#d': ['artist-metadata'],
-          limit: 5
-        }]),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Metadata query timeout for ${url}`)), 5000)
-        )
-      ]) as NostrEvent[];
+  const artistMetadataMap = new Map<string, Record<string, unknown>>();
 
-      if (events.length > 0) {
-        console.log(`✅ Found ${events.length} metadata events from ${url}`);
+  // Fetch metadata for all artists in parallel
+  const metadataPromises = artistPubkeys.map(async (pubkey) => {
+    const relayPromises = relays.map(async ({url, relay}) => {
+      try {
+        const events = await Promise.race([
+          relay.query([{
+            kinds: [MUSIC_KINDS.ARTIST_METADATA],
+            authors: [pubkey],
+            '#d': ['artist-metadata'],
+            limit: 5
+          }]),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`Metadata query timeout for ${url}`)), 5000)
+          )
+        ]) as NostrEvent[];
+
         return events;
+      } catch (error) {
+        return [];
       }
-      return [];
-    } catch (error) {
-      console.log(`⚠️ Failed to fetch metadata from ${url}:`, (error as Error).message);
-      return [];
+    });
+
+    const allResults = await Promise.allSettled(relayPromises);
+    const allEvents: NostrEvent[] = [];
+
+    allResults.forEach((result) => {
+      if (result.status === 'fulfilled') {
+        allEvents.push(...result.value);
+      }
+    });
+
+    if (allEvents.length > 0) {
+      const latestEvent = allEvents.reduce((latest, current) =>
+        current.created_at > latest.created_at ? current : latest
+      );
+
+      try {
+        const metadata = JSON.parse(latestEvent.content);
+        artistMetadataMap.set(pubkey, metadata);
+      } catch (error) {
+        console.warn(`⚠️ Failed to parse metadata JSON for artist ${pubkey}:`, error);
+      }
     }
   });
 
-  const allResults = await Promise.allSettled(relayPromises);
-  const allEvents: NostrEvent[] = [];
-
-  allResults.forEach((result) => {
-    if (result.status === 'fulfilled') {
-      allEvents.push(...result.value);
-    }
-  });
-
-  if (allEvents.length > 0) {
-    const latestEvent = allEvents.reduce((latest, current) =>
-      current.created_at > latest.created_at ? current : latest
-    );
-
-    const updatedAt = new Date(latestEvent.created_at * 1000);
-    console.log(`✅ Found artist metadata from Nostr (updated: ${updatedAt.toISOString()})`);
-
-    try {
-      const metadata = JSON.parse(latestEvent.content);
-      return metadata;
-    } catch (error) {
-      console.warn('⚠️ Failed to parse metadata JSON:', error);
-      return null;
-    }
-  } else {
-    console.log('⚠️ No artist metadata found from any relay');
-    return null;
-  }
+  await Promise.all(metadataPromises);
+  
+  console.log(`✅ Found metadata for ${artistMetadataMap.size} artists`);
+  return artistMetadataMap;
 }
 
 /**
@@ -375,6 +374,7 @@ export async function fetchNostrDataBundle(
   const relays = relayUrls.map(url => ({ url, relay: new NRelay1(url) }));
 
   let metadata: Record<string, unknown> | null = null;
+  let allArtistMetadata: Map<string, Record<string, unknown>> = new Map();
   let tracks: MusicTrackData[] = [];
   let playlists: MusicPlaylistData[] = [];
   let artists: SimpleArtistInfo[] = [];
@@ -391,18 +391,32 @@ export async function fetchNostrDataBundle(
     playlists = fetchedPlaylists;
 
     // Extract unique artist pubkeys from all content
-    const allEvents = [...tracks, ...playlists];
-    const uniqueArtistPubkeys = extractArtistPubkeys(allEvents);
+    const artistPubkeys = new Set<string>();
+    tracks.forEach(track => {
+      if (track.artistPubkey) {
+        artistPubkeys.add(track.artistPubkey);
+      }
+    });
+    playlists.forEach(playlist => {
+      if (playlist.authorPubkey) {
+        artistPubkeys.add(playlist.authorPubkey);
+      }
+    });
+    
+    const uniqueArtistPubkeys = Array.from(artistPubkeys);
     console.log(`🎨 Found ${uniqueArtistPubkeys.length} unique artists in content`);
 
-    // Fetch artist profiles and configured artist metadata in parallel
-    const [fetchedArtists, fetchedMetadata] = await Promise.all([
+    // Fetch artist profiles and all artist metadata in parallel
+    const [fetchedArtists, fetchedArtistMetadata] = await Promise.all([
       fetchArtistProfilesMultiRelay(relays, uniqueArtistPubkeys),
-      fetchArtistMetadataMultiRelay(relays, artistPubkeyHex) // Still need configured artist metadata
+      fetchAllArtistMetadataMultiRelay(relays, uniqueArtistPubkeys)
     ]);
 
     artists = fetchedArtists;
-    metadata = fetchedMetadata;
+    allArtistMetadata = fetchedArtistMetadata;
+    
+    // Get configured artist metadata for backward compatibility
+    metadata = allArtistMetadata.get(artistPubkeyHex) || null;
 
   } finally {
     // Close relay connections
@@ -428,6 +442,7 @@ export async function fetchNostrDataBundle(
     tracks,
     playlists,
     metadata,
+    allArtistMetadata,
     artists,
     relaysUsed: relayUrls,
     fetchedAt: new Date(),

@@ -4,6 +4,7 @@ import { useMusicTracks } from '@/hooks/useMusicTracks';
 import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
+import { useArtistMetadata } from '@/hooks/useArtistMetadata';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
 import { GlassTabs, GlassTabsList, GlassTabsTrigger, GlassTabsContent } from '@/components/ui/GlassTabs';
@@ -44,6 +45,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const { data: authorData, isLoading: isLoadingAuthor } = useAuthor(pubkey);
   const { data: tracks = [], isLoading: isLoadingTracks } = useMusicTracks();
   const { data: playlists = [], isLoading: isLoadingPlaylists } = useMusicPlaylists({ artistPubkey: pubkey });
+  const { data: artistMetadata } = useArtistMetadata(pubkey);
   const { user: currentUser } = useCurrentUser();
   const { toast } = useToast();
   
@@ -215,26 +217,31 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                   <div className="flex justify-center">
                     {!isOwnProfile && authorData?.event && currentUser && (authorData.metadata?.lud16 || authorData.metadata?.lud06) ? (
                       <ZapDialog target={authorData.event}>
-                        <Button className="w-12 h-12 rounded-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30 backdrop-blur-sm">
+                        <Button className="w-12 h-12 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-yellow-500/20 hover:border-yellow-400/40 hover:text-yellow-300 transition-all duration-200 shadow-lg">
                           <Zap className="w-5 h-5" />
                         </Button>
                       </ZapDialog>
                     ) : (
-                      <Button className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 text-white/50 border border-white/10 backdrop-blur-sm" disabled>
+                      <Button className="w-12 h-12 rounded-full bg-black/30 border border-white/20 text-white/50 backdrop-blur-xl transition-all duration-200 shadow-lg" disabled>
                         <Zap className="w-5 h-5" />
                       </Button>
                     )}
                   </div>
-                  <div className="flex justify-center">
-                    <Button className="w-12 h-12 rounded-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 backdrop-blur-sm" asChild>
-                      <a href="/rss.xml" target="_blank" rel="noopener noreferrer">
-                        <Rss className="w-5 h-5" />
-                      </a>
-                    </Button>
-                  </div>
+                  
+                  {/* Artist-specific RSS Button - only show if RSS is enabled */}
+                  {artistMetadata?.rssEnabled && (
+                    <div className="flex justify-center">
+                      <Button className="w-12 h-12 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-orange-500/20 hover:border-orange-400/40 hover:text-orange-300 transition-all duration-200 shadow-lg" asChild>
+                        <a href={`/rss/${pubkey}.xml`} target="_blank" rel="noopener noreferrer" title={`RSS feed for ${displayName}`}>
+                          <Rss className="w-5 h-5" />
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-center">
                     <Button 
-                      className="w-12 h-12 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 backdrop-blur-sm"
+                      className="w-12 h-12 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-cyan-500/20 hover:border-cyan-400/40 hover:text-cyan-300 transition-all duration-200 shadow-lg"
                       onClick={async () => {
                         const profileUrl = window.location.href;
                         try {

@@ -4,7 +4,6 @@ import {
   Users, 
   MessageSquare, 
   User, 
-  Rss, 
   Settings 
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -40,15 +39,6 @@ export const navigationItems: NavigationItem[] = [
     label: 'Community',
     description: 'Engage with listeners',
     group: 'main'
-  },
-  // Secondary navigation items
-  {
-    path: '/rss.xml',
-    icon: Rss,
-    label: 'RSS',
-    description: 'Subscribe to updates',
-    external: true,
-    group: 'secondary'
   },
   // Artist-only items
   {

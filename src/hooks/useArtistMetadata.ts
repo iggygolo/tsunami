@@ -8,6 +8,7 @@ interface ArtistMetadata {
   image: string;
   website: string;
   copyright: string;
+  rssEnabled?: boolean; // Optional for backward compatibility
   value: {
     amount: number;
     currency: string;
@@ -92,6 +93,7 @@ export function useArtistMetadata(artistPubkey?: string) {
           return {
             ...metadata,
             artist: metadata.artist || MUSIC_CONFIG.music.artistName,
+            rssEnabled: metadata.rssEnabled || false, // Default to false if not present
             updated_at: latestEvent.created_at
           };
         }
@@ -106,6 +108,7 @@ export function useArtistMetadata(artistPubkey?: string) {
         image: MUSIC_CONFIG.music.image,
         website: MUSIC_CONFIG.music.website,
         copyright: MUSIC_CONFIG.music.copyright,
+        rssEnabled: false, // Default to disabled
         value: {
           amount: MUSIC_CONFIG.music.value.amount,
           currency: MUSIC_CONFIG.music.value.currency,

@@ -186,40 +186,158 @@ async function generateIndividualReleaseCaches(
   console.log(`✅ Generated ${topReleases.length} individual release cache files`);
 }
 
-async function generateRSSFile(
+/**
+ * Generate individual RSS feeds for artists with RSS enabled
+ */
+async function generateArtistRSSFeeds(
   tracks: MusicTrackData[], 
   playlists: MusicPlaylistData[], 
+  allArtistMetadata: Map<string, Record<string, unknown>>,
   artists: SimpleArtistInfo[],
-  config: RSSConfig, 
+  baseConfig: RSSConfig,
   distDir: string
 ): Promise<void> {
-  console.log('📝 Generating RSS feed...');
-  console.log(`🎨 RSS will include content from ${artists.length} artists:`);
-  
-  // Log artist information for transparency
-  artists.forEach(artist => {
+  console.log('📝 Generating individual artist RSS feeds...');
+
+  // Create RSS directory
+  const rssDir = path.join(distDir, 'rss');
+  await fs.mkdir(rssDir, { recursive: true });
+
+  let generatedCount = 0;
+  let errorCount = 0;
+  const errors: Array<{ artist: string; error: string }> = [];
+
+  // Process each artist
+  for (const artist of artists) {
+    const artistMetadata = allArtistMetadata.get(artist.pubkey);
+    const rssEnabled = artistMetadata?.rssEnabled === true;
+
+    if (!rssEnabled) {
+      console.log(`⏭️  Skipping RSS for ${artist.name || artist.npub.slice(0, 12) + '...'} (RSS disabled)`);
+      continue;
+    }
+
+    // Filter content for this artist
     const artistTracks = tracks.filter(t => t.artistPubkey === artist.pubkey);
     const artistPlaylists = playlists.filter(p => p.authorPubkey === artist.pubkey);
-    console.log(`   • ${artist.name || artist.npub.slice(0, 12) + '...'}: ${artistTracks.length} tracks, ${artistPlaylists.length} playlists`);
-  });
 
-  try {
-    const rssContent = generateRSSFeed(
-      tracks, 
-      playlists, 
-      config
-    );
+    if (artistTracks.length === 0 && artistPlaylists.length === 0) {
+      console.log(`⏭️  Skipping RSS for ${artist.name || artist.npub.slice(0, 12) + '...'} (no content)`);
+      continue;
+    }
 
-    const rssPath = path.join(distDir, 'rss.xml');
-    await fs.writeFile(rssPath, rssContent, 'utf-8');
+    try {
+      // Create artist-specific config
+      const artistConfig: RSSConfig = {
+        ...baseConfig,
+        artistNpub: artist.npub,
+        music: {
+          ...baseConfig.music,
+          // Override with artist's metadata, ensuring type safety
+          artistName: (artistMetadata?.artist as string) || artist.name || baseConfig.music.artistName,
+          description: (artistMetadata?.description as string) || baseConfig.music.description,
+          image: (artistMetadata?.image as string) || baseConfig.music.image,
+          website: (artistMetadata?.website as string) || baseConfig.music.website,
+          copyright: (artistMetadata?.copyright as string) || baseConfig.music.copyright,
+        }
+      };
 
-    console.log(`✅ RSS feed generated: ${rssPath}`);
-    console.log(`📊 Feed size: ${(rssContent.length / 1024).toFixed(2)} KB`);
-    console.log(`🎵 Total content: ${tracks.length} tracks, ${playlists.length} releases from ${artists.length} artists`);
-  } catch (error) {
-    console.error('❌ Failed to generate RSS feed:', error);
-    throw error;
+      // Generate RSS content with validation
+      console.log(`🔄 Generating RSS for ${artist.name || artist.npub.slice(0, 12) + '...'}`);
+      const rssContent = generateRSSFeed(artistTracks, artistPlaylists, artistConfig);
+
+      // Additional validation before saving
+      if (!rssContent || rssContent.trim().length === 0) {
+        throw new Error('Generated RSS content is empty');
+      }
+
+      if (!rssContent.includes('<?xml')) {
+        throw new Error('Generated RSS content is not valid XML');
+      }
+
+      // Save to file
+      const rssFileName = `${artist.pubkey}.xml`;
+      const rssPath = path.join(rssDir, rssFileName);
+      await fs.writeFile(rssPath, rssContent, 'utf-8');
+
+      generatedCount++;
+      console.log(`✅ Generated RSS for ${artist.name || artist.npub.slice(0, 12) + '...'}: /rss/${rssFileName}`);
+      console.log(`   📊 ${artistTracks.length} tracks, ${artistPlaylists.length} releases`);
+
+    } catch (error) {
+      errorCount++;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const artistName = artist.name || artist.npub.slice(0, 12) + '...';
+      
+      console.error(`❌ Failed to generate RSS for artist ${artistName}:`, errorMessage);
+      
+      // Store error details for summary
+      errors.push({
+        artist: artistName,
+        error: errorMessage
+      });
+
+      // Try to generate a minimal fallback RSS feed
+      try {
+        console.log(`🔄 Attempting fallback RSS generation for ${artistName}...`);
+        
+        const fallbackConfig: RSSConfig = {
+          ...baseConfig,
+          artistNpub: artist.npub,
+          music: {
+            ...baseConfig.music,
+            artistName: artist.name || 'Artist',
+            description: 'Music by artist',
+            copyright: '© Artist',
+          }
+        };
+
+        // Generate minimal RSS with empty content
+        const fallbackRss = generateRSSFeed([], [], fallbackConfig);
+        
+        const rssFileName = `${artist.pubkey}.xml`;
+        const rssPath = path.join(rssDir, rssFileName);
+        await fs.writeFile(rssPath, fallbackRss, 'utf-8');
+        
+        console.log(`⚠️  Generated fallback RSS for ${artistName}`);
+        generatedCount++; // Count fallback as generated
+        
+      } catch (fallbackError) {
+        console.error(`❌ Fallback RSS generation also failed for ${artistName}:`, fallbackError);
+        // Continue with other artists - don't let one failure stop the entire build
+      }
+    }
   }
+
+  // Summary logging
+  console.log(`✅ RSS generation completed: ${generatedCount} feeds generated`);
+  
+  if (errorCount > 0) {
+    console.warn(`⚠️  ${errorCount} RSS generation errors occurred:`);
+    errors.forEach(({ artist, error }) => {
+      console.warn(`   • ${artist}: ${error}`);
+    });
+    
+    // Write error summary to file for debugging
+    const errorSummary = {
+      timestamp: new Date().toISOString(),
+      totalArtists: artists.length,
+      rssEnabledArtists: artists.filter(a => allArtistMetadata.get(a.pubkey)?.rssEnabled === true).length,
+      successfulFeeds: generatedCount,
+      failedFeeds: errorCount,
+      errors: errors
+    };
+    
+    try {
+      const errorPath = path.join(distDir, 'rss-build-errors.json');
+      await fs.writeFile(errorPath, JSON.stringify(errorSummary, null, 2), 'utf-8');
+      console.log(`📄 Error summary written to: rss-build-errors.json`);
+    } catch (writeError) {
+      console.error('Failed to write error summary:', writeError);
+    }
+  }
+
+  console.log(`✅ Generated ${generatedCount} individual RSS feeds`);
 }
 
 /**
@@ -450,19 +568,39 @@ export async function buildStaticData(): Promise<void> {
     const distDir = path.resolve('dist');
     await fs.mkdir(distDir, { recursive: true });
 
-    // Generate all outputs in parallel
+    // Generate all outputs in parallel with error handling
     console.log('📝 Generating all outputs...');
-    await Promise.all([
-      generateRSSFile(dataBundle.tracks, dataBundle.playlists, dataBundle.artists, finalConfig, distDir),
-      generateReleaseCache(releases, dataBundle.relaysUsed, distDir),
-      generateLatestReleaseCache(releases, dataBundle.relaysUsed, distDir),
+    const buildPromises = [
+      generateArtistRSSFeeds(dataBundle.tracks, dataBundle.playlists, dataBundle.allArtistMetadata, dataBundle.artists, finalConfig, distDir)
+        .catch(error => {
+          console.error('❌ RSS feeds generation failed:', error);
+          // Don't throw - continue with other builds
+          return Promise.resolve();
+        }),
+      generateReleaseCache(releases, dataBundle.relaysUsed, distDir)
+        .catch(error => {
+          console.error('❌ Release cache generation failed:', error);
+          // Don't throw - continue with other builds
+          return Promise.resolve();
+        }),
+      generateLatestReleaseCache(releases, dataBundle.relaysUsed, distDir)
+        .catch(error => {
+          console.error('❌ Latest release cache generation failed:', error);
+          // Don't throw - continue with other builds
+          return Promise.resolve();
+        }),
       generateIndividualReleaseCaches(releases, {
         generatedAt: new Date().toISOString(),
         totalCount: releases.length,
         dataSource: dataBundle.metadata ? 'nostr' : 'fallback',
         relaysUsed: dataBundle.relaysUsed,
         cacheVersion: '1.0.0',
-      }, distDir),
+      }, distDir)
+        .catch(error => {
+          console.error('❌ Individual release caches generation failed:', error);
+          // Don't throw - continue with other builds
+          return Promise.resolve();
+        }),
       generateHealthChecks(
         dataBundle.tracks, 
         dataBundle.playlists, 
@@ -471,29 +609,48 @@ export async function buildStaticData(): Promise<void> {
         dataBundle.metadata, 
         distDir
       )
-    ]);
+        .catch(error => {
+          console.error('❌ Health checks generation failed:', error);
+          // Don't throw - health checks are not critical
+          return Promise.resolve();
+        })
+    ];
+
+    // Wait for all builds to complete (with individual error handling)
+    await Promise.all(buildPromises);
 
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`\n🎉 Static data build completed successfully in ${totalTime}s!`);
     console.log(`📊 Generated:`);
-    console.log(`   • RSS feed with ${dataBundle.tracks.length} tracks and ${dataBundle.playlists.length} releases from ${dataBundle.artists.length} artists`);
+    
+    // Count RSS-enabled artists
+    const rssEnabledArtists = dataBundle.artists.filter(artist => {
+      const metadata = dataBundle.allArtistMetadata.get(artist.pubkey);
+      return metadata?.rssEnabled === true;
+    });
+    
+    console.log(`   • Individual RSS feeds for ${rssEnabledArtists.length} artists (out of ${dataBundle.artists.length} total)`);
     console.log(`   • Release cache with ${releases.length} releases`);
     console.log(`   • Latest release cache`);
     console.log(`   • Individual release caches (top 20)`);
     console.log(`   • Health check files`);
     console.log(`📁 Files available in: dist/`);
-    console.log(`📡 RSS feed: /rss.xml`);
+    console.log(`📡 RSS feeds: /rss/{artistPubkey}.xml`);
     console.log(`🗂️  Cache files: /data/releases.json, /data/latest-release.json`);
     console.log(`📄 Individual caches: /data/releases/[id].json`);
     console.log(`🏥 Health checks: /rss-health.json, /cache-health.json`);
     
-    // Log artist summary
+    // Log artist summary with RSS status
     if (dataBundle.artists.length > 0) {
-      console.log(`\n🎨 Artists included in RSS feed:`);
+      console.log(`\n🎨 Artist RSS status:`);
       dataBundle.artists.forEach(artist => {
         const artistTracks = dataBundle.tracks.filter(t => t.artistPubkey === artist.pubkey);
         const artistPlaylists = dataBundle.playlists.filter(p => p.authorPubkey === artist.pubkey);
-        console.log(`   • ${artist.name || artist.npub.slice(0, 12) + '...'}: ${artistTracks.length} tracks, ${artistPlaylists.length} playlists`);
+        const metadata = dataBundle.allArtistMetadata.get(artist.pubkey);
+        const rssEnabled = metadata?.rssEnabled === true;
+        const rssStatus = rssEnabled ? '✅ RSS enabled' : '⏸️  RSS disabled';
+        
+        console.log(`   • ${artist.name || artist.npub.slice(0, 12) + '...'}: ${artistTracks.length} tracks, ${artistPlaylists.length} playlists - ${rssStatus}`);
       });
     }
 

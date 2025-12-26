@@ -226,34 +226,309 @@ export function releaseToRSSItems(
 }
 
 /**
+ * Validates RSS feed XML structure and required elements
+ */
+export interface RSSValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+/**
+ * Validates that the RSS feed contains all required elements
+ */
+export function validateRSSFeed(rssXml: string): RSSValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  try {
+    // Basic XML structure validation
+    if (!rssXml.trim().startsWith('<?xml')) {
+      errors.push('RSS feed must start with XML declaration');
+    }
+
+    if (!rssXml.includes('<rss version="2.0"')) {
+      errors.push('RSS feed must have <rss version="2.0"> element');
+    }
+
+    // Required RSS elements
+    const requiredElements = [
+      '<channel>',
+      '<title>',
+      '<description>',
+      '<link>',
+      '</channel>',
+      '</rss>'
+    ];
+
+    for (const element of requiredElements) {
+      if (!rssXml.includes(element)) {
+        errors.push(`Missing required RSS element: ${element}`);
+      }
+    }
+
+    // iTunes namespace validation
+    if (!rssXml.includes('xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"')) {
+      warnings.push('Missing iTunes namespace declaration');
+    }
+
+    // Podcasting 2.0 namespace validation
+    if (!rssXml.includes('xmlns:podcast="https://podcastindex.org/namespace/1.0"')) {
+      warnings.push('Missing Podcasting 2.0 namespace declaration');
+    }
+
+    // Atom namespace validation
+    if (!rssXml.includes('xmlns:atom="http://www.w3.org/2005/Atom"')) {
+      warnings.push('Missing Atom namespace declaration');
+    }
+
+    // Check for proper XML escaping in common problematic areas
+    const unescapedPatterns = [
+      { pattern: /[^&]&[^#\w]/, message: 'Unescaped ampersand (&) found - should be &amp;' },
+      { pattern: /<(?![\/\w]|!\[CDATA\[)/, message: 'Unescaped less-than (<) found - should be &lt;' },
+      { pattern: /(?<![\/\w])>/, message: 'Potentially unescaped greater-than (>) found - should be &gt;' }
+    ];
+
+    for (const { pattern, message } of unescapedPatterns) {
+      if (pattern.test(rssXml)) {
+        warnings.push(message);
+      }
+    }
+
+    // Validate enclosure elements for items
+    const itemMatches = rssXml.match(/<item>[\s\S]*?<\/item>/g);
+    if (itemMatches) {
+      itemMatches.forEach((item, index) => {
+        if (!item.includes('<enclosure')) {
+          errors.push(`Item ${index + 1} missing required <enclosure> element`);
+        } else {
+          // Validate enclosure attributes
+          const enclosureMatch = item.match(/<enclosure\s+([^>]+)>/);
+          if (enclosureMatch) {
+            const attrs = enclosureMatch[1];
+            if (!attrs.includes('url=')) {
+              errors.push(`Item ${index + 1} enclosure missing required 'url' attribute`);
+            }
+            if (!attrs.includes('type=')) {
+              errors.push(`Item ${index + 1} enclosure missing required 'type' attribute`);
+            }
+            if (!attrs.includes('length=')) {
+              errors.push(`Item ${index + 1} enclosure missing required 'length' attribute`);
+            }
+          }
+        }
+
+        // Validate GUID elements
+        if (!item.includes('<guid')) {
+          warnings.push(`Item ${index + 1} missing <guid> element`);
+        }
+
+        // Validate pubDate elements
+        if (!item.includes('<pubDate>')) {
+          warnings.push(`Item ${index + 1} missing <pubDate> element`);
+        }
+      });
+    }
+
+    // Check for valid UTF-8 encoding
+    try {
+      // Test if the string can be properly encoded/decoded
+      const encoded = encodeURIComponent(rssXml);
+      decodeURIComponent(encoded);
+    } catch (e) {
+      errors.push('RSS feed contains invalid UTF-8 characters');
+    }
+
+    // Validate XML structure more thoroughly
+    try {
+      // Basic XML well-formedness check
+      const openTags = rssXml.match(/<[^\/][^>]*>/g) || [];
+      const closeTags = rssXml.match(/<\/[^>]+>/g) || [];
+      
+      // Simple tag balance check (not perfect but catches obvious issues)
+      const tagCounts = new Map<string, number>();
+      
+      openTags.forEach(tag => {
+        const tagName = tag.match(/<([^\s>]+)/)?.[1];
+        if (tagName && !tag.endsWith('/>')) {
+          tagCounts.set(tagName, (tagCounts.get(tagName) || 0) + 1);
+        }
+      });
+      
+      closeTags.forEach(tag => {
+        const tagName = tag.match(/<\/([^>]+)>/)?.[1];
+        if (tagName) {
+          tagCounts.set(tagName, (tagCounts.get(tagName) || 0) - 1);
+        }
+      });
+      
+      for (const [tagName, count] of tagCounts) {
+        if (count !== 0) {
+          errors.push(`Unbalanced XML tags for: ${tagName} (difference: ${count})`);
+        }
+      }
+    } catch (e) {
+      errors.push('XML structure validation failed');
+    }
+
+  } catch (error) {
+    errors.push(`RSS validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+}
+
+/**
+ * Validates RSS configuration before generation
+ */
+export function validateRSSConfig(config: RSSConfig): RSSValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Required fields
+  if (!config.artistNpub || config.artistNpub.trim() === '') {
+    errors.push('Artist npub is required');
+  }
+
+  if (!config.music.artistName || config.music.artistName.trim() === '') {
+    errors.push('Artist name is required');
+  }
+
+  if (!config.music.description || config.music.description.trim() === '') {
+    warnings.push('Artist description is recommended');
+  }
+
+  if (!config.music.website || config.music.website.trim() === '') {
+    warnings.push('Website URL is recommended for proper RSS links');
+  }
+
+  if (!config.music.copyright || config.music.copyright.trim() === '') {
+    warnings.push('Copyright information is recommended');
+  }
+
+  // Validate website URL format
+  if (config.music.website) {
+    try {
+      new URL(config.music.website);
+    } catch {
+      errors.push('Website URL is not a valid URL format');
+    }
+  }
+
+  // Validate image URL format
+  if (config.music.image) {
+    try {
+      new URL(config.music.image);
+    } catch {
+      warnings.push('Image URL is not a valid URL format');
+    }
+  }
+
+  // Validate value recipients
+  if (config.music.value?.recipients) {
+    config.music.value.recipients.forEach((recipient, index) => {
+      if (!recipient.name || recipient.name.trim() === '') {
+        errors.push(`Value recipient ${index + 1} missing name`);
+      }
+      if (!recipient.address || recipient.address.trim() === '') {
+        errors.push(`Value recipient ${index + 1} missing address`);
+      }
+      if (typeof recipient.split !== 'number' || recipient.split < 0 || recipient.split > 100) {
+        errors.push(`Value recipient ${index + 1} split must be a number between 0 and 100`);
+      }
+      if (!['node', 'lnaddress'].includes(recipient.type)) {
+        warnings.push(`Value recipient ${index + 1} has unknown type: ${recipient.type}`);
+      }
+    });
+
+    // Check that splits add up to 100 or less
+    const totalSplit = config.music.value.recipients.reduce((sum, r) => sum + (r.split || 0), 0);
+    if (totalSplit > 100) {
+      errors.push(`Total value recipient splits (${totalSplit}) exceed 100%`);
+    }
+  }
+
+  // Validate person entries
+  if (config.music.person) {
+    config.music.person.forEach((person, index) => {
+      if (!person.name || person.name.trim() === '') {
+        errors.push(`Person ${index + 1} missing name`);
+      }
+      if (!person.role || person.role.trim() === '') {
+        errors.push(`Person ${index + 1} missing role`);
+      }
+      if (person.href) {
+        try {
+          new URL(person.href);
+        } catch {
+          warnings.push(`Person ${index + 1} href is not a valid URL`);
+        }
+      }
+      if (person.img) {
+        try {
+          new URL(person.img);
+        } catch {
+          warnings.push(`Person ${index + 1} img is not a valid URL`);
+        }
+      }
+    });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+}
+
+/**
  * Generate single RSS feed with multiple channels - one channel per release
  * Each channel contains tracks from that specific release as items
+ * Now includes validation and error handling
  */
 export function generateRSSFeed(
   tracks: MusicTrackData[], 
   releases: MusicPlaylistData[], 
   config: RSSConfig
 ): string {
+  // Validate configuration first
+  const configValidation = validateRSSConfig(config);
+  if (!configValidation.isValid) {
+    console.error('RSS Config validation failed:', configValidation.errors);
+    // Continue with warnings but throw on errors
+    throw new Error(`RSS configuration invalid: ${configValidation.errors.join(', ')}`);
+  }
+
+  if (configValidation.warnings.length > 0) {
+    console.warn('RSS Config warnings:', configValidation.warnings);
+  }
+
   const baseUrl = config.music.website || "";
   
-  // Generate channels for each release
-  const channels = releases.map(release => {
-    // Generate RSS items for tracks in this specific release
-    const releaseItems = releaseToRSSItems(release, tracks, config);
-    
-    // Get release-specific information using naddr
-    const releaseLink = release.authorPubkey
-      ? `${baseUrl}/release/${release.authorPubkey}/${release.identifier}`
-      : `${baseUrl}/release/${release.identifier}`;
+  try {
+    // Generate channels for each release
+    const channels = releases.map(release => {
+      try {
+        // Generate RSS items for tracks in this specific release
+        const releaseItems = releaseToRSSItems(release, tracks, config);
+        
+        // Get release-specific information using naddr
+        const releaseLink = release.authorPubkey
+          ? `${baseUrl}/release/${release.authorPubkey}/${release.identifier}`
+          : `${baseUrl}/release/${release.identifier}`;
 
-    // Collect genres from tracks in this release
-    const releaseGenres = Array.from(new Set(
-      releaseItems
-        .flatMap(item => item.category || [])
-        .filter((genre): genre is string => Boolean(genre && typeof genre === 'string' && genre.trim().length > 0))
-    ));
+        // Collect genres from tracks in this release
+        const releaseGenres = Array.from(new Set(
+          releaseItems
+            .flatMap(item => item.category || [])
+            .filter((genre): genre is string => Boolean(genre && typeof genre === 'string' && genre.trim().length > 0))
+        ));
 
-    return `<channel>
+        return `<channel>
     <title>${escapeXml(release.title)}</title>
     <description>${escapeXml(release.description || `Music release: ${release.title}`)}</description>
     <link>${escapeXml(releaseLink)}</link>
@@ -337,9 +612,23 @@ export function generateRSSFeed(
       <podcast:episode>${index + 1}</podcast:episode>
     </item>`).join('')}
   </channel>`;
-  }).join('\n\n');
+      } catch (error) {
+        console.error(`Failed to generate RSS channel for release ${release.title}:`, error);
+        // Return a minimal valid channel on error
+        return `<channel>
+    <title>${escapeXml(release.title || 'Unknown Release')}</title>
+    <description>${escapeXml(`Error generating RSS for release: ${release.title || 'Unknown'}`)}</description>
+    <link>${escapeXml(baseUrl)}</link>
+    <copyright>${escapeXml(config.music.copyright)}</copyright>
+    <pubDate>${new Date().toUTCString()}</pubDate>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <ttl>${config.rss.ttl}</ttl>
+    <generator>Tsunami - Nostr Music Platform v${getPackageVersion()}</generator>
+  </channel>`;
+      }
+    }).join('\n\n');
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
      xmlns:atom="http://www.w3.org/2005/Atom"
      xmlns:podcast="https://podcastindex.org/namespace/1.0"
@@ -348,7 +637,44 @@ export function generateRSSFeed(
 ${channels}
 </rss>`;
 
-  return xml;
+    // Validate the generated RSS feed
+    const validation = validateRSSFeed(xml);
+    if (!validation.isValid) {
+      console.error('Generated RSS feed validation failed:', validation.errors);
+      if (validation.warnings.length > 0) {
+        console.warn('RSS feed warnings:', validation.warnings);
+      }
+      // Still return the feed but log the issues
+    } else if (validation.warnings.length > 0) {
+      console.warn('RSS feed generated with warnings:', validation.warnings);
+    }
+
+    return xml;
+  } catch (error) {
+    console.error('RSS feed generation failed:', error);
+    
+    // Return a minimal valid RSS feed as fallback
+    const fallbackXml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:podcast="https://podcastindex.org/namespace/1.0"
+     xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>${escapeXml(config.music.artistName || 'Artist')}</title>
+    <description>${escapeXml(config.music.description || 'Music by artist')}</description>
+    <link>${escapeXml(config.music.website || 'https://example.com')}</link>
+    <copyright>${escapeXml(config.music.copyright || '© Artist')}</copyright>
+    <pubDate>${new Date().toUTCString()}</pubDate>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <ttl>${config.rss.ttl}</ttl>
+    <generator>Tsunami - Nostr Music Platform v${getPackageVersion()}</generator>
+    <itunes:author>${escapeXml(config.music.artistName || 'Artist')}</itunes:author>
+    <itunes:category text="Music" />
+  </channel>
+</rss>`;
+
+    return fallbackXml;
+  }
 }
 
 /**
