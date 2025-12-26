@@ -1,6 +1,7 @@
 import type { MusicTrackData, MusicPlaylistData, RSSItem } from '@/types/music';
 import type { MusicConfig } from './musicConfig';
 import { formatToAudioType } from '@/lib/audioUtils';
+import { encodeMusicTrackAsNaddr } from '@/lib/nip19Utils';
 
 /**
  * Core RSS generation utilities that work in both browser and Node.js environments
@@ -119,12 +120,12 @@ export function formatDuration(seconds: number): string {
 /**
  * Converts a MusicTrackData to an RSS item
  */
-export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEncoder?: (pubkey: string, identifier: string) => string): RSSItem {
+export function trackToRSSItem(track: MusicTrackData, config: RSSConfig): RSSItem {
   const baseUrl = config.music.website;
   
-  // Generate link - use naddr encoder if provided, otherwise fallback to simple format
-  const link = naddrEncoder && track.artistPubkey
-    ? `${baseUrl}/${naddrEncoder(track.artistPubkey, track.identifier)}`
+  // Generate naddr-based link
+  const link = track.artistPubkey
+    ? `${baseUrl}/track/${encodeMusicTrackAsNaddr(track.artistPubkey, track.identifier)}`
     : `${baseUrl}/track/${track.identifier}`;
 
   // Generate a meaningful description with fallbacks
@@ -179,8 +180,7 @@ export function trackToRSSItem(track: MusicTrackData, config: RSSConfig, naddrEn
 export function releaseToRSSItems(
   release: MusicPlaylistData, 
   tracks: MusicTrackData[], 
-  config: RSSConfig, 
-  trackNaddrEncoder?: (pubkey: string, identifier: string) => string
+  config: RSSConfig
 ): RSSItem[] {
   const baseUrl = config.music.website;
   
@@ -215,7 +215,7 @@ export function releaseToRSSItems(
     }
     
     // Convert track to RSS item
-    const rssItem = trackToRSSItem(trackData, config, trackNaddrEncoder);
+    const rssItem = trackToRSSItem(trackData, config);
     
     return rssItem;
   });
@@ -228,20 +228,18 @@ export function releaseToRSSItems(
 export function generateRSSFeed(
   tracks: MusicTrackData[], 
   releases: MusicPlaylistData[], 
-  config: RSSConfig,
-  trackNaddrEncoder?: (pubkey: string, identifier: string) => string,
-  releaseNaddrEncoder?: (pubkey: string, identifier: string) => string
+  config: RSSConfig
 ): string {
   const baseUrl = config.music.website || "";
   
   // Generate channels for each release
   const channels = releases.map(release => {
     // Generate RSS items for tracks in this specific release
-    const releaseItems = releaseToRSSItems(release, tracks, config, trackNaddrEncoder);
+    const releaseItems = releaseToRSSItems(release, tracks, config);
     
-    // Get release-specific information
-    const releaseLink = releaseNaddrEncoder && release.authorPubkey
-      ? `${baseUrl}/${releaseNaddrEncoder(release.authorPubkey, release.identifier)}`
+    // Get release-specific information using naddr
+    const releaseLink = release.authorPubkey
+      ? `${baseUrl}/release/${release.authorPubkey}/${release.identifier}`
       : `${baseUrl}/release/${release.identifier}`;
 
     // Collect genres from tracks in this release

@@ -52,9 +52,10 @@ export function GlassReleaseCard({ release, className}: GlassReleaseCardProps) {
   // Get first track for explicit badge
   const firstTrack = release.tracks?.[0];
 
-  // Generate release URL
-  const releaseId = release.eventId || release.id;
-  const releaseUrl = `/releases/${releaseId}`;
+  // Generate release URL using new Nostr navigation pattern
+  const releaseUrl = release.artistPubkey && release.identifier 
+    ? `/release/${release.artistPubkey}/${release.identifier}`
+    : `/releases/${release.eventId || release.id}`; // Fallback for legacy data
 
   const handleMouseEnter = () => {
     // Prefetch release data when hovering for instant navigation

@@ -152,7 +152,9 @@ const Index = () => {
                     </Badge>
                     <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
                       <Link 
-                        to={`/releases/${latestRelease.eventId || latestRelease.id}`}
+                        to={latestRelease.artistPubkey && latestRelease.identifier 
+                          ? `/release/${latestRelease.artistPubkey}/${latestRelease.identifier}`
+                          : `/releases/${latestRelease.eventId || latestRelease.id}`}
                         className="text-white drop-shadow-lg hover:text-white/90 transition-colors"
                       >
                         {latestRelease.title}

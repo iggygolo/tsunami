@@ -137,6 +137,17 @@ export function encodeMusicPlaylistAsNaddr(
 }
 
 /**
+ * Generate a track link using naddr format
+ * @param pubkey The track author's pubkey
+ * @param identifier The track 'd' tag identifier
+ * @returns Track URL path
+ */
+export function generateTrackLink(pubkey: string, identifier: string): string {
+  const naddr = encodeMusicTrackAsNaddr(pubkey, identifier);
+  return `/track/${naddr}`;
+}
+
+/**
  * Legacy function for backward compatibility - encodes a release as naddr
  * Now uses the music playlist event kind (34139)
  * @param pubkey The release author's pubkey

@@ -49,6 +49,11 @@ export interface ReleaseTrack {
   explicit?: boolean;
   language?: string | null; // ISO 639-1 two-letter code (e.g., "en", "es") or null for instrumental
   imageUrl?: string; // Individual track artwork URL
+  
+  // Nostr metadata for proper track identification
+  eventId?: string;     // Original Nostr event ID
+  identifier?: string;  // Original Nostr identifier ('d' tag)
+  artistPubkey?: string; // Track author's pubkey
 }
 
 /**

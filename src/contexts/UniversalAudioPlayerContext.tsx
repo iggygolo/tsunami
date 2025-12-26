@@ -112,24 +112,30 @@ export function releaseTracksToUniversal(
 ): UniversalTrack[] {
   if (!release.tracks) return [];
   
-  return release.tracks.map((track: any, index: number) => ({
-    id: `${release.eventId}-track-${index}`,
-    title: track.title,
-    artist: track.artist || MUSIC_CONFIG.music.artistName, // Use track's artist or default to configured artist
-    audioUrl: track.audioUrl,
-    duration: track.duration,
-    imageUrl: track.imageUrl || release.imageUrl,
-    explicit: track.explicit,
-    language: track.language,
-    source: {
-      type: sourceType,
-      releaseId: release.eventId,
-      releaseTitle: release.title,
-      artistPubkey: release.artistPubkey,
-    },
-    eventId: `${release.eventId}-track-${index}`,
-    identifier: `${release.identifier || release.eventId}-track-${index}`,
-  }));
+  return release.tracks.map((track: any, index: number) => {
+    // Use actual track metadata if available, otherwise create synthetic ID
+    const trackId = track.eventId || `${release.eventId}-track-${index}`;
+    const trackIdentifier = track.identifier || `${release.identifier || release.eventId}-track-${index}`;
+    
+    return {
+      id: trackId,
+      title: track.title,
+      artist: track.artist || MUSIC_CONFIG.music.artistName, // Use track's artist or default to configured artist
+      audioUrl: track.audioUrl,
+      duration: track.duration,
+      imageUrl: track.imageUrl || release.imageUrl,
+      explicit: track.explicit,
+      language: track.language,
+      source: {
+        type: sourceType,
+        releaseId: release.eventId,
+        releaseTitle: release.title,
+        artistPubkey: track.artistPubkey || release.artistPubkey, // Use track's artist pubkey if available
+      },
+      eventId: track.eventId, // Use actual event ID if available
+      identifier: trackIdentifier,
+    };
+  });
 }
 
 interface UniversalAudioPlayerProviderProps {

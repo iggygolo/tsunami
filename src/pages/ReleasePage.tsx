@@ -1,56 +1,86 @@
 import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSeoMeta } from '@unhead/react';
 import { ArrowLeft, Play, Pause, Heart, Share, MessageCircle, Music, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GlassTabs, GlassTabsList, GlassTabsTrigger, GlassTabsContent } from '@/components/ui/GlassTabs';
-import { ZapLeaderboard } from './ZapLeaderboard';
-import { ZapDialog } from '@/components/ZapDialog';
-import { CommentsSection } from '@/components/comments/CommentsSection';
-import { ReactionsSection } from './ReactionsSection';
-import { UniversalTrackList } from './UniversalTrackList';
-import { ArtistLinkWithImage } from '@/components/music/ArtistLink';
 import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
-import { Link, useNavigate } from 'react-router-dom';
-import { useMusicConfig } from '@/hooks/useMusicConfig';
-import { useReleaseData } from '@/hooks/useReleaseData';
+import { NostrNavigationError } from '@/components/NostrNavigationError';
+import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
+import { ZapDialog } from '@/components/ZapDialog';
+import { CommentsSection } from '@/components/comments/CommentsSection';
+import { ReactionsSection } from '@/components/music/ReactionsSection';
+import { UniversalTrackList } from '@/components/music/UniversalTrackList';
+import { ArtistLinkWithImage } from '@/components/music/ArtistLink';
+import { useReleaseResolver } from '@/hooks/useEventResolver';
+import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
+import { useMusicConfig } from '@/hooks/useMusicConfig';
+import { eventToMusicPlaylist, playlistToRelease } from '@/lib/eventConversions';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
+import NotFound from './NotFound';
 import type { NostrEvent } from '@nostrify/nostrify';
+import type { MusicPlaylistData } from '@/types/music';
 
-interface AddressableEventParams {
-  pubkey: string;
-  kind: number;
-  identifier: string;
-}
-
-interface ReleasePageProps {
-  eventId?: string; // For note1/nevent1
-  addressableEvent?: AddressableEventParams; // For naddr1
-}
-
-export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
+export function ReleasePage() {
+  const params = useParams<{ pubkey: string; identifier: string }>();
   const navigate = useNavigate();
-  const podcastConfig = useMusicConfig();
+  const musicConfig = useMusicConfig();
   const { formatDuration } = useFormatDuration();
   const [activeTab, setActiveTab] = useState('tracks');
 
-  // Use custom hook for release data
-  const { 
-    release, 
-    event, 
-    commentEvent, 
-    totalDuration, 
-    isLoading 
-  } = useReleaseData({ eventId, addressableEvent });
+  // Extract and validate URL parameters
+  if (!params.pubkey || !params.identifier) {
+    return <NotFound />;
+  }
+
+  const { pubkey, identifier } = params;
+
+  // Resolve the release event
+  const { data: playlistData, isLoading: isLoadingRelease, error: releaseError, refetch } = useReleaseResolver(
+    pubkey,
+    identifier,
+    eventToMusicPlaylist
+  );
+
+  // Resolve tracks in the release
+  const { data: resolvedTracks, isLoading: isLoadingTracks } = usePlaylistTrackResolution(
+    playlistData?.tracks || []
+  );
+
+  // Convert playlist data to release format for compatibility with existing components
+  const release = playlistData && resolvedTracks ? playlistToRelease(playlistData, new Map(
+    resolvedTracks.map(rt => [
+      `${rt.reference.pubkey}:${rt.reference.identifier}`,
+      rt.trackData
+    ]).filter(([, trackData]) => trackData !== undefined) as [string, any][]
+  )) : null;
 
   // Use custom hook for track playback
   const trackPlayback = useUniversalTrackPlayback(release);
+
+  // Create NostrEvent for interactions
+  const releaseEvent: NostrEvent | null = playlistData ? {
+    id: playlistData.eventId || `${pubkey}:${identifier}`,
+    pubkey: playlistData.authorPubkey || pubkey,
+    created_at: Math.floor((playlistData.createdAt?.getTime() || Date.now()) / 1000),
+    kind: MUSIC_KINDS.MUSIC_PLAYLIST,
+    tags: [
+      ['d', playlistData.identifier || identifier],
+      ['title', playlistData.title],
+      ...(playlistData.description ? [['description', playlistData.description]] : []),
+      ...(playlistData.imageUrl ? [['image', playlistData.imageUrl]] : []),
+      ...playlistData.categories?.map(tag => ['t', tag]) || []
+    ],
+    content: playlistData.description || '',
+    sig: ''
+  } : null;
 
   // Use custom hook for interactions
   const {
@@ -61,34 +91,25 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
     handleShare
   } = useReleaseInteractions({ 
     release: release, 
-    event, 
-    commentEvent 
+    event: releaseEvent, 
+    commentEvent: releaseEvent 
   });
 
-  // Create NostrEvent for zap functionality
-  const releaseEvent: NostrEvent | null = release ? {
-    id: release.eventId,
-    pubkey: release.artistPubkey,
-    created_at: Math.floor(release.createdAt.getTime() / 1000),
-    kind: MUSIC_KINDS.MUSIC_PLAYLIST,
-    tags: [
-      ['d', release.identifier || release.eventId],
-      ['title', release.title],
-      ...(release.description ? [['description', release.description]] : []),
-      ...(release.imageUrl ? [['image', release.imageUrl]] : []),
-      ...release.tags.map(tag => ['t', tag])
-    ],
-    content: JSON.stringify(release.tracks),
-    sig: ''
-  } : null;
+  // Calculate total duration from resolved tracks
+  const totalDuration = resolvedTracks?.reduce((sum, resolved) => {
+    return sum + (resolved.trackData?.duration || 0);
+  }, 0) || 0;
+
+  const isLoading = isLoadingRelease || isLoadingTracks;
 
   // Update document title when release loads
   useSeoMeta({
     title: release 
-      ? `${release.title} | ${release.artistName || podcastConfig.music.artistName}`
-      : `Release | ${podcastConfig.music.artistName}`,
+      ? `${release.title} | ${release.artistName || musicConfig.music.artistName}`
+      : `Release | ${musicConfig.music.artistName}`,
   });
 
+  // Loading state
   if (isLoading) {
     return (
       <Layout>
@@ -188,33 +209,45 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
     );
   }
 
-  if (!release) {
+  // Error state
+  if (releaseError || !release) {
+    const getErrorType = (): 'not_found' | 'network_error' | 'timeout' => {
+      if (!releaseError) return 'not_found';
+      if (releaseError.includes('timeout') || releaseError.includes('AbortError')) return 'timeout';
+      if (releaseError.includes('network') || releaseError.includes('fetch')) return 'network_error';
+      return 'not_found';
+    };
+
     return (
       <Layout>
-        <div className="relative -mx-4 px-4">
+        <div className="relative w-full max-w-full">
           <BlurredBackground image={undefined} />
           
-          <div className="relative py-8">
-            <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 text-white/70 hover:text-white">
+          <div className="relative py-4 w-full max-w-full overflow-hidden">
+            {/* Back Button */}
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate(-1)} 
+              className="mb-2 text-white/70 hover:text-white"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
 
-            <div className="text-center py-16">
-              <h2 className="text-2xl font-semibold mb-2 text-white drop-shadow-lg">Release Not Found</h2>
-              <p className="text-white/60 mb-6 drop-shadow-md">
-                This release doesn't exist or hasn't been published yet.
-              </p>
-              <Button asChild className="bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-black/40 hover:border-white/30 transition-all duration-200 shadow-lg">
-                <Link to="/releases">Browse All Releases</Link>
-              </Button>
-            </div>
+            <NostrNavigationError
+              type={getErrorType()}
+              title="Release Not Found"
+              message={releaseError || "This release doesn't exist or hasn't been published yet."}
+              onRetry={refetch}
+              showBackButton={false}
+            />
           </div>
         </div>
       </Layout>
     );
   }
 
+  // Success state - release loaded
   return (
     <Layout>
       <div className="relative w-full max-w-full">
@@ -223,7 +256,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
         <div className="relative py-4 w-full max-w-full overflow-hidden">
           {/* Back Button */}
           <Button variant="ghost" onClick={() => navigate(-1)} className="mb-2 text-white/70 hover:text-white">
-            <ArrowLeft className="w-4 h-2 mr-2" />
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
 
@@ -275,7 +308,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                     />
                   </div>
                 ) : (
-                  <p className="text-white/90 text-sm drop-shadow-md mb-2">{podcastConfig.music.artistName}</p>
+                  <p className="text-white/90 text-sm drop-shadow-md mb-2">{musicConfig.music.artistName}</p>
                 )}
                 {release.description && (
                   <p className="text-white/80 drop-shadow-md text-xs mb-2">{release.description}</p>
@@ -284,9 +317,9 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
               {/* Genre, Duration, and Track Count */}
               <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center lg:justify-start">
-                {release.genre && (
+                {release.tags && release.tags.length > 0 && (
                   <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30 text-xs">
-                    {release.genre}
+                    {release.tags[0]}
                   </Badge>
                 )}
                 {release.tracks && release.tracks.length > 0 && (
@@ -416,7 +449,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
               <GlassTabsContent value="zappers" className="w-full max-w-full">
                 <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
                   <ZapLeaderboard 
-                    eventId={release.eventId}
+                    eventId={release?.eventId || playlistData?.eventId || ''}
                     showTitle={false}
                     className="text-white"
                     limit={10}
@@ -426,16 +459,16 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
 
               <GlassTabsContent value="comments" className="w-full max-w-full">
                 <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg w-full max-w-full overflow-hidden">
-                  {event && (
+                  {releaseEvent && (
                     <CommentsSection
-                      root={event}
+                      root={releaseEvent}
                       title=""
                       emptyStateMessage="No comments yet"
                       emptyStateSubtitle="Be the first to share your thoughts!"
                       className="bg-transparent border-none"
                     />
                   )}
-                  {!event && (
+                  {!releaseEvent && (
                     <div className="p-6 text-center text-white/70">
                       <MessageCircle className="w-12 h-12 mx-auto mb-4 text-white/30" />
                       <p>Comments unavailable</p>
@@ -448,7 +481,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
                 <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
                   <div className="w-full max-w-full overflow-hidden">
                     <ReactionsSection 
-                      eventId={release.eventId}
+                      eventId={release?.eventId || playlistData?.eventId || ''}
                       className="text-white w-full max-w-full overflow-hidden"
                     />
                   </div>

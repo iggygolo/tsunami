@@ -17,7 +17,9 @@ import { ZapDialog } from '@/components/ZapDialog';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useUniversalAudioPlayer, musicTrackToUniversal, releaseTracksToUniversal, type UniversalTrack } from '@/contexts/UniversalAudioPlayerContext';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
+import { encodeMusicTrackAsNaddr } from '@/lib/nip19Utils';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 import type { MusicRelease, MusicTrackData } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -188,6 +190,35 @@ export function UniversalTrackList({
     return playerState.currentTrack?.id === track.id;
   };
 
+  // Generate track link using naddr format for standalone tracks
+  const getTrackLink = (track: MusicTrackData | any, index: number): string | null => {
+    // For individual tracks (profile page), check if we have proper track metadata
+    if (tracks && track.artistPubkey && track.identifier) {
+      // Only create links for non-synthetic tracks
+      const isSyntheticTrack = track.identifier?.includes('-track-') || 
+                              track.id?.includes('-track-');
+      
+      if (!isSyntheticTrack) {
+        const naddr = encodeMusicTrackAsNaddr(track.artistPubkey, track.identifier);
+        return `/track/${naddr}`;
+      }
+    }
+    
+    // For release tracks, check if they have proper standalone metadata
+    if (release && track.eventId && track.identifier && track.artistPubkey) {
+      // Only create links for tracks that exist as standalone events
+      const isSyntheticTrack = track.identifier?.includes('-track-') || 
+                              track.eventId?.includes('-track-');
+      
+      if (!isSyntheticTrack) {
+        const naddr = encodeMusicTrackAsNaddr(track.artistPubkey, track.identifier);
+        return `/track/${naddr}`;
+      }
+    }
+    
+    return null; // No link for synthetic tracks
+  };
+
   // Empty state (using dark theme semantic colors)
   if (displayTracks.length === 0) {
     return (
@@ -267,13 +298,37 @@ export function UniversalTrackList({
             {/* Track Info */}
             <div className="flex-1 min-w-0 pr-2">
               <div className="flex items-center gap-1 flex-wrap">
-                <h4 className={cn(
-                  "font-medium truncate max-w-full",
-                  isCurrentTrack ? "text-white" : "text-white/90",
-                  !hasAudio && "text-white/50"
-                )}>
-                  {track.title}
-                </h4>
+                {(() => {
+                  const trackLink = getTrackLink(track, index);
+                  const trackTitle = (
+                    <span className={cn(
+                      "font-medium truncate max-w-full",
+                      isCurrentTrack ? "text-white" : "text-white/90",
+                      !hasAudio && "text-white/50"
+                    )}>
+                      {track.title}
+                    </span>
+                  );
+
+                  return trackLink ? (
+                    <Link 
+                      to={trackLink}
+                      className="hover:text-white transition-colors cursor-pointer truncate max-w-full"
+                      onClick={(e) => e.stopPropagation()}
+                      title="View track page"
+                    >
+                      {trackTitle}
+                    </Link>
+                  ) : (
+                    <h4 className={cn(
+                      "font-medium truncate max-w-full",
+                      isCurrentTrack ? "text-white" : "text-white/90",
+                      !hasAudio && "text-white/50"
+                    )}>
+                      {track.title}
+                    </h4>
+                  );
+                })()}
                 {track.explicit && (
                   <Badge variant="destructive" className="text-xs px-1.5 py-0.5 h-5 flex-shrink-0">
                     E

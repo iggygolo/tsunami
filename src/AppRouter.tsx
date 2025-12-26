@@ -7,6 +7,8 @@ import Community from "./pages/Community";
 import SocialFeed from "./pages/SocialFeed";
 import DebugAudio from "./pages/DebugAudio";
 import { NIP19Page } from "./pages/NIP19Page";
+import { TrackPage } from "./pages/TrackPage";
+import { ReleasePage } from "./pages/ReleasePage";
 import NotFound from "./pages/NotFound";
 import { PersistentAudioPlayer } from "./components/audio/PersistentAudioPlayer";
 import { 
@@ -32,6 +34,10 @@ export function AppRouter() {
         <Route path="/releases/:releaseId" element={<NIP19Page />} />
         <Route path="/community" element={<Community />} />
         <Route path="/social" element={<SocialFeed />} />
+        
+        {/* Nostr navigation routes */}
+        <Route path="/track/:naddr" element={<TrackPage />} />
+        <Route path="/release/:pubkey/:identifier" element={<ReleasePage />} />
         
         {/* Studio nested routes */}
         <Route path="/studio" element={<StudioLayout />}>

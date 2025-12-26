@@ -273,6 +273,10 @@ export function playlistToRelease(
         explicit: track.explicit || false,
         language: track.language || null,
         imageUrl: track.imageUrl, // Include individual track image
+        // Preserve Nostr metadata for proper track identification
+        eventId: track.eventId,
+        identifier: track.identifier,
+        artistPubkey: track.artistPubkey,
       };
       releaseTracks.push(releaseTrack);
       console.log(`✅ playlistToRelease - Track ${index + 1} added with full data`);
@@ -286,6 +290,9 @@ export function playlistToRelease(
         explicit: false,
         language: null,
         imageUrl: undefined, // No image for placeholder tracks
+        // Use reference data for placeholders
+        identifier: trackRef.identifier,
+        artistPubkey: trackRef.pubkey,
       };
       releaseTracks.push(releaseTrack);
       console.log(`⚠️ playlistToRelease - Track ${index + 1} added as placeholder (missing track data)`);

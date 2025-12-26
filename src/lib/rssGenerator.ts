@@ -1,6 +1,5 @@
 import type { MusicTrackData, MusicPlaylistData } from '@/types/music';
 import { MUSIC_CONFIG, type MusicConfig } from './musicConfig';
-import { encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr } from './nip19Utils';
 import { 
   generateRSSFeed as generateRSSFeedCore,
   musicConfigToRSSConfig 
@@ -14,7 +13,7 @@ export function generateRSSFeed(tracks: MusicTrackData[], releases: MusicPlaylis
   const musicConfig = config || MUSIC_CONFIG;
   const rssConfig = musicConfigToRSSConfig(musicConfig);
   
-  return generateRSSFeedCore(tracks, releases, rssConfig, encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr);
+  return generateRSSFeedCore(tracks, releases, rssConfig);
 }
 
 /**

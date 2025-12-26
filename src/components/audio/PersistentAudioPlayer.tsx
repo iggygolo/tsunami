@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { nip19 } from 'nostr-tools';
 import {
   Play,
   Pause,
@@ -19,7 +18,8 @@ import { ArtistLinkCompact } from '@/components/music/ArtistLink';
 import { useUniversalAudioPlayer } from '@/contexts/UniversalAudioPlayerContext';
 import { useGlassEffect } from '@/hooks/useBackdropSupport';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
-import { useNavigate } from 'react-router-dom';
+import { encodeMusicTrackAsNaddr } from '@/lib/nip19Utils';
+import { useNavigate, Link } from 'react-router-dom';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 export function PersistentAudioPlayer() {
@@ -119,23 +119,45 @@ export function PersistentAudioPlayer() {
     seekTo(Math.min(state.duration, state.currentTime + 15));
   };
 
-  const handleNavigateToTrack = () => {
+  // Generate track link using naddr format
+  const getTrackLink = (): string | null => {
+    // Only check for synthetic track identifiers, not source type
+    const isSyntheticTrack = currentTrack.identifier?.includes('-track-') || 
+                            currentTrack.id?.includes('-track-');
+    
+    if (isSyntheticTrack) {
+      return null; // Will navigate to release instead
+    }
+
     if (currentTrack.source?.artistPubkey && currentTrack.identifier) {
-      // Create naddr for individual track (Kind 36787)
-      const naddr = nip19.naddrEncode({
-        identifier: currentTrack.identifier,
-        pubkey: currentTrack.source.artistPubkey,
-        kind: MUSIC_KINDS.MUSIC_TRACK
-      });
-      navigate(`/${naddr}`);
-    } else if (currentTrack.eventId) {
-      // Fallback to event ID if no addressable info
-      navigate(`/releases/${currentTrack.eventId}`);
+      // Generate naddr for standalone tracks
+      const naddr = encodeMusicTrackAsNaddr(
+        currentTrack.source.artistPubkey, 
+        currentTrack.identifier
+      );
+      return `/track/${naddr}`;
+    }
+    
+    return null;
+  };
+
+  const handleNavigateToTrack = () => {
+    const trackLink = getTrackLink();
+    
+    if (trackLink) {
+      navigate(trackLink);
+    } else {
+      // For synthetic tracks or tracks without proper metadata, navigate to the release instead
+      handleNavigateToRelease();
     }
   };
 
   const handleNavigateToRelease = () => {
-    if (currentTrack.source?.releaseId) {
+    if (currentTrack.source?.releaseId && currentTrack.source?.artistPubkey) {
+      // Try to use new Nostr navigation pattern for releases if we have the identifier
+      // For now, fall back to legacy pattern since we don't have releaseIdentifier in the source
+      navigate(`/releases/${currentTrack.source.releaseId}`);
+    } else if (currentTrack.source?.releaseId) {
       navigate(`/releases/${currentTrack.source.releaseId}`);
     } else if (currentTrack.source?.type === 'profile' && currentTrack.source.artistPubkey) {
       navigate(`/profile/${currentTrack.source.artistPubkey}`);
@@ -169,13 +191,24 @@ export function PersistentAudioPlayer() {
           <div className="flex items-center space-x-4 mb-4">
             {displayImage && (
               <div className="relative">
-                <img
-                  src={displayImage}
-                  alt={currentTrack.title}
-                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
-                  onClick={handleNavigateToTrack}
-                  title="View track page"
-                />
+                {getTrackLink() ? (
+                  <Link to={getTrackLink()!} className="block">
+                    <img
+                      src={displayImage}
+                      alt={currentTrack.title}
+                      className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
+                      title="View track page"
+                    />
+                  </Link>
+                ) : (
+                  <img
+                    src={displayImage}
+                    alt={currentTrack.title}
+                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
+                    onClick={handleNavigateToTrack}
+                    title="View release page"
+                  />
+                )}
                 {state.isPlaying && (
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-md">
                     <div className="w-1 h-1 bg-black rounded-full animate-pulse" />
@@ -184,15 +217,27 @@ export function PersistentAudioPlayer() {
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <button 
-                onClick={handleNavigateToTrack}
-                className="text-left w-full group"
-                title="View individual track page"
-              >
-                <p className="font-medium text-sm line-clamp-1 text-white group-hover:text-white/90 transition-colors cursor-pointer">
-                  {currentTrack.title}
-                </p>
-              </button>
+              {getTrackLink() ? (
+                <Link 
+                  to={getTrackLink()!}
+                  className="text-left w-full group block"
+                  title="View track page"
+                >
+                  <p className="font-medium text-sm line-clamp-1 text-white group-hover:text-white/90 transition-colors cursor-pointer">
+                    {currentTrack.title}
+                  </p>
+                </Link>
+              ) : (
+                <button 
+                  onClick={handleNavigateToTrack}
+                  className="text-left w-full group"
+                  title="View release page"
+                >
+                  <p className="font-medium text-sm line-clamp-1 text-white group-hover:text-white/90 transition-colors cursor-pointer">
+                    {currentTrack.title}
+                  </p>
+                </button>
+              )}
               <p className="text-xs text-white/70 line-clamp-1 mb-1">
                 {currentTrack.source?.artistPubkey ? (
                   <ArtistLinkCompact 
@@ -311,13 +356,24 @@ export function PersistentAudioPlayer() {
           <div className="flex items-center space-x-4 min-w-0 w-1/3">
             {displayImage && (
               <div className="relative">
-                <img
-                  src={displayImage}
-                  alt={currentTrack.title}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
-                  onClick={handleNavigateToTrack}
-                  title="View track page"
-                />
+                {getTrackLink() ? (
+                  <Link to={getTrackLink()!} className="block">
+                    <img
+                      src={displayImage}
+                      alt={currentTrack.title}
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
+                      title="View track page"
+                    />
+                  </Link>
+                ) : (
+                  <img
+                    src={displayImage}
+                    alt={currentTrack.title}
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
+                    onClick={handleNavigateToTrack}
+                    title="View release page"
+                  />
+                )}
                 {state.isPlaying && (
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-md">
                     <div className="w-1 h-1 bg-black rounded-full animate-pulse" />
@@ -326,15 +382,27 @@ export function PersistentAudioPlayer() {
               </div>
             )}
             <div className="min-w-0 flex-1 flex flex-col">
-              <button 
-                onClick={handleNavigateToTrack}
-                className="text-left w-full group"
-                title="View individual track page"
-              >
-                <p className="font-medium text-xs sm:text-sm line-clamp-1 text-white group-hover:text-white/90 transition-colors cursor-pointer">
-                  {currentTrack.title}
-                </p>
-              </button>
+              {getTrackLink() ? (
+                <Link 
+                  to={getTrackLink()!}
+                  className="text-left w-full group block"
+                  title="View track page"
+                >
+                  <p className="font-medium text-xs sm:text-sm line-clamp-1 text-white group-hover:text-white/90 transition-colors cursor-pointer">
+                    {currentTrack.title}
+                  </p>
+                </Link>
+              ) : (
+                <button 
+                  onClick={handleNavigateToTrack}
+                  className="text-left w-full group"
+                  title="View release page"
+                >
+                  <p className="font-medium text-xs sm:text-sm line-clamp-1 text-white group-hover:text-white/90 transition-colors cursor-pointer">
+                    {currentTrack.title}
+                  </p>
+                </button>
+              )}
               <p className="text-xs text-white/70 line-clamp-1">
                 {currentTrack.source?.artistPubkey ? (
                   <ArtistLinkCompact 

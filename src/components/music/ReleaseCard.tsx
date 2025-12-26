@@ -42,10 +42,10 @@ export function ReleaseCard({
   // Calculate total duration from all tracks
   const totalDuration = release.tracks?.reduce((sum, track) => sum + (track.duration || 0), 0) || 0;
 
-  // Generate release URL - prefer explicit route for better SEO
-  // Use consistent /releases/:eventId format for all release links
-  const releaseId = release.eventId || release.id;
-  const releaseUrl = `/releases/${releaseId}`;
+  // Generate release URL using new Nostr navigation pattern
+  const releaseUrl = release.artistPubkey && release.identifier 
+    ? `/release/${release.artistPubkey}/${release.identifier}`
+    : `/releases/${release.eventId || release.id}`; // Fallback for legacy data
 
   const handleMouseEnter = () => {
     // Prefetch release data when hovering for instant navigation

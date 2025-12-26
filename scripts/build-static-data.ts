@@ -3,7 +3,6 @@ import path from 'path';
 import { config } from 'dotenv';
 import { fetchNostrDataBundle } from './shared/nostr-data-fetcher.js';
 import { generateRSSFeed, type RSSConfig } from '../src/lib/rssCore.js';
-import { encodeMusicTrackAsNaddr, encodeMusicPlaylistAsNaddr } from '../src/lib/nip19Utils.js';
 import { playlistToRelease } from '../src/lib/eventConversions.js';
 import type { MusicRelease, MusicTrackData, MusicPlaylistData } from '../src/types/music.js';
 
@@ -198,9 +197,7 @@ async function generateRSSFile(
     const rssContent = generateRSSFeed(
       tracks, 
       playlists, 
-      config, 
-      encodeMusicTrackAsNaddr, 
-      encodeMusicPlaylistAsNaddr
+      config
     );
 
     const rssPath = path.join(distDir, 'rss.xml');
