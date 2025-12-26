@@ -19,7 +19,7 @@ export function TrackPage() {
   const params = useParams<{ naddr: string }>();
   const navigate = useNavigate();
   const { formatDuration } = useFormatDuration();
-  const { playQueue } = useUniversalAudioPlayer();
+  const { playQueue, state, play, pause } = useUniversalAudioPlayer();
 
   // Only handle naddr format
   if (!params.naddr) {
@@ -80,13 +80,32 @@ export function TrackPage() {
   const handleTrackPlay = () => {
     if (!track || !track.audioUrl) return;
     
-    const universalTrack = musicTrackToUniversal(track, {
-      type: 'profile',
-      artistPubkey: track.artistPubkey
-    });
+    // Check if this track is currently playing
+    const isCurrentTrack = state.currentTrack?.id === track.eventId || 
+                          state.currentTrack?.id === `${track.artistPubkey}:${track.identifier}`;
     
-    playQueue([universalTrack], 0, track.title);
+    if (isCurrentTrack) {
+      // If this track is currently loaded, just toggle play/pause
+      if (state.isPlaying) {
+        pause();
+      } else {
+        play();
+      }
+    } else {
+      // If this is a different track, load and play it
+      const universalTrack = musicTrackToUniversal(track, {
+        type: 'profile',
+        artistPubkey: track.artistPubkey
+      });
+      
+      playQueue([universalTrack], 0, track.title);
+    }
   };
+
+  // Check if this track is currently playing
+  const isCurrentTrack = state.currentTrack?.id === track?.eventId || 
+                         state.currentTrack?.id === `${track?.artistPubkey}:${track?.identifier}`;
+  const isTrackPlaying = isCurrentTrack && state.isPlaying;
 
   // Placeholder interaction handlers
   const handleLike = () => {
@@ -241,8 +260,8 @@ export function TrackPage() {
               }] : [])
             ]}
             playback={track.audioUrl ? {
-              isPlaying: false, // TODO: Connect to actual playback state
-              isLoading: false,
+              isPlaying: isTrackPlaying,
+              isLoading: state.isLoading,
               hasPlayableTracks: true,
               onPlay: handleTrackPlay
             } : undefined}
