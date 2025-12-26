@@ -67,10 +67,12 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
     return (
       <div className={cn('grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6', className)}>
         {[...Array(limit)].map((_, i) => (
-          <div key={i} className="flex flex-col items-center text-center">
-            <Skeleton className="w-32 h-32 rounded-full mb-4" />
-            <Skeleton className="h-5 w-24 mb-1" />
-            <Skeleton className="h-4 w-16" />
+          <div key={i} className="flex flex-col items-center text-center space-y-3">
+            <Skeleton className="w-32 h-32 rounded-full" />
+            <div className="space-y-2 w-full">
+              <Skeleton className="h-5 w-24 mx-auto" />
+              <Skeleton className="h-3 w-16 mx-auto" />
+            </div>
           </div>
         ))}
       </div>

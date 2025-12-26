@@ -1,30 +1,23 @@
-import { useState } from 'react';
 import { useSeoMeta } from '@unhead/react';
-import { MessageCircle, Users, TrendingUp, Music, Sparkles } from 'lucide-react';
+import { MessageCircle, Users, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
 import { PostCard } from '@/components/social/PostCard';
 import { NoteComposer } from '@/components/social/NoteComposer';
 import { InfiniteScroll } from '@/components/ui/InfiniteScroll';
-import { ArtistLinkWithImage } from '@/components/music/ArtistLink';
-import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
-import { RecentActivity } from '@/components/music/RecentActivity';
-import { ReleaseDiscussions } from '@/components/music/ReleaseDiscussions';
+import { CommunityZapLeaderboard } from '@/components/community/CommunityZapLeaderboard';
+import { CommunityRecentActivity } from '@/components/community/CommunityRecentActivity';
 import { 
   useCommunityPosts, 
-  useCommunityStats, 
-  useFeaturedArtists 
+  useCommunityStats
 } from '@/hooks/useCommunityPosts';
+import { FeaturedArtistsSection } from '@/components/community/FeaturedArtists';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useQueryClient } from '@tanstack/react-query';
-import { cn } from '@/lib/utils';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 const Community = () => {
-  const [selectedArtistFilter, setSelectedArtistFilter] = useState<string | undefined>(undefined);
   const { user } = useCurrentUser();
   const queryClient = useQueryClient();
 
@@ -36,10 +29,9 @@ const Community = () => {
     isFetching: isFetchingPosts,
     isLoading: postsLoading,
     error: postsError,
-  } = useCommunityPosts(20, selectedArtistFilter);
+  } = useCommunityPosts(20);
 
   const { data: communityStats } = useCommunityStats();
-  const { data: featuredArtists } = useFeaturedArtists(6);
 
   // Flatten infinite query data for rendering
   const communityPostsData = postsData?.pages.flat() || [];
@@ -105,13 +97,10 @@ const Community = () => {
   return (
     <Layout>
       <div className="py-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">
+        <div className="mb-4">
+          <h1 className="text-3xl font-bold mb-2 text-foreground">
             Community
           </h1>
-          <p className="text-muted-foreground">
-            Discover and engage with the Nostr music community
-          </p>
           
           {/* Community Stats */}
           {communityStats && (
@@ -133,65 +122,9 @@ const Community = () => {
         </div>
 
         {/* Featured Artists Section */}
-        {featuredArtists && featuredArtists.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Sparkles className="w-5 h-5 text-primary" />
-                Featured Artists
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {featuredArtists.map((artist) => (
-                  <div
-                    key={artist.pubkey}
-                    className={cn(
-                      "p-3 rounded-lg border transition-colors cursor-pointer",
-                      selectedArtistFilter === artist.pubkey
-                        ? "bg-primary/10 border-primary/30"
-                        : "hover:bg-muted/50"
-                    )}
-                    onClick={() => {
-                      setSelectedArtistFilter(
-                        selectedArtistFilter === artist.pubkey ? undefined : artist.pubkey
-                      );
-                    }}
-                  >
-                    <ArtistLinkWithImage
-                      pubkey={artist.pubkey}
-                      artistInfo={artist}
-                      disabled={true}
-                      className="flex flex-col items-center text-center gap-2"
-                      textSize="text-xs"
-                      imageSize="w-12 h-12"
-                    />
-                    {artist.activityScore > 0 && (
-                      <div className="text-xs text-muted-foreground text-center mt-1">
-                        {artist.activityScore} activity
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              
-              {selectedArtistFilter && (
-                <div className="mt-4 flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Showing posts from selected artist
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedArtistFilter(undefined)}
-                  >
-                    Show All Artists
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        <div className="mb-4">
+          <FeaturedArtistsSection />
+        </div>
 
         {/* Main Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -212,7 +145,7 @@ const Community = () => {
                       placeholder="Share something with the community..."
                       onSuccess={(newEvent) => {
                         // Optimistically add the new note to the community feed
-                        queryClient.setQueryData(['community-posts', selectedArtistFilter, 20], (oldData: unknown) => {
+                        queryClient.setQueryData(['community-posts', 20], (oldData: unknown) => {
                           if (!oldData || typeof oldData !== 'object' || !('pages' in oldData)) return oldData;
                           
                           const typedOldData = oldData as { pages: NostrEvent[][] };
@@ -293,7 +226,7 @@ const Community = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ZapLeaderboard limit={5} showTitle={false} />
+                <CommunityZapLeaderboard limit={5} />
               </CardContent>
             </Card>
 
@@ -306,20 +239,7 @@ const Community = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <RecentActivity limit={15} showTitle={false} />
-              </CardContent>
-            </Card>
-
-            {/* Release Discussions */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Music className="w-5 h-5 text-primary" />
-                  Release Discussions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ReleaseDiscussions limit={10} />
+                <CommunityRecentActivity limit={15} />
               </CardContent>
             </Card>
           </div>
