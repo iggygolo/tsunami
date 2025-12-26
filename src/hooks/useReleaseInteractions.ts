@@ -131,7 +131,7 @@ export function useReleaseInteractions({ release, event, commentEvent }: UseRele
     
     try {
       const naddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
-      const url = `${window.location.origin}/${naddr}`;
+      const url = `${window.location.origin}/release/${naddr}`;
       await navigator.clipboard.writeText(url);
       
       toast({

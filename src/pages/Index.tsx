@@ -21,6 +21,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { useArtistPosts, useArtistPostCount } from '@/hooks/useArtistPosts';
 import { useZapLeaderboard } from '@/hooks/useZapLeaderboard';
+import { generateReleaseLink } from '@/lib/nip19Utils';
 import { getArtistPubkeyHex } from '@/lib/musicConfig';
 
 const Index = () => {
@@ -152,9 +153,7 @@ const Index = () => {
                     </Badge>
                     <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
                       <Link 
-                        to={latestRelease.artistPubkey && latestRelease.identifier 
-                          ? `/release/${latestRelease.artistPubkey}/${latestRelease.identifier}`
-                          : `/releases/${latestRelease.eventId || latestRelease.id}`}
+                        to={generateReleaseLink(latestRelease.artistPubkey, latestRelease.identifier)}
                         className="text-white drop-shadow-lg hover:text-white/90 transition-colors"
                       >
                         {latestRelease.title}

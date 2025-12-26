@@ -125,7 +125,7 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
     try {
       // Use naddr format for sharing (canonical Nostr format)
       const naddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
-      const url = `${window.location.origin}/${naddr}`;
+      const url = `${window.location.origin}/release/${naddr}`;
 
       await navigator.clipboard.writeText(url);
 

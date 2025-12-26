@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSeoMeta } from '@unhead/react';
 import { ArrowLeft, Music, Zap, Heart, MessageCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { GlassTabs, GlassTabsList, GlassTabsTrigger, GlassTabsContent } from '@/components/ui/GlassTabs';
 import { Layout } from '@/components/Layout';
@@ -21,22 +20,41 @@ import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { eventToMusicPlaylist, playlistToRelease } from '@/lib/eventConversions';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
+import { nip19 } from 'nostr-tools';
 import NotFound from './NotFound';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 export function ReleasePage() {
-  const params = useParams<{ pubkey: string; identifier: string }>();
+  const params = useParams<{ naddr: string }>();
   const navigate = useNavigate();
   const musicConfig = useMusicConfig();
   const { formatDuration } = useFormatDuration();
   const [activeTab, setActiveTab] = useState('tracks');
 
-  // Extract and validate URL parameters
-  if (!params.pubkey || !params.identifier) {
+  // Only handle naddr format
+  if (!params.naddr) {
     return <NotFound />;
   }
 
-  const { pubkey, identifier } = params;
+  let pubkey: string;
+  let identifier: string;
+
+  try {
+    const decoded = nip19.decode(params.naddr);
+    if (decoded.type === 'naddr') {
+      pubkey = decoded.data.pubkey;
+      identifier = decoded.data.identifier;
+      
+      // Verify this is a playlist/release event (kind 34139)
+      if (decoded.data.kind !== MUSIC_KINDS.MUSIC_PLAYLIST) {
+        return <NotFound />;
+      }
+    } else {
+      return <NotFound />;
+    }
+  } catch (error) {
+    return <NotFound />;
+  }
 
   // Resolve the release event
   const { data: playlistData, isLoading: isLoadingRelease, error: releaseError, refetch } = useReleaseResolver(

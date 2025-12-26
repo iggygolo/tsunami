@@ -7,6 +7,7 @@ import { ArtistLinkCompact } from '@/components/music/ArtistLink';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { useReleasePrefetch } from '@/hooks/useReleasePrefetch';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
+import { generateReleaseLink } from '@/lib/nip19Utils';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
 import type { MusicRelease } from '@/types/music';
@@ -52,10 +53,8 @@ export function GlassReleaseCard({ release, className}: GlassReleaseCardProps) {
   // Get first track for explicit badge
   const firstTrack = release.tracks?.[0];
 
-  // Generate release URL using new Nostr navigation pattern
-  const releaseUrl = release.artistPubkey && release.identifier 
-    ? `/release/${release.artistPubkey}/${release.identifier}`
-    : `/releases/${release.eventId || release.id}`; // Fallback for legacy data
+  // Generate release URL using naddr format
+  const releaseUrl = generateReleaseLink(release.artistPubkey, release.identifier);
 
   const handleMouseEnter = () => {
     // Prefetch release data when hovering for instant navigation

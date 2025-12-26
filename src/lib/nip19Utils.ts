@@ -148,6 +148,17 @@ export function generateTrackLink(pubkey: string, identifier: string): string {
 }
 
 /**
+ * Generate a release link using naddr format
+ * @param pubkey The release author's pubkey
+ * @param identifier The release 'd' tag identifier
+ * @returns Release URL path
+ */
+export function generateReleaseLink(pubkey: string, identifier: string): string {
+  const naddr = encodeMusicPlaylistAsNaddr(pubkey, identifier);
+  return `/release/${naddr}`;
+}
+
+/**
  * Legacy function for backward compatibility - encodes a release as naddr
  * Now uses the music playlist event kind (34139)
  * @param pubkey The release author's pubkey

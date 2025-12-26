@@ -37,7 +37,7 @@ export function AppRouter() {
         
         {/* Nostr navigation routes */}
         <Route path="/track/:naddr" element={<TrackPage />} />
-        <Route path="/release/:pubkey/:identifier" element={<ReleasePage />} />
+        <Route path="/release/:naddr" element={<ReleasePage />} />
         
         {/* Studio nested routes */}
         <Route path="/studio" element={<StudioLayout />}>

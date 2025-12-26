@@ -31,7 +31,7 @@ const NotFound = () => {
           <NostrNavigationError
             type="invalid_format"
             title="Invalid URL Format"
-            message="The URL format is not valid. Nostr music URLs should follow the pattern /track/{naddr} or /release/{pubkey}/{identifier}."
+            message="The URL format is not valid. Nostr music URLs should follow the pattern /track/{naddr} or /release/{naddr}."
             showBackButton={true}
           />
         </div>
