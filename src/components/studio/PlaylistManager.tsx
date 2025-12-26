@@ -21,6 +21,7 @@ import {
 import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useDeletePlaylist } from '@/hooks/usePublishPlaylist';
 import { useToast } from '@/hooks/useToast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import type { MusicPlaylistData } from '@/types/music';
@@ -38,13 +39,16 @@ export function PlaylistManager({
 }: PlaylistManagerProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useCurrentUser();
   const { playQueue, pause, state } = useUniversalAudioPlayer();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'tracks'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  // Only fetch playlists for the current user
   const { data: playlists, isLoading, error } = useMusicPlaylists({
+    artistPubkey: user?.pubkey, // Only fetch current user's playlists
     sortBy,
     sortOrder,
     includePrivate: true, // Show all playlists including private ones

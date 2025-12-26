@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { TrackForm } from '@/components/studio/TrackForm';
 import { useMusicTrack } from '@/hooks/useMusicTracks';
 import { useUpdateTrack } from '@/hooks/usePublishTrack';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useToast } from '@/hooks/useToast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,8 +13,10 @@ export function EditTrackPage() {
   const navigate = useNavigate();
   const { trackId } = useParams<{ trackId: string }>();
   const { toast } = useToast();
+  const { user } = useCurrentUser();
   
-  const { data: track, isLoading, error } = useMusicTrack(trackId || '');
+  // Only fetch track if it belongs to the current user
+  const { data: track, isLoading, error } = useMusicTrack(trackId || '', user?.pubkey);
   const { mutate: updateTrack, isPending } = useUpdateTrack();
 
   const handleSubmit = async (data: MusicTrackFormData) => {

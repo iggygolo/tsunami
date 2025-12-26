@@ -25,6 +25,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/useToast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMusicTracks } from '@/hooks/useMusicTracks';
 import { getAllGenres, POPULAR_GENRES } from '@/lib/musicMetadata';
 import type { MusicPlaylistFormData, MusicPlaylistData, TrackReference, MusicTrackData } from '@/types/music';
@@ -59,6 +60,7 @@ export function PlaylistForm({
   submitButtonLoadingText,
 }: PlaylistFormProps) {
   const { toast } = useToast();
+  const { user } = useCurrentUser();
   
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [selectedGenre, setSelectedGenre] = useState('');
@@ -70,8 +72,10 @@ export function PlaylistForm({
   // Get all available genres (same as used for tracks)
   const allGenres = getAllGenres();
 
-  // Fetch available tracks
-  const { data: availableTracks, isLoading: tracksLoading } = useMusicTracks();
+  // Fetch available tracks for the current user only
+  const { data: availableTracks, isLoading: tracksLoading } = useMusicTracks({
+    artistPubkey: user?.pubkey, // Only fetch current user's tracks
+  });
 
   const form = useForm<PlaylistFormValues>({
     resolver: zodResolver(playlistFormSchema),

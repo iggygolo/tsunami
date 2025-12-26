@@ -7,12 +7,13 @@ import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicTrackData } from '@/types/music';
 
 /**
- * Hook to fetch all music tracks from all artists
+ * Hook to fetch all music tracks from all artists or a specific artist
  */
 export function useMusicTracks(options: {
   limit?: number;
   sortBy?: 'date' | 'title' | 'album';
   sortOrder?: 'asc' | 'desc';
+  artistPubkey?: string; // Optional: filter by specific artist
 } = {}) {
   const { nostr } = useNostr();
 
@@ -21,12 +22,19 @@ export function useMusicTracks(options: {
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
-      // Query for music track events from all artists
-      const events = await nostr.query([{
+      // Query for music track events from all artists or specific artist
+      const queryFilter: any = {
         kinds: [MUSIC_KINDS.MUSIC_TRACK],
-        // No authors filter - get from all artists
         limit: options.limit || 200 // Increased limit for multi-artist content
-      }], { signal });
+      };
+
+      // If artistPubkey is specified, filter by that artist, otherwise get from all artists
+      if (options.artistPubkey) {
+        queryFilter.authors = [options.artistPubkey];
+      }
+      // No authors filter means get from all artists
+
+      const events = await nostr.query([queryFilter], { signal });
 
       // Filter and validate events
       const validEvents = events.filter(validateMusicTrack);

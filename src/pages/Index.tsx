@@ -265,9 +265,18 @@ const Index = () => {
             <ReleaseList
               showSearch={false}
               showArtistFilter={false}
-              limit={6}
+              limit={3}
               useCache={true}
             />
+          </section>
+
+          {/* All Releases */}
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">All Releases</h2>
+            </div>
+
+            <ReleaseList showSearch showArtistFilter useCache />
           </section>
 
           {/* Community Section */}

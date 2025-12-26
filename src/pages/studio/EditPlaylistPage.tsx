@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { PlaylistForm } from '@/components/studio/PlaylistForm';
 import { useUpdatePlaylist } from '@/hooks/usePublishPlaylist';
 import { useMusicPlaylist } from '@/hooks/useMusicPlaylists';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useToast } from '@/hooks/useToast';
 import type { MusicPlaylistFormData } from '@/types/music';
 
@@ -12,9 +13,11 @@ export function EditPlaylistPage() {
   const navigate = useNavigate();
   const { playlistId } = useParams<{ playlistId: string }>();
   const { toast } = useToast();
+  const { user } = useCurrentUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { data: playlist, isLoading, error } = useMusicPlaylist(playlistId || '');
+  // Only fetch playlist if it belongs to the current user
+  const { data: playlist, isLoading, error } = useMusicPlaylist(playlistId || '', user?.pubkey);
   const { mutate: updatePlaylist } = useUpdatePlaylist();
 
   // Redirect if no playlist ID

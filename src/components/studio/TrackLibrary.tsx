@@ -21,6 +21,7 @@ import {
 import { useMusicTracks } from '@/hooks/useMusicTracks';
 import { useDeleteTrack } from '@/hooks/usePublishTrack';
 import { useToast } from '@/hooks/useToast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import type { MusicTrackData } from '@/types/music';
 
@@ -37,13 +38,16 @@ export function TrackLibrary({
 }: TrackLibraryProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useCurrentUser();
   const { playTrack, pause, state } = useUniversalAudioPlayer();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'album'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  // Only fetch tracks for the current user
   const { data: tracks, isLoading, error } = useMusicTracks({
+    artistPubkey: user?.pubkey, // Only fetch current user's tracks
     sortBy,
     sortOrder,
   });

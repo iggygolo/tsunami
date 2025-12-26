@@ -6,28 +6,36 @@ import { validateMusicPlaylist, eventToMusicPlaylist, getEventIdentifier, dedupl
 import type { MusicPlaylistData } from '@/types/music';
 
 /**
- * Hook to fetch all music playlists by the artist
+ * Hook to fetch all music playlists from all artists
  */
 export function useMusicPlaylists(options: {
   limit?: number;
   sortBy?: 'date' | 'title' | 'tracks';
   sortOrder?: 'asc' | 'desc';
   includePrivate?: boolean;
+  artistPubkey?: string; // Optional: filter by specific artist
 } = {}) {
   const { nostr } = useNostr();
-  const artistPubkeyHex = getArtistPubkeyHex();
+  const defaultArtistPubkey = getArtistPubkeyHex();
 
   return useQuery({
-    queryKey: ['music-playlists', options],
+    queryKey: ['multi-artist-music-playlists', options],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
-      // Query for music playlist events from the artist
-      const events = await nostr.query([{
+      // Query for music playlist events from all artists or specific artist
+      const queryFilter: any = {
         kinds: [MUSIC_KINDS.MUSIC_PLAYLIST],
-        authors: [artistPubkeyHex],
-        limit: options.limit || 100
-      }], { signal });
+        limit: options.limit || 200 // Increased limit for multi-artist content
+      };
+
+      // If artistPubkey is specified, filter by that artist, otherwise get from all artists
+      if (options.artistPubkey) {
+        queryFilter.authors = [options.artistPubkey];
+      }
+      // No authors filter means get from all artists
+
+      const events = await nostr.query([queryFilter], { signal });
 
       // Filter and validate events
       const validEvents = events.filter(validateMusicPlaylist);
@@ -75,21 +83,22 @@ export function useMusicPlaylists(options: {
 }
 
 /**
- * Hook to fetch a single music playlist by identifier
+ * Hook to fetch a single music playlist by identifier from a specific artist
  */
-export function useMusicPlaylist(identifier: string) {
+export function useMusicPlaylist(identifier: string, artistPubkey?: string) {
   const { nostr } = useNostr();
-  const artistPubkeyHex = getArtistPubkeyHex();
+  const defaultArtistPubkey = getArtistPubkeyHex();
+  const targetPubkey = artistPubkey || defaultArtistPubkey;
 
   return useQuery({
-    queryKey: ['music-playlist', identifier],
+    queryKey: ['music-playlist', identifier, targetPubkey],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
 
-      // Query for specific music playlist by identifier
+      // Query for specific music playlist by identifier from specific artist
       const events = await nostr.query([{
         kinds: [MUSIC_KINDS.MUSIC_PLAYLIST],
-        authors: [artistPubkeyHex],
+        authors: [targetPubkey],
         '#d': [identifier],
         limit: 10 // Get multiple versions to find the latest
       }], { signal });

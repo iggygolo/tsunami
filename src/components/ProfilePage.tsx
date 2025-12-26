@@ -43,7 +43,7 @@ interface ProfilePageProps {
 export function ProfilePage({ pubkey }: ProfilePageProps) {
   const { data: authorData, isLoading: isLoadingAuthor } = useAuthor(pubkey);
   const { data: tracks = [], isLoading: isLoadingTracks } = useMusicTracks();
-  const { data: playlists = [], isLoading: isLoadingPlaylists } = useMusicPlaylists();
+  const { data: playlists = [], isLoading: isLoadingPlaylists } = useMusicPlaylists({ artistPubkey: pubkey });
   const { user: currentUser } = useCurrentUser();
   const { toast } = useToast();
   
@@ -62,9 +62,10 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
     updateArtistCache(pubkey, metadata);
   }
   
-  // Filter tracks and playlists to only show content from this specific artist
+  // Filter tracks to only show content from this specific artist
+  // Playlists are already filtered by artistPubkey in the hook
   const artistTracks = tracks.filter(track => track.artistPubkey === pubkey);
-  const artistPlaylists = playlists.filter(playlist => playlist.authorPubkey === pubkey);
+  const artistPlaylists = playlists; // Already filtered by artistPubkey in useMusicPlaylists
   
   if (isLoadingAuthor) {
     return (
