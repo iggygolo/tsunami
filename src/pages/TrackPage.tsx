@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
-import { ArrowLeft, Music, Clock } from 'lucide-react';
+import { ArrowLeft, Music, Clock, Album, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
@@ -11,7 +11,7 @@ import { usePlaylistResolution } from '@/hooks/usePlaylistResolution';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import { eventToMusicTrack } from '@/lib/eventConversions';
-import { MUSIC_KINDS } from '@/lib/musicConfig';
+import { MUSIC_KINDS, isArtist } from '@/lib/musicConfig';
 import NotFound from './NotFound';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -255,9 +255,20 @@ export function TrackPage() {
                 icon: <Clock className="w-3 h-3" />, 
                 text: formatDuration(track.duration) 
               }] : []),
-              ...(playlists.length > 0 ? [{ 
-                text: `Appears in ${playlists.length} playlist${playlists.length !== 1 ? 's' : ''}` 
-              }] : [])
+              ...(playlists.length > 0 ? (() => {
+                const releases = playlists.filter(playlist => playlist.authorPubkey && isArtist(playlist.authorPubkey));
+                const userPlaylists = playlists.filter(playlist => playlist.authorPubkey && !isArtist(playlist.authorPubkey));
+                const parts: string[] = [];
+                
+                if (releases.length > 0) {
+                  parts.push(`${releases.length} release${releases.length !== 1 ? 's' : ''}`);
+                }
+                if (userPlaylists.length > 0) {
+                  parts.push(`${userPlaylists.length} user playlist${userPlaylists.length !== 1 ? 's' : ''}`);
+                }
+                
+                return [{ text: `Found in ${parts.join(' and ')}` }];
+              })() : [])
             ]}
             playback={track.audioUrl ? {
               isPlaying: isTrackPlaying,
@@ -276,103 +287,106 @@ export function TrackPage() {
           {/* Playlists Section */}
           {playlists.length > 0 && (
             <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-4 mb-6">
-              <h3 className="text-white font-semibold mb-3">Found in Playlists</h3>
-              <div className="space-y-2">
-                {playlists.map((playlist) => (
-                  <div 
-                    key={playlist.identifier}
-                    className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Music className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white text-sm font-medium">{playlist.title}</p>
-                      {playlist.description && (
-                        <p className="text-white/60 text-xs">{playlist.description}</p>
-                      )}
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => navigate(`/release/${playlist.authorPubkey}/${playlist.identifier}`)}
-                      className="text-white/70 hover:text-white text-xs"
-                    >
-                      View
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+              {(() => {
+                // Categorize playlists
+                const releases = playlists.filter(playlist => playlist.authorPubkey && isArtist(playlist.authorPubkey));
+                const userPlaylists = playlists.filter(playlist => playlist.authorPubkey && !isArtist(playlist.authorPubkey));
 
-          {/* Track Details */}
-          <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-4 mb-6">
-            <h3 className="text-white font-semibold mb-3">Track Details</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-white/60">Artist:</span>
-                <span className="text-white">{track.artist}</span>
-              </div>
-              {track.album && (
-                <div className="flex justify-between">
-                  <span className="text-white/60">Album:</span>
-                  <span className="text-white">{track.album}</span>
-                </div>
-              )}
-              {track.releaseDate && (
-                <div className="flex justify-between">
-                  <span className="text-white/60">Released:</span>
-                  <span className="text-white">{track.releaseDate}</span>
-                </div>
-              )}
-              {track.genres && track.genres.length > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-white/60">Genres:</span>
-                  <span className="text-white">{track.genres.join(', ')}</span>
-                </div>
-              )}
-              {track.format && (
-                <div className="flex justify-between">
-                  <span className="text-white/60">Format:</span>
-                  <span className="text-white">{track.format.toUpperCase()}</span>
-                </div>
-              )}
-              {track.bitrate && (
-                <div className="flex justify-between">
-                  <span className="text-white/60">Bitrate:</span>
-                  <span className="text-white">{track.bitrate}</span>
-                </div>
-              )}
-              {track.language && (
-                <div className="flex justify-between">
-                  <span className="text-white/60">Language:</span>
-                  <span className="text-white">{track.language.toUpperCase()}</span>
-                </div>
-              )}
-              {track.explicit && (
-                <div className="flex justify-between">
-                  <span className="text-white/60">Content:</span>
-                  <span className="text-white">Explicit</span>
-                </div>
-              )}
-            </div>
-          </div>
+                return (
+                  <>
+                    {/* Releases Section */}
+                    {releases.length > 0 && (
+                      <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Album className="w-4 h-4 text-white" />
+                          <h3 className="text-white font-semibold">
+                            Found in {releases.length} Release{releases.length !== 1 ? 's' : ''}
+                          </h3>
+                        </div>
+                        <div className="space-y-2">
+                          {releases.map((release) => (
+                            <div 
+                              key={release.identifier}
+                              className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                              onClick={() => release.authorPubkey && navigate(`/release/${release.authorPubkey}/${release.identifier}`)}
+                            >
+                              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Album className="w-4 h-4 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-white text-sm font-medium">{release.title}</p>
+                                {release.description && (
+                                  <p className="text-white/60 text-xs line-clamp-1">{release.description}</p>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (release.authorPubkey) {
+                                    navigate(`/release/${release.authorPubkey}/${release.identifier}`);
+                                  }
+                                }}
+                                className="text-white/70 hover:text-white text-xs"
+                              >
+                                View
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-          {/* Audio Player Section */}
-          {track.audioUrl && (
-            <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-4 mb-6">
-              <h3 className="text-white font-semibold mb-3">Audio Player</h3>
-              <div className="bg-black/20 rounded-lg p-4">
-                <audio 
-                  controls 
-                  className="w-full"
-                  preload="metadata"
-                >
-                  <source src={track.audioUrl} type={`audio/${track.format || 'mp3'}`} />
-                  Your browser does not support the audio element.
-                </audio>
-              </div>
+                    {/* User Playlists Section */}
+                    {userPlaylists.length > 0 && (
+                      <div className={releases.length > 0 ? 'border-t border-white/10 pt-4' : ''}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Users className="w-4 h-4 text-white" />
+                          <h3 className="text-white font-semibold">
+                            Added to {userPlaylists.length} User Playlist{userPlaylists.length !== 1 ? 's' : ''}
+                          </h3>
+                        </div>
+                        <div className="space-y-2">
+                          {userPlaylists.map((playlist) => (
+                            <div 
+                              key={playlist.identifier}
+                              className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                              onClick={() => playlist.authorPubkey && navigate(`/release/${playlist.authorPubkey}/${playlist.identifier}`)}
+                            >
+                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Users className="w-4 h-4 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-white text-sm font-medium">{playlist.title}</p>
+                                {playlist.description && (
+                                  <p className="text-white/60 text-xs line-clamp-1">{playlist.description}</p>
+                                )}
+                                <p className="text-white/50 text-xs">
+                                  by {playlist.authorPubkey ? `${playlist.authorPubkey.slice(0, 8)}...${playlist.authorPubkey.slice(-4)}` : 'Unknown'}
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (playlist.authorPubkey) {
+                                    navigate(`/release/${playlist.authorPubkey}/${playlist.identifier}`);
+                                  }
+                                }}
+                                className="text-white/70 hover:text-white text-xs"
+                              >
+                                View
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
 
