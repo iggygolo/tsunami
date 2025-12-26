@@ -10,6 +10,7 @@ import { ZapDialog } from '@/components/ZapDialog';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { ReactionsSection } from './ReactionsSection';
 import { UniversalTrackList } from './UniversalTrackList';
+import { ArtistLinkWithImage } from '@/components/music/ArtistLink';
 import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { Link, useNavigate } from 'react-router-dom';
@@ -84,7 +85,7 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   // Update document title when release loads
   useSeoMeta({
     title: release 
-      ? `${release.title} | ${podcastConfig.music.artistName}`
+      ? `${release.title} | ${release.artistName || podcastConfig.music.artistName}`
       : `Release | ${podcastConfig.music.artistName}`,
   });
 
@@ -206,7 +207,16 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
             <div className="flex-1 space-y-3 relative z-10 w-full max-w-lg text-center lg:text-left">
               <div className="flex-1">
                 <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg mb-2">{release.title}</h1>
-                <p className="text-white/90 text-sm drop-shadow-md mb-2">{podcastConfig.music.artistName}</p>
+                {release.artistPubkey ? (
+                  <div className="mb-2">
+                    <ArtistLinkWithImage 
+                      pubkey={release.artistPubkey}
+                      className="text-white/90 hover:text-white transition-colors drop-shadow-md text-sm"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-white/90 text-sm drop-shadow-md mb-2">{podcastConfig.music.artistName}</p>
+                )}
                 {release.description && (
                   <p className="text-white/80 drop-shadow-md text-xs mb-2">{release.description}</p>
                 )}

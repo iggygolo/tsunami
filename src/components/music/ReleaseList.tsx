@@ -6,12 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GlassReleaseCard } from './GlassReleaseCard';
+import { ArtistFilter } from './ArtistFilter';
 import { useReleases } from '@/hooks/useReleases';
 import { useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
 import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
 
 interface ReleaseListProps {
   showSearch?: boolean;
+  showArtistFilter?: boolean;
   limit?: number;
   className?: string;
   onPlayRelease?: (release: MusicRelease) => void;
@@ -20,6 +22,7 @@ interface ReleaseListProps {
 
 export function ReleaseList({
   showSearch = true,
+  showArtistFilter = true,
   limit = 50,
   className,
   onPlayRelease,
@@ -31,17 +34,24 @@ export function ReleaseList({
     sortOrder: 'desc'
   });
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedArtist, setSelectedArtist] = useState<string | undefined>();
 
   // Use cache when enabled and no search/filtering is applied
-  const shouldUseCache = useCache && !searchOptions.query && searchOptions.sortBy === 'date' && searchOptions.sortOrder === 'desc';
+  const shouldUseCache = useCache && !searchOptions.query && !selectedArtist && searchOptions.sortBy === 'date' && searchOptions.sortOrder === 'desc';
   
   const { data: cachedReleases, isLoading: isCacheLoading } = useStaticReleaseCache();
   const { data: liveReleases, isLoading: isLiveLoading, error } = useReleases(
     shouldUseCache ? { limit: 0 } : searchOptions // Skip live query if using cache
   );
 
-  // Determine final data source
-  const releases = shouldUseCache ? cachedReleases?.slice(0, limit) : liveReleases;
+  // Determine final data source and apply artist filtering
+  let releases = shouldUseCache ? cachedReleases?.slice(0, limit) : liveReleases;
+  
+  // Apply artist filtering if selected
+  if (releases && selectedArtist) {
+    releases = releases.filter(release => release.artistPubkey === selectedArtist);
+  }
+  
   const isLoading = shouldUseCache ? isCacheLoading : isLiveLoading;
 
   const handleSearch = (query: string) => {
@@ -99,6 +109,15 @@ export function ReleaseList({
             </div>
 
             <div className="flex gap-2">
+              {/* Artist Filter */}
+              {showArtistFilter && releases && (
+                <ArtistFilter
+                  releases={releases}
+                  selectedArtist={selectedArtist}
+                  onArtistChange={setSelectedArtist}
+                />
+              )}
+
               <Select value={searchOptions.sortBy} onValueChange={handleSortChange}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
@@ -175,12 +194,14 @@ export function ReleaseList({
               <p className="text-muted-foreground">
                 {searchOptions.query
                   ? `No releases found for "${searchOptions.query}"`
+                  : selectedArtist
+                  ? "No releases found for this artist"
                   : "No releases published yet"
                 }
               </p>
-              {!searchOptions.query && (
+              {!searchOptions.query && !selectedArtist && (
                 <p className="text-sm text-muted-foreground">
-                  Releases will appear here once the artist publishes them.
+                  Releases will appear here once artists publish them.
                 </p>
               )}
             </div>

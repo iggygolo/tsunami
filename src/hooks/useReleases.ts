@@ -30,28 +30,28 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
   const { nostr } = useNostr();
   const queryClient = useQueryClient();
 
-  // Step 1: Fetch only playlist events from the artist (not individual tracks)
+  // Step 1: Fetch playlist events from all artists (not individual tracks)
   const { data: playlistEvents, isLoading: isLoadingEvents } = useQuery({
-    queryKey: ['playlist-events', searchOptions.limit, searchOptions.offset],
+    queryKey: ['multi-artist-playlist-events', searchOptions.limit, searchOptions.offset],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(15000)]);
-      const artistPubkey = getArtistPubkeyHex();
 
-      console.log('Fetching playlist events from artist:', artistPubkey.slice(0, 8) + '...');
+      console.log('Fetching playlist events from all artists...');
 
-      // Fetch only playlists (not individual tracks)
+      // Fetch playlists from all artists (remove authors filter)
       const playlistEvents = await nostr.query([{
         kinds: [MUSIC_KINDS.MUSIC_PLAYLIST],
-        authors: [artistPubkey],
-        limit: searchOptions.limit || 50
+        // No authors filter - get from all artists
+        limit: searchOptions.limit || 100 // Increased limit for multi-artist content
       }], { signal });
 
       // Deduplicate playlist events
       const deduplicatedEvents = deduplicateEventsByIdentifier(playlistEvents, getEventIdentifier);
 
-      console.log('Found playlist events:', {
+      console.log('Found playlist events from all artists:', {
         playlists: playlistEvents.length,
-        deduplicated: deduplicatedEvents.length
+        deduplicated: deduplicatedEvents.length,
+        uniqueArtists: [...new Set(deduplicatedEvents.map(e => e.pubkey))].length
       });
 
       return deduplicatedEvents;
@@ -76,11 +76,11 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
 
   // Step 4: Convert playlist events to releases
   const { data: releases, isLoading: isLoadingConversion } = useQuery({
-    queryKey: ['releases-conversion', validPlaylistEvents.length, resolvedTracks?.length],
+    queryKey: ['multi-artist-releases-conversion', validPlaylistEvents.length, resolvedTracks?.length],
     queryFn: async () => {
       if (!validPlaylistEvents.length) return [];
 
-      console.log('Converting playlist events to releases');
+      console.log('Converting playlist events to releases from multiple artists');
 
       const releases: MusicRelease[] = [];
 
@@ -183,9 +183,10 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
         return sortOrder === 'desc' ? -comparison : comparison;
       });
 
-      console.log('Conversion complete:', {
+      console.log('Multi-artist conversion complete:', {
         totalReleases: releases.length,
         filteredReleases: filteredReleases.length,
+        uniqueArtists: [...new Set(releases.map(r => r.artistPubkey))].length,
         searchQuery: searchOptions.query,
         sortBy,
         sortOrder

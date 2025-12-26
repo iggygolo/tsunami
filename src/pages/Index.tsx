@@ -13,6 +13,7 @@ import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
 import { RecentActivity } from '@/components/music/RecentActivity';
 import { PostCard } from '@/components/social/PostCard';
 import { ZapDialog } from '@/components/ZapDialog';
+import { ArtistLinkWithImage } from '@/components/music/ArtistLink';
 import { useLatestReleaseCache, useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
 import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { useAuthor } from '@/hooks/useAuthor';
@@ -73,8 +74,8 @@ const Index = () => {
   const isLatestReleasePlayable = trackPlayback?.hasPlayableTracks || false;
 
   useSeoMeta({
-    title: musicConfig.music.artistName,
-    description: musicConfig.music.description,
+    title: `${musicConfig.music.artistName} - Nostr Music Discovery`,
+    description: 'Discover music from artists on Nostr - decentralized music platform',
   });
 
   return (
@@ -158,15 +159,13 @@ const Index = () => {
                       </Link>
                     </h1>
                     <div className="flex flex-col lg:flex-row items-center gap-2 sm:gap-4">
-                      <Link to={`/${musicConfig.artistNpub}`} className="inline-flex items-center gap-2 text-lg text-white/90 hover:text-white transition-colors drop-shadow-md">
-                        {musicConfig.music.image && (
-                          <img
-                            src={musicConfig.music.image}
-                            className="w-6 h-6 rounded-full object-cover"
-                          />
-                        )}
-                        <span className="font-medium">{musicConfig.music.artistName}</span>
-                      </Link>
+                      {/* Artist Attribution with multi-artist support */}
+                      {latestRelease.artistPubkey && (
+                        <ArtistLinkWithImage 
+                          pubkey={latestRelease.artistPubkey}
+                          className="text-lg text-white/90 hover:text-white transition-colors drop-shadow-md"
+                        />
+                      )}
                       {latestRelease.tags && latestRelease.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 justify-center lg:justify-start">
                           {latestRelease.tags.slice(0, 3).map((tag) => (
@@ -224,22 +223,22 @@ const Index = () => {
             <div className="max-w-4xl mx-auto text-center space-y-6">
               <div className="space-y-2">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
-                  Welcome to {musicConfig.music.artistName}
+                  Discover Music on Nostr
                 </h1>
                 <p className="text-xl text-muted-foreground">
-                  {musicConfig.music.description}
+                  Explore decentralized music from artists around the world
                 </p>
               </div>
               
               <div className="bg-muted/50 rounded-lg p-6 space-y-4">
-                <h3 className="text-lg font-semibold">No Music Found</h3>
+                <h3 className="text-lg font-semibold">No Recent Releases</h3>
                 <p className="text-muted-foreground">
-                  This artist hasn't published any music yet, or the music might be on different Nostr relays.
+                  No music has been published recently, or the content might be on different Nostr relays.
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center">
                   <Button variant="outline" asChild>
-                    <Link to={`/${musicConfig.artistNpub}`}>
-                      View Profile
+                    <Link to="/releases">
+                      Browse All Releases
                     </Link>
                   </Button>
                 </div>
@@ -265,6 +264,7 @@ const Index = () => {
 
             <ReleaseList
               showSearch={false}
+              showArtistFilter={false}
               limit={6}
               useCache={true}
             />

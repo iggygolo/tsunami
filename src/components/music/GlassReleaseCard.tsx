@@ -3,13 +3,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ZapDialog } from '@/components/ZapDialog';
+import { ArtistLinkCompact } from '@/components/music/ArtistLink';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { useReleasePrefetch } from '@/hooks/useReleasePrefetch';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
-import { useAuthor } from '@/hooks/useAuthor';
-import { useMusicConfig } from '@/hooks/useMusicConfig';
-import { genUserName } from '@/lib/genUserName';
-import { MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
 import type { MusicRelease } from '@/types/music';
 import type { Event } from 'nostr-tools';
@@ -22,17 +20,6 @@ interface GlassReleaseCardProps {
 export function GlassReleaseCard({ release, className}: GlassReleaseCardProps) {
   const trackPlayback = useUniversalTrackPlayback(release);
   const { prefetchRelease } = useReleasePrefetch();
-  const musicConfig = useMusicConfig();
-  
-  // Resolve artist name from pubkey
-  const { data: artistData } = useAuthor(release.artistPubkey);
-  const artistName = artistData?.metadata?.name || genUserName(release.artistPubkey);
-  
-  // Fallback to config artist name if this is the configured artist
-  const configArtistPubkey = getArtistPubkeyHex();
-  const displayArtistName = release.artistPubkey === configArtistPubkey 
-    ? musicConfig.music.artistName 
-    : artistName;
 
   // Create NostrEvent for social interactions - only if we have required data
   const releaseEvent: Event | null = release.eventId && release.artistPubkey ? {
@@ -216,9 +203,14 @@ export function GlassReleaseCard({ release, className}: GlassReleaseCardProps) {
             {release.title}
           </h3>
         </Link>
-        <p className="text-xs text-muted-foreground font-medium">
-          {displayArtistName}
-        </p>
+        
+        {/* Artist Attribution */}
+        {release.artistPubkey && (
+          <ArtistLinkCompact 
+            pubkey={release.artistPubkey}
+            className="text-xs font-medium"
+          />
+        )}
       </div>
     </div>
   );

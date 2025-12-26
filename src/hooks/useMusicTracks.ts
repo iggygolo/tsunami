@@ -7,7 +7,7 @@ import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicTrackData } from '@/types/music';
 
 /**
- * Hook to fetch all music tracks by the artist
+ * Hook to fetch all music tracks from all artists
  */
 export function useMusicTracks(options: {
   limit?: number;
@@ -15,18 +15,17 @@ export function useMusicTracks(options: {
   sortOrder?: 'asc' | 'desc';
 } = {}) {
   const { nostr } = useNostr();
-  const artistPubkeyHex = getArtistPubkeyHex();
 
   return useQuery({
-    queryKey: ['music-tracks', options],
+    queryKey: ['multi-artist-music-tracks', options],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
-      // Query for music track events from the artist
+      // Query for music track events from all artists
       const events = await nostr.query([{
         kinds: [MUSIC_KINDS.MUSIC_TRACK],
-        authors: [artistPubkeyHex],
-        limit: options.limit || 100
+        // No authors filter - get from all artists
+        limit: options.limit || 200 // Increased limit for multi-artist content
       }], { signal });
 
       // Filter and validate events
@@ -69,21 +68,22 @@ export function useMusicTracks(options: {
 }
 
 /**
- * Hook to fetch a single music track by identifier
+ * Hook to fetch a single music track by identifier from a specific artist
  */
-export function useMusicTrack(identifier: string) {
+export function useMusicTrack(identifier: string, artistPubkey?: string) {
   const { nostr } = useNostr();
-  const artistPubkeyHex = getArtistPubkeyHex();
+  const defaultArtistPubkey = getArtistPubkeyHex();
+  const targetPubkey = artistPubkey || defaultArtistPubkey;
 
   return useQuery({
-    queryKey: ['music-track', identifier],
+    queryKey: ['music-track', identifier, targetPubkey],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
 
-      // Query for specific music track by identifier
+      // Query for specific music track by identifier from specific artist
       const events = await nostr.query([{
         kinds: [MUSIC_KINDS.MUSIC_TRACK],
-        authors: [artistPubkeyHex],
+        authors: [targetPubkey],
         '#d': [identifier],
         limit: 10 // Get multiple versions to find the latest
       }], { signal });
@@ -109,14 +109,14 @@ export function useMusicTrack(identifier: string) {
 }
 
 /**
- * Hook to fetch music tracks with zap and engagement data
+ * Hook to fetch music tracks from all artists with zap and engagement data
  */
 export function useMusicTracksWithStats() {
   const { data: tracks } = useMusicTracks();
   const { nostr } = useNostr();
 
   return useQuery({
-    queryKey: ['music-tracks-stats', tracks?.length],
+    queryKey: ['multi-artist-music-tracks-stats', tracks?.length],
     queryFn: async (context) => {
       if (!tracks || tracks.length === 0) return [];
 

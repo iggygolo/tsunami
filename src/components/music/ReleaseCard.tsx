@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { useReleasePrefetch } from '@/hooks/useReleasePrefetch';
+import { ArtistLinkCompact } from '@/components/music/ArtistLink';
 import { cn } from '@/lib/utils';
 import type { MusicRelease } from '@/types/music';
 
@@ -87,6 +88,15 @@ export function ReleaseCard({
             {release.title}
           </h3>
         </Link>
+        
+        {/* Artist Attribution */}
+        {release.artistPubkey && (
+          <div className="mt-1">
+            <ArtistLinkCompact 
+              pubkey={release.artistPubkey}
+            />
+          </div>
+        )}
         
         <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
           <span>{formatDistanceToNow(release.publishDate, { addSuffix: true })}</span>

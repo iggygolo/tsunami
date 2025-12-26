@@ -2,6 +2,7 @@ import React from 'react';
 import { Play, Pause, Music } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ArtistLinkCompact } from '@/components/music/ArtistLink';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import { formatDistanceToNow } from 'date-fns';
 import type { MusicTrackData } from '@/types/music';
@@ -66,7 +67,14 @@ export function TrackCard({ track, className }: TrackCardProps) {
           <div className="space-y-2">
             <h3 className="font-medium text-sm line-clamp-2">{track.title}</h3>
             <p className="text-xs text-muted-foreground line-clamp-1">
-              {track.artist || 'Unknown Artist'}
+              {track.artistPubkey ? (
+                <ArtistLinkCompact 
+                  pubkey={track.artistPubkey}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                />
+              ) : (
+                track.artist || 'Unknown Artist'
+              )}
             </p>
             
             <div className="flex items-center justify-between text-xs text-muted-foreground">

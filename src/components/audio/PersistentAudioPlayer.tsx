@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { ZapDialog } from '@/components/ZapDialog';
+import { ArtistLinkCompact } from '@/components/music/ArtistLink';
 import { useUniversalAudioPlayer } from '@/contexts/UniversalAudioPlayerContext';
 import { useGlassEffect } from '@/hooks/useBackdropSupport';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
@@ -170,12 +171,19 @@ export function PersistentAudioPlayer() {
                 {currentTrack.title}
               </p>
               <p className="text-xs text-white/70 line-clamp-1">
-                <button 
-                  onClick={handleNavigateToRelease}
-                  className="hover:text-white transition-colors cursor-pointer"
-                >
-                  {currentTrack.artist || queueTitle}
-                </button>
+                {currentTrack.source?.artistPubkey ? (
+                  <ArtistLinkCompact 
+                    pubkey={currentTrack.source.artistPubkey}
+                    className="text-white/70 hover:text-white transition-colors"
+                  />
+                ) : (
+                  <button 
+                    onClick={handleNavigateToRelease}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    {currentTrack.artist || queueTitle}
+                  </button>
+                )}
               </p>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-xs text-white/50 tabular-nums">
@@ -298,12 +306,19 @@ export function PersistentAudioPlayer() {
                 {currentTrack.title}
               </p>
               <p className="text-xs text-white/70 line-clamp-1">
-                <button 
-                  onClick={handleNavigateToRelease}
-                  className="hover:text-white transition-colors cursor-pointer"
-                >
-                  {currentTrack.artist || queueTitle}
-                </button>
+                {currentTrack.source?.artistPubkey ? (
+                  <ArtistLinkCompact 
+                    pubkey={currentTrack.source.artistPubkey}
+                    className="text-white/70 hover:text-white transition-colors"
+                  />
+                ) : (
+                  <button 
+                    onClick={handleNavigateToRelease}
+                    className="hover:text-white transition-colors cursor-pointer"
+                  >
+                    {currentTrack.artist || queueTitle}
+                  </button>
+                )}
               </p>
               <div className="flex items-center space-x-2 text-xs text-white/50">
                 <span className="tabular-nums">

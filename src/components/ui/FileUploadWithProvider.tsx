@@ -105,8 +105,8 @@ export function FileUploadWithProvider({
             className={`
               border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
               ${disabled 
-                ? 'border-gray-200 bg-gray-50 cursor-not-allowed' 
-                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                ? 'border-border bg-muted/30 cursor-not-allowed' 
+                : 'border-muted-foreground/30 hover:border-muted-foreground/50 hover:bg-muted/30'
               }
               ${file || imageUrl ? 'border-green-300 bg-green-50' : ''}
             `}

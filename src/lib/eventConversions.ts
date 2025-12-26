@@ -2,6 +2,7 @@ import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicTrackData, MusicPlaylistData, TrackReference, MusicRelease, ReleaseTrack } from '@/types/music';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { formatToAudioType } from '@/lib/audioUtils';
+import { getArtistDisplayInfo } from '@/lib/artistUtils';
 
 /**
  * Modern music event validation and conversion utilities
@@ -139,6 +140,9 @@ export function eventToMusicTrack(event: NostrEvent): MusicTrackData {
     }
   }
 
+  // Get artist information from cache or create basic info
+  const artistInfo = getArtistDisplayInfo(event.pubkey);
+
   return {
     // Required fields
     identifier: tags.get('d')?.[0] || '',
@@ -174,6 +178,10 @@ export function eventToMusicTrack(event: NostrEvent): MusicTrackData {
     eventId: event.id,
     artistPubkey: event.pubkey,
     createdAt: new Date(event.created_at * 1000),
+
+    // Artist information (enhanced for multi-artist support)
+    artistName: artistInfo.name,
+    artistImage: artistInfo.image,
   };
 }
 
@@ -289,12 +297,21 @@ export function playlistToRelease(
     .filter(track => track.duration)
     .reduce((sum, track) => sum + (track.duration || 0), 0);
 
+  // Get artist information from cache or create basic info
+  const artistPubkey = playlist.authorPubkey || '';
+  const artistInfo = getArtistDisplayInfo(artistPubkey);
+
   console.log('🎉 playlistToRelease - Conversion complete:', {
     title: playlist.title,
     totalTracks: releaseTracks.length,
     tracksWithAudio: releaseTracks.filter(t => t.audioUrl).length,
     tracksWithoutAudio: releaseTracks.filter(t => !t.audioUrl).length,
-    totalDuration
+    totalDuration,
+    artistInfo: {
+      pubkey: artistPubkey.slice(0, 8) + '...',
+      name: artistInfo.name,
+      hasImage: !!artistInfo.image
+    }
   });
 
   return {
@@ -308,7 +325,7 @@ export function playlistToRelease(
     transcriptUrl: undefined,
     genre: playlist.categories?.[0] || null,
     eventId: playlist.eventId || '',
-    artistPubkey: playlist.authorPubkey || '',
+    artistPubkey: artistPubkey,
     identifier: playlist.identifier,
     createdAt: playlist.createdAt || new Date(),
     tracks: releaseTracks,
@@ -318,6 +335,9 @@ export function playlistToRelease(
     ...(playlist.totalSats && { totalSats: playlist.totalSats }),
     ...(playlist.commentCount && { commentCount: playlist.commentCount }),
     ...(playlist.repostCount && { repostCount: playlist.repostCount }),
+    // Artist information (enhanced for multi-artist support)
+    artistName: artistInfo.name,
+    artistImage: artistInfo.image,
   };
 }
 
@@ -354,6 +374,10 @@ export function trackToRelease(track: MusicTrackData): MusicRelease {
   
   const description = descriptionParts.length > 0 ? descriptionParts.join('\n') : undefined;
 
+  // Get artist information from cache or create basic info
+  const artistPubkey = track.artistPubkey || '';
+  const artistInfo = getArtistDisplayInfo(artistPubkey);
+
   return {
     id: track.eventId || '',
     title: track.title,
@@ -365,7 +389,7 @@ export function trackToRelease(track: MusicTrackData): MusicRelease {
     transcriptUrl: undefined,
     genre: track.genres?.[0] || null,
     eventId: track.eventId || '',
-    artistPubkey: track.artistPubkey || '',
+    artistPubkey: artistPubkey,
     identifier: track.identifier,
     createdAt: track.createdAt || new Date(),
     tracks: [{
@@ -382,6 +406,9 @@ export function trackToRelease(track: MusicTrackData): MusicRelease {
     ...(track.totalSats && { totalSats: track.totalSats }),
     ...(track.commentCount && { commentCount: track.commentCount }),
     ...(track.repostCount && { repostCount: track.repostCount }),
+    // Artist information (enhanced for multi-artist support)
+    artistName: artistInfo.name,
+    artistImage: artistInfo.image,
   };
 }
 
@@ -400,6 +427,9 @@ export function eventToRelease(event: NostrEvent): MusicRelease {
   // Handle music playlist events (Kind 34139) - but without track resolution
   if (event.kind === MUSIC_KINDS.MUSIC_PLAYLIST && validateMusicPlaylist(event)) {
     const playlist = eventToMusicPlaylist(event);
+    // Get artist information from cache or create basic info
+    const artistInfo = getArtistDisplayInfo(event.pubkey);
+    
     // Return playlist as release but with empty tracks (since we can't resolve them here)
     return {
       id: playlist.eventId || event.id,
@@ -416,6 +446,9 @@ export function eventToRelease(event: NostrEvent): MusicRelease {
       identifier: playlist.identifier,
       createdAt: playlist.createdAt || new Date(event.created_at * 1000),
       tracks: [], // Empty tracks - caller should use proper track resolution
+      // Artist information (enhanced for multi-artist support)
+      artistName: artistInfo.name,
+      artistImage: artistInfo.image,
     };
   }
   

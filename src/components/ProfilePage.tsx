@@ -14,6 +14,7 @@ import { EditProfileForm } from '@/components/EditProfileForm';
 import { UniversalTrackList } from '@/components/music/UniversalTrackList';
 import { GlassReleaseCard } from '@/components/music/GlassReleaseCard';
 import { ZapDialog } from '@/components/ZapDialog';
+import { updateArtistCache } from '@/lib/artistUtils';
 import { genUserName } from '@/lib/genUserName';
 import { 
   Edit, 
@@ -55,6 +56,15 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const isOwnProfile = currentUser?.pubkey === pubkey;
   const metadata = authorData?.metadata;
   const displayName = metadata?.name || genUserName(pubkey);
+  
+  // Update artist cache when profile data is loaded
+  if (metadata && !isLoadingAuthor) {
+    updateArtistCache(pubkey, metadata);
+  }
+  
+  // Filter tracks and playlists to only show content from this specific artist
+  const artistTracks = tracks.filter(track => track.artistPubkey === pubkey);
+  const artistPlaylists = playlists.filter(playlist => playlist.authorPubkey === pubkey);
   
   if (isLoadingAuthor) {
     return (
@@ -234,7 +244,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                 <GlassTabsTrigger 
                   value="tracks"
                   icon={<Music className="w-3 h-3" />}
-                  count={tracks.length}
+                  count={artistTracks.length}
                   className="text-xs sm:text-sm px-3 sm:px-4"
                 >
                   Tracks
@@ -242,7 +252,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                 <GlassTabsTrigger 
                   value="releases"
                   icon={<Album className="w-3 h-3" />}
-                  count={playlists.length}
+                  count={artistPlaylists.length}
                   className="text-xs sm:text-sm px-3 sm:px-4"
                 >
                   Releases
@@ -253,9 +263,9 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                 <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
                   {isLoadingTracks ? (
                     <GlassListSkeleton count={3} />
-                  ) : tracks.length > 0 ? (
+                  ) : artistTracks.length > 0 ? (
                     <UniversalTrackList 
-                      tracks={tracks}
+                      tracks={artistTracks}
                       className="text-white"
                       showTrackNumbers={true}
                     />
@@ -285,9 +295,9 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                         </div>
                       ))}
                     </div>
-                  ) : playlists.length > 0 ? (
+                  ) : artistPlaylists.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                      {playlists.map((playlist) => {
+                      {artistPlaylists.map((playlist) => {
                         // Get resolved tracks for this playlist
                         const playlistTrackReferences = playlist.tracks;
                         const playlistResolvedTracks = resolvedPlaylistTracks?.filter(resolved => 
@@ -343,6 +353,9 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                           totalSats: playlist.totalSats,
                           commentCount: playlist.commentCount,
                           repostCount: playlist.repostCount,
+                          // Add artist information for multi-artist support
+                          artistName: metadata?.name,
+                          artistImage: metadata?.picture,
                         };
 
                         return (

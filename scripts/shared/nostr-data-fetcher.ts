@@ -117,31 +117,30 @@ async function fetchArtistMetadataMultiRelay(
 }
 
 /**
- * Fetch music playlists from multiple Nostr relays
+ * Fetch music playlists from multiple Nostr relays (all artists)
  */
 async function fetchMusicPlaylistsMultiRelay(
-  relays: Array<{url: string, relay: NRelay1}>, 
-  artistPubkeyHex: string
+  relays: Array<{url: string, relay: NRelay1}>
 ): Promise<MusicPlaylistData[]> {
-  console.log('📡 Fetching music playlists from Nostr...');
+  console.log('📡 Fetching music playlists from all artists on Nostr...');
 
   const relayPromises = relays.map(async ({url, relay}) => {
     try {
       const events = await Promise.race([
         relay.query([{
           kinds: [MUSIC_KINDS.RELEASE],
-          authors: [artistPubkeyHex],
-          limit: 100
+          // No authors filter - get from all artists
+          limit: 200 // Increased limit for multi-artist content
         }]),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Playlists query timeout for ${url}`)), 5000)
+          setTimeout(() => reject(new Error(`Playlists query timeout for ${url}`)), 10000) // Increased timeout
         )
       ]) as NostrEvent[];
 
       const validEvents = events.filter(event => validateMusicPlaylist(event));
 
       if (validEvents.length > 0) {
-        console.log(`✅ Found ${validEvents.length} playlists from ${url}`);
+        console.log(`✅ Found ${validEvents.length} playlists from ${url} (${[...new Set(validEvents.map(e => e.pubkey))].length} unique artists)`);
         return validEvents;
       }
       return [];
@@ -160,52 +159,53 @@ async function fetchMusicPlaylistsMultiRelay(
     }
   });
 
-  // Deduplicate by identifier
-  const playlistsByIdentifier = new Map<string, NostrEvent>();
+  // Deduplicate by artist:identifier combination
+  const playlistsByKey = new Map<string, NostrEvent>();
   
   allEvents.forEach(event => {
     const identifier = event.tags.find(([name]) => name === 'd')?.[1];
     if (!identifier) return;
     
-    const existing = playlistsByIdentifier.get(identifier);
+    const key = `${event.pubkey}:${identifier}`;
+    const existing = playlistsByKey.get(key);
     if (!existing || event.created_at > existing.created_at) {
-      playlistsByIdentifier.set(identifier, event);
+      playlistsByKey.set(key, event);
     }
   });
 
-  const uniqueEvents = Array.from(playlistsByIdentifier.values());
-  console.log(`✅ Found ${uniqueEvents.length} unique playlists from ${allResults.length} relays`);
+  const uniqueEvents = Array.from(playlistsByKey.values());
+  const uniqueArtists = [...new Set(uniqueEvents.map(e => e.pubkey))].length;
+  console.log(`✅ Found ${uniqueEvents.length} unique playlists from ${uniqueArtists} artists across ${allResults.length} relays`);
 
   const playlists = uniqueEvents.map(event => eventToMusicPlaylist(event));
   return playlists.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
 }
 
 /**
- * Fetch music tracks from multiple Nostr relays
+ * Fetch music tracks from multiple Nostr relays (all artists)
  */
 async function fetchMusicTracksMultiRelay(
-  relays: Array<{url: string, relay: NRelay1}>, 
-  artistPubkeyHex: string
+  relays: Array<{url: string, relay: NRelay1}>
 ): Promise<MusicTrackData[]> {
-  console.log('📡 Fetching music tracks from Nostr...');
+  console.log('📡 Fetching music tracks from all artists on Nostr...');
 
   const relayPromises = relays.map(async ({url, relay}) => {
     try {
       const events = await Promise.race([
         relay.query([{
           kinds: [MUSIC_KINDS.MUSIC_TRACK],
-          authors: [artistPubkeyHex],
-          limit: 200
+          // No authors filter - get from all artists
+          limit: 400 // Increased limit for multi-artist content
         }]),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Tracks query timeout for ${url}`)), 5000)
+          setTimeout(() => reject(new Error(`Tracks query timeout for ${url}`)), 10000) // Increased timeout
         )
       ]) as NostrEvent[];
 
       const validEvents = events.filter(event => validateMusicTrack(event));
 
       if (validEvents.length > 0) {
-        console.log(`✅ Found ${validEvents.length} tracks from ${url}`);
+        console.log(`✅ Found ${validEvents.length} tracks from ${url} (${[...new Set(validEvents.map(e => e.pubkey))].length} unique artists)`);
         return validEvents;
       }
       return [];
@@ -224,21 +224,23 @@ async function fetchMusicTracksMultiRelay(
     }
   });
 
-  // Deduplicate by identifier
-  const tracksByIdentifier = new Map<string, NostrEvent>();
+  // Deduplicate by artist:identifier combination
+  const tracksByKey = new Map<string, NostrEvent>();
   
   allEvents.forEach(event => {
     const identifier = event.tags.find(([name]) => name === 'd')?.[1];
     if (!identifier) return;
     
-    const existing = tracksByIdentifier.get(identifier);
+    const key = `${event.pubkey}:${identifier}`;
+    const existing = tracksByKey.get(key);
     if (!existing || event.created_at > existing.created_at) {
-      tracksByIdentifier.set(identifier, event);
+      tracksByKey.set(key, event);
     }
   });
 
-  const uniqueEvents = Array.from(tracksByIdentifier.values());
-  console.log(`✅ Found ${uniqueEvents.length} unique tracks from ${allResults.length} relays`);
+  const uniqueEvents = Array.from(tracksByKey.values());
+  const uniqueArtists = [...new Set(uniqueEvents.map(e => e.pubkey))].length;
+  console.log(`✅ Found ${uniqueEvents.length} unique tracks from ${uniqueArtists} artists across ${allResults.length} relays`);
 
   const tracks = uniqueEvents.map(event => eventToMusicTrack(event));
   return tracks.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
@@ -278,9 +280,9 @@ export async function fetchNostrDataBundle(
     // Fetch all data in parallel for efficiency
     console.log('📡 Fetching all data types in parallel...');
     const [fetchedMetadata, fetchedTracks, fetchedPlaylists] = await Promise.all([
-      fetchArtistMetadataMultiRelay(relays, artistPubkeyHex),
-      fetchMusicTracksMultiRelay(relays, artistPubkeyHex),
-      fetchMusicPlaylistsMultiRelay(relays, artistPubkeyHex)
+      fetchArtistMetadataMultiRelay(relays, artistPubkeyHex), // Still need artist for metadata
+      fetchMusicTracksMultiRelay(relays), // No artist filter
+      fetchMusicPlaylistsMultiRelay(relays) // No artist filter
     ]);
 
     metadata = fetchedMetadata;
@@ -300,8 +302,8 @@ export async function fetchNostrDataBundle(
   }
 
   const fetchTime = ((Date.now() - startTime) / 1000).toFixed(2);
-  console.log(`\n✅ Nostr data fetch completed in ${fetchTime}s`);
-  console.log(`📊 Results: ${tracks.length} tracks, ${playlists.length} playlists, ${metadata ? 'metadata found' : 'no metadata'}`);
+  console.log(`\n✅ Multi-artist Nostr data fetch completed in ${fetchTime}s`);
+  console.log(`📊 Results: ${tracks.length} tracks, ${playlists.length} playlists from multiple artists, ${metadata ? 'metadata found' : 'no metadata'}`);
 
   return {
     tracks,

@@ -1,6 +1,16 @@
 import type { NostrEvent } from '@nostrify/nostrify';
 
 /**
+ * Simple artist information structure for multi-artist support
+ */
+export interface SimpleArtistInfo {
+  pubkey: string;
+  name?: string; // From profile or fallback to npub
+  npub: string; // Derived from pubkey
+  image?: string; // Profile picture from metadata
+}
+
+/**
  * Music release metadata
  */
 export interface MusicRelease {
@@ -25,6 +35,10 @@ export interface MusicRelease {
   totalSats?: number;
   commentCount?: number;
   repostCount?: number;
+
+  // Artist information (enhanced for multi-artist support)
+  artistName?: string; // From profile metadata or fallback
+  artistImage?: string; // From profile metadata
 }
 
 export interface ReleaseTrack {
@@ -80,6 +94,10 @@ export interface MusicTrackData {
   totalSats?: number;          // Total sats received
   commentCount?: number;       // Number of comments
   repostCount?: number;        // Number of reposts
+
+  // Artist information (enhanced for multi-artist support)
+  artistName?: string;         // From profile metadata or fallback
+  artistImage?: string;        // From profile metadata
 }
 
 /**
