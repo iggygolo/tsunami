@@ -63,10 +63,21 @@ export function NIP19Page() {
     }
 
     case 'naddr': {
-      // Handle addressable events (music playlists are kind 34139)
+      // Handle addressable events (music playlists are kind 34139, tracks are kind 36787)
       const naddr = decoded.data;
       if (naddr.kind === MUSIC_KINDS.MUSIC_PLAYLIST) {
         // This is a music playlist (release) - pass the addressable event parameters
+        return (
+          <ReleasePage
+            addressableEvent={{
+              pubkey: naddr.pubkey,
+              kind: naddr.kind,
+              identifier: naddr.identifier
+            }}
+          />
+        );
+      } else if (naddr.kind === MUSIC_KINDS.MUSIC_TRACK) {
+        // This is an individual music track - pass the addressable event parameters
         return (
           <ReleasePage
             addressableEvent={{

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { nip19 } from 'nostr-tools';
 import {
   Play,
   Pause,
@@ -118,6 +119,21 @@ export function PersistentAudioPlayer() {
     seekTo(Math.min(state.duration, state.currentTime + 15));
   };
 
+  const handleNavigateToTrack = () => {
+    if (currentTrack.source?.artistPubkey && currentTrack.identifier) {
+      // Create naddr for individual track (Kind 36787)
+      const naddr = nip19.naddrEncode({
+        identifier: currentTrack.identifier,
+        pubkey: currentTrack.source.artistPubkey,
+        kind: MUSIC_KINDS.MUSIC_TRACK
+      });
+      navigate(`/${naddr}`);
+    } else if (currentTrack.eventId) {
+      // Fallback to event ID if no addressable info
+      navigate(`/releases/${currentTrack.eventId}`);
+    }
+  };
+
   const handleNavigateToRelease = () => {
     if (currentTrack.source?.releaseId) {
       navigate(`/releases/${currentTrack.source.releaseId}`);
@@ -146,18 +162,19 @@ export function PersistentAudioPlayer() {
       </div>
 
       {/* Main Player Content */}
-      <div className="mx-auto px-4 sm:px-6 py-3 max-w-4xl 2xl:max-w-5xl">
+      <div className="mx-auto px-4 sm:px-6 py-4 max-w-4xl 2xl:max-w-5xl">
         {/* Mobile Layout */}
         <div className="sm:hidden">
           {/* Top Row: Track Info */}
-          <div className="flex items-center space-x-3 mb-3">
+          <div className="flex items-center space-x-4 mb-4">
             {displayImage && (
               <div className="relative">
                 <img
                   src={displayImage}
                   alt={currentTrack.title}
                   className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
-                  onClick={handleNavigateToRelease}
+                  onClick={handleNavigateToTrack}
+                  title="View track page"
                 />
                 {state.isPlaying && (
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-md">
@@ -167,10 +184,16 @@ export function PersistentAudioPlayer() {
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="font-medium text-sm line-clamp-1 text-white">
-                {currentTrack.title}
-              </p>
-              <p className="text-xs text-white/70 line-clamp-1">
+              <button 
+                onClick={handleNavigateToTrack}
+                className="text-left w-full group"
+                title="View individual track page"
+              >
+                <p className="font-medium text-sm line-clamp-1 text-white group-hover:text-white/90 transition-colors cursor-pointer">
+                  {currentTrack.title}
+                </p>
+              </button>
+              <p className="text-xs text-white/70 line-clamp-1 mb-1">
                 {currentTrack.source?.artistPubkey ? (
                   <ArtistLinkCompact 
                     pubkey={currentTrack.source.artistPubkey}
@@ -185,7 +208,7 @@ export function PersistentAudioPlayer() {
                   </button>
                 )}
               </p>
-              <div className="flex items-center justify-between mt-1">
+              <div className="flex items-center justify-between">
                 <span className="text-xs text-white/50 tabular-nums">
                   {formatTime(state.currentTime)} / {formatTime(state.duration)}
                 </span>
@@ -285,14 +308,15 @@ export function PersistentAudioPlayer() {
         {/* Desktop Layout */}
         <div className="hidden sm:flex items-center">
           {/* Left: Album Art & Track Info */}
-          <div className="flex items-center space-x-3 min-w-0 w-1/3">
+          <div className="flex items-center space-x-4 min-w-0 w-1/3">
             {displayImage && (
               <div className="relative">
                 <img
                   src={displayImage}
                   alt={currentTrack.title}
                   className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 shadow-lg ring-1 ring-white/20 cursor-pointer hover:ring-white/40 transition-all"
-                  onClick={handleNavigateToRelease}
+                  onClick={handleNavigateToTrack}
+                  title="View track page"
                 />
                 {state.isPlaying && (
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-md">
@@ -301,10 +325,16 @@ export function PersistentAudioPlayer() {
                 )}
               </div>
             )}
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-xs sm:text-sm line-clamp-1 text-white">
-                {currentTrack.title}
-              </p>
+            <div className="min-w-0 flex-1 flex flex-col">
+              <button 
+                onClick={handleNavigateToTrack}
+                className="text-left w-full group"
+                title="View individual track page"
+              >
+                <p className="font-medium text-xs sm:text-sm line-clamp-1 text-white group-hover:text-white/90 transition-colors cursor-pointer">
+                  {currentTrack.title}
+                </p>
+              </button>
               <p className="text-xs text-white/70 line-clamp-1">
                 {currentTrack.source?.artistPubkey ? (
                   <ArtistLinkCompact 
