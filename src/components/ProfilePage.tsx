@@ -3,8 +3,8 @@ import { useAuthor } from '@/hooks/useAuthor';
 import { useMusicTracks } from '@/hooks/useMusicTracks';
 import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
+import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
 import { GlassTabs, GlassTabsList, GlassTabsTrigger, GlassTabsContent } from '@/components/ui/GlassTabs';
 import { GlassListSkeleton } from '@/components/ui/GlassList';
@@ -13,17 +13,18 @@ import { BlurredBackground } from '@/components/BlurredBackground';
 import { EditProfileForm } from '@/components/EditProfileForm';
 import { UniversalTrackList } from '@/components/music/UniversalTrackList';
 import { GlassReleaseCard } from '@/components/music/GlassReleaseCard';
+import { ZapDialog } from '@/components/ZapDialog';
 import { genUserName } from '@/lib/genUserName';
-import { MUSIC_KINDS } from '@/lib/musicConfig';
-import type { MusicPlaylistData } from '@/types/music';
-import type { NostrEvent } from '@nostrify/nostrify';
 import { 
   Edit, 
   ExternalLink, 
   Music, 
   Album,
-  Users,
-  Globe
+  Globe,
+  Zap,
+  Hash,
+  Rss,
+  Share2
 } from 'lucide-react';
 import {
   Dialog,
@@ -43,7 +44,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   const { data: tracks = [], isLoading: isLoadingTracks } = useMusicTracks();
   const { data: playlists = [], isLoading: isLoadingPlaylists } = useMusicPlaylists();
   const { user: currentUser } = useCurrentUser();
-  const { state: playerState, pause, playQueue } = useUniversalAudioPlayer();
+  const { toast } = useToast();
   
   // Get all track references from all playlists for batch resolution
   const allPlaylistTrackReferences = playlists?.flatMap(playlist => playlist.tracks) || [];
@@ -101,12 +102,12 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
             </div>
 
             {/* Profile Info */}
-            <div className="flex-1 space-y-3 relative z-10 w-full max-w-lg text-center lg:text-left">
+            <div className="flex-1 space-y-4 relative z-10 w-full max-w-lg text-center lg:text-left">
               <div className="flex flex-col sm:flex-row sm:items-start gap-3">
                 <div className="flex-1">
                   <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg mb-2">{displayName}</h1>
                   {metadata?.about && (
-                    <p className="text-white/90 text-sm drop-shadow-md mb-2">{metadata.about}</p>
+                    <p className="text-white/90 text-sm drop-shadow-md mb-2 leading-relaxed">{metadata.about}</p>
                   )}
                   {metadata?.nip05 && (
                     <p className="text-white/80 drop-shadow-md text-xs mb-2">@{metadata.nip05}</p>
@@ -137,38 +138,93 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                 )}
               </div>
 
-              {/* Stats */}
-              <div className="flex items-center gap-4 justify-center lg:justify-start">
-                <div className="text-white">
-                  <div className="text-xl font-bold drop-shadow-lg">0</div>
-                  <div className="text-white/80 text-xs drop-shadow-md">sats</div>
+              {/* Social Buttons */}
+              <div className="flex flex-row gap-3">
+                  <div className="flex justify-center">
+                    {!isOwnProfile && authorData?.event && currentUser && (authorData.metadata?.lud16 || authorData.metadata?.lud06) ? (
+                      <ZapDialog target={authorData.event}>
+                        <Button className="w-12 h-12 rounded-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border border-yellow-500/30 backdrop-blur-sm">
+                          <Zap className="w-5 h-5" />
+                        </Button>
+                      </ZapDialog>
+                    ) : (
+                      <Button className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 text-white/50 border border-white/10 backdrop-blur-sm" disabled>
+                        <Zap className="w-5 h-5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex justify-center">
+                    <Button className="w-12 h-12 rounded-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 backdrop-blur-sm" asChild>
+                      <a href="/rss.xml" target="_blank" rel="noopener noreferrer">
+                        <Rss className="w-5 h-5" />
+                      </a>
+                    </Button>
+                  </div>
+                  <div className="flex justify-center">
+                    <Button 
+                      className="w-12 h-12 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 backdrop-blur-sm"
+                      onClick={async () => {
+                        const profileUrl = window.location.href;
+                        try {
+                          if (navigator.share) {
+                            await navigator.share({
+                              title: `${displayName} on Nostr`,
+                              url: profileUrl
+                            });
+                          } else {
+                            await navigator.clipboard.writeText(profileUrl);
+                            toast({
+                              title: "Link copied!",
+                              description: "Profile link has been copied to clipboard.",
+                            });
+                          }
+                        } catch (error) {
+                          // Fallback if clipboard API fails
+                          toast({
+                            title: "Copy failed",
+                            description: "Unable to copy link to clipboard.",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      <Share2 className="w-5 h-5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="text-white/60 text-xs drop-shadow-md">
-                  0 zaps
-                </div>
-              </div>
 
-              {/* Links */}
-              <div className="flex flex-wrap gap-2 text-xs text-white/80 justify-center lg:justify-start">
+              {/* Social Links */}
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start text-sm">
                 {metadata?.website && (
                   <a 
                     href={metadata.website} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 hover:text-white transition-colors drop-shadow-md"
+                    className="flex items-center gap-1 text-white/80 hover:text-white transition-colors drop-shadow-md"
                   >
-                    <Globe className="w-3 h-3" />
+                    <Globe className="w-4 h-4" />
                     Website
-                    <ExternalLink className="w-2 h-2" />
+                    <ExternalLink className="w-3 h-3 opacity-30" />
                   </a>
                 )}
                 
-                <div className="flex items-center gap-1 drop-shadow-md">
-                  <Users className="w-3 h-3" />
+                <a 
+                  href={`https://njump.me/${nip19.npubEncode(pubkey)}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-white/80 hover:text-white transition-colors drop-shadow-md"
+                >
+                  <Hash className="w-4 h-4" />
                   {nip19.npubEncode(pubkey).slice(0, 12)}...
-                </div>
+                  <ExternalLink className="w-3 h-3 opacity-30" />
+                </a>
               </div>
             </div>
+          </div>
+
+          {/* Enhanced Profile Information Section */}
+          <div className="mb-8">
+            {/* This section is now integrated into the stats row above */}
           </div>
 
           {/* Tab Pills - Moved outside the header area */}
