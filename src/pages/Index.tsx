@@ -134,7 +134,7 @@ const Index = () => {
                       <Sparkles className="w-3 h-3 mr-1" />
                       Latest Release
                     </Badge>
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight break-words hyphens-auto max-w-64 lg:max-w-72 mx-auto lg:mx-0">
                       <Link 
                         to={generateReleaseLink(latestRelease.artistPubkey, latestRelease.identifier)}
                         className="text-white drop-shadow-lg hover:text-white/90 transition-colors"
