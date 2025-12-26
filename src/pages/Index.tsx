@@ -158,7 +158,7 @@ const Index = () => {
                       </Link>
                     </h1>
                     <div className="flex flex-col lg:flex-row items-center gap-2 sm:gap-4">
-                      <Link to="/about" className="inline-flex items-center gap-2 text-lg text-white/90 hover:text-white transition-colors drop-shadow-md">
+                      <Link to={`/${musicConfig.artistNpub}`} className="inline-flex items-center gap-2 text-lg text-white/90 hover:text-white transition-colors drop-shadow-md">
                         {musicConfig.music.image && (
                           <img
                             src={musicConfig.music.image}
@@ -238,8 +238,8 @@ const Index = () => {
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center">
                   <Button variant="outline" asChild>
-                    <Link to="/about">
-                      About Artist
+                    <Link to={`/${musicConfig.artistNpub}`}>
+                      View Profile
                     </Link>
                   </Button>
                 </div>

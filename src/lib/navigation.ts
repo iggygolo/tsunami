@@ -50,13 +50,6 @@ export const navigationItems: NavigationItem[] = [
   },
   // Secondary navigation items
   {
-    path: '/about',
-    icon: User,
-    label: 'About',
-    description: 'Artist bio & info',
-    group: 'secondary'
-  },
-  {
     path: '/rss.xml',
     icon: Rss,
     label: 'RSS',

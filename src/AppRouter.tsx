@@ -5,7 +5,6 @@ import Index from "./pages/Index";
 import Releases from "./pages/Releases";
 import Community from "./pages/Community";
 import SocialFeed from "./pages/SocialFeed";
-import About from "./pages/About";
 import DebugAudio from "./pages/DebugAudio";
 import { NIP19Page } from "./pages/NIP19Page";
 import NotFound from "./pages/NotFound";
@@ -48,7 +47,6 @@ export function AppRouter() {
           <Route path="analytics" element={<StudioAnalytics />} />
         </Route>
         
-        <Route path="/about" element={<About />} />
         <Route path="/debug-audio" element={<DebugAudio />} />
         {/* NIP-19 route for npub1, note1, naddr1, nevent1, nprofile1 */}
         <Route path="/:nip19" element={<NIP19Page />} />
