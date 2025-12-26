@@ -9,6 +9,7 @@ import { MusicItemHeader } from '@/components/music/MusicItemHeader';
 import { GlassReleaseCard } from '@/components/music/GlassReleaseCard';
 import { useTrackResolver } from '@/hooks/useEventResolver';
 import { usePlaylistResolution } from '@/hooks/usePlaylistResolution';
+import { useTrackInteractions } from '@/hooks/useTrackInteractions';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import { eventToMusicTrack, playlistToRelease } from '@/lib/eventConversions';
@@ -77,6 +78,14 @@ export function TrackPage() {
     sig: ''
   } : null;
 
+  // Use track interactions hook for like/share functionality
+  const {
+    interactionCounts,
+    hasUserLiked,
+    handleLike,
+    handleShare
+  } = useTrackInteractions({ track, event: trackEvent });
+
   // Handle track playback
   const handleTrackPlay = () => {
     if (!track || !track.audioUrl) return;
@@ -107,23 +116,6 @@ export function TrackPage() {
   const isCurrentTrack = state.currentTrack?.id === track?.eventId || 
                          state.currentTrack?.id === `${track?.artistPubkey}:${track?.identifier}`;
   const isTrackPlaying = isCurrentTrack && state.isPlaying;
-
-  // Placeholder interaction handlers
-  const handleLike = () => {
-    console.log('Like track:', track?.title);
-  };
-
-  const handleShare = () => {
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      navigator.share({
-        title: track?.title,
-        text: `Check out "${track?.title}" by ${track?.artist}`,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-    }
-  };
 
   // Loading state
   if (isLoading) {
@@ -271,6 +263,10 @@ export function TrackPage() {
                 return [{ text: `Found in ${parts.join(' and ')}` }];
               })() : [])
             ]}
+            stats={{
+              sats: interactionCounts?.totalSats || 0,
+              zaps: interactionCounts?.zaps || 0
+            }}
             playback={track.audioUrl ? {
               isPlaying: isTrackPlaying,
               isLoading: state.isLoading,
@@ -279,7 +275,7 @@ export function TrackPage() {
             } : undefined}
             interactions={trackEvent ? {
               event: trackEvent,
-              hasUserLiked: false, // TODO: Connect to actual like state
+              hasUserLiked: hasUserLiked,
               onLike: handleLike,
               onShare: handleShare
             } : undefined}

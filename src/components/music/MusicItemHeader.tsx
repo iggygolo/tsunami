@@ -3,6 +3,7 @@
  * 
  * A reusable header component for music items (tracks, releases, playlists)
  * that provides consistent layout and styling across different pages.
+ *
  */
 
 import { ReactNode } from 'react';
@@ -194,7 +195,7 @@ export function MusicItemHeader({
             </Button>
           )}
 
-          {/* Interaction Buttons */}
+          {/* Social Interaction Buttons */}
           {interactions && (
             <>
               {/* Zap Button */}
@@ -202,7 +203,7 @@ export function MusicItemHeader({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-black/40 hover:border-white/30 hover:text-yellow-400 transition-all duration-200 shadow-lg"
+                  className="w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-yellow-500/20 hover:border-yellow-400/40 hover:text-yellow-300 transition-all duration-200 shadow-lg"
                   title="Zap this item"
                 >
                   <Zap className="w-4 h-4" />
@@ -215,8 +216,8 @@ export function MusicItemHeader({
                 variant="ghost"
                 onClick={interactions.onLike}
                 className={cn(
-                  "w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-black/40 hover:border-white/30 transition-all duration-200 shadow-lg",
-                  interactions.hasUserLiked && "text-red-500"
+                  "w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-red-500/20 hover:border-red-400/40 hover:text-red-300 transition-all duration-200 shadow-lg",
+                  interactions.hasUserLiked && "text-red-500 bg-red-500/10 border-red-400/30"
                 )}
               >
                 <Heart className={cn("w-4 h-4", interactions.hasUserLiked && "fill-current")} />
@@ -227,7 +228,7 @@ export function MusicItemHeader({
                 size="sm"
                 variant="ghost"
                 onClick={interactions.onShare}
-                className="w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-black/40 hover:border-white/30 transition-all duration-200 shadow-lg"
+                className="w-10 h-10 p-0 rounded-full bg-black/30 border border-white/20 text-white backdrop-blur-xl hover:bg-cyan-500/20 hover:border-cyan-400/40 hover:text-cyan-300 transition-all duration-200 shadow-lg"
               >
                 <Share className="w-4 h-4" />
               </Button>
