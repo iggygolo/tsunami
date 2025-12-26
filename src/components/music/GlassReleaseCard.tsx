@@ -175,7 +175,7 @@ export function GlassReleaseCard({ release, className}: GlassReleaseCardProps) {
         {/* Playing Status Indicator - Top Left */}
         {trackPlayback?.isReleasePlaying && (
           <div className="absolute top-3 left-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/90 text-white rounded-full text-xs font-medium backdrop-blur-sm shadow-lg">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/90 text-black rounded-full text-xs font-medium backdrop-blur-sm shadow-lg">
               <Volume2 className="w-3 h-3 animate-pulse" />
               <span>Playing</span>
             </div>
