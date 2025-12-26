@@ -6,11 +6,12 @@ import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { NostrNavigationError } from '@/components/NostrNavigationError';
 import { MusicItemHeader } from '@/components/music/MusicItemHeader';
+import { GlassReleaseCard } from '@/components/music/GlassReleaseCard';
 import { useTrackResolver } from '@/hooks/useEventResolver';
 import { usePlaylistResolution } from '@/hooks/usePlaylistResolution';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
-import { eventToMusicTrack } from '@/lib/eventConversions';
+import { eventToMusicTrack, playlistToRelease } from '@/lib/eventConversions';
 import { MUSIC_KINDS, isArtist } from '@/lib/musicConfig';
 import NotFound from './NotFound';
 import type { NostrEvent } from '@nostrify/nostrify';
@@ -286,7 +287,7 @@ export function TrackPage() {
 
           {/* Playlists Section */}
           {playlists.length > 0 && (
-            <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-4 mb-6">
+            <div className="mb-6">
               {(() => {
                 // Categorize playlists
                 const releases = playlists.filter(playlist => playlist.authorPubkey && isArtist(playlist.authorPubkey));
@@ -296,91 +297,52 @@ export function TrackPage() {
                   <>
                     {/* Releases Section */}
                     {releases.length > 0 && (
-                      <div className="mb-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Album className="w-4 h-4 text-white" />
-                          <h3 className="text-white font-semibold">
+                      <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Album className="w-5 h-5 text-white" />
+                          <h3 className="text-white font-semibold text-lg">
                             Found in {releases.length} Release{releases.length !== 1 ? 's' : ''}
                           </h3>
                         </div>
-                        <div className="space-y-2">
-                          {releases.map((release) => (
-                            <div 
-                              key={release.identifier}
-                              className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-                              onClick={() => release.authorPubkey && navigate(`/release/${release.authorPubkey}/${release.identifier}`)}
-                            >
-                              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Album className="w-4 h-4 text-white" />
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-white text-sm font-medium">{release.title}</p>
-                                {release.description && (
-                                  <p className="text-white/60 text-xs line-clamp-1">{release.description}</p>
-                                )}
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (release.authorPubkey) {
-                                    navigate(`/release/${release.authorPubkey}/${release.identifier}`);
-                                  }
-                                }}
-                                className="text-white/70 hover:text-white text-xs"
-                              >
-                                View
-                              </Button>
-                            </div>
-                          ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                          {releases.map((playlist) => {
+                            // Convert playlist to release format for GlassReleaseCard
+                            const releaseData = playlistToRelease(playlist, new Map());
+                            
+                            return (
+                              <GlassReleaseCard
+                                key={playlist.eventId || playlist.identifier}
+                                release={releaseData}
+                                className="w-full"
+                              />
+                            );
+                          })}
                         </div>
                       </div>
                     )}
 
                     {/* User Playlists Section */}
                     {userPlaylists.length > 0 && (
-                      <div className={releases.length > 0 ? 'border-t border-white/10 pt-4' : ''}>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Users className="w-4 h-4 text-white" />
-                          <h3 className="text-white font-semibold">
+                      <div className={releases.length > 0 ? 'border-t border-white/10 pt-8' : ''}>
+                        <div className="flex items-center gap-2 mb-4">
+                          <Users className="w-5 h-5 text-white" />
+                          <h3 className="text-white font-semibold text-lg">
                             Added to {userPlaylists.length} User Playlist{userPlaylists.length !== 1 ? 's' : ''}
                           </h3>
                         </div>
-                        <div className="space-y-2">
-                          {userPlaylists.map((playlist) => (
-                            <div 
-                              key={playlist.identifier}
-                              className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-                              onClick={() => playlist.authorPubkey && navigate(`/release/${playlist.authorPubkey}/${playlist.identifier}`)}
-                            >
-                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Users className="w-4 h-4 text-white" />
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-white text-sm font-medium">{playlist.title}</p>
-                                {playlist.description && (
-                                  <p className="text-white/60 text-xs line-clamp-1">{playlist.description}</p>
-                                )}
-                                <p className="text-white/50 text-xs">
-                                  by {playlist.authorPubkey ? `${playlist.authorPubkey.slice(0, 8)}...${playlist.authorPubkey.slice(-4)}` : 'Unknown'}
-                                </p>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (playlist.authorPubkey) {
-                                    navigate(`/release/${playlist.authorPubkey}/${playlist.identifier}`);
-                                  }
-                                }}
-                                className="text-white/70 hover:text-white text-xs"
-                              >
-                                View
-                              </Button>
-                            </div>
-                          ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                          {userPlaylists.map((playlist) => {
+                            // Convert playlist to release format for GlassReleaseCard
+                            const releaseData = playlistToRelease(playlist, new Map());
+                            
+                            return (
+                              <GlassReleaseCard
+                                key={playlist.eventId || playlist.identifier}
+                                release={releaseData}
+                                className="w-full"
+                              />
+                            );
+                          })}
                         </div>
                       </div>
                     )}
