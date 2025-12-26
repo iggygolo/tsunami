@@ -70,15 +70,76 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
   if (isLoadingAuthor) {
     return (
       <Layout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="h-48 bg-muted rounded-lg mb-8"></div>
-            <div className="flex items-start gap-6">
-              <div className="w-32 h-32 bg-muted rounded-full"></div>
-              <div className="flex-1 space-y-4">
-                <div className="h-8 bg-muted rounded w-1/3"></div>
-                <div className="h-4 bg-muted rounded w-2/3"></div>
-                <div className="h-4 bg-muted rounded w-1/2"></div>
+        <div className="relative -mx-4 px-4">
+          {/* Blurred background skeleton */}
+          <div className="absolute inset-0 bg-muted/20 animate-pulse"></div>
+          
+          <div className="relative py-8">
+            <div className="animate-pulse">
+              {/* Profile Header Skeleton */}
+              <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 mb-6">
+                {/* Profile Image Skeleton */}
+                <div className="flex-shrink-0">
+                  <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl bg-muted shadow-2xl"></div>
+                </div>
+
+                {/* Profile Info Skeleton */}
+                <div className="flex-1 space-y-4 w-full max-w-lg text-center lg:text-left">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+                    <div className="flex-1 space-y-3">
+                      {/* Name */}
+                      <div className="h-8 bg-muted rounded w-48 mx-auto lg:mx-0"></div>
+                      {/* About */}
+                      <div className="space-y-2">
+                        <div className="h-4 bg-muted rounded w-full"></div>
+                        <div className="h-4 bg-muted rounded w-3/4 mx-auto lg:mx-0"></div>
+                      </div>
+                      {/* NIP-05 */}
+                      <div className="h-3 bg-muted rounded w-32 mx-auto lg:mx-0"></div>
+                    </div>
+                    
+                    {/* Edit button skeleton */}
+                    <div className="h-10 w-28 bg-muted rounded-full"></div>
+                  </div>
+
+                  {/* Social Buttons Skeleton */}
+                  <div className="flex flex-row gap-3 justify-center lg:justify-start">
+                    <div className="w-12 h-12 rounded-full bg-muted"></div>
+                    <div className="w-12 h-12 rounded-full bg-muted"></div>
+                    <div className="w-12 h-12 rounded-full bg-muted"></div>
+                  </div>
+
+                  {/* Social Links Skeleton */}
+                  <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                    <div className="h-4 bg-muted rounded w-20"></div>
+                    <div className="h-4 bg-muted rounded w-24"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabs Skeleton */}
+              <div className="w-full max-w-full mb-6">
+                <div className="flex gap-2 justify-center lg:justify-start mb-4">
+                  <div className="h-10 bg-muted rounded-full w-24"></div>
+                  <div className="h-10 bg-muted rounded-full w-28"></div>
+                </div>
+
+                {/* Content Area Skeleton */}
+                <div className="bg-muted/30 border border-muted-foreground/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4">
+                  {/* Track list skeleton */}
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/20">
+                        <div className="w-12 h-12 bg-muted rounded-lg flex-shrink-0"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded w-3/4"></div>
+                          <div className="h-3 bg-muted rounded w-1/2"></div>
+                        </div>
+                        <div className="w-8 h-8 bg-muted rounded-full"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

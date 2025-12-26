@@ -92,33 +92,93 @@ export function ReleasePage({ eventId, addressableEvent }: ReleasePageProps) {
   if (isLoading) {
     return (
       <Layout>
-        <div className="relative">
-          <BlurredBackground image={undefined} />
+        <div className="relative w-full max-w-full">
+          {/* Blurred background skeleton */}
+          <div className="absolute inset-0 bg-muted/20 animate-pulse"></div>
           
-          <div className="relative py-8">
-            <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 text-white/70 hover:text-white">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
+          <div className="relative py-4 w-full max-w-full overflow-hidden">
+            <div className="animate-pulse">
+              {/* Back Button Skeleton */}
+              <div className="h-10 w-20 bg-muted rounded mb-2"></div>
 
-            {/* Loading skeleton matching ProfilePage style */}
-            <div className="flex flex-col lg:flex-row items-start gap-4 mb-6">
-              <div className="flex-shrink-0">
-                <Skeleton className="w-48 h-48 rounded-2xl bg-white/10" />
+              {/* Release Header Skeleton */}
+              <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 mb-6">
+                {/* Large Release Artwork Skeleton */}
+                <div className="flex-shrink-0">
+                  <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl bg-muted shadow-2xl"></div>
+                </div>
+
+                {/* Release Info Skeleton */}
+                <div className="flex-1 space-y-3 w-full max-w-lg text-center lg:text-left">
+                  <div className="flex-1 space-y-3">
+                    {/* Title */}
+                    <div className="h-8 bg-muted rounded w-3/4 mx-auto lg:mx-0"></div>
+                    {/* Artist */}
+                    <div className="h-5 bg-muted rounded w-32 mx-auto lg:mx-0"></div>
+                    {/* Description */}
+                    <div className="space-y-2">
+                      <div className="h-3 bg-muted rounded w-full"></div>
+                      <div className="h-3 bg-muted rounded w-2/3 mx-auto lg:mx-0"></div>
+                    </div>
+                  </div>
+
+                  {/* Genre, Duration, Track Count Skeleton */}
+                  <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center lg:justify-start">
+                    <div className="h-6 w-16 bg-muted rounded-full"></div>
+                    <div className="h-4 w-20 bg-muted rounded"></div>
+                    <div className="h-4 w-12 bg-muted rounded"></div>
+                  </div>
+
+                  {/* Stats Skeleton */}
+                  <div className="flex items-center gap-4 justify-center lg:justify-start">
+                    <div className="space-y-1">
+                      <div className="h-6 w-12 bg-muted rounded"></div>
+                      <div className="h-3 w-8 bg-muted rounded"></div>
+                    </div>
+                    <div className="h-3 w-16 bg-muted rounded"></div>
+                  </div>
+
+                  {/* Action Buttons Skeleton */}
+                  <div className="flex items-center gap-2 justify-center lg:justify-start">
+                    <div className="w-10 h-10 bg-muted rounded-full"></div>
+                    <div className="w-10 h-10 bg-muted rounded-full"></div>
+                    <div className="w-10 h-10 bg-muted rounded-full"></div>
+                    <div className="w-10 h-10 bg-muted rounded-full"></div>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 space-y-3 relative z-10 max-w-lg">
-                <div className="space-y-3">
-                  <Skeleton className="h-8 w-3/4 bg-white/10" />
-                  <Skeleton className="h-5 w-32 bg-white/10" />
+
+              {/* Tabs Skeleton */}
+              <div className="w-full max-w-full mb-6">
+                <div className="flex gap-2 justify-center lg:justify-start mb-4 flex-wrap">
+                  <div className="h-10 bg-muted rounded-full w-20"></div>
+                  <div className="h-10 bg-muted rounded-full w-16"></div>
+                  <div className="h-10 bg-muted rounded-full w-18"></div>
+                  <div className="h-10 bg-muted rounded-full w-24"></div>
                 </div>
-                <div className="flex gap-2">
-                  <Skeleton className="h-6 w-20 rounded-full bg-white/10" />
-                  <Skeleton className="h-6 w-16 rounded-full bg-white/10" />
-                </div>
-                <div className="flex gap-3">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="w-10 h-10 rounded-full bg-white/10" />
-                  ))}
+
+                {/* Content Area Skeleton */}
+                <div className="bg-muted/30 border border-muted-foreground/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4">
+                  {/* Track list skeleton */}
+                  <div className="space-y-3">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/20">
+                        {/* Track number */}
+                        <div className="w-6 h-6 bg-muted rounded flex-shrink-0"></div>
+                        {/* Track artwork */}
+                        <div className="w-12 h-12 bg-muted rounded-lg flex-shrink-0"></div>
+                        {/* Track info */}
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded w-3/4"></div>
+                          <div className="h-3 bg-muted rounded w-1/2"></div>
+                        </div>
+                        {/* Duration */}
+                        <div className="w-12 h-4 bg-muted rounded flex-shrink-0"></div>
+                        {/* Play button */}
+                        <div className="w-8 h-8 bg-muted rounded-full flex-shrink-0"></div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
