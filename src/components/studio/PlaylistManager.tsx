@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, ListMusic, Calendar, MoreVertical, Users, Lock, Eye, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/useToast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
+import { generateReleaseLink } from '@/lib/nip19Utils';
 import type { MusicPlaylistData } from '@/types/music';
 
 interface PlaylistManagerProps {
@@ -360,9 +361,14 @@ export function PlaylistManager({
                 <div className="space-y-1">
                   <div className="flex items-start justify-between gap-1">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-foreground truncate text-sm" title={playlist.title}>
-                        {playlist.title}
-                      </h3>
+                      <Link 
+                        to={generateReleaseLink(playlist.authorPubkey || '', playlist.identifier)}
+                        className="block"
+                      >
+                        <h3 className="font-medium text-foreground truncate text-sm hover:text-primary transition-colors" title={playlist.title}>
+                          {playlist.title}
+                        </h3>
+                      </Link>
                       <p className="text-xs text-muted-foreground">
                         {playlist.tracks.length} track{playlist.tracks.length !== 1 ? 's' : ''}
                       </p>

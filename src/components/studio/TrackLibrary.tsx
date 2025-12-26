@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, Music, Clock, Calendar, MoreVertical, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,7 @@ import { useDeleteTrack } from '@/hooks/usePublishTrack';
 import { useToast } from '@/hooks/useToast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
+import { generateTrackLink } from '@/lib/nip19Utils';
 import type { MusicTrackData } from '@/types/music';
 
 interface TrackLibraryProps {
@@ -300,9 +301,14 @@ export function TrackLibrary({
                 <div className="space-y-1">
                   <div className="flex items-start justify-between gap-1">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-foreground truncate text-sm" title={track.title}>
-                        {track.title}
-                      </h3>
+                      <Link 
+                        to={generateTrackLink(track.artistPubkey || '', track.identifier)}
+                        className="block"
+                      >
+                        <h3 className="font-medium text-foreground truncate text-sm hover:text-primary transition-colors" title={track.title}>
+                          {track.title}
+                        </h3>
+                      </Link>
                       <p className="text-xs text-muted-foreground truncate" title={track.artist}>
                         {track.artist}
                       </p>
