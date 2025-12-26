@@ -16,19 +16,19 @@ export const DEFAULT_BLOSSOM_SERVERS = [
 
 /**
  * Platform configuration interface
- * This is now minimal since all artist-specific config is handled per-artist
+ * Provides empty defaults that should be populated per-artist in multi-artist platform
  */
 export interface PlatformConfig {
-  /** Default values for new artists */
+  /** Empty defaults for new artists - should be customized per artist */
   defaults: {
-    artistName: string;
-    description: string;
-    image: string;
-    website: string;
-    copyright: string;
+    artistName: string; // Empty string - must be set per artist
+    description: string; // Empty string - must be set per artist
+    image: string; // Empty string - must be set per artist
+    website: string; // Empty string - optional per artist
+    copyright: string; // Year only - artist name added per artist
     value: {
-      amount: number;
-      currency: string;
+      amount: number; // Default sats amount for zaps
+      currency: string; // Always 'sats'
       recipients: Array<{
         name: string;
         type: 'node' | 'lnaddress';
@@ -37,12 +37,12 @@ export interface PlatformConfig {
         customKey?: string;
         customValue?: string;
         fee?: boolean;
-      }>;
+      }>; // Empty array - must be configured per artist
     };
-    medium: 'music';
+    medium: 'music'; // Always 'music' for this platform
     license: {
-      identifier: string;
-      url?: string;
+      identifier: string; // Default license type
+      url?: string; // Optional license URL
     };
   };
   
@@ -64,11 +64,11 @@ export interface PlatformConfig {
  */
 export const PLATFORM_CONFIG: PlatformConfig = {
   defaults: {
-    artistName: 'Unknown Artist',
-    description: 'A Nostr-powered artist exploring decentralized music',
+    artistName: '',
+    description: '',
     image: '',
     website: '',
-    copyright: `© ${new Date().getFullYear()} Unknown Artist`,
+    copyright: `© ${new Date().getFullYear()}`,
     value: {
       amount: 100,
       currency: 'sats',
@@ -93,35 +93,29 @@ export const PLATFORM_CONFIG: PlatformConfig = {
 
 /**
  * Legacy MUSIC_CONFIG for backward compatibility
- * This maintains the same interface but uses hardcoded defaults
+ * This maintains the same interface but uses empty defaults for multi-artist platform
  * @deprecated Use PLATFORM_CONFIG instead for new code
  */
 export const MUSIC_CONFIG = {
-  // No longer uses environment variables - this is just for backward compatibility
-  artistNpub: "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
+  // No longer uses a specific artist - this is just for backward compatibility
+  artistNpub: "", // Empty - no default artist in multi-artist platform
 
   music: {
-    artistName: PLATFORM_CONFIG.defaults.artistName,
-    description: PLATFORM_CONFIG.defaults.description,
+    artistName: '', // Empty - should be set per artist
+    description: '', // Empty - should be set per artist
     image: PLATFORM_CONFIG.defaults.image,
     website: PLATFORM_CONFIG.defaults.website,
-    copyright: PLATFORM_CONFIG.defaults.copyright,
+    copyright: PLATFORM_CONFIG.defaults.copyright, // Just year, no artist name
     value: PLATFORM_CONFIG.defaults.value,
-    guid: "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h",
+    guid: "", // No default GUID - should be set per artist
     medium: PLATFORM_CONFIG.defaults.medium,
-    publisher: PLATFORM_CONFIG.defaults.artistName,
+    publisher: '', // Empty - should be set per artist
     locked: {
-      owner: PLATFORM_CONFIG.defaults.artistName,
+      owner: '', // Empty - should be set per artist
       locked: true
     },
     location: undefined,
-    person: [
-      {
-        name: PLATFORM_CONFIG.defaults.artistName,
-        role: "artist",
-        group: "cast"
-      }
-    ],
+    person: [], // Empty array - should be populated per artist
     license: PLATFORM_CONFIG.defaults.license,
     txt: undefined,
     remoteItem: undefined,
@@ -158,17 +152,8 @@ export const MUSIC_KINDS = {
  * In multi-artist platform, use the specific artist's pubkey instead
  */
 export function getArtistPubkeyHex(): string {
-  try {
-    const decoded = nip19.decode(MUSIC_CONFIG.artistNpub);
-    if (decoded.type === 'npub') {
-      return decoded.data;
-    }
-    throw new Error('Invalid npub format');
-  } catch (error) {
-    console.error('Failed to decode artist npub:', error);
-    // Fallback to the original value in case it's already hex
-    return MUSIC_CONFIG.artistNpub;
-  }
+  console.warn('getArtistPubkeyHex() is deprecated in multi-artist platform. Use specific artist pubkey instead.');
+  return ""; // No default artist in multi-artist platform
 }
 
 /**
@@ -183,10 +168,17 @@ export function isArtist(pubkey: string): boolean {
 
 /**
  * Get default configuration for a new artist
+ * Returns empty values that must be populated by the artist
  */
 export function getDefaultArtistConfig() {
   return {
     ...PLATFORM_CONFIG.defaults,
+    // Artist must fill these in:
+    // - artistName (required)
+    // - description (recommended)
+    // - image (recommended)
+    // - website (optional)
+    // - value.recipients (required for payments)
     blossomServers: PLATFORM_CONFIG.upload.blossomServers,
     rssEnabled: false,
     updated_at: Math.floor(Date.now() / 1000)

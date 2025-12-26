@@ -45,31 +45,29 @@ interface SingleReleaseCache {
 
 /**
  * Create a Node.js compatible config using platform defaults
- * No longer depends on environment variables
+ * No longer depends on environment variables or specific artists
  */
 function createNodejsConfig(): RSSConfig {
-  // Use hardcoded platform defaults since we no longer use environment variables
-  const artistNpub = "npub1km5prrxcgt5fwgjzjpltyswsuu7u7jcj2cx9hk2rwvxyk00v2jqsgv0a3h"; // Default fallback
-
+  // Use empty platform defaults for multi-artist platform
   return {
-    artistNpub,
+    artistNpub: "", // No default artist in multi-artist platform
     music: {
-      description: "A Nostr-powered artist exploring decentralized music",
-      artistName: "Unknown Artist",
+      description: "",
+      artistName: "",
       image: "",
       website: "",
-      copyright: `© ${new Date().getFullYear()} Unknown Artist`,
+      copyright: `© ${new Date().getFullYear()}`,
       value: {
         amount: 100,
         currency: "sats",
         recipients: []
       },
       // Podcasting 2.0 fields
-      guid: artistNpub,
+      guid: "", // No default GUID in multi-artist platform
       medium: "music",
-      publisher: "Unknown Artist",
+      publisher: "",
       location: undefined,
-      person: [{ name: "Unknown Artist", role: "artist", group: "cast" }],
+      person: [], // Empty array - should be populated per artist
       license: {
         identifier: "All Rights Reserved",
         url: ""
@@ -517,7 +515,7 @@ export async function buildStaticData(): Promise<void> {
 
     // Get base configuration
     const baseConfig = createNodejsConfig();
-    console.log(`👤 Artist: ${baseConfig.artistNpub}`);
+    console.log(`👤 Multi-artist platform - no single configured artist`);
 
     // Fetch all data from Nostr relays (single fetch)
     const dataBundle = await fetchNostrDataBundle();

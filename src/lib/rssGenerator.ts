@@ -1,5 +1,5 @@
 import type { MusicTrackData, MusicPlaylistData } from '@/types/music';
-import { MUSIC_CONFIG, type MusicConfig } from './musicConfig';
+import { PLATFORM_CONFIG, getDefaultArtistConfig, type MusicConfig } from './musicConfig';
 import { 
   generateRSSFeed as generateRSSFeedCore,
   musicConfigToRSSConfig 
@@ -10,9 +10,47 @@ import {
  * Returns single RSS feed with multiple channels (one per release)
  */
 export function generateRSSFeed(tracks: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: MusicConfig): string {
-  const musicConfig = config || MUSIC_CONFIG;
-  const rssConfig = musicConfigToRSSConfig(musicConfig);
+  // If no config provided, create a generic fallback config
+  let musicConfig = config;
+  if (!musicConfig) {
+    const defaultConfig = getDefaultArtistConfig();
+    musicConfig = {
+      artistNpub: "",
+      music: {
+        artistName: defaultConfig.artistName,
+        description: defaultConfig.description,
+        image: defaultConfig.image,
+        website: defaultConfig.website,
+        copyright: defaultConfig.copyright,
+        value: defaultConfig.value,
+        guid: "",
+        medium: defaultConfig.medium,
+        publisher: defaultConfig.artistName,
+        locked: {
+          owner: defaultConfig.artistName,
+          locked: true
+        },
+        location: undefined,
+        person: [
+          {
+            name: defaultConfig.artistName,
+            role: "artist",
+            group: "cast"
+          }
+        ],
+        license: defaultConfig.license,
+        txt: undefined,
+        remoteItem: undefined,
+        block: undefined,
+        newFeedUrl: undefined,
+      },
+      rss: {
+        ttl: PLATFORM_CONFIG.rss.ttl
+      }
+    };
+  }
   
+  const rssConfig = musicConfigToRSSConfig(musicConfig);
   return generateRSSFeedCore(tracks, releases, rssConfig);
 }
 

@@ -52,15 +52,17 @@ export function useArtistMetadata(artistPubkey?: string) {
   return useQuery({
     queryKey: ['artist-metadata', artistPubkey],
     queryFn: async (context): Promise<ArtistMetadata> => {
-      // Use provided pubkey or fall back to config
-      const pubkey = artistPubkey || MUSIC_CONFIG.artistNpub;
+      // Require a specific artist pubkey - no fallback to hardcoded config
+      if (!artistPubkey) {
+        throw new Error('Artist pubkey is required for metadata lookup');
+      }
       
       // Convert npub to hex if needed
-      let hexPubkey = pubkey;
-      if (pubkey.startsWith('npub')) {
+      let hexPubkey = artistPubkey;
+      if (artistPubkey.startsWith('npub')) {
         try {
           const { nip19 } = await import('nostr-tools');
-          const decoded = nip19.decode(pubkey);
+          const decoded = nip19.decode(artistPubkey);
           if (decoded.type === 'npub') {
             hexPubkey = decoded.data;
           }
@@ -118,7 +120,7 @@ export function useArtistMetadata(artistPubkey?: string) {
           currency: defaultConfig.value.currency,
           recipients: defaultConfig.value.recipients
         },
-        guid: MUSIC_CONFIG.music.guid, // Keep for backward compatibility
+        guid: "", // No default GUID - should be set per artist
         medium: defaultConfig.medium,
         publisher: defaultConfig.artistName,
         location: undefined,
@@ -137,6 +139,6 @@ export function useArtistMetadata(artistPubkey?: string) {
     gcTime: 60 * 60 * 1000, // 1 hour
     retry: 1, // Only retry once for faster failure
     retryDelay: 500, // Quick retry
-    enabled: !!artistPubkey || !!MUSIC_CONFIG.artistNpub, // Only run if we have a pubkey
+    enabled: !!artistPubkey, // Only run if we have a specific artist pubkey
   });
 }

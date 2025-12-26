@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { Headphones, Menu, Settings, Music, ListMusic, Zap, Server, Waves } from 'lucide-react';
+import { Headphones, Menu, Settings, Music, ListMusic, Zap, Waves } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoginArea } from '@/components/auth/LoginArea';

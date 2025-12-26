@@ -120,7 +120,7 @@ export function releaseTracksToUniversal(
     return {
       id: trackId,
       title: track.title,
-      artist: track.artist || MUSIC_CONFIG.music.artistName, // Use track's artist or default to configured artist
+      artist: track.artist || "Unknown Artist", // Use track's artist or generic fallback
       audioUrl: track.audioUrl,
       duration: track.duration,
       imageUrl: track.imageUrl || release.imageUrl,
