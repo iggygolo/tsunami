@@ -117,9 +117,9 @@ export function useArtistReposts(limit: number = 50, artistPubkey?: string) {
 
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
-      // Query for both legacy (kind 6) and generic (kind 16) reposts from the artist
+      // Query for both generic (kind 16) and legacy (kind 6) reposts from the artist
       const events = await nostr.query([{
-        kinds: [6, 16], // Legacy reposts and generic reposts
+        kinds: [6, 16], // Legacy and generic reposts
         authors: [targetArtist],
         limit: limit
       }], { signal });

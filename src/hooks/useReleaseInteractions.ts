@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/useToast';
 import { useComments } from '@/hooks/useComments';
 import { useReactions } from '@/hooks/useReactions';
 import { useZapCounts } from '@/hooks/useZapCounts';
-import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
+import { encodeMusicPlaylistAsNaddr } from '@/lib/nip19Utils';
 import type { MusicRelease } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -130,7 +130,7 @@ export function useReleaseInteractions({ release, event, commentEvent }: UseRele
     if (!release) return;
     
     try {
-      const naddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
+      const naddr = encodeMusicPlaylistAsNaddr(release.artistPubkey, release.identifier);
       const url = `${window.location.origin}/release/${naddr}`;
       await navigator.clipboard.writeText(url);
       

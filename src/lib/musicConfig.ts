@@ -1,12 +1,8 @@
-import { nip19 } from 'nostr-tools';
-
 /**
  * Platform configuration for Tsunami multi-artist platform
  * This defines default values and constants used across the platform
  * All artist-specific configuration is now handled through Artist Settings UI
  */
-
-/**
 
 /**
  * Default Blossom servers for file uploads
@@ -18,28 +14,14 @@ export const DEFAULT_BLOSSOM_SERVERS = [
 
 /**
  * Platform configuration interface
- * Provides empty defaults that should be populated per-artist in multi-artist platform
+ * Provides sensible defaults for the multi-artist platform
  */
 export interface PlatformConfig {
-  /** Empty defaults for new artists - should be customized per artist */
+  /** Default values for new artists */
   defaults: {
-    artistName: string; // Empty string - must be set per artist
-    description: string; // Empty string - must be set per artist
-    image: string; // Empty string - must be set per artist
-    website: string; // Empty string - optional per artist
-    copyright: string; // Year only - artist name added per artist
     value: {
       amount: number; // Default sats amount for zaps
       currency: string; // Always 'sats'
-      recipients: Array<{
-        name: string;
-        type: 'node' | 'lnaddress';
-        address: string;
-        split: number;
-        customKey?: string;
-        customValue?: string;
-        fee?: boolean;
-      }>; // Empty array - must be configured per artist
     };
     medium: 'music'; // Always 'music' for this platform
     license: {
@@ -62,24 +44,17 @@ export interface PlatformConfig {
 
 /**
  * Platform configuration with sensible defaults
- * No environment variables needed - everything is hardcoded or configured per-artist
+ * Core platform settings that apply to all artists
  */
 export const PLATFORM_CONFIG: PlatformConfig = {
   defaults: {
-    artistName: '',
-    description: '',
-    image: '',
-    website: '',
-    copyright: `© ${new Date().getFullYear()}`,
     value: {
       amount: 100,
-      currency: 'sats',
-      recipients: []
+      currency: 'sats'
     },
     medium: 'music',
     license: {
-      identifier: 'All Rights Reserved',
-      url: ''
+      identifier: 'All Rights Reserved'
     }
   },
   
@@ -122,17 +97,21 @@ export function isArtist(pubkey: string): boolean {
 
 /**
  * Get default configuration for a new artist
- * Returns empty values that must be populated by the artist
+ * Returns platform defaults that can be customized per artist
  */
 export function getDefaultArtistConfig() {
   return {
-    ...PLATFORM_CONFIG.defaults,
-    // Artist must fill these in:
-    // - artistName (required)
-    // - description (recommended)
-    // - image (recommended)
-    // - website (optional)
-    // - value.recipients (required for payments)
+    artistName: '',
+    description: '',
+    image: '',
+    website: '',
+    copyright: `© ${new Date().getFullYear()}`,
+    value: {
+      ...PLATFORM_CONFIG.defaults.value,
+      recipients: []
+    },
+    medium: PLATFORM_CONFIG.defaults.medium,
+    license: { ...PLATFORM_CONFIG.defaults.license },
     blossomServers: PLATFORM_CONFIG.upload.blossomServers,
     rssEnabled: false,
     updated_at: Math.floor(Date.now() / 1000)

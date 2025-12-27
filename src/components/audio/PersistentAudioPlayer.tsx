@@ -154,8 +154,6 @@ export function PersistentAudioPlayer() {
 
   const handleNavigateToRelease = () => {
     if (currentTrack.source?.releaseId && currentTrack.source?.artistPubkey) {
-      // Try to use new Nostr navigation pattern for releases if we have the identifier
-      // For now, fall back to legacy pattern since we don't have releaseIdentifier in the source
       navigate(`/releases/${currentTrack.source.releaseId}`);
     } else if (currentTrack.source?.releaseId) {
       navigate(`/releases/${currentTrack.source.releaseId}`);

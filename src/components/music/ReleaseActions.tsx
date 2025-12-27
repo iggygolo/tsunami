@@ -8,7 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useComments } from '@/hooks/useComments';
 import { useReactions } from '@/hooks/useReactions';
 import { useZapCounts } from '@/hooks/useZapCounts';
-import { encodeReleaseAsNaddr } from '@/lib/nip19Utils';
+import { encodeMusicPlaylistAsNaddr } from '@/lib/nip19Utils';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import type { NostrEvent } from '@nostrify/nostrify';
 import type { MusicRelease } from '@/types/music';
@@ -124,7 +124,7 @@ export function ReleaseActions({ release, className, showComments, onToggleComme
   const handleShare = async () => {
     try {
       // Use naddr format for sharing (canonical Nostr format)
-      const naddr = encodeReleaseAsNaddr(release.artistPubkey, release.identifier);
+      const naddr = encodeMusicPlaylistAsNaddr(release.artistPubkey, release.identifier);
       const url = `${window.location.origin}/release/${naddr}`;
 
       await navigator.clipboard.writeText(url);

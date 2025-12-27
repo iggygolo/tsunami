@@ -4,7 +4,7 @@ import { PLATFORM_CONFIG } from '@/lib/musicConfig';
 
 /**
  * Hook for managing upload configuration
- * Now uses artist-configured Blossom servers instead of local storage
+ * Uses artist-configured Blossom servers with platform defaults as fallback
  */
 export function useUploadConfig() {
   const { user } = useCurrentUser();
@@ -15,20 +15,10 @@ export function useUploadConfig() {
 
   return {
     config: {
-      defaultProvider: 'blossom' as const, // Always use Blossom now
+      defaultProvider: 'blossom' as const,
       blossomServers,
-      vercelEnabled: false, // No longer supported
-      blossomEnabled: true,
       maxFileSize: PLATFORM_CONFIG.upload.maxFileSize,
-      allowedTypes: ['*/*'] // Blossom supports all file types
-    },
-    // Legacy function for backward compatibility
-    updateProvider: () => {
-      console.warn('updateProvider is deprecated - upload provider is now always Blossom');
-    },
-    // Legacy function for backward compatibility
-    setConfig: () => {
-      console.warn('setConfig is deprecated - configuration is now handled through Artist Settings');
+      allowedTypes: ['*/*']
     }
   };
 }

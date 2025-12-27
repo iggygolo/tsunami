@@ -64,9 +64,3 @@ The build script now works as a multi-artist platform without requiring environm
 - **Multi-Artist Support**: Fetches data for all artists found on the configured relays
 - **Automatic Discovery**: Discovers artists and their content dynamically from Nostr
 - **Fallback Handling**: Graceful degradation when specific artist data is unavailable
-
-For development, you can optionally override the artist filter by setting `VITE_ARTIST_NPUB`, but this is not required for production builds.
-
-### Legacy Scripts
-
-The old separate scripts (`build-rss.ts` and `build-ssg.ts`) have been replaced by the unified system. They can be safely removed once the new system is verified to work correctly.

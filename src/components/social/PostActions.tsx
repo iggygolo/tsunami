@@ -219,7 +219,7 @@ export function PostActions({ event, className }: PostActionsProps) {
 
       // Publish the event
       await createEvent({
-        kind: 16, // Use generic repost (kind 16) instead of legacy repost (kind 6)
+        kind: 16, // Generic repost
         content: '',
         tags: [
           ['e', event.id],

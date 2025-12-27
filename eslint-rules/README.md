@@ -69,9 +69,6 @@ const handleError = () => {};
 // This is a regular comment
 const data = [];
 
-// TODO: Implement database connection
-const config = {};
-
 // Note: In a real application, consider using a database
 const handleError = () => {};
 ```
