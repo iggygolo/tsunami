@@ -12,16 +12,13 @@ import { ZapLeaderboard } from '@/components/music/ZapLeaderboard';
 import { CommentsSection } from '@/components/comments/CommentsSection';
 import { ReactionsSection } from '@/components/music/ReactionsSection';
 import { UniversalTrackList } from '@/components/music/UniversalTrackList';
-import { useReleaseResolver } from '@/hooks/useEventResolver';
-import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
+import { useReleaseData } from '@/hooks/useReleaseData';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
-import { eventToMusicPlaylist, playlistToRelease } from '@/lib/eventConversions';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { nip19 } from 'nostr-tools';
 import NotFound from './NotFound';
-import type { NostrEvent } from '@nostrify/nostrify';
 
 export function ReleasePage() {
   const params = useParams<{ naddr: string }>();
@@ -54,45 +51,20 @@ export function ReleasePage() {
     return <NotFound />;
   }
 
-  // Resolve the release event
-  const { data: playlistData, isLoading: isLoadingRelease, error: releaseError, refetch } = useReleaseResolver(
-    pubkey,
-    identifier,
-    eventToMusicPlaylist
-  );
-
-  // Resolve tracks in the release
-  const { data: resolvedTracks, isLoading: isLoadingTracks } = usePlaylistTrackResolution(
-    playlistData?.tracks || []
-  );
-
-  // Convert playlist data to release format for compatibility with existing components
-  const release = playlistData && resolvedTracks ? playlistToRelease(playlistData, new Map(
-    resolvedTracks.map(rt => [
-      `${rt.reference.pubkey}:${rt.reference.identifier}`,
-      rt.trackData
-    ]).filter(([, trackData]) => trackData !== undefined) as [string, any][]
-  )) : null;
+  // Use cache-first release data loading
+  const { release, event: releaseEvent, isLoading } = useReleaseData({
+    addressableEvent: {
+      pubkey,
+      kind: MUSIC_KINDS.MUSIC_PLAYLIST,
+      identifier
+    }
+  });
 
   // Use custom hook for track playback
   const trackPlayback = useUniversalTrackPlayback(release);
 
-  // Create NostrEvent for interactions
-  const releaseEvent: NostrEvent | null = playlistData ? {
-    id: playlistData.eventId || `${pubkey}:${identifier}`,
-    pubkey: playlistData.authorPubkey || pubkey,
-    created_at: Math.floor((playlistData.createdAt?.getTime() || Date.now()) / 1000),
-    kind: MUSIC_KINDS.MUSIC_PLAYLIST,
-    tags: [
-      ['d', playlistData.identifier || identifier],
-      ['title', playlistData.title],
-      ...(playlistData.description ? [['description', playlistData.description]] : []),
-      ...(playlistData.imageUrl ? [['image', playlistData.imageUrl]] : []),
-      ...playlistData.categories?.map(tag => ['t', tag]) || []
-    ],
-    content: playlistData.description || '',
-    sig: ''
-  } : null;
+  // Create NostrEvent for interactions (use the event from useReleaseData)
+  // releaseEvent is already provided by useReleaseData
 
   // Use custom hook for interactions
   const {
@@ -107,12 +79,10 @@ export function ReleasePage() {
     commentEvent: releaseEvent 
   });
 
-  // Calculate total duration from resolved tracks
-  const totalDuration = resolvedTracks?.reduce((sum, resolved) => {
-    return sum + (resolved.trackData?.duration || 0);
+  // Calculate total duration from release tracks
+  const totalDuration = release?.tracks?.reduce((sum, track) => {
+    return sum + (track.duration || 0);
   }, 0) || 0;
-
-  const isLoading = isLoadingRelease || isLoadingTracks;
 
   // Update document title when release loads
   useSeoMeta({
@@ -222,14 +192,7 @@ export function ReleasePage() {
   }
 
   // Error state
-  if (releaseError || !release) {
-    const getErrorType = (): 'not_found' | 'network_error' | 'timeout' => {
-      if (!releaseError) return 'not_found';
-      if (releaseError.includes('timeout') || releaseError.includes('AbortError')) return 'timeout';
-      if (releaseError.includes('network') || releaseError.includes('fetch')) return 'network_error';
-      return 'not_found';
-    };
-
+  if (!release && !isLoading) {
     return (
       <Layout>
         <div className="relative w-full max-w-full">
@@ -247,10 +210,10 @@ export function ReleasePage() {
             </Button>
 
             <NostrNavigationError
-              type={getErrorType()}
+              type="not_found"
               title="Release Not Found"
-              message={releaseError || "This release doesn't exist or hasn't been published yet."}
-              onRetry={refetch}
+              message="This release doesn't exist or hasn't been published yet."
+              onRetry={() => window.location.reload()}
               showBackButton={false}
             />
           </div>
@@ -260,6 +223,36 @@ export function ReleasePage() {
   }
 
   // Success state - release loaded
+  if (!release) {
+    return (
+      <Layout>
+        <div className="relative w-full max-w-full">
+          <BlurredBackground image={undefined} />
+          
+          <div className="relative py-4 w-full max-w-full overflow-hidden">
+            {/* Back Button */}
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate(-1)} 
+              className="mb-2 text-white/70 hover:text-white"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+
+            <NostrNavigationError
+              type="not_found"
+              title="Release Not Found"
+              message="This release doesn't exist or hasn't been published yet."
+              onRetry={() => window.location.reload()}
+              showBackButton={false}
+            />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="relative w-full max-w-full">
@@ -354,7 +347,7 @@ export function ReleasePage() {
               <GlassTabsContent value="zappers" className="w-full max-w-full">
                 <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
                   <ZapLeaderboard 
-                    eventId={release?.eventId || playlistData?.eventId || ''}
+                    eventId={release.eventId || releaseEvent?.id || ''}
                     showTitle={false}
                     className="text-white"
                     limit={10}
@@ -386,7 +379,7 @@ export function ReleasePage() {
                 <div className="bg-black/30 border border-white/20 backdrop-blur-xl rounded-lg shadow-lg p-3 sm:p-4 w-full max-w-full overflow-hidden">
                   <div className="w-full max-w-full overflow-hidden">
                     <ReactionsSection 
-                      eventId={release?.eventId || playlistData?.eventId || ''}
+                      eventId={release.eventId || releaseEvent?.id || ''}
                       className="text-white w-full max-w-full overflow-hidden"
                     />
                   </div>
