@@ -1,4 +1,4 @@
-import { ChevronRight, Music, Play, Pause, Heart, Share, Zap, Volume2 } from 'lucide-react';
+import { Music, Play, Pause, Heart, Share, Zap, Volume2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -286,21 +286,6 @@ export function TrendingTracksSection({
 
   return (
     <section className={cn("space-y-6", className)}>
-      {/* Section Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-foreground">Trending Tracks</h2>
-        </div>
-        
-        {/* View All Tracks Link (Requirement 8.5) */}
-        <Button variant="ghost" asChild>
-          <Link to="/releases" className="group text-muted-foreground hover:text-foreground">
-            View All
-            <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </Button>
-      </div>
-
       {/* Content - Clear state separation */}
       {isLoading ? (
         /* Loading State - Show skeletons */

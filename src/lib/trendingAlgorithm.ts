@@ -18,7 +18,7 @@ export interface TrendingTrackResult {
  */
 export const TRENDING_CONFIG = {
   DEFAULT_LIMIT: 12,
-  MAX_PER_ARTIST: 2,
+  MAX_PER_ARTIST: 3,
   RECENCY_WINDOW_DAYS: 7,
   WEIGHTS: {
     ZAP_AMOUNT: 0.6,
