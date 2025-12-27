@@ -402,6 +402,58 @@ export type LanguageCode = string | null;
 export type GenreString = string | null;
 
 /**
+ * Featured Artists Cache Types
+ */
+export interface FeaturedArtistsCache {
+  artists: FeaturedArtistResult[];
+  metadata: {
+    generatedAt: string;
+    totalCount: number;
+    dataSource: 'nostr' | 'fallback';
+    relaysUsed: string[];
+    cacheVersion: string;
+    algorithm: {
+      releaseCountWeight: number;
+      totalZapsWeight: number;
+      recentActivityWeight: number;
+      followerCountWeight: number;
+      defaultLimit: number;
+      recencyWindowDays: number;
+      minReleases: number;
+    };
+  };
+}
+
+export interface FeaturedArtistResult {
+  artist: SimpleArtistInfo;
+  metrics: ArtistMetrics;
+  featuredScore: number;
+  releaseScore: number;
+  zapScore: number;
+  activityScore: number;
+  followerScore: number;
+}
+
+export interface ArtistMetrics {
+  pubkey: string;
+  releaseCount: number;
+  trackCount: number;
+  totalSats: number;
+  totalZaps: number;
+  recentActivity: number;
+  followerCount: number;
+  lastReleaseDate: Date | null;
+}
+
+export interface StaticFeaturedArtistsCacheHook {
+  data: FeaturedArtistResult[] | null;
+  isLoading: boolean;
+  isStale: boolean;
+  lastUpdated: Date | null;
+  error: Error | null;
+}
+
+/**
  * Type guards for validation
  */
 export function isValidLanguageCode(code: unknown): code is LanguageCode {

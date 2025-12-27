@@ -4,9 +4,10 @@ import { config } from 'dotenv';
 import { fetchNostrDataBundle } from './shared/nostr-data-fetcher.js';
 import { generateRSSFeed, type ArtistInfo } from '../src/lib/rssCore.js';
 import { playlistToRelease } from '../src/lib/eventConversions.js';
-import type { MusicRelease, MusicTrackData, MusicPlaylistData } from '../src/types/music.js';
+import type { MusicRelease, MusicTrackData, MusicPlaylistData, FeaturedArtistsCache } from '../src/types/music.js';
 import type { SimpleArtistInfo } from '../src/lib/artistUtils.js';
 import { processTrendingTracks, TRENDING_CONFIG } from '../src/lib/trendingAlgorithm.js';
+import { processFeaturedArtists, FEATURED_ARTISTS_CONFIG } from '../src/lib/featuredArtistsAlgorithm.js';
 
 // Load environment variables
 config();
@@ -581,6 +582,81 @@ async function generateTrendingTracksCache(
 }
 
 /**
+ * Generate featured-artists.json cache file
+ */
+async function generateFeaturedArtistsCache(
+  artists: SimpleArtistInfo[],
+  tracks: MusicTrackData[], 
+  playlists: MusicPlaylistData[],
+  relayUrls: string[], 
+  distDir: string
+): Promise<void> {
+  console.log('📝 Generating featured artists cache...');
+
+  try {
+    // Use the shared featured artists algorithm for consistency
+    const featuredResults = processFeaturedArtists(artists, tracks, playlists, {
+      limit: FEATURED_ARTISTS_CONFIG.DEFAULT_LIMIT
+    });
+
+    console.log(`🎯 Featured artists: ${artists.length} total → ${featuredResults.length} featured (using shared algorithm)`);
+
+    const cache: FeaturedArtistsCache = {
+      artists: featuredResults,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        totalCount: featuredResults.length,
+        dataSource: artists.length > 0 ? 'nostr' : 'fallback',
+        relaysUsed: relayUrls,
+        cacheVersion: '1.0.0',
+        algorithm: {
+          releaseCountWeight: FEATURED_ARTISTS_CONFIG.WEIGHTS.RELEASE_COUNT,
+          totalZapsWeight: FEATURED_ARTISTS_CONFIG.WEIGHTS.TOTAL_ZAPS,
+          recentActivityWeight: FEATURED_ARTISTS_CONFIG.WEIGHTS.RECENT_ACTIVITY,
+          followerCountWeight: FEATURED_ARTISTS_CONFIG.WEIGHTS.FOLLOWER_COUNT,
+          defaultLimit: FEATURED_ARTISTS_CONFIG.DEFAULT_LIMIT,
+          recencyWindowDays: FEATURED_ARTISTS_CONFIG.RECENCY_WINDOW_DAYS,
+          minReleases: FEATURED_ARTISTS_CONFIG.MIN_RELEASES
+        }
+      }
+    };
+
+    // Write featured artists cache to both directories
+    await writeToMultipleDirectories('data/featured-artists.json', JSON.stringify(cache, null, 2));
+
+    console.log(`✅ Generated featured artists cache (${featuredResults.length} artists using shared algorithm)`);
+  } catch (error) {
+    console.error('❌ Failed to generate featured artists cache:', error);
+    
+    // Create minimal fallback cache
+    const fallbackCache: FeaturedArtistsCache = {
+      artists: [],
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        totalCount: 0,
+        dataSource: 'fallback',
+        relaysUsed: relayUrls,
+        cacheVersion: '1.0.0',
+        algorithm: {
+          releaseCountWeight: FEATURED_ARTISTS_CONFIG.WEIGHTS.RELEASE_COUNT,
+          totalZapsWeight: FEATURED_ARTISTS_CONFIG.WEIGHTS.TOTAL_ZAPS,
+          recentActivityWeight: FEATURED_ARTISTS_CONFIG.WEIGHTS.RECENT_ACTIVITY,
+          followerCountWeight: FEATURED_ARTISTS_CONFIG.WEIGHTS.FOLLOWER_COUNT,
+          defaultLimit: FEATURED_ARTISTS_CONFIG.DEFAULT_LIMIT,
+          recencyWindowDays: FEATURED_ARTISTS_CONFIG.RECENCY_WINDOW_DAYS,
+          minReleases: FEATURED_ARTISTS_CONFIG.MIN_RELEASES
+        }
+      }
+    };
+    
+    await writeToMultipleDirectories('data/featured-artists.json', JSON.stringify(fallbackCache, null, 2));
+    console.log('📄 Created fallback featured artists cache');
+    
+    throw error;
+  }
+}
+
+/**
  * Generate health check files
  */
 async function generateHealthChecks(
@@ -707,6 +783,12 @@ export async function buildStaticData(): Promise<void> {
           // Don't throw - continue with other builds
           return Promise.resolve();
         }),
+      generateFeaturedArtistsCache(dataBundle.artists, dataBundle.tracks, dataBundle.playlists, dataBundle.relaysUsed, distDir)
+        .catch(error => {
+          console.error('❌ Featured artists cache generation failed:', error);
+          // Don't throw - continue with other builds
+          return Promise.resolve();
+        }),
       generateIndividualReleaseCaches(releases, {
         generatedAt: new Date().toISOString(),
         totalCount: releases.length,
@@ -751,11 +833,12 @@ export async function buildStaticData(): Promise<void> {
     console.log(`   • Release cache with ${releases.length} releases`);
     console.log(`   • Latest release cache`);
     console.log(`   • Trending tracks cache`);
+    console.log(`   • Featured artists cache`);
     console.log(`   • Individual release caches (top 20)`);
     console.log(`   • Health check files`);
     console.log(`📁 Files available in: dist/ and public/`);
     console.log(`📡 RSS feeds: /rss/{artistPubkey}.xml`);
-    console.log(`🗂️  Cache files: /data/releases.json, /data/latest-release.json, /data/trending-tracks.json`);
+    console.log(`🗂️  Cache files: /data/releases.json, /data/latest-release.json, /data/trending-tracks.json, /data/featured-artists.json`);
     console.log(`📄 Individual caches: /data/releases/[id].json`);
     console.log(`🏥 Health checks: /rss-health.json, /cache-health.json`);
     

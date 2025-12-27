@@ -2,6 +2,9 @@ import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { useReleases } from '@/hooks/useReleases';
 import { useDiscoveredArtists } from '@/hooks/useArtistProfiles';
+import { useMusicTracks } from '@/hooks/useMusicTracks';
+import { useMusicPlaylists } from '@/hooks/useMusicPlaylists';
+import { processFeaturedArtists } from '@/lib/featuredArtistsAlgorithm';
 import type { NostrEvent } from '@nostrify/nostrify';
 
 /**
@@ -177,56 +180,57 @@ export function useCommunityStats() {
 
 /**
  * Hook to get featured/highlighted artists based on recent activity
+ * Now uses the shared algorithm for consistency with SSG cache
  */
-export function useFeaturedArtists(limit: number = 6) {
+export function useFeaturedArtists(limit: number = 6, options: { enabled?: boolean } = {}) {
+  const { enabled = true } = options;
   const { artistPubkeys } = useDiscoveredMusicArtists();
-  const { data: communityActivity } = useCommunityActivity(100);
-
+  
   // Fetch profiles for discovered artists
   const { data: artistProfiles } = useDiscoveredArtists(
     artistPubkeys.map(pubkey => ({ pubkey }))
   );
 
+  // Fetch music data for algorithm
+  const { data: tracks } = useMusicTracks();
+  const { data: playlists } = useMusicPlaylists();
+
   return useQuery({
-    queryKey: ['featured-artists', artistPubkeys.length, communityActivity?.length, limit],
+    queryKey: ['featured-artists', artistPubkeys.length, tracks?.length, playlists?.length, limit],
     queryFn: async () => {
-      if (!communityActivity || !artistProfiles) {
+      if (!artistProfiles || !tracks || !playlists) {
         return [];
       }
 
-      // Calculate activity scores for each artist
-      const artistScores = new Map<string, number>();
-      const weekAgo = Math.floor(Date.now() / 1000) - (7 * 24 * 60 * 60);
+      console.log('🎯 Calculating featured artists using shared algorithm');
 
-      communityActivity.forEach(event => {
-        if (event.created_at > weekAgo) {
-          const currentScore = artistScores.get(event.pubkey) || 0;
-          // Weight different types of activity
-          let points = 0;
-          switch (event.kind) {
-            case 1: points = 3; break; // Posts worth 3 points
-            case 6:
-            case 16: points = 2; break; // Reposts worth 2 points
-            case 7: points = 1; break; // Reactions worth 1 point
-          }
-          artistScores.set(event.pubkey, currentScore + points);
+      // Use the shared algorithm for consistency with SSG cache
+      const featuredResults = processFeaturedArtists(
+        artistProfiles,
+        tracks,
+        playlists,
+        { limit }
+      );
+
+      // Convert to legacy format for backward compatibility
+      const featuredArtists = featuredResults.map(result => ({
+        ...result.artist,
+        activityScore: result.featuredScore, // Map to legacy field name
+        metrics: result.metrics,
+        scores: {
+          featured: result.featuredScore,
+          release: result.releaseScore,
+          zap: result.zapScore,
+          activity: result.activityScore,
+          follower: result.followerScore
         }
-      });
+      }));
 
-      // Sort artists by activity score and take top ones
-      const featuredArtists = artistProfiles
-        .map(artist => ({
-          ...artist,
-          activityScore: artistScores.get(artist.pubkey) || 0
-        }))
-        .sort((a, b) => b.activityScore - a.activityScore)
-        .slice(0, limit);
-
-      console.log(`Featured ${featuredArtists.length} artists based on recent activity`);
+      console.log(`✨ Featured ${featuredArtists.length} artists using shared algorithm`);
 
       return featuredArtists;
     },
-    enabled: !!communityActivity && !!artistProfiles,
+    enabled: enabled && !!artistProfiles && !!tracks && !!playlists,
     staleTime: 300000, // 5 minutes
   });
 }

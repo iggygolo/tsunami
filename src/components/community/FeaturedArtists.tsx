@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, ChevronRight } from 'lucide-react';
-import { useFeaturedArtists } from '@/hooks/useCommunityPosts';
+import { useStaticFeaturedArtistsCache } from '@/hooks/useStaticFeaturedArtistsCache';
 import { useReleases } from '@/hooks/useReleases';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { pubkeyToNpub } from '@/lib/artistUtils';
@@ -17,11 +17,22 @@ interface FeaturedArtistsProps {
 
 /**
  * FeaturedArtists component that displays active artists with track counts
- * and clickable profile links
+ * and clickable profile links - now uses static cache with live fallback
  */
 export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) {
-  const { data: featuredArtists, isLoading: isLoadingFeatured } = useFeaturedArtists(limit);
+  const { data: featuredArtistsResults, isLoading: isLoadingFeatured } = useStaticFeaturedArtistsCache();
   const { data: releases } = useReleases();
+
+  // Extract artists from the cache results
+  const featuredArtists = React.useMemo(() => {
+    if (!featuredArtistsResults) return [];
+    return featuredArtistsResults.slice(0, limit).map(result => ({
+      ...result.artist,
+      // Add metrics for backward compatibility
+      activityScore: result.featuredScore,
+      metrics: result.metrics
+    }));
+  }, [featuredArtistsResults, limit]);
 
   // Calculate track counts for each artist (only artist-created tracks)
   const artistTrackCounts = React.useMemo(() => {
@@ -98,7 +109,8 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
   return (
     <div className={cn('grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6', className)}>
       {featuredArtists.map((artist) => {
-        const trackCount = artistTrackCounts.get(artist.pubkey) || 0;
+        const trackCount = artist.metrics?.trackCount || artistTrackCounts.get(artist.pubkey) || 0;
+        const releaseCount = artist.metrics?.releaseCount || 0;
         const tracks = artistTracks.get(artist.pubkey) || [];
         const npub = artist.npub || pubkeyToNpub(artist.pubkey);
         const profileUrl = `/${npub}`;
@@ -108,6 +120,7 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
             key={artist.pubkey}
             artist={artist}
             trackCount={trackCount}
+            releaseCount={releaseCount}
             tracks={tracks}
             profileUrl={profileUrl}
           />
@@ -120,11 +133,12 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
 interface ArtistCardProps {
   artist: any;
   trackCount: number;
+  releaseCount: number;
   tracks: ReleaseTrack[];
   profileUrl: string;
 }
 
-function ArtistCard({ artist, trackCount, tracks, profileUrl }: ArtistCardProps) {
+function ArtistCard({ artist, trackCount, releaseCount, tracks, profileUrl }: ArtistCardProps) {
   // Create a virtual release for playback
   const artistRelease = React.useMemo(() => {
     if (!tracks.length) return null;
@@ -195,6 +209,12 @@ function ArtistCard({ artist, trackCount, tracks, profileUrl }: ArtistCardProps)
         <h3 className="text-lg font-semibold text-foreground mb-1">
           {artist.name || 'Unknown Artist'}
         </h3>
+        <p className="text-sm text-muted-foreground">
+          {releaseCount > 0 && `${releaseCount} release${releaseCount !== 1 ? 's' : ''}`}
+          {releaseCount > 0 && trackCount > 0 && ', '}
+          {trackCount > 0 && `${trackCount} track${trackCount !== 1 ? 's' : ''}`}
+          {releaseCount === 0 && trackCount === 0 && 'New artist'}
+        </p>
       </Link>
     </div>
   );
