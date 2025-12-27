@@ -401,6 +401,25 @@ export function useArtistStats() {
         (ep.commentCount || 0) > (max?.commentCount || 0) ? ep : max, releases[0]
       );
 
+      // Calculate recent engagement (last 7 days)
+      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      const recentEngagement = releases
+        .filter(release => {
+          const releaseDate = release.createdAt?.getTime() || 0;
+          return releaseDate >= sevenDaysAgo;
+        })
+        .map(release => ({
+          releaseId: release.id,
+          title: release.title,
+          zapCount: release.zapCount || 0,
+          commentCount: release.commentCount || 0,
+          repostCount: release.repostCount || 0,
+          totalEngagement: (release.zapCount || 0) + (release.commentCount || 0) + (release.repostCount || 0),
+          createdAt: release.createdAt
+        }))
+        .sort((a, b) => b.totalEngagement - a.totalEngagement)
+        .slice(0, 10); // Top 10 most engaged releases in last 7 days
+
       return {
         totalReleases,
         totalZaps,
@@ -408,7 +427,7 @@ export function useArtistStats() {
         totalReposts,
         mostZappedRelease: mostZappedRelease?.zapCount ? mostZappedRelease : undefined,
         mostCommentedRelease: mostCommentedRelease?.commentCount ? mostCommentedRelease : undefined,
-        recentEngagement: [] // TODO: Implement recent engagement tracking
+        recentEngagement
       };
     },
     enabled: !!releases,

@@ -3,10 +3,14 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { ZapDialog } from '@/components/ZapDialog';
 import { useTrendingTracks } from '@/hooks/useTrendingTracks';
+import { useTrackInteractions } from '@/hooks/useTrackInteractions';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import { generateTrackLink } from '@/lib/nip19Utils';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { cn } from '@/lib/utils';
+import type { NostrEvent } from '@nostrify/nostrify';
 
 interface TrendingTracksSectionProps {
   limit?: number;
@@ -35,6 +39,29 @@ function TrendingTrackCard({
   
   // Generate track URL using naddr format
   const trackUrl = generateTrackLink(trackData.artistPubkey, trackData.identifier);
+
+  // Create NostrEvent for interactions
+  const trackEvent: NostrEvent = {
+    id: trackData.eventId || trackData.identifier,
+    pubkey: trackData.artistPubkey || '',
+    created_at: Math.floor(Date.now() / 1000),
+    kind: MUSIC_KINDS.MUSIC_TRACK,
+    tags: [
+      ['d', trackData.identifier],
+      ['title', trackData.title],
+      ...(trackData.artist ? [['artist', trackData.artist]] : []),
+      ...(trackData.audioUrl ? [['audio', trackData.audioUrl]] : []),
+      ...(trackData.imageUrl ? [['image', trackData.imageUrl]] : []),
+    ],
+    content: '',
+    sig: ''
+  };
+
+  // Use track interactions hook
+  const { handleLike, handleShare, hasUserLiked } = useTrackInteractions({ 
+    track: trackData, 
+    event: trackEvent 
+  });
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -104,12 +131,17 @@ function TrendingTrackCard({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              // TODO: Implement like functionality
+              handleLike();
             }}
-            className="w-8 h-8 p-0 rounded-full bg-black/30 border border-white/20 text-white hover:bg-red-500/20 hover:border-red-400/40 hover:text-red-300 backdrop-blur-xl transition-all duration-200 shadow-lg"
-            title="Like this track"
+            className={cn(
+              "w-8 h-8 p-0 rounded-full backdrop-blur-xl transition-all duration-200 shadow-lg",
+              hasUserLiked
+                ? "text-red-500 bg-red-500/10 border border-red-400/30 hover:bg-red-500/20 hover:border-red-400/40"
+                : "bg-black/30 border border-white/20 text-white hover:bg-red-500/20 hover:border-red-400/40 hover:text-red-300"
+            )}
+            title={hasUserLiked ? "Unlike this track" : "Like this track"}
           >
-            <Heart className="w-3.5 h-3.5" />
+            <Heart className={cn("w-3.5 h-3.5", hasUserLiked && "fill-current")} />
           </Button>
 
           {/* Share Button */}
@@ -119,7 +151,7 @@ function TrendingTrackCard({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              // TODO: Implement share functionality
+              handleShare();
             }}
             className="w-8 h-8 p-0 rounded-full bg-black/30 border border-white/20 text-white hover:bg-cyan-500/20 hover:border-cyan-400/40 hover:text-cyan-300 backdrop-blur-xl transition-all duration-200 shadow-lg"
             title="Share this track"
@@ -128,19 +160,20 @@ function TrendingTrackCard({
           </Button>
 
           {/* Zap Button */}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              // TODO: Implement zap functionality
-            }}
-            className="w-8 h-8 p-0 rounded-full bg-black/30 border border-white/20 text-white hover:bg-yellow-500/20 hover:border-yellow-400/40 hover:text-yellow-300 backdrop-blur-xl transition-all duration-200 shadow-lg"
-            title="Zap this track"
-          >
-            <Zap className="w-3.5 h-3.5" />
-          </Button>
+          <ZapDialog target={trackEvent}>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              className="w-8 h-8 p-0 rounded-full bg-black/30 border border-white/20 text-white hover:bg-yellow-500/20 hover:border-yellow-400/40 hover:text-yellow-300 backdrop-blur-xl transition-all duration-200 shadow-lg"
+              title="Zap this track"
+            >
+              <Zap className="w-3.5 h-3.5" />
+            </Button>
+          </ZapDialog>
         </div>
 
         {/* Playing Status Indicator - Top Left */}

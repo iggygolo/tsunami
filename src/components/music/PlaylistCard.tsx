@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useUniversalAudioPlayer } from '@/contexts/UniversalAudioPlayerContext';
+import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
@@ -16,16 +17,42 @@ interface PlaylistCardProps {
 }
 
 export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
-  const { playQueue } = useUniversalAudioPlayer();
+  const { playQueue, state } = useUniversalAudioPlayer();
+  const { data: resolvedTracks } = usePlaylistTrackResolution(playlist.tracks);
 
   const handlePlay = () => {
-    // For now, we'll just log that playlist playing is not yet fully implemented
-    // TODO: Implement playlist track resolution and queue playing
-    console.log('Playlist playing not yet fully implemented with universal audio player:', playlist.title);
-    
-    // Could potentially create placeholder tracks or navigate to playlist page
-    // where the full playlist can be loaded and played
+    if (!resolvedTracks || resolvedTracks.length === 0) {
+      console.warn('No resolved tracks available for playlist:', playlist.title);
+      return;
+    }
+
+    // Convert resolved tracks to queue format
+    const queueTracks = resolvedTracks
+      .filter(resolved => resolved.trackData) // Only include tracks with data
+      .map(resolved => {
+        const track = resolved.trackData!;
+        return {
+          id: track.eventId || track.identifier,
+          title: track.title,
+          artist: track.artist || 'Unknown Artist',
+          audioUrl: track.audioUrl,
+          duration: track.duration,
+          imageUrl: track.imageUrl,
+          source: {
+            type: 'playlist' as const,
+            releaseId: playlist.identifier, // Use releaseId instead of playlistId
+            artistPubkey: playlist.authorPubkey
+          }
+        };
+      });
+
+    // Play the playlist queue
+    playQueue(queueTracks, 0, playlist.title);
   };
+
+  // Check if any track from this playlist is currently playing
+  const isPlaylistActive = state.currentTrack?.source?.type === 'playlist' && 
+                          state.currentTrack?.source?.releaseId === playlist.identifier;
 
   // Create naddr for playlist
   const playlistUrl = playlist.authorPubkey ? nip19.naddrEncode({
@@ -62,8 +89,13 @@ export function PlaylistCard({ playlist, className }: PlaylistCardProps) {
                     e.preventDefault();
                     handlePlay();
                   }}
+                  disabled={!resolvedTracks || resolvedTracks.length === 0}
                 >
-                  <Play className="w-6 h-6 ml-1" />
+                  {isPlaylistActive && state.isPlaying ? (
+                    <Pause className="w-6 h-6" />
+                  ) : (
+                    <Play className="w-6 h-6 ml-1" />
+                  )}
                 </Button>
               </div>
             </div>

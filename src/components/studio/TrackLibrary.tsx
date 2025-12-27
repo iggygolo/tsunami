@@ -115,10 +115,19 @@ export function TrackLibrary({
     if (onAddToPlaylist) {
       onAddToPlaylist(track.identifier);
     } else {
-      // TODO: Open playlist selection modal
+      // Show a simple toast with available playlists info
       toast({
         title: 'Add to playlist',
-        description: 'Playlist functionality coming soon!',
+        description: 'Use the Studio page to create playlists and add tracks to them.',
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.open('/studio', '_blank')}
+          >
+            Open Studio
+          </Button>
+        ),
       });
     }
   };
