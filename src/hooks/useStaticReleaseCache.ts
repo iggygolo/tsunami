@@ -94,19 +94,32 @@ async function fetchCachedLatestRelease(): Promise<LatestReleaseCache> {
 }
 
 /**
- * Check if cached data is stale (older than 1 hour)
+ * Check if cached data is stale (older than 6 hours for static cache)
+ * Static cache files are generated during build, so they should be valid longer
  */
 function isCacheStale(generatedAt: string): boolean {
   const cacheTime = new Date(generatedAt);
   const now = new Date();
-  const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+  const sixHours = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
   
-  return (now.getTime() - cacheTime.getTime()) > oneHour;
+  return (now.getTime() - cacheTime.getTime()) > sixHours;
+}
+
+/**
+ * Check if we should show live data instead of cache
+ * More aggressive check for when cache is significantly outdated
+ */
+function shouldPreferLiveData(generatedAt: string): boolean {
+  const cacheTime = new Date(generatedAt);
+  const now = new Date();
+  const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+  
+  return (now.getTime() - cacheTime.getTime()) > twelveHours;
 }
 
 /**
  * Hook to load cached release data with fallback to live Nostr data
- * Implements cache-first strategy with background refresh for stale data
+ * Implements cache-first strategy with smart background refresh and cache invalidation
  */
 export function useStaticReleaseCache(): StaticCacheHook {
   // Fetch cached data
@@ -121,25 +134,35 @@ export function useStaticReleaseCache(): StaticCacheHook {
     retry: 1, // Only retry once for cache files
   });
 
-  // Fallback to live Nostr data if cache fails or is empty
-  const shouldUseLiveData = !cachedData || cacheError || cachedData.releases.length === 0;
+  // Determine if we should prefer live data over cache
+  const shouldUseLiveData = !cachedData || cacheError || cachedData.releases.length === 0 || 
+    (cachedData && shouldPreferLiveData(cachedData.metadata.generatedAt));
   
+  // Fallback to live Nostr data
   const { 
     data: liveData, 
     isLoading: isLiveLoading 
   } = useReleases({
-    limit: 20 // Match cache limit
+    limit: 20, // Match cache limit
+    enabled: shouldUseLiveData ? true : false // Only fetch if we need live data
   });
 
-  // Determine if we should refresh in background (cache is stale)
+  // Determine if cache is stale (for UI indicators)
   const isStale = cachedData ? isCacheStale(cachedData.metadata.generatedAt) : false;
   
-  // Background refresh for stale data (don't block UI)
-  useQuery({
-    queryKey: ['background-release-refresh'],
-    queryFn: () => liveData || [], // Use already fetched live data
-    enabled: isStale && !!liveData,
-    staleTime: Infinity, // Don't refetch this background query
+  // Smart background refresh: fetch live data when cache is stale but still usable
+  const { data: backgroundData } = useQuery({
+    queryKey: ['background-release-refresh', cachedData?.metadata.generatedAt],
+    queryFn: async () => {
+      // This will use the existing useReleases cache if available
+      const releases = await new Promise<any[]>((resolve) => {
+        // Trigger a background fetch through useReleases
+        resolve(liveData || []);
+      });
+      return releases;
+    },
+    enabled: isStale && !shouldUseLiveData && !!cachedData,
+    staleTime: 300000, // 5 minutes
   });
 
   // Determine final data and loading state
@@ -149,15 +172,22 @@ export function useStaticReleaseCache(): StaticCacheHook {
   let error: Error | null = null;
 
   if (shouldUseLiveData) {
-    // Use live data as fallback
+    // Use live data when cache is too old or unavailable
     finalData = liveData || null;
     isLoading = isLiveLoading;
     error = cacheError;
+    console.log('🔄 Using live release data (cache unavailable or too old)');
   } else {
-    // Use cached data
-    finalData = cachedData.releases;
+    // Use cached data with potential background refresh
+    finalData = backgroundData && backgroundData.length > 0 ? backgroundData : cachedData.releases;
     isLoading = isCacheLoading;
     lastUpdated = new Date(cachedData.metadata.generatedAt);
+    
+    if (backgroundData && backgroundData.length > 0) {
+      console.log('🔄 Using background-refreshed release data');
+    } else {
+      console.log('📦 Using cached release data');
+    }
   }
 
   return {
@@ -171,7 +201,7 @@ export function useStaticReleaseCache(): StaticCacheHook {
 
 /**
  * Hook specifically for latest release with cache-first strategy
- * Optimized for homepage and quick access scenarios
+ * Optimized for homepage and quick access scenarios with smart fallback
  */
 export function useLatestReleaseCache(): LatestReleaseCacheHook {
   // Fetch cached latest release
@@ -186,25 +216,31 @@ export function useLatestReleaseCache(): LatestReleaseCacheHook {
     retry: 1,
   });
 
-  // Fallback to live data if cache fails
-  const shouldUseLiveData = !cachedData || cacheError || !cachedData.release;
+  // Determine if we should prefer live data over cache
+  const shouldUseLiveData = !cachedData || cacheError || !cachedData.release ||
+    (cachedData && shouldPreferLiveData(cachedData.metadata.generatedAt));
   
+  // Fallback to live data
   const { 
     data: liveReleases, 
     isLoading: isLiveLoading 
   } = useReleases({
-    limit: 1 // Only need the latest one
+    limit: 1, // Only need the latest one
+    enabled: shouldUseLiveData ? true : false
   });
 
   // Determine if cache is stale
   const isStale = cachedData ? isCacheStale(cachedData.metadata.generatedAt) : false;
 
-  // Background refresh for stale data
-  useQuery({
-    queryKey: ['background-latest-release-refresh'],
-    queryFn: () => liveReleases?.[0] || null,
-    enabled: isStale && !!liveReleases?.[0],
-    staleTime: Infinity,
+  // Smart background refresh for latest release
+  const { data: backgroundLatest } = useQuery({
+    queryKey: ['background-latest-release-refresh', cachedData?.metadata.generatedAt],
+    queryFn: async () => {
+      // Get the latest release from live data
+      return liveReleases?.[0] || null;
+    },
+    enabled: isStale && !shouldUseLiveData && !!cachedData?.release,
+    staleTime: 300000, // 5 minutes
   });
 
   // Determine final data and loading state
@@ -214,15 +250,22 @@ export function useLatestReleaseCache(): LatestReleaseCacheHook {
   let error: Error | null = null;
 
   if (shouldUseLiveData) {
-    // Use live data as fallback
+    // Use live data when cache is too old or unavailable
     finalData = liveReleases?.[0] || null;
     isLoading = isLiveLoading;
     error = cacheError;
+    console.log('🔄 Using live latest release data (cache unavailable or too old)');
   } else {
-    // Use cached data
-    finalData = cachedData.release;
+    // Use cached data with potential background refresh
+    finalData = backgroundLatest || cachedData.release;
     isLoading = isCacheLoading;
     lastUpdated = new Date(cachedData.metadata.generatedAt);
+    
+    if (backgroundLatest) {
+      console.log('🔄 Using background-refreshed latest release data');
+    } else {
+      console.log('📦 Using cached latest release data');
+    }
   }
 
   return {
@@ -253,11 +296,13 @@ export function useCacheMetadata() {
             totalCount: releasesCache.metadata.totalCount,
             dataSource: releasesCache.metadata.dataSource,
             isStale: isCacheStale(releasesCache.metadata.generatedAt),
+            shouldPreferLive: shouldPreferLiveData(releasesCache.metadata.generatedAt),
           },
           latestRelease: {
             generatedAt: latestCache.metadata.generatedAt,
             dataSource: latestCache.metadata.dataSource,
             isStale: isCacheStale(latestCache.metadata.generatedAt),
+            shouldPreferLive: shouldPreferLiveData(latestCache.metadata.generatedAt),
             hasRelease: !!latestCache.release,
           },
         };

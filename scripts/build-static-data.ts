@@ -44,6 +44,31 @@ interface SingleReleaseCache {
 }
 
 /**
+ * Write file to multiple output directories (dist and public)
+ */
+async function writeToMultipleDirectories(
+  relativePath: string, 
+  content: string, 
+  directories: string[] = ['dist', 'public']
+): Promise<void> {
+  const writePromises = directories.map(async (dir) => {
+    const fullPath = path.join(dir, relativePath);
+    const dirPath = path.dirname(fullPath);
+    
+    // Ensure directory exists
+    await fs.mkdir(dirPath, { recursive: true });
+    
+    // Write file
+    await fs.writeFile(fullPath, content, 'utf-8');
+    
+    return fullPath;
+  });
+
+  const writtenPaths = await Promise.all(writePromises);
+  console.log(`📄 Written to: ${writtenPaths.join(', ')}`);
+}
+
+/**
  * Create a Node.js compatible TTL setting
  */
 function getDefaultTTL(): number {
@@ -90,13 +115,19 @@ async function generateIndividualReleaseCaches(
 ): Promise<void> {
   console.log('📄 Generating individual release cache files...');
 
-  const releasesDir = path.join(distDir, 'data', 'releases');
-  await fs.mkdir(releasesDir, { recursive: true });
-
-  // Generate cache files for top 20 releases (most recent)
-  const topReleases = releases.slice(0, 20);
+  // Prioritize releases with images, but cache top 20 regardless
+  const releasesWithImages = releases.filter(release => release.imageUrl);
+  const releasesWithoutImages = releases.filter(release => !release.imageUrl);
   
-  for (const release of topReleases) {
+  // Combine: prioritize releases with images, then add releases without images to fill up to 20
+  const prioritizedReleases = [
+    ...releasesWithImages.slice(0, 20),
+    ...releasesWithoutImages.slice(0, Math.max(0, 20 - releasesWithImages.length))
+  ].slice(0, 20);
+
+  console.log(`🖼️  Individual caches: ${releasesWithImages.length} with images, ${releasesWithoutImages.length} without images, caching ${prioritizedReleases.length} total`);
+  
+  for (const release of prioritizedReleases) {
     try {
       const eventId = release.eventId || release.id;
       if (!eventId) {
@@ -114,13 +145,7 @@ async function generateIndividualReleaseCaches(
 
       // Generate cache file with event ID (for /releases/:eventId routes)
       const fileName = `${eventId}.json`;
-      const filePath = path.join(releasesDir, fileName);
-      
-      await fs.writeFile(
-        filePath, 
-        JSON.stringify(singleReleaseCache, null, 2), 
-        'utf-8'
-      );
+      await writeToMultipleDirectories(`data/releases/${fileName}`, JSON.stringify(singleReleaseCache, null, 2));
 
       console.log(`✅ Generated cache for release: ${fileName}`);
     } catch (error) {
@@ -128,7 +153,7 @@ async function generateIndividualReleaseCaches(
     }
   }
 
-  console.log(`✅ Generated ${topReleases.length} individual release cache files`);
+  console.log(`✅ Generated ${prioritizedReleases.length} individual release cache files`);
 }
 
 /**
@@ -143,10 +168,6 @@ async function generateArtistRSSFeeds(
   distDir: string
 ): Promise<void> {
   console.log('📝 Generating individual artist RSS feeds...');
-
-  // Create RSS directory
-  const rssDir = path.join(distDir, 'rss');
-  await fs.mkdir(rssDir, { recursive: true });
 
   let generatedCount = 0;
   let errorCount = 0;
@@ -193,10 +214,9 @@ async function generateArtistRSSFeeds(
         throw new Error('Generated RSS content is not valid XML');
       }
 
-      // Save to file
+      // Save to both dist and public directories
       const rssFileName = `${artist.pubkey}.xml`;
-      const rssPath = path.join(rssDir, rssFileName);
-      await fs.writeFile(rssPath, rssContent, 'utf-8');
+      await writeToMultipleDirectories(`rss/${rssFileName}`, rssContent);
 
       generatedCount++;
       console.log(`✅ Generated RSS for ${artist.name || artist.npub.slice(0, 12) + '...'}: /rss/${rssFileName}`);
@@ -234,8 +254,7 @@ async function generateArtistRSSFeeds(
         const fallbackRss = generateRSSFeed([], [], fallbackArtistInfo, ttl);
         
         const rssFileName = `${artist.pubkey}.xml`;
-        const rssPath = path.join(rssDir, rssFileName);
-        await fs.writeFile(rssPath, fallbackRss, 'utf-8');
+        await writeToMultipleDirectories(`rss/${rssFileName}`, fallbackRss);
         
         console.log(`⚠️  Generated fallback RSS for ${artistName}`);
         generatedCount++; // Count fallback as generated
@@ -267,8 +286,7 @@ async function generateArtistRSSFeeds(
     };
     
     try {
-      const errorPath = path.join(distDir, 'rss-build-errors.json');
-      await fs.writeFile(errorPath, JSON.stringify(errorSummary, null, 2), 'utf-8');
+      await writeToMultipleDirectories('rss-build-errors.json', JSON.stringify(errorSummary, null, 2));
       console.log(`📄 Error summary written to: rss-build-errors.json`);
     } catch (writeError) {
       console.error('Failed to write error summary:', writeError);
@@ -289,8 +307,13 @@ async function generateReleaseCache(
   console.log('📝 Generating releases cache...');
 
   try {
-    // Take latest 20 releases for cache
-    const cachedReleases = releases.slice(0, 20);
+    // Filter releases to only include those with images (required for recent releases display)
+    const releasesWithImages = releases.filter(release => release.imageUrl);
+    
+    // Take latest 20 releases with images for cache
+    const cachedReleases = releasesWithImages.slice(0, 20);
+
+    console.log(`🖼️  Filtered releases: ${releases.length} total → ${releasesWithImages.length} with images → ${cachedReleases.length} cached`);
 
     const cache: ReleaseCache = {
       releases: cachedReleases,
@@ -303,15 +326,10 @@ async function generateReleaseCache(
       }
     };
 
-    // Ensure data directory exists
-    const dataDir = path.join(distDir, 'data');
-    await fs.mkdir(dataDir, { recursive: true });
+    // Write releases cache to both directories
+    await writeToMultipleDirectories('data/releases.json', JSON.stringify(cache, null, 2));
 
-    // Write releases cache
-    const releasesPath = path.join(dataDir, 'releases.json');
-    await fs.writeFile(releasesPath, JSON.stringify(cache, null, 2), 'utf-8');
-
-    console.log(`✅ Generated releases cache: ${releasesPath} (${cachedReleases.length} releases)`);
+    console.log(`✅ Generated releases cache (${cachedReleases.length} releases with images)`);
   } catch (error) {
     console.error('❌ Failed to generate releases cache:', error);
     
@@ -329,8 +347,7 @@ async function generateReleaseCache(
     
     const dataDir = path.join(distDir, 'data');
     await fs.mkdir(dataDir, { recursive: true });
-    const fallbackPath = path.join(dataDir, 'releases.json');
-    await fs.writeFile(fallbackPath, JSON.stringify(fallbackCache, null, 2), 'utf-8');
+    await writeToMultipleDirectories('data/releases.json', JSON.stringify(fallbackCache, null, 2));
     console.log('📄 Created fallback releases cache');
     
     throw error;
@@ -348,7 +365,13 @@ async function generateLatestReleaseCache(
   console.log('📝 Generating latest release cache...');
 
   try {
-    const latestRelease = releases.length > 0 ? releases[0] : null;
+    // Prefer releases with images for the latest release display
+    const releasesWithImages = releases.filter(release => release.imageUrl);
+    const latestRelease = releasesWithImages.length > 0 ? releasesWithImages[0] : (releases.length > 0 ? releases[0] : null);
+
+    if (latestRelease) {
+      console.log(`🖼️  Latest release: "${latestRelease.title}" ${latestRelease.imageUrl ? '(with image)' : '(no image)'}`);
+    }
 
     const cache: LatestReleaseCache = {
       release: latestRelease,
@@ -360,15 +383,10 @@ async function generateLatestReleaseCache(
       }
     };
 
-    // Ensure data directory exists
-    const dataDir = path.join(distDir, 'data');
-    await fs.mkdir(dataDir, { recursive: true });
+    // Write latest release cache to both directories
+    await writeToMultipleDirectories('data/latest-release.json', JSON.stringify(cache, null, 2));
 
-    // Write latest release cache
-    const latestPath = path.join(dataDir, 'latest-release.json');
-    await fs.writeFile(latestPath, JSON.stringify(cache, null, 2), 'utf-8');
-
-    console.log(`✅ Generated latest release cache: ${latestPath}`);
+    console.log(`✅ Generated latest release cache`);
   } catch (error) {
     console.error('❌ Failed to generate latest release cache:', error);
     
@@ -385,8 +403,7 @@ async function generateLatestReleaseCache(
     
     const dataDir = path.join(distDir, 'data');
     await fs.mkdir(dataDir, { recursive: true });
-    const fallbackPath = path.join(dataDir, 'latest-release.json');
-    await fs.writeFile(fallbackPath, JSON.stringify(fallbackCache, null, 2), 'utf-8');
+    await writeToMultipleDirectories('data/latest-release.json', JSON.stringify(fallbackCache, null, 2));
     console.log('📄 Created fallback latest release cache');
     
     throw error;
@@ -432,8 +449,8 @@ async function generateHealthChecks(
       configuredArtist: undefined // No longer using environment variables
     };
 
-    const rssHealthPath = path.join(distDir, 'rss-health.json');
-    await fs.writeFile(rssHealthPath, JSON.stringify(rssHealthData, null, 2));
+    // RSS health check
+    await writeToMultipleDirectories('rss-health.json', JSON.stringify(rssHealthData, null, 2));
 
     // Cache health check
     const cacheHealthData = {
@@ -454,10 +471,9 @@ async function generateHealthChecks(
       configuredArtist: undefined // No longer using environment variables
     };
 
-    const cacheHealthPath = path.join(distDir, 'cache-health.json');
-    await fs.writeFile(cacheHealthPath, JSON.stringify(cacheHealthData, null, 2));
+    await writeToMultipleDirectories('cache-health.json', JSON.stringify(cacheHealthData, null, 2));
 
-    // .nojekyll file for GitHub Pages compatibility
+    // .nojekyll file for GitHub Pages compatibility (only in dist)
     const nojekyllPath = path.join(distDir, '.nojekyll');
     await fs.writeFile(nojekyllPath, '');
 
@@ -487,9 +503,11 @@ export async function buildStaticData(): Promise<void> {
     // Convert playlists to releases for cache
     const releases = convertToReleases(dataBundle.playlists, dataBundle.tracks);
 
-    // Ensure dist directory exists
+    // Ensure both dist and public directories exist
     const distDir = path.resolve('dist');
+    const publicDir = path.resolve('public');
     await fs.mkdir(distDir, { recursive: true });
+    await fs.mkdir(publicDir, { recursive: true });
 
     // Generate all outputs in parallel with error handling
     console.log('📝 Generating all outputs...');
@@ -557,7 +575,7 @@ export async function buildStaticData(): Promise<void> {
     console.log(`   • Latest release cache`);
     console.log(`   • Individual release caches (top 20)`);
     console.log(`   • Health check files`);
-    console.log(`📁 Files available in: dist/`);
+    console.log(`📁 Files available in: dist/ and public/`);
     console.log(`📡 RSS feeds: /rss/{artistPubkey}.xml`);
     console.log(`🗂️  Cache files: /data/releases.json, /data/latest-release.json`);
     console.log(`📄 Individual caches: /data/releases/[id].json`);

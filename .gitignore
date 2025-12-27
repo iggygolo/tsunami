@@ -31,3 +31,5 @@ dist-ssr
 # public
 /public/assets
 /public/data
+/public/rss
+/public/*health.json

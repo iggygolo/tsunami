@@ -58,6 +58,7 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
       return deduplicatedEvents;
     },
     staleTime: 300000, // 5 minutes
+    enabled: searchOptions.enabled !== false, // Default to enabled unless explicitly disabled
   });
 
   // Step 2: Process playlist events and extract track references
@@ -189,7 +190,7 @@ export function useReleases(searchOptions: ReleaseSearchOptions = {}) {
 
       return filteredReleases;
     },
-    enabled: !!validPlaylistEvents.length,
+    enabled: !!validPlaylistEvents.length && searchOptions.enabled !== false,
     staleTime: 300000, // 5 minutes
   });
 

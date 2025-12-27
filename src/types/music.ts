@@ -293,6 +293,7 @@ export interface ReleaseSearchOptions {
   sortOrder?: 'asc' | 'desc';
   limit?: number;
   offset?: number;
+  enabled?: boolean; // Enable/disable the query
 }
 
 /**
