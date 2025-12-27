@@ -6,7 +6,7 @@ import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { NostrNavigationError } from '@/components/NostrNavigationError';
 import { MusicItemHeader } from '@/components/music/MusicItemHeader';
-import { GlassReleaseCard } from '@/components/music/GlassReleaseCard';
+import { UnifiedMusicCard } from '@/components/music/UnifiedMusicCard';
 import { useTrackResolver } from '@/hooks/useEventResolver';
 import { usePlaylistResolution } from '@/hooks/usePlaylistResolution';
 import { useTrackInteractions } from '@/hooks/useTrackInteractions';
@@ -302,13 +302,13 @@ export function TrackPage() {
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                           {releases.map((playlist) => {
-                            // Convert playlist to release format for GlassReleaseCard
+                            // Convert playlist to release format for UnifiedMusicCard
                             const releaseData = playlistToRelease(playlist, new Map());
                             
                             return (
-                              <GlassReleaseCard
+                              <UnifiedMusicCard
                                 key={playlist.eventId || playlist.identifier}
-                                release={releaseData}
+                                content={releaseData}
                                 className="w-full"
                               />
                             );
@@ -328,13 +328,13 @@ export function TrackPage() {
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                           {userPlaylists.map((playlist) => {
-                            // Convert playlist to release format for GlassReleaseCard
+                            // Convert playlist to release format for UnifiedMusicCard
                             const releaseData = playlistToRelease(playlist, new Map());
                             
                             return (
-                              <GlassReleaseCard
+                              <UnifiedMusicCard
                                 key={playlist.eventId || playlist.identifier}
-                                release={releaseData}
+                                content={releaseData}
                                 className="w-full"
                               />
                             );

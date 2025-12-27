@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { GlassReleaseCard } from './GlassReleaseCard';
+import { UnifiedMusicCard } from './UnifiedMusicCard';
 import { ArtistFilter } from './ArtistFilter';
 import { useReleases } from '@/hooks/useReleases';
 import { useLatestReleaseCache, useStaticRecentReleasesCache, useStaticAllReleasesCache } from '@/hooks/useStaticReleaseCache';
@@ -233,9 +233,9 @@ export function ReleaseList({
             : 'grid-cols-1 md:grid-cols-2'
         }`}>
           {releases.map((release) => (
-            <GlassReleaseCard
+            <UnifiedMusicCard
               key={release.id}
-              release={release}
+              content={release}
             />
           ))}
         </div>

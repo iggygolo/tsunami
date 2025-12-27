@@ -13,7 +13,7 @@ import { Layout } from '@/components/Layout';
 import { BlurredBackground } from '@/components/BlurredBackground';
 import { EditProfileForm } from '@/components/EditProfileForm';
 import { UniversalTrackList } from '@/components/music/UniversalTrackList';
-import { GlassReleaseCard } from '@/components/music/GlassReleaseCard';
+import { UnifiedMusicCard } from '@/components/music/UnifiedMusicCard';
 import { ZapDialog } from '@/components/ZapDialog';
 import { updateArtistCache } from '@/lib/artistUtils';
 import { genUserName } from '@/lib/genUserName';
@@ -377,7 +377,7 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                           )
                         ) || [];
 
-                        // Convert playlist to release format for GlassReleaseCard with resolved track data
+                        // Convert playlist to release format for UnifiedMusicCard with resolved track data
                         const releaseData = {
                           id: playlist.eventId || playlist.identifier,
                           eventId: playlist.eventId || '',
@@ -428,9 +428,9 @@ export function ProfilePage({ pubkey }: ProfilePageProps) {
                         };
 
                         return (
-                          <GlassReleaseCard
+                          <UnifiedMusicCard
                             key={playlist.eventId || playlist.identifier}
-                            release={releaseData}
+                            content={releaseData}
                           />
                         );
                       })}

@@ -1,221 +1,17 @@
-import { Music, Play, Pause, Heart, Share, Zap, Volume2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Music } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { ZapDialog } from '@/components/ZapDialog';
+import { UnifiedMusicCard } from '@/components/music/UnifiedMusicCard';
 import { useTrendingTracks } from '@/hooks/useTrendingTracks';
 import { useStaticTrendingTracksCache } from '@/hooks/useStaticTrendingTracksCache';
-import { useTrackInteractions } from '@/hooks/useTrackInteractions';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
-import { generateTrackLink } from '@/lib/nip19Utils';
-import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { TRENDING_CONFIG } from '@/lib/trendingAlgorithm';
 import { cn } from '@/lib/utils';
-import type { NostrEvent } from '@nostrify/nostrify';
 
 interface TrendingTracksSectionProps {
   limit?: number;
   excludeTrackIds?: string[];
   className?: string;
   useCache?: boolean; // Enable cache usage for better performance
-}
-
-interface TrendingTrackCardProps {
-  track: any; // TrendingTrack type
-  index: number;
-  allTracks: any[]; // TrendingTrack[] type
-  isCurrentTrack: boolean;
-  isPlaying: boolean;
-  isLoading: boolean;
-  onPlay: () => void;
-}
-
-function TrendingTrackCard({ 
-  track,
-  isCurrentTrack, 
-  isPlaying, 
-  isLoading, 
-  onPlay 
-}: TrendingTrackCardProps) {
-  const trackData = track.track;
-  
-  // Generate track URL using naddr format
-  const trackUrl = generateTrackLink(trackData.artistPubkey, trackData.identifier);
-
-  // Create NostrEvent for interactions
-  const trackEvent: NostrEvent = {
-    id: trackData.eventId || trackData.identifier,
-    pubkey: trackData.artistPubkey || '',
-    created_at: Math.floor(Date.now() / 1000),
-    kind: MUSIC_KINDS.MUSIC_TRACK,
-    tags: [
-      ['d', trackData.identifier],
-      ['title', trackData.title],
-      ...(trackData.artist ? [['artist', trackData.artist]] : []),
-      ...(trackData.audioUrl ? [['audio', trackData.audioUrl]] : []),
-      ...(trackData.imageUrl ? [['image', trackData.imageUrl]] : []),
-    ],
-    content: '',
-    sig: ''
-  };
-
-  // Use track interactions hook
-  const { handleLike, handleShare, hasUserLiked } = useTrackInteractions({ 
-    track: trackData, 
-    event: trackEvent 
-  });
-
-  const handlePlayClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onPlay();
-  };
-
-  return (
-    <div className="group">
-      {/* Square Card Image */}
-      <div className="relative overflow-hidden rounded-2xl bg-card/40 border border-border/60 backdrop-blur-xl hover:bg-card/50 hover:border-border/80 transition-all duration-300 shadow-lg hover:shadow-xl aspect-square">
-        <Link 
-          to={trackUrl} 
-          className="block relative w-full h-full"
-        >
-          {trackData.imageUrl ? (
-            <img
-              src={trackData.imageUrl}
-              alt={trackData.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-              <Music className="w-16 h-16 text-muted-foreground/50" />
-            </div>
-          )}
-          
-          {/* Gradient overlay for better button visibility */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        </Link>
-
-        {/* Play button overlay - Center */}
-        {trackData.audioUrl && (
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Button
-              size="default"
-              onClick={handlePlayClick}
-              disabled={isLoading}
-              className="rounded-full w-12 h-12 p-0 bg-white/90 hover:bg-white text-black border-0 shadow-lg backdrop-blur-sm"
-            >
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-              ) : (isCurrentTrack && isPlaying) ? (
-                <Pause className="w-6 h-6" fill="currentColor" />
-              ) : (
-                <Play className="w-6 h-6 ml-0.5" fill="currentColor" />
-              )}
-            </Button>
-          </div>
-        )}
-
-        {/* No Audio Available State */}
-        {!trackData.audioUrl && (
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="px-3 py-1.5 bg-black/80 text-white/90 rounded-full text-xs font-medium backdrop-blur-sm">
-              No Audio Available
-            </div>
-          </div>
-        )}
-
-        {/* Social Actions - Bottom Right Corner */}
-        <div className="absolute bottom-3 right-3 flex flex-row gap-2 opacity-80 group-hover:opacity-100 transition-opacity duration-200">
-          {/* Like Button */}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleLike();
-            }}
-            className={cn(
-              "w-8 h-8 p-0 rounded-full backdrop-blur-xl transition-all duration-200 shadow-lg",
-              hasUserLiked
-                ? "text-red-500 bg-red-500/10 border border-red-400/30 hover:bg-red-500/20 hover:border-red-400/40"
-                : "bg-black/30 border border-white/20 text-white hover:bg-red-500/20 hover:border-red-400/40 hover:text-red-300"
-            )}
-            title={hasUserLiked ? "Unlike this track" : "Like this track"}
-          >
-            <Heart className={cn("w-3.5 h-3.5", hasUserLiked && "fill-current")} />
-          </Button>
-
-          {/* Share Button */}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleShare();
-            }}
-            className="w-8 h-8 p-0 rounded-full bg-black/30 border border-white/20 text-white hover:bg-cyan-500/20 hover:border-cyan-400/40 hover:text-cyan-300 backdrop-blur-xl transition-all duration-200 shadow-lg"
-            title="Share this track"
-          >
-            <Share className="w-3.5 h-3.5" />
-          </Button>
-
-          {/* Zap Button */}
-          <ZapDialog target={trackEvent}>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              className="w-8 h-8 p-0 rounded-full bg-black/30 border border-white/20 text-white hover:bg-yellow-500/20 hover:border-yellow-400/40 hover:text-yellow-300 backdrop-blur-xl transition-all duration-200 shadow-lg"
-              title="Zap this track"
-            >
-              <Zap className="w-3.5 h-3.5" />
-            </Button>
-          </ZapDialog>
-        </div>
-
-        {/* Playing Status Indicator - Top Left */}
-        {isCurrentTrack && isPlaying && (
-          <div className="absolute top-3 left-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/90 text-black rounded-full text-xs font-medium backdrop-blur-sm shadow-lg">
-              <Volume2 className="w-3 h-3 animate-pulse" />
-              <span>Playing</span>
-            </div>
-          </div>
-        )}
-
-        {/* Explicit Content Badge - Top Left (when not playing) */}
-        {trackData.explicit && !(isCurrentTrack && isPlaying) && (
-          <div className="absolute top-3 left-3">
-            <Badge variant="destructive" className="text-xs px-2 py-1 bg-red-500/90 text-white border-0 backdrop-blur-sm">
-              E
-            </Badge>
-          </div>
-        )}
-      </div>
-
-      {/* Track Info */}
-      <div className="mt-3 space-y-1">
-        <Link 
-          to={trackUrl} 
-          className="block group/title"
-        >
-          <h3 className="font-bold text-foreground leading-tight line-clamp-2 group-hover/title:text-primary transition-colors text-sm">
-            {trackData.title}
-          </h3>
-        </Link>
-        
-        <p className="text-xs text-muted-foreground font-medium">
-          {trackData.artist}
-        </p>
-      </div>
-    </div>
-  );
 }
 
 export function TrendingTracksSection({ 
@@ -360,10 +156,8 @@ export function TrendingTracksSection({
                   key={trendingTrack.track.eventId || trendingTrack.track.identifier} 
                   className="flex-shrink-0 w-40"
                 >
-                  <TrendingTrackCard
-                    track={trendingTrack}
-                    index={index}
-                    allTracks={trendingTracks}
+                  <UnifiedMusicCard
+                    content={trendingTrack.track}
                     isCurrentTrack={isTrendingQueueActive && state.currentTrackIndex === index}
                     isPlaying={state.isPlaying}
                     isLoading={state.isLoading}
@@ -379,10 +173,8 @@ export function TrendingTracksSection({
             <div className="grid grid-cols-3 gap-4">
               {trendingTracks.slice(0, 6).map((trendingTrack, index) => (
                 <div key={trendingTrack.track.eventId || trendingTrack.track.identifier}>
-                  <TrendingTrackCard
-                    track={trendingTrack}
-                    index={index}
-                    allTracks={trendingTracks}
+                  <UnifiedMusicCard
+                    content={trendingTrack.track}
                     isCurrentTrack={isTrendingQueueActive && state.currentTrackIndex === index}
                     isPlaying={state.isPlaying}
                     isLoading={state.isLoading}
@@ -401,10 +193,8 @@ export function TrendingTracksSection({
                   key={trendingTrack.track.eventId || trendingTrack.track.identifier}
                   className="max-w-xs" // Maintain maximum card size for visual hierarchy
                 >
-                  <TrendingTrackCard
-                    track={trendingTrack}
-                    index={index}
-                    allTracks={trendingTracks}
+                  <UnifiedMusicCard
+                    content={trendingTrack.track}
                     isCurrentTrack={isTrendingQueueActive && state.currentTrackIndex === index}
                     isPlaying={state.isPlaying}
                     isLoading={state.isLoading}
