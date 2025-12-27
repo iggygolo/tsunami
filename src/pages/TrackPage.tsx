@@ -9,6 +9,7 @@ import { MusicItemHeader } from '@/components/music/MusicItemHeader';
 import { UnifiedMusicCard } from '@/components/music/UnifiedMusicCard';
 import { useTrackResolver } from '@/hooks/useEventResolver';
 import { usePlaylistResolution } from '@/hooks/usePlaylistResolution';
+import { useReleaseData } from '@/hooks/useReleaseData';
 import { useTrackInteractions } from '@/hooks/useTrackInteractions';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
@@ -16,6 +17,48 @@ import { eventToMusicTrack, playlistToRelease } from '@/lib/eventConversions';
 import { MUSIC_KINDS, isArtist } from '@/lib/musicConfig';
 import NotFound from './NotFound';
 import type { NostrEvent } from '@nostrify/nostrify';
+import type { MusicPlaylistData } from '@/types/music';
+
+// Simple wrapper component to fetch release data from cache/live
+function ReleaseDataWrapper({ playlist }: { playlist: MusicPlaylistData }) {
+  const { release, isLoading } = useReleaseData({
+    addressableEvent: {
+      pubkey: playlist.authorPubkey || '',
+      kind: MUSIC_KINDS.MUSIC_PLAYLIST,
+      identifier: playlist.identifier
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl bg-card/30 border border-border/50 backdrop-blur-xl overflow-hidden animate-pulse">
+        <div className="w-full aspect-square bg-muted" />
+        <div className="p-2 space-y-1">
+          <div className="h-3 bg-muted rounded w-3/4" />
+          <div className="h-2 bg-muted rounded w-1/2" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!release) {
+    // Fallback to basic playlist data if cache/live data unavailable
+    const fallbackRelease = playlistToRelease(playlist, new Map());
+    return (
+      <UnifiedMusicCard
+        content={fallbackRelease}
+        className="w-full"
+      />
+    );
+  }
+
+  return (
+    <UnifiedMusicCard
+      content={release}
+      className="w-full"
+    />
+  );
+}
 
 export function TrackPage() {
   const params = useParams<{ naddr: string }>();
@@ -302,14 +345,11 @@ export function TrackPage() {
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                           {releases.map((playlist) => {
-                            // Convert playlist to release format for UnifiedMusicCard
-                            const releaseData = playlistToRelease(playlist, new Map());
-                            
+                            // Use ReleaseDataWrapper to fetch cached release data
                             return (
-                              <UnifiedMusicCard
+                              <ReleaseDataWrapper
                                 key={playlist.eventId || playlist.identifier}
-                                content={releaseData}
-                                className="w-full"
+                                playlist={playlist}
                               />
                             );
                           })}
@@ -328,14 +368,11 @@ export function TrackPage() {
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                           {userPlaylists.map((playlist) => {
-                            // Convert playlist to release format for UnifiedMusicCard
-                            const releaseData = playlistToRelease(playlist, new Map());
-                            
+                            // Use ReleaseDataWrapper to fetch cached release data
                             return (
-                              <UnifiedMusicCard
+                              <ReleaseDataWrapper
                                 key={playlist.eventId || playlist.identifier}
-                                content={releaseData}
-                                className="w-full"
+                                playlist={playlist}
                               />
                             );
                           })}
