@@ -209,12 +209,6 @@ function ArtistCard({ artist, trackCount, releaseCount, tracks, profileUrl }: Ar
         <h3 className="text-lg font-semibold text-foreground mb-1">
           {artist.name || 'Unknown Artist'}
         </h3>
-        <p className="text-sm text-muted-foreground">
-          {releaseCount > 0 && `${releaseCount} release${releaseCount !== 1 ? 's' : ''}`}
-          {releaseCount > 0 && trackCount > 0 && ', '}
-          {trackCount > 0 && `${trackCount} track${trackCount !== 1 ? 's' : ''}`}
-          {releaseCount === 0 && trackCount === 0 && 'New artist'}
-        </p>
       </Link>
     </div>
   );
