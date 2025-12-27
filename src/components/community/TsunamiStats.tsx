@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Music, Users, Activity, Globe, Headphones } from 'lucide-react';
-import { useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
+import { useStaticAllReleasesCache } from '@/hooks/useStaticReleaseCache';
 import { useCommunityStats } from '@/hooks/useCommunityPosts';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { cn } from '@/lib/utils';
@@ -74,7 +74,7 @@ function StatCard({ icon, label, value, description, isLoading, color = 'primary
  * TsunamiStats component displays platform-wide statistics and navigation
  */
 export function TsunamiStats({ className }: TsunamiStatsProps) {
-  const { data: releases, isLoading: isLoadingReleases } = useStaticReleaseCache();
+  const { data: releases, isLoading: isLoadingReleases } = useStaticAllReleasesCache();
   const { data: communityStats, isLoading: isLoadingCommunity } = useCommunityStats();
   const { user } = useCurrentUser();
 

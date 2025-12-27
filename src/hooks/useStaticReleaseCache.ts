@@ -52,20 +52,41 @@ function transformCachedRelease(release: any): MusicRelease {
 }
 
 /**
- * Fetch cached release data from static JSON files
+ * Fetch cached recent releases data from static JSON files (for main page)
  */
-async function fetchCachedReleases(): Promise<ReleaseCache> {
-  console.log('🗂️ Fetching cached releases from /data/releases.json');
-  const response = await fetch('/data/releases.json');
+async function fetchCachedRecentReleases(): Promise<ReleaseCache> {
+  console.log('🗂️ Fetching cached recent releases from /data/recent-releases.json');
+  const response = await fetch('/data/recent-releases.json');
   if (!response.ok) {
-    throw new Error(`Failed to fetch cached releases: ${response.status}`);
+    throw new Error(`Failed to fetch cached recent releases: ${response.status}`);
   }
   const data = await response.json();
   
   // Transform releases to ensure Date objects are properly converted
   const transformedReleases = data.releases.map(transformCachedRelease);
   
-  console.log('✅ Loaded cached releases:', { count: transformedReleases.length, generatedAt: data.metadata.generatedAt });
+  console.log('✅ Loaded cached recent releases:', { count: transformedReleases.length, generatedAt: data.metadata.generatedAt });
+  return {
+    ...data,
+    releases: transformedReleases,
+  };
+}
+
+/**
+ * Fetch cached all releases data from static JSON files (for releases page)
+ */
+async function fetchCachedAllReleases(): Promise<ReleaseCache> {
+  console.log('🗂️ Fetching cached all releases from /data/all-releases.json');
+  const response = await fetch('/data/all-releases.json');
+  if (!response.ok) {
+    throw new Error(`Failed to fetch cached all releases: ${response.status}`);
+  }
+  const data = await response.json();
+  
+  // Transform releases to ensure Date objects are properly converted
+  const transformedReleases = data.releases.map(transformCachedRelease);
+  
+  console.log('✅ Loaded cached all releases:', { count: transformedReleases.length, generatedAt: data.metadata.generatedAt });
   return {
     ...data,
     releases: transformedReleases,
@@ -118,24 +139,24 @@ function shouldPreferLiveData(generatedAt: string): boolean {
 }
 
 /**
- * Hook to load cached release data with fallback to live Nostr data
- * Implements cache-first strategy with smart background refresh and cache invalidation
+ * Hook to load cached recent releases data for main page
+ * Optimized for homepage display with image-focused content
  */
-export function useStaticReleaseCache(): StaticCacheHook {
+export function useStaticRecentReleasesCache(): StaticCacheHook {
   // Fetch cached data
   const { 
     data: cachedData, 
     isLoading: isCacheLoading, 
     error: cacheError 
   } = useQuery({
-    queryKey: ['static-release-cache'],
-    queryFn: fetchCachedReleases,
+    queryKey: ['static-recent-releases-cache'],
+    queryFn: fetchCachedRecentReleases,
     staleTime: 300000, // 5 minutes
     retry: 1, // Only retry once for cache files
   });
 
   // Determine if we should prefer live data over cache
-  const shouldUseLiveData = !cachedData || cacheError || cachedData.releases.length === 0 || 
+  const shouldUseLiveData = !cachedData || !!cacheError || cachedData.releases.length === 0 || 
     (cachedData && shouldPreferLiveData(cachedData.metadata.generatedAt));
   
   // Fallback to live Nostr data
@@ -143,8 +164,8 @@ export function useStaticReleaseCache(): StaticCacheHook {
     data: liveData, 
     isLoading: isLiveLoading 
   } = useReleases({
-    limit: 20, // Match cache limit
-    enabled: shouldUseLiveData ? true : false // Only fetch if we need live data
+    limit: 10, // Match recent releases limit
+    enabled: shouldUseLiveData ? true : false
   });
 
   // Determine if cache is stale (for UI indicators)
@@ -152,14 +173,9 @@ export function useStaticReleaseCache(): StaticCacheHook {
   
   // Smart background refresh: fetch live data when cache is stale but still usable
   const { data: backgroundData } = useQuery({
-    queryKey: ['background-release-refresh', cachedData?.metadata.generatedAt],
+    queryKey: ['background-recent-releases-refresh', cachedData?.metadata.generatedAt],
     queryFn: async () => {
-      // This will use the existing useReleases cache if available
-      const releases = await new Promise<any[]>((resolve) => {
-        // Trigger a background fetch through useReleases
-        resolve(liveData || []);
-      });
-      return releases;
+      return liveData || [];
     },
     enabled: isStale && !shouldUseLiveData && !!cachedData,
     staleTime: 300000, // 5 minutes
@@ -175,8 +191,8 @@ export function useStaticReleaseCache(): StaticCacheHook {
     // Use live data when cache is too old or unavailable
     finalData = liveData || null;
     isLoading = isLiveLoading;
-    error = cacheError;
-    console.log('🔄 Using live release data (cache unavailable or too old)');
+    error = cacheError as Error | null;
+    console.log('🔄 Using live recent releases data (cache unavailable or too old)');
   } else {
     // Use cached data with potential background refresh
     finalData = backgroundData && backgroundData.length > 0 ? backgroundData : cachedData.releases;
@@ -184,9 +200,86 @@ export function useStaticReleaseCache(): StaticCacheHook {
     lastUpdated = new Date(cachedData.metadata.generatedAt);
     
     if (backgroundData && backgroundData.length > 0) {
-      console.log('🔄 Using background-refreshed release data');
+      console.log('🔄 Using background-refreshed recent releases data');
     } else {
-      console.log('📦 Using cached release data');
+      console.log('📦 Using cached recent releases data');
+    }
+  }
+
+  return {
+    data: finalData,
+    isLoading,
+    isStale,
+    lastUpdated,
+    error,
+  };
+}
+
+/**
+ * Hook to load cached all releases data for releases page
+ * Includes all releases for comprehensive browsing
+ */
+export function useStaticAllReleasesCache(): StaticCacheHook {
+  // Fetch cached data
+  const { 
+    data: cachedData, 
+    isLoading: isCacheLoading, 
+    error: cacheError 
+  } = useQuery({
+    queryKey: ['static-all-releases-cache'],
+    queryFn: fetchCachedAllReleases,
+    staleTime: 300000, // 5 minutes
+    retry: 1, // Only retry once for cache files
+  });
+
+  // Determine if we should prefer live data over cache
+  const shouldUseLiveData = !cachedData || !!cacheError || cachedData.releases.length === 0 || 
+    (cachedData && shouldPreferLiveData(cachedData.metadata.generatedAt));
+  
+  // Fallback to live Nostr data
+  const { 
+    data: liveData, 
+    isLoading: isLiveLoading 
+  } = useReleases({
+    limit: 50, // Match all releases limit
+    enabled: shouldUseLiveData ? true : false
+  });
+
+  // Determine if cache is stale (for UI indicators)
+  const isStale = cachedData ? isCacheStale(cachedData.metadata.generatedAt) : false;
+  
+  // Smart background refresh: fetch live data when cache is stale but still usable
+  const { data: backgroundData } = useQuery({
+    queryKey: ['background-all-releases-refresh', cachedData?.metadata.generatedAt],
+    queryFn: async () => {
+      return liveData || [];
+    },
+    enabled: isStale && !shouldUseLiveData && !!cachedData,
+    staleTime: 300000, // 5 minutes
+  });
+
+  // Determine final data and loading state
+  let finalData: MusicRelease[] | null = null;
+  let isLoading = false;
+  let lastUpdated: Date | null = null;
+  let error: Error | null = null;
+
+  if (shouldUseLiveData) {
+    // Use live data when cache is too old or unavailable
+    finalData = liveData || null;
+    isLoading = isLiveLoading;
+    error = cacheError as Error | null;
+    console.log('🔄 Using live all releases data (cache unavailable or too old)');
+  } else {
+    // Use cached data with potential background refresh
+    finalData = backgroundData && backgroundData.length > 0 ? backgroundData : cachedData.releases;
+    isLoading = isCacheLoading;
+    lastUpdated = new Date(cachedData.metadata.generatedAt);
+    
+    if (backgroundData && backgroundData.length > 0) {
+      console.log('🔄 Using background-refreshed all releases data');
+    } else {
+      console.log('📦 Using cached all releases data');
     }
   }
 
@@ -217,7 +310,7 @@ export function useLatestReleaseCache(): LatestReleaseCacheHook {
   });
 
   // Determine if we should prefer live data over cache
-  const shouldUseLiveData = !cachedData || cacheError || !cachedData.release ||
+  const shouldUseLiveData = !cachedData || !!cacheError || !cachedData.release ||
     (cachedData && shouldPreferLiveData(cachedData.metadata.generatedAt));
   
   // Fallback to live data
@@ -253,7 +346,7 @@ export function useLatestReleaseCache(): LatestReleaseCacheHook {
     // Use live data when cache is too old or unavailable
     finalData = liveReleases?.[0] || null;
     isLoading = isLiveLoading;
-    error = cacheError;
+    error = cacheError as Error | null;
     console.log('🔄 Using live latest release data (cache unavailable or too old)');
   } else {
     // Use cached data with potential background refresh
@@ -285,18 +378,26 @@ export function useCacheMetadata() {
     queryKey: ['cache-metadata'],
     queryFn: async () => {
       try {
-        const [releasesCache, latestCache] = await Promise.all([
-          fetchCachedReleases(),
+        const [recentCache, allCache, latestCache] = await Promise.all([
+          fetchCachedRecentReleases(),
+          fetchCachedAllReleases(),
           fetchCachedLatestRelease()
         ]);
 
         return {
-          releases: {
-            generatedAt: releasesCache.metadata.generatedAt,
-            totalCount: releasesCache.metadata.totalCount,
-            dataSource: releasesCache.metadata.dataSource,
-            isStale: isCacheStale(releasesCache.metadata.generatedAt),
-            shouldPreferLive: shouldPreferLiveData(releasesCache.metadata.generatedAt),
+          recentReleases: {
+            generatedAt: recentCache.metadata.generatedAt,
+            totalCount: recentCache.metadata.totalCount,
+            dataSource: recentCache.metadata.dataSource,
+            isStale: isCacheStale(recentCache.metadata.generatedAt),
+            shouldPreferLive: shouldPreferLiveData(recentCache.metadata.generatedAt),
+          },
+          allReleases: {
+            generatedAt: allCache.metadata.generatedAt,
+            totalCount: allCache.metadata.totalCount,
+            dataSource: allCache.metadata.dataSource,
+            isStale: isCacheStale(allCache.metadata.generatedAt),
+            shouldPreferLive: shouldPreferLiveData(allCache.metadata.generatedAt),
           },
           latestRelease: {
             generatedAt: latestCache.metadata.generatedAt,

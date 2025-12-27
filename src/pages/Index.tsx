@@ -12,7 +12,7 @@ import { ReleaseList } from '@/components/music/ReleaseList';
 import { TrendingTracksSection } from '@/components/music/TrendingTracksSection';
 import { FeaturedArtistsSection } from '@/components/community/FeaturedArtists';
 import { TsunamiStats } from '@/components/community/TsunamiStats';
-import { useLatestReleaseCache, useStaticReleaseCache } from '@/hooks/useStaticReleaseCache';
+import { useLatestReleaseCache, useStaticRecentReleasesCache } from '@/hooks/useStaticReleaseCache';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { generateReleaseLink } from '@/lib/nip19Utils';
@@ -20,7 +20,7 @@ import { ArtistLinkWithImage } from '@/components/music/ArtistLink';
 
 const Index = () => {
   const { data: latestRelease, isLoading: isLoadingLatest } = useLatestReleaseCache();
-  const { data: allReleases } = useStaticReleaseCache();
+  const { data: recentReleases } = useStaticRecentReleasesCache();
   const { user } = useCurrentUser();
   const { toast } = useToast();
 
@@ -28,7 +28,7 @@ const Index = () => {
   const isLoading = isLoadingLatest;
   
   // Stats for Explore cards
-  const releaseCount = allReleases?.length || 0;
+  const releaseCount = recentReleases?.length || 0;
 
   // Use track playback hook for latest release (always call hook, but pass null if no release)
   const trackPlayback = useUniversalTrackPlayback(latestRelease || null);
@@ -278,6 +278,7 @@ const Index = () => {
               limit={5}
               useCache={true}
               excludeLatest={true}
+              cacheType="recent"
             />
           </section>
 

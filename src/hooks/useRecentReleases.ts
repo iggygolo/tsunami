@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { useStaticReleaseCache, useLatestReleaseCache } from '@/hooks/useStaticReleaseCache';
+import { useStaticRecentReleasesCache, useLatestReleaseCache } from '@/hooks/useStaticReleaseCache';
 import { useReleases } from '@/hooks/useReleases';
 import type { MusicRelease } from '@/types/music';
 
@@ -22,7 +22,7 @@ export function useRecentReleases(options: RecentReleasesOptions = {}) {
   } = options;
 
   // Get cached data and latest release
-  const { data: cachedReleases, isLoading: isCacheLoading, isStale } = useStaticReleaseCache();
+  const { data: cachedReleases, isLoading: isCacheLoading, isStale } = useStaticRecentReleasesCache();
   const { data: latestRelease } = useLatestReleaseCache();
 
   // Determine if we should use live data instead of cache

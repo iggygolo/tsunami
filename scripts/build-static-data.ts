@@ -397,41 +397,41 @@ async function generateArtistRSSFeeds(
 }
 
 /**
- * Generate releases.json cache file
+ * Generate recent-releases.json cache file (for main page)
  */
-async function generateReleaseCache(
+async function generateRecentReleasesCache(
   releases: MusicRelease[], 
   relayUrls: string[], 
   distDir: string
 ): Promise<void> {
-  console.log('📝 Generating releases cache...');
+  console.log('📝 Generating recent releases cache...');
 
   try {
-    // Filter releases to only include those with images (required for recent releases display)
+    // Filter releases to only include those with images (required for main page display)
     const releasesWithImages = releases.filter(release => release.imageUrl);
     
-    // Take latest 20 releases with images for cache
-    const cachedReleases = releasesWithImages.slice(0, 20);
+    // Take latest 10 releases with images for main page
+    const recentReleases = releasesWithImages.slice(0, 10);
 
-    console.log(`🖼️  Filtered releases: ${releases.length} total → ${releasesWithImages.length} with images → ${cachedReleases.length} cached`);
+    console.log(`🖼️  Recent releases: ${releases.length} total → ${releasesWithImages.length} with images → ${recentReleases.length} cached for main page`);
 
     const cache: ReleaseCache = {
-      releases: cachedReleases,
+      releases: recentReleases,
       metadata: {
         generatedAt: new Date().toISOString(),
-        totalCount: cachedReleases.length,
+        totalCount: recentReleases.length,
         dataSource: releases.length > 0 ? 'nostr' : 'fallback',
         relaysUsed: relayUrls,
         cacheVersion: '1.0.0',
       }
     };
 
-    // Write releases cache to both directories
-    await writeToMultipleDirectories('data/releases.json', JSON.stringify(cache, null, 2));
+    // Write recent releases cache to both directories
+    await writeToMultipleDirectories('data/recent-releases.json', JSON.stringify(cache, null, 2));
 
-    console.log(`✅ Generated releases cache (${cachedReleases.length} releases with images)`);
+    console.log(`✅ Generated recent releases cache (${recentReleases.length} releases with images)`);
   } catch (error) {
-    console.error('❌ Failed to generate releases cache:', error);
+    console.error('❌ Failed to generate recent releases cache:', error);
     
     // Create minimal fallback cache
     const fallbackCache: ReleaseCache = {
@@ -445,11 +445,96 @@ async function generateReleaseCache(
       }
     };
     
-    const dataDir = path.join(distDir, 'data');
-    await fs.mkdir(dataDir, { recursive: true });
-    await writeToMultipleDirectories('data/releases.json', JSON.stringify(fallbackCache, null, 2));
-    console.log('📄 Created fallback releases cache');
+    await writeToMultipleDirectories('data/recent-releases.json', JSON.stringify(fallbackCache, null, 2));
+    console.log('📄 Created fallback recent releases cache');
     
+    throw error;
+  }
+}
+
+/**
+ * Generate all-releases.json cache file (for releases page)
+ */
+async function generateAllReleasesCache(
+  releases: MusicRelease[], 
+  relayUrls: string[], 
+  distDir: string
+): Promise<void> {
+  console.log('📝 Generating all releases cache...');
+
+  try {
+    // Include all releases (with and without images) for comprehensive browsing
+    const allReleases = releases.slice(0, 50); // Limit to 50 for performance
+
+    console.log(`📚 All releases: ${releases.length} total → ${allReleases.length} cached for releases page`);
+
+    const cache: ReleaseCache = {
+      releases: allReleases,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        totalCount: allReleases.length,
+        dataSource: releases.length > 0 ? 'nostr' : 'fallback',
+        relaysUsed: relayUrls,
+        cacheVersion: '1.0.0',
+      }
+    };
+
+    // Write all releases cache to both directories
+    await writeToMultipleDirectories('data/all-releases.json', JSON.stringify(cache, null, 2));
+
+    console.log(`✅ Generated all releases cache (${allReleases.length} releases)`);
+  } catch (error) {
+    console.error('❌ Failed to generate all releases cache:', error);
+    
+    // Create minimal fallback cache
+    const fallbackCache: ReleaseCache = {
+      releases: [],
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        totalCount: 0,
+        dataSource: 'fallback',
+        relaysUsed: relayUrls,
+        cacheVersion: '1.0.0',
+      }
+    };
+    
+    await writeToMultipleDirectories('data/all-releases.json', JSON.stringify(fallbackCache, null, 2));
+    console.log('📄 Created fallback all releases cache');
+    
+    throw error;
+  }
+}
+
+/**
+ * Generate releases.json cache file (legacy compatibility - points to recent releases)
+ */
+async function generateLegacyReleaseCache(
+  releases: MusicRelease[], 
+  relayUrls: string[], 
+  distDir: string
+): Promise<void> {
+  console.log('📝 Generating legacy releases cache (for backward compatibility)...');
+  
+  try {
+    // Create the same as recent releases for backward compatibility
+    const releasesWithImages = releases.filter(release => release.imageUrl);
+    const cachedReleases = releasesWithImages.slice(0, 20);
+
+    const cache: ReleaseCache = {
+      releases: cachedReleases,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        totalCount: cachedReleases.length,
+        dataSource: releases.length > 0 ? 'nostr' : 'fallback',
+        relaysUsed: relayUrls,
+        cacheVersion: '1.0.0',
+      }
+    };
+
+    await writeToMultipleDirectories('data/releases.json', JSON.stringify(cache, null, 2));
+    console.log(`✅ Generated legacy releases cache (${cachedReleases.length} releases)`);
+  } catch (error) {
+    console.error('❌ Failed to generate legacy releases cache:', error);
     throw error;
   }
 }
@@ -765,9 +850,21 @@ export async function buildStaticData(): Promise<void> {
           // Don't throw - continue with other builds
           return Promise.resolve();
         }),
-      generateReleaseCache(releases, dataBundle.relaysUsed, distDir)
+      generateRecentReleasesCache(releases, dataBundle.relaysUsed, distDir)
         .catch(error => {
-          console.error('❌ Release cache generation failed:', error);
+          console.error('❌ Recent releases cache generation failed:', error);
+          // Don't throw - continue with other builds
+          return Promise.resolve();
+        }),
+      generateAllReleasesCache(releases, dataBundle.relaysUsed, distDir)
+        .catch(error => {
+          console.error('❌ All releases cache generation failed:', error);
+          // Don't throw - continue with other builds
+          return Promise.resolve();
+        }),
+      generateLegacyReleaseCache(releases, dataBundle.relaysUsed, distDir)
+        .catch(error => {
+          console.error('❌ Legacy release cache generation failed:', error);
           // Don't throw - continue with other builds
           return Promise.resolve();
         }),
@@ -830,7 +927,9 @@ export async function buildStaticData(): Promise<void> {
     });
     
     console.log(`   • Individual RSS feeds for ${rssEnabledArtists.length} artists (out of ${dataBundle.artists.length} total)`);
-    console.log(`   • Release cache with ${releases.length} releases`);
+    console.log(`   • Recent releases cache (for main page)`);
+    console.log(`   • All releases cache (for releases page)`);
+    console.log(`   • Legacy releases cache (backward compatibility)`);
     console.log(`   • Latest release cache`);
     console.log(`   • Trending tracks cache`);
     console.log(`   • Featured artists cache`);
@@ -838,7 +937,7 @@ export async function buildStaticData(): Promise<void> {
     console.log(`   • Health check files`);
     console.log(`📁 Files available in: dist/ and public/`);
     console.log(`📡 RSS feeds: /rss/{artistPubkey}.xml`);
-    console.log(`🗂️  Cache files: /data/releases.json, /data/latest-release.json, /data/trending-tracks.json, /data/featured-artists.json`);
+    console.log(`🗂️  Cache files: /data/recent-releases.json, /data/all-releases.json, /data/releases.json, /data/latest-release.json, /data/trending-tracks.json, /data/featured-artists.json`);
     console.log(`📄 Individual caches: /data/releases/[id].json`);
     console.log(`🏥 Health checks: /rss-health.json, /cache-health.json`);
     

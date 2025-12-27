@@ -18,7 +18,7 @@ const Releases = () => {
           </p>
         </div>
 
-        <ReleaseList showSearch showArtistFilter useCache />
+        <ReleaseList showSearch showArtistFilter useCache cacheType="all" />
       </div>
     </Layout>
   );
