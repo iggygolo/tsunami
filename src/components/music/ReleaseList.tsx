@@ -10,6 +10,7 @@ import { ArtistFilter } from './ArtistFilter';
 import { useReleases } from '@/hooks/useReleases';
 import { useLatestReleaseCache, useStaticRecentReleasesCache, useStaticAllReleasesCache } from '@/hooks/useStaticReleaseCache';
 import { useRecentReleases } from '@/hooks/useRecentReleases';
+import { filterRecentReleases, filterAllReleases } from '@/lib/releaseFiltering';
 import type { MusicRelease, ReleaseSearchOptions } from '@/types/music';
 
 interface ReleaseListProps {
@@ -82,23 +83,27 @@ export function ReleaseList({
     isLoading = isLiveLoading;
   }
 
-  // Apply additional filtering
-  if (releases && cacheType !== 'recent') {
-    // Exclude latest release if requested (for non-recent releases)
-    if (excludeLatest && latestRelease) {
-      releases = releases.filter(release => release.id !== latestRelease.id);
+  // Apply additional filtering using shared logic
+  if (releases) {
+    if (cacheType === 'recent') {
+      // For recent releases, apply additional filtering if needed
+      releases = filterRecentReleases(releases, {
+        excludeLatest: false, // Already handled by cache
+        requireImages: false, // Already handled by cache
+        limit: releases.length, // Don't re-limit
+        selectedArtist,
+        latestRelease
+      });
+    } else {
+      // For all releases or live data, apply full filtering
+      releases = filterAllReleases(releases, {
+        excludeLatest: excludeLatest,
+        requireImages: false,
+        limit: releases.length, // Don't re-limit here
+        selectedArtist,
+        latestRelease
+      });
     }
-    
-    // Apply artist filtering if selected
-    if (selectedArtist) {
-      releases = releases.filter(release => release.artistPubkey === selectedArtist);
-    }
-  } else if (releases && cacheType === 'recent') {
-    // For recent releases from static cache, still apply artist filtering if needed
-    if (selectedArtist) {
-      releases = releases.filter(release => release.artistPubkey === selectedArtist);
-    }
-    // Latest release exclusion is already handled by the cache generation
   }
 
   const handleSearch = (query: string) => {

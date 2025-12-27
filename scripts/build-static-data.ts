@@ -8,6 +8,14 @@ import type { MusicRelease, MusicTrackData, MusicPlaylistData, FeaturedArtistsCa
 import type { SimpleArtistInfo } from '../src/lib/artistUtils.js';
 import { processTrendingTracks, TRENDING_CONFIG } from '../src/lib/trendingAlgorithm.js';
 import { processFeaturedArtists, FEATURED_ARTISTS_CONFIG } from '../src/lib/featuredArtistsAlgorithm.js';
+import { 
+  filterRecentReleases, 
+  filterAllReleases, 
+  getLatestReleaseWithImage,
+  RELEASE_FILTER_CONFIG,
+  sortReleasesByDate,
+  logReleaseFiltering
+} from '../src/lib/releaseFiltering.js';
 
 // Load environment variables
 config();
@@ -407,13 +415,31 @@ async function generateRecentReleasesCache(
   console.log('📝 Generating recent releases cache...');
 
   try {
-    // Filter releases to only include those with images (required for main page display)
-    const releasesWithImages = releases.filter(release => release.imageUrl);
+    // Sort releases by date first
+    const sortedReleases = sortReleasesByDate(releases);
     
-    // Take latest 10 releases with images for main page
-    const recentReleases = releasesWithImages.slice(0, 10);
+    // Get latest release for exclusion
+    const latestRelease = getLatestReleaseWithImage(sortedReleases);
+    
+    // Use shared filtering logic
+    const recentReleases = filterRecentReleases(sortedReleases, {
+      excludeLatest: RELEASE_FILTER_CONFIG.RECENT_RELEASES.EXCLUDE_LATEST,
+      requireImages: RELEASE_FILTER_CONFIG.RECENT_RELEASES.REQUIRE_IMAGES,
+      limit: RELEASE_FILTER_CONFIG.RECENT_RELEASES.DEFAULT_LIMIT,
+      latestRelease
+    });
 
-    console.log(`🖼️  Recent releases: ${releases.length} total → ${releasesWithImages.length} with images → ${recentReleases.length} cached for main page`);
+    logReleaseFiltering(
+      'Recent releases cache',
+      releases.length,
+      recentReleases.length,
+      {
+        excludeLatest: RELEASE_FILTER_CONFIG.RECENT_RELEASES.EXCLUDE_LATEST,
+        requireImages: RELEASE_FILTER_CONFIG.RECENT_RELEASES.REQUIRE_IMAGES,
+        limit: RELEASE_FILTER_CONFIG.RECENT_RELEASES.DEFAULT_LIMIT,
+        latestRelease
+      }
+    );
 
     const cache: ReleaseCache = {
       releases: recentReleases,
@@ -429,7 +455,7 @@ async function generateRecentReleasesCache(
     // Write recent releases cache to both directories
     await writeToMultipleDirectories('data/recent-releases.json', JSON.stringify(cache, null, 2));
 
-    console.log(`✅ Generated recent releases cache (${recentReleases.length} releases with images)`);
+    console.log(`✅ Generated recent releases cache (${recentReleases.length} releases excluding latest)`);
   } catch (error) {
     console.error('❌ Failed to generate recent releases cache:', error);
     
@@ -463,10 +489,26 @@ async function generateAllReleasesCache(
   console.log('📝 Generating all releases cache...');
 
   try {
-    // Include all releases (with and without images) for comprehensive browsing
-    const allReleases = releases.slice(0, 50); // Limit to 50 for performance
+    // Sort releases by date first
+    const sortedReleases = sortReleasesByDate(releases);
+    
+    // Use shared filtering logic
+    const allReleases = filterAllReleases(sortedReleases, {
+      excludeLatest: RELEASE_FILTER_CONFIG.ALL_RELEASES.EXCLUDE_LATEST,
+      requireImages: RELEASE_FILTER_CONFIG.ALL_RELEASES.REQUIRE_IMAGES,
+      limit: RELEASE_FILTER_CONFIG.ALL_RELEASES.DEFAULT_LIMIT
+    });
 
-    console.log(`📚 All releases: ${releases.length} total → ${allReleases.length} cached for releases page`);
+    logReleaseFiltering(
+      'All releases cache',
+      releases.length,
+      allReleases.length,
+      {
+        excludeLatest: RELEASE_FILTER_CONFIG.ALL_RELEASES.EXCLUDE_LATEST,
+        requireImages: RELEASE_FILTER_CONFIG.ALL_RELEASES.REQUIRE_IMAGES,
+        limit: RELEASE_FILTER_CONFIG.ALL_RELEASES.DEFAULT_LIMIT
+      }
+    );
 
     const cache: ReleaseCache = {
       releases: allReleases,
@@ -505,39 +547,7 @@ async function generateAllReleasesCache(
   }
 }
 
-/**
- * Generate releases.json cache file (legacy compatibility - points to recent releases)
- */
-async function generateLegacyReleaseCache(
-  releases: MusicRelease[], 
-  relayUrls: string[], 
-  distDir: string
-): Promise<void> {
-  console.log('📝 Generating legacy releases cache (for backward compatibility)...');
-  
-  try {
-    // Create the same as recent releases for backward compatibility
-    const releasesWithImages = releases.filter(release => release.imageUrl);
-    const cachedReleases = releasesWithImages.slice(0, 20);
 
-    const cache: ReleaseCache = {
-      releases: cachedReleases,
-      metadata: {
-        generatedAt: new Date().toISOString(),
-        totalCount: cachedReleases.length,
-        dataSource: releases.length > 0 ? 'nostr' : 'fallback',
-        relaysUsed: relayUrls,
-        cacheVersion: '1.0.0',
-      }
-    };
-
-    await writeToMultipleDirectories('data/releases.json', JSON.stringify(cache, null, 2));
-    console.log(`✅ Generated legacy releases cache (${cachedReleases.length} releases)`);
-  } catch (error) {
-    console.error('❌ Failed to generate legacy releases cache:', error);
-    throw error;
-  }
-}
 
 /**
  * Generate latest-release.json cache file
@@ -550,9 +560,9 @@ async function generateLatestReleaseCache(
   console.log('📝 Generating latest release cache...');
 
   try {
-    // Prefer releases with images for the latest release display
-    const releasesWithImages = releases.filter(release => release.imageUrl);
-    const latestRelease = releasesWithImages.length > 0 ? releasesWithImages[0] : (releases.length > 0 ? releases[0] : null);
+    // Use shared logic to get the latest release with image preference
+    const latestRelease = getLatestReleaseWithImage(releases) || 
+                         (releases.length > 0 ? releases[0] : null);
 
     if (latestRelease) {
       console.log(`🖼️  Latest release: "${latestRelease.title}" ${latestRelease.imageUrl ? '(with image)' : '(no image)'}`);
@@ -862,12 +872,6 @@ export async function buildStaticData(): Promise<void> {
           // Don't throw - continue with other builds
           return Promise.resolve();
         }),
-      generateLegacyReleaseCache(releases, dataBundle.relaysUsed, distDir)
-        .catch(error => {
-          console.error('❌ Legacy release cache generation failed:', error);
-          // Don't throw - continue with other builds
-          return Promise.resolve();
-        }),
       generateLatestReleaseCache(releases, dataBundle.relaysUsed, distDir)
         .catch(error => {
           console.error('❌ Latest release cache generation failed:', error);
@@ -929,7 +933,7 @@ export async function buildStaticData(): Promise<void> {
     console.log(`   • Individual RSS feeds for ${rssEnabledArtists.length} artists (out of ${dataBundle.artists.length} total)`);
     console.log(`   • Recent releases cache (for main page)`);
     console.log(`   • All releases cache (for releases page)`);
-    console.log(`   • Legacy releases cache (backward compatibility)`);
+    console.log(`   • Legacy releases cache (same as recent)`);
     console.log(`   • Latest release cache`);
     console.log(`   • Trending tracks cache`);
     console.log(`   • Featured artists cache`);

@@ -1,8 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useStaticRecentReleasesCache, useLatestReleaseCache } from '@/hooks/useStaticReleaseCache';
 import { useReleases } from '@/hooks/useReleases';
-import type { MusicRelease } from '@/types/music';
+import { filterRecentReleases, logReleaseFiltering } from '@/lib/releaseFiltering';
 
 interface RecentReleasesOptions {
   limit?: number;
@@ -43,27 +42,33 @@ export function useRecentReleases(options: RecentReleasesOptions = {}) {
   const rawReleases = shouldUseLiveData ? (liveReleases || []) : (cachedReleases || []);
   const isLoading = shouldUseLiveData ? isLiveLoading : isCacheLoading;
 
-  // Apply filtering outside the query using useMemo for better performance
+  // Apply filtering using shared logic for consistency
   const filteredReleases = useMemo(() => {
     if (!rawReleases || rawReleases.length === 0) {
       return [];
     }
 
-    let filtered = [...rawReleases];
+    // Use shared filtering logic
+    const filtered = filterRecentReleases(rawReleases, {
+      excludeLatest: excludeLatest && shouldUseLiveData, // Only exclude for live data, cache already excludes
+      requireImages: requireImages && shouldUseLiveData, // Only filter for live data, cache already filters
+      limit,
+      latestRelease: shouldUseLiveData ? latestRelease : null // Only pass latest for live data
+    });
 
-    // 1. Exclude latest release if requested
-    if (excludeLatest && latestRelease) {
-      filtered = filtered.filter(release => release.id !== latestRelease.id);
-    }
+    logReleaseFiltering(
+      'Recent releases hook',
+      rawReleases.length,
+      filtered.length,
+      {
+        excludeLatest: excludeLatest && shouldUseLiveData,
+        requireImages: requireImages && shouldUseLiveData,
+        limit,
+        latestRelease: shouldUseLiveData ? latestRelease : null
+      }
+    );
 
-    // 2. Filter out releases without images if required (only for live data)
-    // Note: Cache already filters for images, so this is mainly for live data fallback
-    if (requireImages && shouldUseLiveData) {
-      filtered = filtered.filter(release => release.imageUrl);
-    }
-
-    // 3. Apply limit
-    return filtered.slice(0, limit);
+    return filtered;
   }, [rawReleases, excludeLatest, latestRelease, requireImages, limit, shouldUseLiveData]);
 
   // Log data source for debugging
