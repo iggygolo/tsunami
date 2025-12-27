@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useUploadConfig } from '../useUploadConfig';
 
 // Mock localStorage
@@ -26,19 +26,11 @@ describe('useUploadConfig', () => {
     const { result } = renderHook(() => useUploadConfig());
     
     expect(result.current.config.defaultProvider).toBe('blossom');
-    expect(result.current.config.vercelEnabled).toBe(true);
-    expect(result.current.config.blossomEnabled).toBe(true);
-  });
-
-  it('should update default provider', () => {
-    localStorageMock.getItem.mockReturnValue(null);
-    
-    const { result } = renderHook(() => useUploadConfig());
-    
-    act(() => {
-      result.current.updateProvider('vercel');
-    });
-    
-    expect(result.current.config.defaultProvider).toBe('vercel');
+    expect(result.current.config.blossomServers).toEqual([
+      'https://blossom.primal.net',
+      'https://blossom.nostr.band'
+    ]);
+    expect(result.current.config.maxFileSize).toBeGreaterThan(0);
+    expect(result.current.config.allowedTypes).toContain('*/*');
   });
 });

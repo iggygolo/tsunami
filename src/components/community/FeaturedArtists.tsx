@@ -1,14 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, ChevronRight } from 'lucide-react';
 import { useStaticFeaturedArtistsCache } from '@/hooks/useStaticFeaturedArtistsCache';
-import { useReleases } from '@/hooks/useReleases';
-import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
 import { pubkeyToNpub } from '@/lib/artistUtils';
 import { cn } from '@/lib/utils';
-import type { ReleaseTrack } from '@/types/music';
 
 interface FeaturedArtistsProps {
   limit?: number;
@@ -16,63 +12,21 @@ interface FeaturedArtistsProps {
 }
 
 /**
- * FeaturedArtists component that displays active artists with track counts
- * and clickable profile links - now uses static cache with live fallback
+ * FeaturedArtists component that displays active artists
+ * Clicking on an artist navigates to their profile page
  */
 export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) {
   const { data: featuredArtistsResults, isLoading: isLoadingFeatured } = useStaticFeaturedArtistsCache();
-  const { data: releases } = useReleases();
 
   // Extract artists from the cache results
   const featuredArtists = React.useMemo(() => {
     if (!featuredArtistsResults) return [];
     return featuredArtistsResults.slice(0, limit).map(result => ({
       ...result.artist,
-      // Add metrics for backward compatibility
-      activityScore: result.featuredScore,
+      // Add metrics for display
       metrics: result.metrics
     }));
   }, [featuredArtistsResults, limit]);
-
-  // Calculate track counts for each artist (only artist-created tracks)
-  const artistTrackCounts = React.useMemo(() => {
-    if (!releases) return new Map<string, number>();
-    
-    const counts = new Map<string, number>();
-    releases.forEach(release => {
-      if (release.artistPubkey) {
-        // Only count tracks where the track's artistPubkey matches the release artist
-        const artistCreatedTracks = release.tracks?.filter(track => 
-          track.artistPubkey === release.artistPubkey
-        ) || [];
-        
-        const currentCount = counts.get(release.artistPubkey) || 0;
-        counts.set(release.artistPubkey, currentCount + artistCreatedTracks.length);
-      }
-    });
-    
-    return counts;
-  }, [releases]);
-
-  // Get all tracks for each artist
-  const artistTracks = React.useMemo(() => {
-    if (!releases) return new Map<string, ReleaseTrack[]>();
-    
-    const tracks = new Map<string, ReleaseTrack[]>();
-    releases.forEach(release => {
-      if (release.artistPubkey) {
-        // Only include tracks where the track's artistPubkey matches the release artist
-        const artistCreatedTracks = release.tracks?.filter(track => 
-          track.artistPubkey === release.artistPubkey
-        ) || [];
-        
-        const currentTracks = tracks.get(release.artistPubkey) || [];
-        tracks.set(release.artistPubkey, [...currentTracks, ...artistCreatedTracks]);
-      }
-    });
-    
-    return tracks;
-  }, [releases]);
 
   if (isLoadingFeatured) {
     return (
@@ -109,9 +63,7 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
   return (
     <div className={cn('grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6', className)}>
       {featuredArtists.map((artist) => {
-        const trackCount = artist.metrics?.trackCount || artistTrackCounts.get(artist.pubkey) || 0;
-        const releaseCount = artist.metrics?.releaseCount || 0;
-        const tracks = artistTracks.get(artist.pubkey) || [];
+        const trackCount = artist.metrics?.trackCount || 0;
         const npub = artist.npub || pubkeyToNpub(artist.pubkey);
         const profileUrl = `/${npub}`;
 
@@ -120,8 +72,6 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
             key={artist.pubkey}
             artist={artist}
             trackCount={trackCount}
-            releaseCount={releaseCount}
-            tracks={tracks}
             profileUrl={profileUrl}
           />
         );
@@ -133,84 +83,44 @@ export function FeaturedArtists({ limit = 6, className }: FeaturedArtistsProps) 
 interface ArtistCardProps {
   artist: any;
   trackCount: number;
-  releaseCount: number;
-  tracks: ReleaseTrack[];
   profileUrl: string;
 }
 
-function ArtistCard({ artist, trackCount, releaseCount, tracks, profileUrl }: ArtistCardProps) {
-  // Create a virtual release for playback
-  const artistRelease = React.useMemo(() => {
-    if (!tracks.length) return null;
-    
-    const releaseId = `artist-${artist.pubkey}`;
-    return {
-      id: releaseId,
-      title: `${artist.name || 'Artist'} - All Tracks`,
-      tracks,
-      artistPubkey: artist.pubkey,
-      publishDate: new Date(),
-      createdAt: new Date(),
-      eventId: releaseId, // Use the same ID for eventId so the comparison works
-      identifier: releaseId,
-      tags: [],
-      imageUrl: artist.image
-    };
-  }, [artist, tracks]);
-
-  const trackPlayback = useUniversalTrackPlayback(artistRelease);
-
-  const handleProfileClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (trackPlayback?.hasPlayableTracks) {
-      trackPlayback.handleReleasePlay();
-    }
-  };
-
+function ArtistCard({ artist, trackCount, profileUrl }: ArtistCardProps) {
   return (
-    <div className="flex flex-col items-center text-center group">
-      {/* Circular Profile Image with Play Button */}
+    <Link 
+      to={profileUrl} 
+      className="flex flex-col items-center text-center group hover:scale-105 transition-transform duration-200"
+    >
+      {/* Circular Profile Image */}
       <div className="relative mb-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="p-0 h-auto hover:bg-transparent relative"
-          onClick={handleProfileClick}
-        >
-          <div className="w-32 h-32 rounded-full overflow-hidden bg-muted/30 hover:scale-105 transition-transform duration-200">
-            {artist.image ? (
-              <img 
-                src={artist.image} 
-                alt={artist.name || 'Artist'} 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Users className="w-12 h-12 text-muted-foreground" />
-              </div>
-            )}
-          </div>
-          
-          {/* Play Button Overlay */}
-          {trackPlayback?.hasPlayableTracks && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg backdrop-blur-sm">
-                <div className="w-0 h-0 border-l-[8px] border-l-black border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1" />
-              </div>
+        <div className="w-32 h-32 rounded-full overflow-hidden bg-muted/30 group-hover:shadow-lg transition-shadow duration-200">
+          {artist.image ? (
+            <img 
+              src={artist.image} 
+              alt={artist.name || 'Artist'} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Users className="w-12 h-12 text-muted-foreground" />
             </div>
           )}
-        </Button>
+        </div>
       </div>
 
       {/* Artist Info */}
-      <Link to={profileUrl} className="group-link hover:text-primary transition-colors">
-        <h3 className="text-lg font-semibold text-foreground mb-1">
-          {artist.name || 'Unknown Artist'}
-        </h3>
-      </Link>
-    </div>
+      <h3 className="text-lg font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
+        {artist.name || 'Unknown Artist'}
+      </h3>
+      
+      {/* Track Count Display */}
+      {trackCount > 0 && (
+        <div className="text-sm text-muted-foreground">
+          <p>{trackCount} track{trackCount !== 1 ? 's' : ''}</p>
+        </div>
+      )}
+    </Link>
   );
 }
 

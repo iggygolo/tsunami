@@ -117,24 +117,15 @@ export function useUploadFile() {
         console.log('📄 UPLOADING OTHER FILE TYPE');
       }
 
-      // Use the configured default provider
-      if (config.defaultProvider === 'vercel' && config.vercelEnabled) {
-        console.log('🚀 USING VERCEL - NO SIGNING REQUIRED');
-        try {
-          return await uploadWithVercel(correctedFile, user);
-        } catch (vercelError) {
-          console.warn('Vercel upload failed:', vercelError);
-          throw vercelError;
-        }
-      } else {
-        console.log('🌸 USING BLOSSOM - SIGNING REQUIRED');
-        // Use Blossom as default or fallback
-        try {
-          return await uploadWithBlossom(correctedFile, user, allServers);
-        } catch (blossomError) {
-          console.warn('Blossom upload failed:', blossomError);
-          throw blossomError;
-        }
+      // Use Blossom as the only provider (app is Blossom-only)
+      console.log('🌸 USING BLOSSOM - SIGNING REQUIRED');
+      
+      // Use Blossom as default or fallback
+      try {
+        return await uploadWithBlossom(correctedFile, user, allServers);
+      } catch (blossomError) {
+        console.warn('Blossom upload failed:', blossomError);
+        throw blossomError;
       }
     },
   });
@@ -185,57 +176,16 @@ export function useUploadFileWithOptions() {
 
       console.log('Primary provider:', primaryProvider);
 
-      // Try primary provider first
-      if (primaryProvider === 'vercel') {
-        if (!config.vercelEnabled) {
-          throw new Error('Vercel upload is disabled. Please enable it in Upload Provider settings.');
-        }
-        
-        try {
-          const tags = await uploadWithVercel(correctedFile, user);
-          const url = tags.find(tag => tag[0] === 'url')?.[1] || '';
-          return { url, provider: 'vercel', tags };
-        } catch (error) {
-          console.warn('Vercel upload failed:', error);
-        }
-      } else {
-        // Primary provider is Blossom
-        try {
-          const tags = await uploadWithBlossom(correctedFile, user, allServers);
-          const url = tags.find(tag => tag[0] === 'url')?.[1] || '';
-          return { url, provider: 'blossom', tags };
-        } catch (error) {
-          console.warn('Blossom upload failed:', error);
-        }
+      // Use Blossom as the only provider
+      try {
+        const tags = await uploadWithBlossom(correctedFile, user, allServers);
+        const url = tags.find(tag => tag[0] === 'url')?.[1] || '';
+        return { url, provider: 'blossom', tags };
+      } catch (error) {
+        console.warn('Blossom upload failed:', error);
+        throw error;
       }
     },
   });
-}
-
-/**
- * Upload with Vercel and return tags format for compatibility
- */
-async function uploadWithVercel(file: File, user: any): Promise<string[][]> {
-  console.log('🚀 uploadWithVercel called - NO SIGNING SHOULD HAPPEN');
-  try {
-    console.log('Creating Vercel provider...');
-    const provider = UploadProviderFactory.createProvider('vercel', user.pubkey, user.signer);
-    console.log('Calling provider.uploadFile...');
-    const url = await provider.uploadFile(file);
-    
-    // Return in tags format for backward compatibility
-    const tags = [
-      ['url', url],
-      ['m', file.type],
-      ['size', file.size.toString()],
-      ['x', ''], // Hash would go here if available
-    ];
-    
-    console.log('Vercel upload successful, tags:', tags);
-    return tags;
-  } catch (error) {
-    console.error('Vercel upload failed:', error);
-    throw new Error(`Vercel upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
 }
 

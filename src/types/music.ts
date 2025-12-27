@@ -420,6 +420,7 @@ export interface FeaturedArtistsCache {
       defaultLimit: number;
       recencyWindowDays: number;
       minReleases: number;
+      previewTracksLimit?: number;
     };
   };
 }
@@ -432,6 +433,8 @@ export interface FeaturedArtistResult {
   zapScore: number;
   activityScore: number;
   followerScore: number;
+  // Preview tracks for quick playback (latest 3-5 tracks)
+  previewTracks?: MusicTrackData[];
 }
 
 export interface ArtistMetrics {

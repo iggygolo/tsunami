@@ -7,17 +7,18 @@ describe('UploadProviders', () => {
       const config = UploadProviderFactory.getDefaultConfig();
       
       expect(config.defaultProvider).toBe('blossom');
-      expect(config.vercelEnabled).toBe(true);
       expect(config.blossomEnabled).toBe(true);
       expect(config.maxFileSize).toBeGreaterThan(0);
-      expect(config.allowedTypes).toContain('audio/mpeg');
-      expect(config.allowedTypes).toContain('image/jpeg');
+      expect(config.allowedTypes).toContain('*/*');
+      expect(config.blossomServers).toEqual([
+        'https://blossom.primal.net',
+        'https://blossom.nostr.band'
+      ]);
     });
 
     it('should create Blossom provider', () => {
       expect(() => {
         UploadProviderFactory.createProvider(
-          'blossom',
           'test-pubkey',
           {},
           ['https://test-server.com']
@@ -25,30 +26,9 @@ describe('UploadProviders', () => {
       }).not.toThrow();
     });
 
-    it('should create Vercel provider', () => {
-      expect(() => {
-        UploadProviderFactory.createProvider(
-          'vercel',
-          'test-pubkey',
-          {}
-        );
-      }).not.toThrow();
-    });
-
-    it('should throw error for unknown provider', () => {
-      expect(() => {
-        UploadProviderFactory.createProvider(
-          'unknown' as any,
-          'test-pubkey',
-          {}
-        );
-      }).toThrow('Unknown provider type');
-    });
-
     it('should throw error for Blossom without servers', () => {
       expect(() => {
         UploadProviderFactory.createProvider(
-          'blossom',
           'test-pubkey',
           {},
           []
@@ -62,14 +42,14 @@ describe('UploadProviders', () => {
       const error = new UploadProviderError(
         'TEST_ERROR',
         'Test error message',
-        'vercel',
+        'blossom',
         { test: 'data' },
         true
       );
 
       expect(error.code).toBe('TEST_ERROR');
       expect(error.message).toBe('Test error message');
-      expect(error.provider).toBe('vercel');
+      expect(error.provider).toBe('blossom');
       expect(error.details).toEqual({ test: 'data' });
       expect(error.retryable).toBe(true);
       expect(error.name).toBe('UploadProviderError');

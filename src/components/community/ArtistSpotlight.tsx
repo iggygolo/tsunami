@@ -221,9 +221,6 @@ export function TrendingArtists({ className, limit = 5 }: TrendingArtistsProps) 
                 textSize="text-sm"
                 imageSize="w-8 h-8"
               />
-              <Badge variant="outline" className="text-xs">
-                {artist.activityScore}
-              </Badge>
             </div>
           ))}
         </div>

@@ -124,7 +124,7 @@ export function CommunityRecentActivity({
             key={activity.id}
             userPubkey={activity.userPubkey}
             amount={activity.amount}
-            releaseId={activity.releaseId}
+            releaseId={activity.releaseId || undefined}
             targetArtistPubkey={activity.targetArtistPubkey}
             timestamp={activity.timestamp}
           />

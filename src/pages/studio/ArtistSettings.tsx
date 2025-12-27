@@ -14,6 +14,7 @@ import { useArtistMetadata } from '@/hooks/useArtistMetadata';
 import { useRSSFeedGenerator } from '@/hooks/useRSSFeedGenerator';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { MUSIC_KINDS, PLATFORM_CONFIG } from '@/lib/musicConfig';
+import { pubkeyToNpub } from '@/lib/artistUtils';
 import { genRSSFeed } from '@/lib/rssGenerator';
 
 interface ArtistFormData {
@@ -287,15 +288,20 @@ const ArtistSettings = () => {
       // Update RSS feed with the new configuration (non-blocking)
       try {
         // Create simplified RSS config from current user's artist metadata
-        const rssConfig = artistMetadata ? {
-          artistName: artistMetadata.artist,
-          description: artistMetadata.description || '',
-          image: artistMetadata.image,
-          website: artistMetadata.website,
-          copyright: artistMetadata.copyright,
-          publisher: artistMetadata.publisher || artistMetadata.artist,
-          medium: artistMetadata.medium || PLATFORM_CONFIG.defaults.medium,
-          license: artistMetadata.license || PLATFORM_CONFIG.defaults.license,
+        const rssConfig = artistMetadata && user ? {
+          pubkey: user.pubkey,
+          npub: pubkeyToNpub(user.pubkey),
+          name: artistMetadata.artist,
+          metadata: {
+            artist: artistMetadata.artist,
+            description: artistMetadata.description || '',
+            image: artistMetadata.image,
+            website: artistMetadata.website,
+            copyright: artistMetadata.copyright,
+            publisher: artistMetadata.publisher || artistMetadata.artist,
+            medium: artistMetadata.medium || PLATFORM_CONFIG.defaults.medium,
+            license: artistMetadata.license || PLATFORM_CONFIG.defaults.license,
+          },
           ttl: PLATFORM_CONFIG.rss.ttl
         } : undefined;
 

@@ -95,7 +95,7 @@ export function useArtistMetadata(artistPubkey?: string) {
 
           return {
             ...metadata,
-            artist: metadata.artist || PLATFORM_CONFIG.defaults.artistName,
+            artist: metadata.artist || '',
             rssEnabled: metadata.rssEnabled || false, // Default to false if not present
             blossomServers: metadata.blossomServers || PLATFORM_CONFIG.upload.blossomServers, // Use platform defaults if not configured
             updated_at: latestEvent.created_at

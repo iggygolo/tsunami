@@ -15,9 +15,24 @@ export function EditTrackPage() {
   const { toast } = useToast();
   const { user } = useCurrentUser();
   
-  // Only fetch track if it belongs to the current user
-  const { data: track, isLoading, error } = useMusicTrack(trackId || '', user?.pubkey);
+  // Only fetch track if trackId exists and belongs to the current user
+  const { data: track, isLoading, error } = useMusicTrack(trackId!, user?.pubkey || '');
   const { mutate: updateTrack, isPending } = useUpdateTrack();
+
+  // Early return if trackId is missing
+  if (!trackId) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Track Not Found</h1>
+          <p className="text-muted-foreground mb-6">The track you're looking for could not be found.</p>
+          <Button onClick={() => navigate('/studio/tracks')}>
+            Back to Tracks
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (data: MusicTrackFormData) => {
     if (!trackId) return;

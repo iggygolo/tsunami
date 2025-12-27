@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FileUploadWithProvider } from '../FileUploadWithProvider';
 
@@ -7,15 +7,15 @@ vi.mock('@/hooks/useUploadConfig', () => ({
   useUploadConfig: () => ({
     config: {
       defaultProvider: 'blossom',
-      vercelEnabled: true,
-      blossomEnabled: true
+      blossomEnabled: true,
+      blossomServers: ['https://blossom.primal.net'],
+      maxFileSize: 500 * 1024 * 1024
     }
   })
 }));
 
 describe('FileUploadWithProvider', () => {
   const mockOnFileSelect = vi.fn();
-  const mockOnProviderChange = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -25,7 +25,6 @@ describe('FileUploadWithProvider', () => {
     render(
       <FileUploadWithProvider
         onFileSelect={mockOnFileSelect}
-        onProviderChange={mockOnProviderChange}
       />
     );
 
@@ -33,23 +32,20 @@ describe('FileUploadWithProvider', () => {
     expect(screen.getByText('Click to select a file')).toBeInTheDocument();
   });
 
-  it('should show provider selection dropdown', () => {
+  it('should show blossom server info', () => {
     render(
       <FileUploadWithProvider
         onFileSelect={mockOnFileSelect}
-        onProviderChange={mockOnProviderChange}
-        showProviderSelection={true}
       />
     );
 
-    expect(screen.getByText('Blossom Servers')).toBeInTheDocument();
+    expect(screen.getByText('via Blossom Servers')).toBeInTheDocument();
   });
 
   it('should handle file selection', () => {
     render(
       <FileUploadWithProvider
         onFileSelect={mockOnFileSelect}
-        onProviderChange={mockOnProviderChange}
       />
     );
 
@@ -69,7 +65,6 @@ describe('FileUploadWithProvider', () => {
       <FileUploadWithProvider
         file={file}
         onFileSelect={mockOnFileSelect}
-        onProviderChange={mockOnProviderChange}
       />
     );
 
