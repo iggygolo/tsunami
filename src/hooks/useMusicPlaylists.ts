@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 import { validateMusicPlaylist, eventToMusicPlaylist, getEventIdentifier, deduplicateEventsByIdentifier } from '@/lib/eventConversions';
-import type { MusicPlaylistData } from '@/types/music';
 
 /**
  * Hook to fetch all music playlists from all artists
@@ -16,7 +16,6 @@ export function useMusicPlaylists(options: {
   artistPubkey?: string; // Optional: filter by specific artist
 } = {}) {
   const { nostr } = useNostr();
-  const defaultArtistPubkey = getArtistPubkeyHex();
 
   return useQuery({
     queryKey: ['multi-artist-music-playlists', options],
@@ -87,8 +86,8 @@ export function useMusicPlaylists(options: {
  */
 export function useMusicPlaylist(identifier: string, artistPubkey?: string) {
   const { nostr } = useNostr();
-  const defaultArtistPubkey = getArtistPubkeyHex();
-  const targetPubkey = artistPubkey || defaultArtistPubkey;
+  const { user } = useCurrentUser();
+  const targetPubkey = artistPubkey || user?.pubkey;
 
   return useQuery({
     queryKey: ['music-playlist', identifier, targetPubkey],
@@ -98,7 +97,7 @@ export function useMusicPlaylist(identifier: string, artistPubkey?: string) {
       // Query for specific music playlist by identifier from specific artist
       const events = await nostr.query([{
         kinds: [MUSIC_KINDS.MUSIC_PLAYLIST],
-        authors: [targetPubkey],
+        authors: targetPubkey ? [targetPubkey] : [],
         '#d': [identifier],
         limit: 10 // Get multiple versions to find the latest
       }], { signal });
@@ -117,7 +116,7 @@ export function useMusicPlaylist(identifier: string, artistPubkey?: string) {
 
       return eventToMusicPlaylist(latestEvent);
     },
-    enabled: !!identifier,
+    enabled: !!identifier && !!targetPubkey,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
   });

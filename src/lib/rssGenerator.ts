@@ -1,57 +1,36 @@
 import type { MusicTrackData, MusicPlaylistData } from '@/types/music';
-import { PLATFORM_CONFIG, getDefaultArtistConfig, type MusicConfig } from './musicConfig';
+import { PLATFORM_CONFIG } from './musicConfig';
 import { 
   generateRSSFeed as generateRSSFeedCore,
-  musicConfigToRSSConfig 
+  type ArtistInfo 
 } from './rssCore';
 
 /**
- * Browser-compatible RSS feed generation using the consolidated core
+ * Browser-compatible RSS feed generation using simplified parameters
  * Returns single RSS feed with multiple channels (one per release)
  */
-export function generateRSSFeed(tracks: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: MusicConfig): string {
-  // If no config provided, create a generic fallback config
-  let musicConfig = config;
-  if (!musicConfig) {
-    const defaultConfig = getDefaultArtistConfig();
-    musicConfig = {
-      artistNpub: "",
-      music: {
-        artistName: defaultConfig.artistName,
-        description: defaultConfig.description,
-        image: defaultConfig.image,
-        website: defaultConfig.website,
-        copyright: defaultConfig.copyright,
-        value: defaultConfig.value,
-        guid: "",
-        medium: defaultConfig.medium,
-        publisher: defaultConfig.artistName,
-        locked: {
-          owner: defaultConfig.artistName,
-          locked: true
-        },
-        location: undefined,
-        person: [
-          {
-            name: defaultConfig.artistName,
-            role: "artist",
-            group: "cast"
-          }
-        ],
-        license: defaultConfig.license,
-        txt: undefined,
-        remoteItem: undefined,
-        block: undefined,
-        newFeedUrl: undefined,
-      },
-      rss: {
-        ttl: PLATFORM_CONFIG.rss.ttl
-      }
-    };
-  }
+export function generateRSSFeed(
+  tracks: MusicTrackData[], 
+  releases: MusicPlaylistData[] = [], 
+  artistInfo?: ArtistInfo,
+  ttl?: number
+): string {
+  // If no artist info provided, create a minimal fallback
+  const fallbackArtistInfo: ArtistInfo = artistInfo || {
+    pubkey: '',
+    npub: '',
+    name: 'Unknown Artist',
+    metadata: {
+      artist: 'Unknown Artist',
+      description: 'Music by artist',
+      copyright: `© ${new Date().getFullYear()}`
+    }
+  };
+
+  // Use provided TTL or platform default
+  const rssTtl = ttl || PLATFORM_CONFIG.rss.ttl;
   
-  const rssConfig = musicConfigToRSSConfig(musicConfig);
-  return generateRSSFeedCore(tracks, releases, rssConfig);
+  return generateRSSFeedCore(tracks, releases, fallbackArtistInfo, rssTtl);
 }
 
 /**
@@ -66,7 +45,12 @@ export function useRSSFeed(tracks: MusicTrackData[] | undefined, releases: Music
  * Generate RSS feeds and store them
  * This function should be called when metadata or tracks are updated
  */
-export async function genRSSFeed(tracks?: MusicTrackData[], releases: MusicPlaylistData[] = [], config?: MusicConfig): Promise<void> {
+export async function genRSSFeed(
+  tracks?: MusicTrackData[], 
+  releases: MusicPlaylistData[] = [], 
+  artistInfo?: ArtistInfo,
+  ttl?: number
+): Promise<void> {
   try {
     // Fetch tracks if not provided
     if (!tracks) {
@@ -75,7 +59,7 @@ export async function genRSSFeed(tracks?: MusicTrackData[], releases: MusicPlayl
     }
 
     // Generate single RSS feed with multiple channels (one per release)
-    const rssContent = generateRSSFeed(tracks, releases, config);
+    const rssContent = generateRSSFeed(tracks, releases, artistInfo, ttl);
 
     // Store the RSS content in localStorage
     localStorage.setItem('rss-content', rssContent);

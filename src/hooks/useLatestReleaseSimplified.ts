@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import { 
   validateMusicPlaylist, 
   eventToMusicPlaylist, 
   playlistToRelease
 } from '@/lib/eventConversions';
-import { MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import type { MusicRelease, MusicTrackData } from '@/types/music';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -16,20 +17,26 @@ import type { NostrEvent } from '@nostrify/nostrify';
  */
 export function useLatestReleaseSimplified() {
   const { nostr } = useNostr();
+  const { user } = useCurrentUser();
 
   // Step 1: Fetch the latest playlist event from the artist
   const { data: latestPlaylistEvent, isLoading: isLoadingEvent } = useQuery<NostrEvent | null>({
-    queryKey: ['latest-playlist-event'],
+    queryKey: ['latest-playlist-event', user?.pubkey],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
-      const artistPubkey = getArtistPubkeyHex();
+      
+      // Use current user's pubkey only
+      if (!user?.pubkey) {
+        console.log('No user logged in');
+        return null;
+      }
 
-      console.log('Fetching latest playlist from artist:', artistPubkey.slice(0, 8) + '...');
+      console.log('Fetching latest playlist from artist:', user.pubkey.slice(0, 8) + '...');
 
       // Get the latest playlist from the artist
       const playlistEvents = await nostr.query([{
         kinds: [MUSIC_KINDS.MUSIC_PLAYLIST],
-        authors: [artistPubkey],
+        authors: [user.pubkey],
         limit: 1 // Only get the latest one
       }], { signal });
 

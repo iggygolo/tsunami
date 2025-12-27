@@ -1,10 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { extractZapAmount, validateZapEvent } from '@/lib/zapUtils';
 import { eventToMusicTrack, validateMusicTrack, getEventIdentifier, deduplicateEventsByIdentifier } from '@/lib/eventConversions';
-import type { NostrEvent } from '@nostrify/nostrify';
-import type { MusicTrackData } from '@/types/music';
 
 /**
  * Hook to fetch all music tracks from all artists or a specific artist
@@ -78,20 +76,22 @@ export function useMusicTracks(options: {
 /**
  * Hook to fetch a single music track by identifier from a specific artist
  */
-export function useMusicTrack(identifier: string, artistPubkey?: string) {
+export function useMusicTrack(identifier: string, artistPubkey: string) {
   const { nostr } = useNostr();
-  const defaultArtistPubkey = getArtistPubkeyHex();
-  const targetPubkey = artistPubkey || defaultArtistPubkey;
+
+  if (!artistPubkey) {
+    throw new Error('Artist pubkey is required for useMusicTrack');
+  }
 
   return useQuery({
-    queryKey: ['music-track', identifier, targetPubkey],
+    queryKey: ['music-track', identifier, artistPubkey],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(5000)]);
 
       // Query for specific music track by identifier from specific artist
       const events = await nostr.query([{
         kinds: [MUSIC_KINDS.MUSIC_TRACK],
-        authors: [targetPubkey],
+        authors: [artistPubkey],
         '#d': [identifier],
         limit: 10 // Get multiple versions to find the latest
       }], { signal });

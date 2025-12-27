@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import type { ZapLeaderboardEntry } from '@/types/music';
-import { getArtistPubkeyHex } from '@/lib/musicConfig';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { extractZapAmount, extractZapperPubkey, validateZapEvent, extractZappedEventId } from '@/lib/zapUtils';
 
 /**
@@ -9,9 +9,10 @@ import { extractZapAmount, extractZapperPubkey, validateZapEvent, extractZappedE
  */
 export function useZapLeaderboard(limit: number = 10, eventId?: string) {
   const { nostr } = useNostr();
+  const { user } = useCurrentUser();
 
   return useQuery({
-    queryKey: ['zap-leaderboard', limit, eventId],
+    queryKey: ['zap-leaderboard', limit, eventId, user?.pubkey],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
       
@@ -25,8 +26,13 @@ export function useZapLeaderboard(limit: number = 10, eventId?: string) {
         // Track-specific: zaps that reference this specific event
         filter['#e'] = [eventId];
       } else {
-        // Podcast-wide: zaps to the artist
-        filter['#p'] = [getArtistPubkeyHex()];
+        // Podcast-wide: zaps to the artist (use current user only)
+        if (user?.pubkey) {
+          filter['#p'] = [user.pubkey];
+        } else {
+          // No user available, return empty results
+          return [];
+        }
       }
 
       const zapEvents = await nostr.query([filter], { signal });
@@ -94,16 +100,21 @@ export function useZapLeaderboard(limit: number = 10, eventId?: string) {
  */
 export function useRecentZapActivity(limit: number = 20) {
   const { nostr } = useNostr();
+  const { user } = useCurrentUser();
 
   return useQuery({
-    queryKey: ['recent-zap-activity', limit],
+    queryKey: ['recent-zap-activity', limit, user?.pubkey],
     queryFn: async (context) => {
+      if (!user?.pubkey) {
+        return [];
+      }
+
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
       
       // Get recent zap events
       const zapEvents = await nostr.query([{
         kinds: [9735],
-        '#p': [getArtistPubkeyHex()],
+        '#p': [user.pubkey],
         limit: limit
       }], { signal });
 

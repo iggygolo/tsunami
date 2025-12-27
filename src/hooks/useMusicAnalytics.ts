@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { MUSIC_KINDS, getArtistPubkeyHex } from '@/lib/musicConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useReleases } from '@/hooks/useReleases';
 import type { MusicRelease } from '@/types/music';
 
@@ -38,16 +39,29 @@ interface MusicAnalytics {
  */
 export function useMusicAnalytics() {
   const { nostr } = useNostr();
-  const artistPubkeyHex = getArtistPubkeyHex();
+  const { user } = useCurrentUser();
   const { data: releases, isLoading: isLoadingReleases } = useReleases();
 
   return useQuery<MusicAnalytics>({
-    queryKey: ['music-analytics', artistPubkeyHex, releases?.length],
+    queryKey: ['music-analytics', user?.pubkey, releases?.length],
     queryFn: async (context) => {
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
+      
+      if (!user?.pubkey) {
+        console.log('📊 Analytics - No user logged in, returning empty analytics');
+        return {
+          totalReleases: 0,
+          totalZaps: 0,
+          totalComments: 0,
+          totalLikes: 0,
+          topReleases: [],
+          recentActivity: [],
+          engagementOverTime: [],
+        };
+      }
 
       console.log('🔍 Analytics - Starting analytics fetch:', {
-        artistPubkey: artistPubkeyHex.slice(0, 8) + '...',
+        artistPubkey: user.pubkey.slice(0, 8) + '...',
         releasesCount: releases?.length || 0,
         releases: releases?.map(r => ({ title: r.title, eventId: r.eventId })) || []
       });

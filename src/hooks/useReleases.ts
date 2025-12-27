@@ -2,7 +2,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
 import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import type { MusicRelease, ReleaseSearchOptions, MusicTrackData } from '@/types/music';
-import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import {
   validateMusicTrack,
   validateMusicPlaylist,

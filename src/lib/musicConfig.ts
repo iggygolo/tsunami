@@ -7,6 +7,8 @@ import { nip19 } from 'nostr-tools';
  */
 
 /**
+
+/**
  * Default Blossom servers for file uploads
  */
 export const DEFAULT_BLOSSOM_SERVERS = [
@@ -92,43 +94,6 @@ export const PLATFORM_CONFIG: PlatformConfig = {
 };
 
 /**
- * Legacy MUSIC_CONFIG for backward compatibility
- * This maintains the same interface but uses empty defaults for multi-artist platform
- * @deprecated Use PLATFORM_CONFIG instead for new code
- */
-export const MUSIC_CONFIG = {
-  // No longer uses a specific artist - this is just for backward compatibility
-  artistNpub: "", // Empty - no default artist in multi-artist platform
-
-  music: {
-    artistName: '', // Empty - should be set per artist
-    description: '', // Empty - should be set per artist
-    image: PLATFORM_CONFIG.defaults.image,
-    website: PLATFORM_CONFIG.defaults.website,
-    copyright: PLATFORM_CONFIG.defaults.copyright, // Just year, no artist name
-    value: PLATFORM_CONFIG.defaults.value,
-    guid: "", // No default GUID - should be set per artist
-    medium: PLATFORM_CONFIG.defaults.medium,
-    publisher: '', // Empty - should be set per artist
-    locked: {
-      owner: '', // Empty - should be set per artist
-      locked: true
-    },
-    location: undefined,
-    person: [], // Empty array - should be populated per artist
-    license: PLATFORM_CONFIG.defaults.license,
-    txt: undefined,
-    remoteItem: undefined,
-    block: undefined,
-    newFeedUrl: undefined,
-  },
-
-  rss: {
-    ttl: PLATFORM_CONFIG.rss.ttl
-  }
-};
-
-/**
  * Nostr event kinds used by Tsunami
  */
 export const MUSIC_KINDS = {
@@ -147,19 +112,8 @@ export const MUSIC_KINDS = {
 } as const;
 
 /**
- * Get the artist's pubkey in hex format (for Nostr queries)
- * @deprecated This function is for backward compatibility only
- * In multi-artist platform, use the specific artist's pubkey instead
- */
-export function getArtistPubkeyHex(): string {
-  console.warn('getArtistPubkeyHex() is deprecated in multi-artist platform. Use specific artist pubkey instead.');
-  return ""; // No default artist in multi-artist platform
-}
-
-/**
- * Check if a pubkey is the music artist
- * @deprecated This function is for backward compatibility only
- * In multi-artist platform, any logged-in user can be an artist
+ * Check if a user can act as an artist (any authenticated user can be an artist)
+ * In multi-artist platform, any logged-in user can create and manage music content
  */
 export function isArtist(pubkey: string): boolean {
   // In multi-artist platform, any user with a valid pubkey can be an artist

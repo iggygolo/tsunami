@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, ReactNode, createContext, useContext } from 'react';
-import { MUSIC_CONFIG } from '@/lib/musicConfig';
 import type { MusicTrackData } from '@/types/music';
 
 /**

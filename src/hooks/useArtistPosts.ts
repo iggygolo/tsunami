@@ -1,19 +1,24 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { getArtistPubkeyHex } from '@/lib/musicConfig';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 /**
  * Hook to fetch an artist's social posts (kind 1 text notes) with infinite scroll
- * @param artistPubkey - Artist pubkey (hex format). If not provided, uses configured artist
+ * @param artistPubkey - Artist pubkey (hex format). If not provided, uses current user
  * @param limit - Number of posts per page
  */
 export function useArtistPosts(limit: number = 20, artistPubkey?: string) {
   const { nostr } = useNostr();
-  const targetArtist = artistPubkey || getArtistPubkeyHex();
+  const { user } = useCurrentUser();
+  const targetArtist = artistPubkey || user?.pubkey;
 
   return useInfiniteQuery({
     queryKey: ['artist-posts', targetArtist],
     queryFn: async ({ pageParam }) => {
+      if (!targetArtist) {
+        return [];
+      }
+
       const signal = AbortSignal.any([AbortSignal.timeout(10000)]);
 
       // Query for text notes (kind 1) from the artist
@@ -59,15 +64,20 @@ export function useArtistPosts(limit: number = 20, artistPubkey?: string) {
 
 /**
  * Hook to get the total count of an artist's posts (kind 1 text notes)
- * @param artistPubkey - Artist pubkey (hex format). If not provided, uses configured artist
+ * @param artistPubkey - Artist pubkey (hex format). If not provided, uses current user
  */
 export function useArtistPostCount(artistPubkey?: string) {
   const { nostr } = useNostr();
-  const targetArtist = artistPubkey || getArtistPubkeyHex();
+  const { user } = useCurrentUser();
+  const targetArtist = artistPubkey || user?.pubkey;
 
   return useQuery({
     queryKey: ['artist-post-count', targetArtist],
     queryFn: async (context) => {
+      if (!targetArtist) {
+        return 0;
+      }
+
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
       // Query for all text notes from the artist
@@ -90,16 +100,21 @@ export function useArtistPostCount(artistPubkey?: string) {
 
 /**
  * Hook to fetch an artist's reposts (kind 6 and 16)
- * @param artistPubkey - Artist pubkey (hex format). If not provided, uses configured artist
+ * @param artistPubkey - Artist pubkey (hex format). If not provided, uses current user
  * @param limit - Number of reposts to fetch
  */
 export function useArtistReposts(limit: number = 50, artistPubkey?: string) {
   const { nostr } = useNostr();
-  const targetArtist = artistPubkey || getArtistPubkeyHex();
+  const { user } = useCurrentUser();
+  const targetArtist = artistPubkey || user?.pubkey;
 
   return useQuery({
     queryKey: ['artist-reposts', targetArtist, limit],
     queryFn: async (context) => {
+      if (!targetArtist) {
+        return [];
+      }
+
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
       // Query for both legacy (kind 6) and generic (kind 16) reposts from the artist
@@ -117,16 +132,21 @@ export function useArtistReposts(limit: number = 50, artistPubkey?: string) {
 
 /**
  * Hook to fetch artist's social activity (posts + reposts combined)
- * @param artistPubkey - Artist pubkey (hex format). If not provided, uses configured artist
+ * @param artistPubkey - Artist pubkey (hex format). If not provided, uses current user
  * @param limit - Number of activity items to fetch
  */
 export function useArtistActivity(limit: number = 50, artistPubkey?: string) {
   const { nostr } = useNostr();
-  const targetArtist = artistPubkey || getArtistPubkeyHex();
+  const { user } = useCurrentUser();
+  const targetArtist = artistPubkey || user?.pubkey;
 
   return useQuery({
     queryKey: ['artist-activity', targetArtist, limit],
     queryFn: async (context) => {
+      if (!targetArtist) {
+        return [];
+      }
+
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
       // Query for multiple kinds from the artist
@@ -147,16 +167,21 @@ export function useArtistActivity(limit: number = 50, artistPubkey?: string) {
 
 /**
  * Hook to fetch replies to an artist's posts (excluding artist's own replies)
- * @param artistPubkey - Artist pubkey (hex format). If not provided, uses configured artist
+ * @param artistPubkey - Artist pubkey (hex format). If not provided, uses current user
  * @param limit - Number of replies to fetch
  */
 export function useRepliesToArtist(limit: number = 50, artistPubkey?: string) {
   const { nostr } = useNostr();
-  const targetArtist = artistPubkey || getArtistPubkeyHex();
+  const { user } = useCurrentUser();
+  const targetArtist = artistPubkey || user?.pubkey;
 
   return useQuery({
     queryKey: ['replies-to-artist', targetArtist, limit],
     queryFn: async (context) => {
+      if (!targetArtist) {
+        return [];
+      }
+
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
       // First get artist's posts to find their event IDs
@@ -192,16 +217,21 @@ export function useRepliesToArtist(limit: number = 50, artistPubkey?: string) {
 
 /**
  * Hook to fetch artist's replies and the original notes they replied to with infinite scroll
- * @param artistPubkey - Artist pubkey (hex format). If not provided, uses configured artist
+ * @param artistPubkey - Artist pubkey (hex format). If not provided, uses current user
  * @param limit - Number of replies per page
  */
 export function useArtistRepliesWithContext(limit: number = 20, artistPubkey?: string) {
   const { nostr } = useNostr();
-  const targetArtist = artistPubkey || getArtistPubkeyHex();
+  const { user } = useCurrentUser();
+  const targetArtist = artistPubkey || user?.pubkey;
 
   return useInfiniteQuery({
     queryKey: ['artist-replies-with-context', targetArtist],
     queryFn: async ({ pageParam }) => {
+      if (!targetArtist) {
+        return [];
+      }
+
       const signal = AbortSignal.any([AbortSignal.timeout(10000)]);
 
       // Get artist's replies (posts that have 'e' tags - indicating they're replies)
@@ -294,16 +324,21 @@ export function useArtistRepliesWithContext(limit: number = 20, artistPubkey?: s
 
 /**
  * Hook to fetch artist's notes only (no reposts)
- * @param artistPubkey - Artist pubkey (hex format). If not provided, uses configured artist
+ * @param artistPubkey - Artist pubkey (hex format). If not provided, uses current user
  * @param limit - Number of notes to fetch
  */
 export function useArtistNotes(limit: number = 50, artistPubkey?: string) {
   const { nostr } = useNostr();
-  const targetArtist = artistPubkey || getArtistPubkeyHex();
+  const { user } = useCurrentUser();
+  const targetArtist = artistPubkey || user?.pubkey;
 
   return useQuery({
     queryKey: ['artist-notes', targetArtist, limit],
     queryFn: async (context) => {
+      if (!targetArtist) {
+        return [];
+      }
+
       const signal = AbortSignal.any([context.signal, AbortSignal.timeout(10000)]);
 
       // Query for text notes only from the artist
@@ -322,7 +357,7 @@ export function useArtistNotes(limit: number = 50, artistPubkey?: string) {
 /**
  * Hook for Replies tab - shows only artist's replies with original context (Twitter style)
  * Each reply shows: Original note + Artist's reply
- * @param artistPubkey - Artist pubkey (hex format). If not provided, uses configured artist
+ * @param artistPubkey - Artist pubkey (hex format). If not provided, uses current user
  * @param limit - Number of replies to fetch
  */
 export function useArtistRepliesTab(limit: number = 50, artistPubkey?: string) {

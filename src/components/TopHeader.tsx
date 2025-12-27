@@ -8,7 +8,6 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { cn } from '@/lib/utils';
 import { MobileSidebar } from '@/components/MobileSidebar';
 
@@ -17,7 +16,6 @@ interface TopHeaderProps {
 }
 
 export function TopHeader({ className }: TopHeaderProps) {
-  const musicConfig = useMusicConfig();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -44,7 +42,7 @@ export function TopHeader({ className }: TopHeaderProps) {
             <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
               <Headphones className="w-7 h-7 text-primary" />
               <h1 className="text-xl font-bold gradient-text truncate">
-                {musicConfig.music.artistName}
+                Tsunami
               </h1>
             </Link>
           </div>

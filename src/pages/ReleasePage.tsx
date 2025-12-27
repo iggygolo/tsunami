@@ -17,7 +17,6 @@ import { usePlaylistTrackResolution } from '@/hooks/usePlaylistTrackResolution';
 import { useReleaseInteractions } from '@/hooks/useReleaseInteractions';
 import { useFormatDuration } from '@/hooks/useFormatDuration';
 import { useUniversalTrackPlayback } from '@/hooks/useUniversalTrackPlayback';
-import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { eventToMusicPlaylist, playlistToRelease } from '@/lib/eventConversions';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { nip19 } from 'nostr-tools';
@@ -27,7 +26,6 @@ import type { NostrEvent } from '@nostrify/nostrify';
 export function ReleasePage() {
   const params = useParams<{ naddr: string }>();
   const navigate = useNavigate();
-  const musicConfig = useMusicConfig();
   const { formatDuration } = useFormatDuration();
   const [activeTab, setActiveTab] = useState('tracks');
 
@@ -119,8 +117,8 @@ export function ReleasePage() {
   // Update document title when release loads
   useSeoMeta({
     title: release 
-      ? `${release.title} | ${release.artistName || musicConfig.music.artistName}`
-      : `Release | ${musicConfig.music.artistName}`,
+      ? `${release.title} | ${release.artistName || 'Unknown Artist'} | Tsunami`
+      : `Release | Tsunami`,
   });
 
   // Loading state
@@ -278,7 +276,7 @@ export function ReleasePage() {
           <MusicItemHeader
             title={release.title}
             artistPubkey={release.artistPubkey}
-            artistName={musicConfig.music.artistName}
+            artistName={release.artistName || 'Unknown Artist'}
             description={release.description}
             imageUrl={release.imageUrl}
             genres={release.tags}

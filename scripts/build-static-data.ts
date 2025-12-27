@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { config } from 'dotenv';
 import { fetchNostrDataBundle } from './shared/nostr-data-fetcher.js';
-import { generateRSSFeed, type RSSConfig } from '../src/lib/rssCore.js';
+import { generateRSSFeed, type ArtistInfo } from '../src/lib/rssCore.js';
 import { playlistToRelease } from '../src/lib/eventConversions.js';
 import type { MusicRelease, MusicTrackData, MusicPlaylistData } from '../src/types/music.js';
 import type { SimpleArtistInfo } from '../src/lib/artistUtils.js';
@@ -44,39 +44,10 @@ interface SingleReleaseCache {
 }
 
 /**
- * Create a Node.js compatible config using platform defaults
- * No longer depends on environment variables or specific artists
+ * Create a Node.js compatible TTL setting
  */
-function createNodejsConfig(): RSSConfig {
-  // Use empty platform defaults for multi-artist platform
-  return {
-    artistNpub: "", // No default artist in multi-artist platform
-    music: {
-      description: "",
-      artistName: "",
-      image: "",
-      website: "",
-      copyright: `© ${new Date().getFullYear()}`,
-      value: {
-        amount: 100,
-        currency: "sats",
-        recipients: []
-      },
-      // Podcasting 2.0 fields
-      guid: "", // No default GUID in multi-artist platform
-      medium: "music",
-      publisher: "",
-      location: undefined,
-      person: [], // Empty array - should be populated per artist
-      license: {
-        identifier: "All Rights Reserved",
-        url: ""
-      }
-    },
-    rss: {
-      ttl: 60
-    }
-  };
+function getDefaultTTL(): number {
+  return 60; // RSS cache time in minutes
 }
 
 /**
@@ -168,7 +139,7 @@ async function generateArtistRSSFeeds(
   playlists: MusicPlaylistData[], 
   allArtistMetadata: Map<string, Record<string, unknown>>,
   artists: SimpleArtistInfo[],
-  baseConfig: RSSConfig,
+  ttl: number,
   distDir: string
 ): Promise<void> {
   console.log('📝 Generating individual artist RSS feeds...');
@@ -201,24 +172,17 @@ async function generateArtistRSSFeeds(
     }
 
     try {
-      // Create artist-specific config
-      const artistConfig: RSSConfig = {
-        ...baseConfig,
-        artistNpub: artist.npub,
-        music: {
-          ...baseConfig.music,
-          // Override with artist's metadata, ensuring type safety
-          artistName: (artistMetadata?.artist as string) || artist.name || baseConfig.music.artistName,
-          description: (artistMetadata?.description as string) || baseConfig.music.description,
-          image: (artistMetadata?.image as string) || baseConfig.music.image,
-          website: (artistMetadata?.website as string) || baseConfig.music.website,
-          copyright: (artistMetadata?.copyright as string) || baseConfig.music.copyright,
-        }
+      // Prepare artist metadata for RSS generation
+      const artistInfo = {
+        pubkey: artist.pubkey,
+        npub: artist.npub,
+        name: artist.name,
+        metadata: artistMetadata as any // Cast to avoid type issues during refactor
       };
 
       // Generate RSS content with validation
       console.log(`🔄 Generating RSS for ${artist.name || artist.npub.slice(0, 12) + '...'}`);
-      const rssContent = generateRSSFeed(artistTracks, artistPlaylists, artistConfig);
+      const rssContent = generateRSSFeed(artistTracks, artistPlaylists, artistInfo, ttl);
 
       // Additional validation before saving
       if (!rssContent || rssContent.trim().length === 0) {
@@ -255,19 +219,19 @@ async function generateArtistRSSFeeds(
       try {
         console.log(`🔄 Attempting fallback RSS generation for ${artistName}...`);
         
-        const fallbackConfig: RSSConfig = {
-          ...baseConfig,
-          artistNpub: artist.npub,
-          music: {
-            ...baseConfig.music,
-            artistName: artist.name || 'Artist',
+        const fallbackArtistInfo = {
+          pubkey: artist.pubkey,
+          npub: artist.npub,
+          name: artist.name || 'Artist',
+          metadata: {
+            artist: artist.name || 'Artist',
             description: 'Music by artist',
             copyright: '© Artist',
           }
         };
 
         // Generate minimal RSS with empty content
-        const fallbackRss = generateRSSFeed([], [], fallbackConfig);
+        const fallbackRss = generateRSSFeed([], [], fallbackArtistInfo, ttl);
         
         const rssFileName = `${artist.pubkey}.xml`;
         const rssPath = path.join(rssDir, rssFileName);
@@ -513,27 +477,12 @@ export async function buildStaticData(): Promise<void> {
   try {
     console.log('🏗️  Building static data (RSS + Cache)...');
 
-    // Get base configuration
-    const baseConfig = createNodejsConfig();
+    // Get default TTL
+    const defaultTTL = getDefaultTTL();
     console.log(`👤 Multi-artist platform - no single configured artist`);
 
     // Fetch all data from Nostr relays (single fetch)
     const dataBundle = await fetchNostrDataBundle();
-
-    // Merge Nostr metadata with base config (Nostr data takes precedence)
-    let finalConfig = baseConfig;
-    if (dataBundle.metadata) {
-      finalConfig = {
-        ...baseConfig,
-        music: {
-          ...baseConfig.music,
-          ...dataBundle.metadata
-        }
-      };
-      console.log('🎯 Using podcast metadata from Nostr');
-    } else {
-      console.log('📄 Using podcast metadata from .env file');
-    }
 
     // Convert playlists to releases for cache
     const releases = convertToReleases(dataBundle.playlists, dataBundle.tracks);
@@ -545,7 +494,7 @@ export async function buildStaticData(): Promise<void> {
     // Generate all outputs in parallel with error handling
     console.log('📝 Generating all outputs...');
     const buildPromises = [
-      generateArtistRSSFeeds(dataBundle.tracks, dataBundle.playlists, dataBundle.allArtistMetadata, dataBundle.artists, finalConfig, distDir)
+      generateArtistRSSFeeds(dataBundle.tracks, dataBundle.playlists, dataBundle.allArtistMetadata, dataBundle.artists, defaultTTL, distDir)
         .catch(error => {
           console.error('❌ RSS feeds generation failed:', error);
           // Don't throw - continue with other builds

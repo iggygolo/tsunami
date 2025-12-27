@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { getArtistPubkeyHex, MUSIC_KINDS } from '@/lib/musicConfig';
+import { MUSIC_KINDS } from '@/lib/musicConfig';
 import { genRSSFeed } from '@/lib/rssGenerator';
+import { useArtistMetadata } from '@/hooks/useArtistMetadata';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import {
   validateMusicTrack,
   validateMusicPlaylist,
@@ -17,23 +19,27 @@ import {
  */
 export function useRSSFeedGenerator() {
   const { nostr } = useNostr();
+  const { user } = useCurrentUser();
+  const { data: artistMetadata } = useArtistMetadata(user?.pubkey);
 
   return useQuery({
-    queryKey: ['rss-feed-generator'],
+    queryKey: ['rss-feed-generator', user?.pubkey],
     queryFn: async () => {
-      try {
-        const artistPubkey = getArtistPubkeyHex();
+      if (!user?.pubkey) {
+        throw new Error('User must be logged in to generate RSS feed');
+      }
 
+      try {
         // Fetch both music tracks (36787) and playlists (34139)
         const [trackEvents, playlistEvents] = await Promise.all([
           nostr.query([{
             kinds: [MUSIC_KINDS.MUSIC_TRACK],
-            authors: [artistPubkey],
+            authors: [user.pubkey],
             limit: 1000,
           }]),
           nostr.query([{
             kinds: [MUSIC_KINDS.MUSIC_PLAYLIST],
-            authors: [artistPubkey],
+            authors: [user.pubkey],
             limit: 100,
           }])
         ]);
@@ -64,8 +70,16 @@ export function useRSSFeedGenerator() {
           return dateB - dateA;
         });
 
+        // Prepare artist info for RSS generation
+        const artistInfo = {
+          pubkey: user.pubkey,
+          npub: '', // We don't have npub here, but it's not critical for RSS generation
+          name: artistMetadata?.artist,
+          metadata: artistMetadata
+        };
+
         // Generate RSS feed with multiple channels (one per release)
-        await genRSSFeed(tracks, playlists);
+        await genRSSFeed(tracks, playlists, artistInfo);
 
         return {
           tracks,
@@ -82,5 +96,6 @@ export function useRSSFeedGenerator() {
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    enabled: !!user?.pubkey, // Only run if user is logged in
   });
 }

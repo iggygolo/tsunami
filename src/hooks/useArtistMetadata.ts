@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNostr } from '@nostrify/react';
-import { MUSIC_CONFIG, MUSIC_KINDS, PLATFORM_CONFIG, getDefaultArtistConfig } from '@/lib/musicConfig';
+import { MUSIC_KINDS, PLATFORM_CONFIG, getDefaultArtistConfig } from '@/lib/musicConfig';
 
 interface ArtistMetadata {
   artist: string;

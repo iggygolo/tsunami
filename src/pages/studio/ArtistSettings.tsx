@@ -11,7 +11,6 @@ import { RecipientList } from '@/components/RecipientList';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { useArtistMetadata } from '@/hooks/useArtistMetadata';
-import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { useRSSFeedGenerator } from '@/hooks/useRSSFeedGenerator';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { MUSIC_KINDS, PLATFORM_CONFIG } from '@/lib/musicConfig';
@@ -65,7 +64,6 @@ const ArtistSettings = () => {
   const { toast } = useToast();
   const { user, name, picture, website } = useCurrentUser();
   const { data: artistMetadata, isLoading: isLoadingMetadata } = useArtistMetadata(user?.pubkey);
-  const musicConfig = useMusicConfig();
   const { refetch: refetchRSSFeed } = useRSSFeedGenerator();
 
   // Redirect if not authenticated
@@ -288,8 +286,21 @@ const ArtistSettings = () => {
 
       // Update RSS feed with the new configuration (non-blocking)
       try {
+        // Create simplified RSS config from current user's artist metadata
+        const rssConfig = artistMetadata ? {
+          artistName: artistMetadata.artist,
+          description: artistMetadata.description || '',
+          image: artistMetadata.image,
+          website: artistMetadata.website,
+          copyright: artistMetadata.copyright,
+          publisher: artistMetadata.publisher || artistMetadata.artist,
+          medium: artistMetadata.medium || PLATFORM_CONFIG.defaults.medium,
+          license: artistMetadata.license || PLATFORM_CONFIG.defaults.license,
+          ttl: PLATFORM_CONFIG.rss.ttl
+        } : undefined;
+
         await Promise.race([
-          genRSSFeed(undefined, [], musicConfig),
+          genRSSFeed(undefined, [], rssConfig),
           new Promise((_, reject) => setTimeout(() => reject(new Error('RSS generation timeout')), 5000))
         ]);
         console.log('RSS feed updated successfully');

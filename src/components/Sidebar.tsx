@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useMusicConfig } from '@/hooks/useMusicConfig';
 import { isArtist } from '@/lib/musicConfig';
 import { getAllNavItems, getArtistNavItems } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
@@ -14,7 +13,6 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const location = useLocation();
   const { user } = useCurrentUser();
-  const musicConfig = useMusicConfig();
   const isArtist_user = user && isArtist(user.pubkey);
 
   const isActive = (path: string) => {
@@ -40,7 +38,7 @@ export function Sidebar({ className }: SidebarProps) {
             <Headphones className="w-9 h-9 text-primary group-hover:scale-110 transition-transform duration-200" />
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full animate-pulse-slow"></div>
           </div>
-          <h1 className="text-xl font-bold gradient-text truncate">{musicConfig.music.artistName}</h1>
+          <h1 className="text-xl font-bold gradient-text truncate">Tsunami</h1>
         </Link>
       </div>
 
