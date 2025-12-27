@@ -5,10 +5,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ZapDialog } from '@/components/ZapDialog';
 import { useTrendingTracks } from '@/hooks/useTrendingTracks';
+import { useStaticTrendingTracksCache } from '@/hooks/useStaticTrendingTracksCache';
 import { useTrackInteractions } from '@/hooks/useTrackInteractions';
 import { useUniversalAudioPlayer, musicTrackToUniversal } from '@/contexts/UniversalAudioPlayerContext';
 import { generateTrackLink } from '@/lib/nip19Utils';
 import { MUSIC_KINDS } from '@/lib/musicConfig';
+import { TRENDING_CONFIG } from '@/lib/trendingAlgorithm';
 import { cn } from '@/lib/utils';
 import type { NostrEvent } from '@nostrify/nostrify';
 
@@ -16,6 +18,7 @@ interface TrendingTracksSectionProps {
   limit?: number;
   excludeTrackIds?: string[];
   className?: string;
+  useCache?: boolean; // Enable cache usage for better performance
 }
 
 interface TrendingTrackCardProps {
@@ -216,13 +219,35 @@ function TrendingTrackCard({
 }
 
 export function TrendingTracksSection({ 
-  limit = 8, 
+  limit = TRENDING_CONFIG.DEFAULT_LIMIT, // Use consistent default limit
   excludeTrackIds,
-  className 
+  className,
+  useCache = false
 }: TrendingTracksSectionProps) {
-  const { data: trendingTracks, isLoading, error } = useTrendingTracks({
+  // Use cached data when enabled
+  const { data: cachedTrendingTracks, isLoading: isCacheLoading, isStale } = useStaticTrendingTracksCache({
     limit,
     excludeTrackIds
+  });
+
+  // Fallback to live data when cache is disabled or unavailable
+  const { data: liveTrendingTracks, isLoading: isLiveLoading, error } = useTrendingTracks({
+    limit,
+    excludeTrackIds,
+    enabled: !useCache || !cachedTrendingTracks
+  });
+
+  // Determine which data to use
+  const trendingTracks = useCache && cachedTrendingTracks ? cachedTrendingTracks : liveTrendingTracks;
+  const isLoading = useCache ? isCacheLoading : isLiveLoading;
+
+  // Log data source for debugging
+  console.log('🎵 Trending tracks data source:', {
+    usingCache: useCache && !!cachedTrendingTracks,
+    isStale,
+    cachedCount: cachedTrendingTracks?.length || 0,
+    liveCount: liveTrendingTracks?.length || 0,
+    finalCount: trendingTracks?.length || 0
   });
 
   const { playQueue, play, pause, state } = useUniversalAudioPlayer();

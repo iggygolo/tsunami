@@ -6,6 +6,7 @@ import { generateRSSFeed, type ArtistInfo } from '../src/lib/rssCore.js';
 import { playlistToRelease } from '../src/lib/eventConversions.js';
 import type { MusicRelease, MusicTrackData, MusicPlaylistData } from '../src/types/music.js';
 import type { SimpleArtistInfo } from '../src/lib/artistUtils.js';
+import { processTrendingTracks, TRENDING_CONFIG } from '../src/lib/trendingAlgorithm.js';
 
 // Load environment variables
 config();
@@ -29,6 +30,24 @@ interface LatestReleaseCache {
     dataSource: 'nostr' | 'fallback';
     relaysUsed: string[];
     cacheVersion: string;
+  };
+}
+
+interface TrendingTracksCache {
+  tracks: any[]; // TrendingTrackResult[]
+  metadata: {
+    generatedAt: string;
+    totalCount: number;
+    dataSource: 'nostr' | 'fallback';
+    relaysUsed: string[];
+    cacheVersion: string;
+    algorithm: {
+      zapAmountWeight: number;
+      zapCountWeight: number;
+      recencyWeight: number;
+      maxPerArtist: number;
+      defaultLimit: number;
+    };
   };
 }
 
@@ -66,6 +85,86 @@ async function writeToMultipleDirectories(
 
   const writtenPaths = await Promise.all(writePromises);
   console.log(`📄 Written to: ${writtenPaths.join(', ')}`);
+}
+
+/**
+ * Calculate trending score for a track (matches client-side algorithm)
+ */
+function calculateTrendingScore(track: MusicTrackData): number {
+  const zapAmount = track.totalSats || 0;
+  const zapCount = track.zapCount || 0;
+  const createdAt = track.createdAt;
+
+  // Calculate recency score (0-1, where 1 is most recent)
+  const recencyScore = getRecencyScore(createdAt);
+
+  // Apply weights: 60% zap amounts, 25% zap count, 15% recency
+  const zapAmountScore = Math.log(zapAmount + 1) * 0.6;
+  const zapCountScore = Math.log(zapCount + 1) * 0.25;
+  const recencyWeightedScore = recencyScore * 0.15;
+
+  return zapAmountScore + zapCountScore + recencyWeightedScore;
+}
+
+/**
+ * Calculate recency score based on publication date
+ */
+function getRecencyScore(createdAt?: Date): number {
+  if (!createdAt) return 0;
+
+  const now = new Date();
+  const daysSincePublish = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+  
+  // Score decreases linearly over 7 days, then becomes 0
+  return Math.max(0, (7 - daysSincePublish) / 7);
+}
+
+/**
+ * Apply artist diversity filter (max 2 tracks per artist)
+ */
+function applyDiversityFilter<T extends { track: MusicTrackData; trendingScore: number }>(
+  tracks: T[], 
+  maxPerArtist: number = 2
+): T[] {
+  const artistTrackCount = new Map<string, number>();
+  const filteredTracks: T[] = [];
+
+  // Sort by trending score first to prioritize best tracks
+  const sortedTracks = [...tracks].sort((a, b) => b.trendingScore - a.trendingScore);
+
+  for (const trackResult of sortedTracks) {
+    const artistPubkey = trackResult.track.artistPubkey || '';
+    const currentCount = artistTrackCount.get(artistPubkey) || 0;
+
+    if (currentCount < maxPerArtist) {
+      filteredTracks.push(trackResult);
+      artistTrackCount.set(artistPubkey, currentCount + 1);
+    }
+  }
+
+  return filteredTracks;
+}
+
+/**
+ * Sort tracks by trending score or fallback to date sorting
+ */
+function sortByTrendingScore<T extends { 
+  track: MusicTrackData; 
+  trendingScore: number; 
+  zapCount: number; 
+  totalSats: number; 
+}>(tracks: T[]): T[] {
+  return [...tracks].sort((a, b) => {
+    // If both have no engagement, sort by date (newest first)
+    if (a.zapCount === 0 && a.totalSats === 0 && b.zapCount === 0 && b.totalSats === 0) {
+      const aTime = a.track.createdAt?.getTime() || 0;
+      const bTime = b.track.createdAt?.getTime() || 0;
+      return bTime - aTime; // Newest first
+    }
+
+    // Otherwise sort by trending score (highest first)
+    return b.trendingScore - a.trendingScore;
+  });
 }
 
 /**
@@ -411,6 +510,77 @@ async function generateLatestReleaseCache(
 }
 
 /**
+ * Generate trending-tracks.json cache file
+ */
+async function generateTrendingTracksCache(
+  tracks: MusicTrackData[], 
+  relayUrls: string[], 
+  distDir: string
+): Promise<void> {
+  console.log('📝 Generating trending tracks cache...');
+
+  try {
+    // Use the shared trending algorithm for consistency
+    const cachedTracks = processTrendingTracks(tracks, {
+      limit: TRENDING_CONFIG.DEFAULT_LIMIT, // Use same limit as live component
+      excludeTrackIds: [], // No exclusions for cache generation
+      maxPerArtist: TRENDING_CONFIG.MAX_PER_ARTIST
+    });
+
+    console.log(`📈 Trending tracks: ${tracks.length} total → ${cachedTracks.length} cached (using shared algorithm)`);
+
+    const cache: TrendingTracksCache = {
+      tracks: cachedTracks,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        totalCount: cachedTracks.length,
+        dataSource: tracks.length > 0 ? 'nostr' : 'fallback',
+        relaysUsed: relayUrls,
+        cacheVersion: '1.0.0',
+        algorithm: {
+          zapAmountWeight: TRENDING_CONFIG.WEIGHTS.ZAP_AMOUNT,
+          zapCountWeight: TRENDING_CONFIG.WEIGHTS.ZAP_COUNT,
+          recencyWeight: TRENDING_CONFIG.WEIGHTS.RECENCY,
+          maxPerArtist: TRENDING_CONFIG.MAX_PER_ARTIST,
+          defaultLimit: TRENDING_CONFIG.DEFAULT_LIMIT
+        }
+      }
+    };
+
+    // Write trending tracks cache to both directories
+    await writeToMultipleDirectories('data/trending-tracks.json', JSON.stringify(cache, null, 2));
+
+    console.log(`✅ Generated trending tracks cache (${cachedTracks.length} tracks using shared algorithm)`);
+  } catch (error) {
+    console.error('❌ Failed to generate trending tracks cache:', error);
+    
+    // Create minimal fallback cache
+    const fallbackCache: TrendingTracksCache = {
+      tracks: [],
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        totalCount: 0,
+        dataSource: 'fallback',
+        relaysUsed: relayUrls,
+        cacheVersion: '1.0.0',
+        algorithm: {
+          zapAmountWeight: TRENDING_CONFIG.WEIGHTS.ZAP_AMOUNT,
+          zapCountWeight: TRENDING_CONFIG.WEIGHTS.ZAP_COUNT,
+          recencyWeight: TRENDING_CONFIG.WEIGHTS.RECENCY,
+          maxPerArtist: TRENDING_CONFIG.MAX_PER_ARTIST,
+          defaultLimit: TRENDING_CONFIG.DEFAULT_LIMIT
+        }
+      }
+    };
+    
+    await writeToMultipleDirectories('data/trending-tracks.json', JSON.stringify(fallbackCache, null, 2));
+    console.log('📄 Created fallback trending tracks cache');
+    
+    throw error;
+  }
+}
+
+/**
  * Generate health check files
  */
 async function generateHealthChecks(
@@ -457,7 +627,8 @@ async function generateHealthChecks(
       status: 'ok',
       endpoints: {
         releases: '/data/releases.json',
-        latestRelease: '/data/latest-release.json'
+        latestRelease: '/data/latest-release.json',
+        trendingTracks: '/data/trending-tracks.json'
       },
       generatedAt: new Date().toISOString(),
       cacheCount: releases.length,
@@ -530,6 +701,12 @@ export async function buildStaticData(): Promise<void> {
           // Don't throw - continue with other builds
           return Promise.resolve();
         }),
+      generateTrendingTracksCache(dataBundle.tracks, dataBundle.relaysUsed, distDir)
+        .catch(error => {
+          console.error('❌ Trending tracks cache generation failed:', error);
+          // Don't throw - continue with other builds
+          return Promise.resolve();
+        }),
       generateIndividualReleaseCaches(releases, {
         generatedAt: new Date().toISOString(),
         totalCount: releases.length,
@@ -573,11 +750,12 @@ export async function buildStaticData(): Promise<void> {
     console.log(`   • Individual RSS feeds for ${rssEnabledArtists.length} artists (out of ${dataBundle.artists.length} total)`);
     console.log(`   • Release cache with ${releases.length} releases`);
     console.log(`   • Latest release cache`);
+    console.log(`   • Trending tracks cache`);
     console.log(`   • Individual release caches (top 20)`);
     console.log(`   • Health check files`);
     console.log(`📁 Files available in: dist/ and public/`);
     console.log(`📡 RSS feeds: /rss/{artistPubkey}.xml`);
-    console.log(`🗂️  Cache files: /data/releases.json, /data/latest-release.json`);
+    console.log(`🗂️  Cache files: /data/releases.json, /data/latest-release.json, /data/trending-tracks.json`);
     console.log(`📄 Individual caches: /data/releases/[id].json`);
     console.log(`🏥 Health checks: /rss-health.json, /cache-health.json`);
     

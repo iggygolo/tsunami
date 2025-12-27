@@ -257,7 +257,7 @@ const Index = () => {
           {/* Trending Tracks Section - Positioned between hero and recent releases (Requirement 8.1) */}
           <TrendingTracksSection 
             excludeTrackIds={excludeTrackIds}
-            limit={6}
+            useCache={true}
           />
 
           {/* Recent Releases */}
